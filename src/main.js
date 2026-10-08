@@ -201,10 +201,10 @@ function showRecords() {
   const s = loadStats();
   $("s-best").textContent = `${s.best}点 / ${MAX_SCORE}点`;
   $("s-plays").textContent = `${s.plays}回`;
-  $("s-answered").textContent = `${s.answered}もん(せいかい ${s.correct}もん)`;
+  $("s-answered").textContent = `${s.answered}問(正解 ${s.correct}問)`;
   $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : "まだ ないよ";
   const now = s.setRounds.reduce((sum, value) => sum + value, 0);
-  $("s-set-now").textContent = `${s.setRounds.length} / ${ROUNDS_PER_SET}回 (${now}点)`;
+  $("s-set-now").textContent = `${s.setRounds.length} / ${ROUNDS_PER_SET}回(${now}点)`;
   $("s-set-best").textContent = s.sets ? `${s.bestSet}点 / ${MAX_SET_SCORE}点` : "まだ ないよ";
   $("s-set-count").textContent = `${s.sets}回`;
   show("records");
