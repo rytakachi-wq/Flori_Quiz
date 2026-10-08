@@ -13,8 +13,21 @@ export function levelFromCounter(counter) {
   return Math.min(MAX_LEVEL, 1 + Math.floor(counter / COUNTER_PER_LEVEL));
 }
 
+// 記述式の答えをくらべやすくする。全角・半角、大文字・小文字、カタカナ・ひらがな、空白や記号のちがいを無視する。
+export function normalizeAnswer(text) {
+  return String(text)
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60))
+    .replace(/[\s、。,.!?「」『』()]/g, "");
+}
+
 const judges = {
   choice: (question, response) => response === question.answer,
+  text: (question, response) => {
+    const given = normalizeAnswer(response);
+    return given !== "" && question.answers.some((answer) => normalizeAnswer(answer) === given);
+  },
 };
 
 // 回答の形式ごとに判定を足せるようにしてある。

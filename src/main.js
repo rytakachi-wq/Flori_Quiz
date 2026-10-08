@@ -21,29 +21,58 @@ function show(name) {
   window.scrollTo(0, 0);
 }
 
-// 回答の形式ごとの画面部品。入力式を足すときは、ここに追加する。
+// 回答の形式ごとの画面部品(出題 render、回答後の表示 mark、正解の言いかた correctText)。
+// 新しい回答形式を足すときは、ここに追加する。
 const renderers = {
-  choice(question, onAnswer) {
-    const list = $("q-choices");
-    list.replaceChildren();
-    question.choices.forEach((text, index) => {
-      const item = document.createElement("li");
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "choice";
-      button.innerHTML = `<span class="choice-no">${index + 1}</span><span class="choice-text"></span>`;
-      button.querySelector(".choice-text").textContent = text;
-      button.addEventListener("click", () => onAnswer(index));
-      item.append(button);
-      list.append(item);
-    });
+  choice: {
+    render(question, onAnswer) {
+      const list = $("q-choices");
+      list.replaceChildren();
+      question.choices.forEach((text, index) => {
+        const item = document.createElement("li");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "choice";
+        button.innerHTML = `<span class="choice-no">${index + 1}</span><span class="choice-text"></span>`;
+        button.querySelector(".choice-text").textContent = text;
+        button.addEventListener("click", () => onAnswer(index));
+        item.append(button);
+        list.append(item);
+      });
+    },
+    mark(question, response) {
+      [...$("q-choices").querySelectorAll(".choice")].forEach((button, index) => {
+        button.disabled = true;
+        if (index === question.answer) button.classList.add("is-right");
+        else if (index === response) button.classList.add("is-wrong");
+      });
+    },
+    correctText: (question) => question.choices[question.answer],
   },
-  markChoice(question, response) {
-    [...$("q-choices").querySelectorAll(".choice")].forEach((button, index) => {
-      button.disabled = true;
-      if (index === question.answer) button.classList.add("is-right");
-      else if (index === response) button.classList.add("is-wrong");
-    });
+  text: {
+    render(question, onAnswer) {
+      const list = $("q-choices");
+      list.replaceChildren();
+      const form = document.createElement("form");
+      form.className = "answer-form";
+      form.innerHTML = `<input id="q-input" class="answer-input" type="text" autocomplete="off" placeholder="ここに かいてね" aria-label="こたえ"><button class="btn btn-main" type="submit">こたえる</button>`;
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const value = form.querySelector("input").value.trim();
+        if (value) onAnswer(value);
+      });
+      const item = document.createElement("li");
+      item.append(form);
+      list.append(item);
+      form.querySelector("input").focus();
+    },
+    mark(question, response, correct) {
+      const input = $("q-input");
+      input.disabled = true;
+      input.classList.add(correct ? "is-right" : "is-wrong");
+      $("q-choices").querySelector("button").disabled = true;
+    },
+    correctText: (question) => question.answers[0],
   },
 };
 
@@ -88,7 +117,7 @@ function showQuestion() {
     message.hidden = true;
   }
 
-  renderers[question.type](question, answer);
+  renderers[question.type].render(question, answer);
   show("question");
 }
 
@@ -96,14 +125,15 @@ function answer(response) {
   if (answered) return;
   answered = true;
   const correct = play.answer(current, response);
-  renderers.markChoice(current, response);
+  renderers[current.type].mark(current, response, correct);
 
   setFlori(correct ? IMG.correct : IMG.wrong, correct ? "わらうフロリ" : "目をつぶるフロリ");
   $("q-message").hidden = true;
   const verdict = $("q-verdict");
   verdict.textContent = correct ? "せいかい!" : "ざんねん…";
   verdict.className = `verdict ${correct ? "is-right" : "is-wrong"}`;
-  $("q-explanation").textContent = current.explanation;
+  const rightText = renderers[current.type].correctText(current);
+  $("q-explanation").textContent = `せいかいは 「${rightText}」\n${current.explanation}`;
   $("btn-next").textContent = play.roundFinished ? "けっかを みる" : "つぎへ";
   $("q-feedback").hidden = false;
   $("btn-next").focus();
@@ -177,7 +207,7 @@ function next() {
 
 document.addEventListener("keydown", (event) => {
   if ($("screen-question").hidden || answered || event.ctrlKey || event.metaKey || event.altKey) return;
-  if ($("dlg-quit").open || $("dlg-oni").open) return;
+  if ($("dlg-quit").open || $("dlg-oni").open || current.type !== "choice") return;
   const index = Number(event.key) - 1;
   if (Number.isInteger(index) && index >= 0 && index < current.choices.length) answer(index);
 });

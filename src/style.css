@@ -159,7 +159,7 @@ body {
 .verdict { margin: 0; font-size: 26px; font-weight: bold; }
 .verdict.is-right { color: var(--right); }
 .verdict.is-wrong { color: var(--wrong); }
-.explanation { margin: 0; text-align: left; }
+.explanation { margin: 0; text-align: left; white-space: pre-line; }
 
 /* 結果画面 */
 .scores { display: grid; gap: 8px; margin: 0; width: min(420px, 100%); }
@@ -224,3 +224,21 @@ body {
   100% { transform: rotate(0); }
 }
 @media (prefers-reduced-motion: reduce) { .corner-flori.is-tapped { animation: none; } }
+
+/* 記述式の答え */
+.answer-form { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
+.answer-input {
+  flex: 1 1 220px;
+  font: inherit;
+  font-size: 20px;
+  padding: 10px 14px;
+  min-height: 56px;
+  color: var(--text);
+  background: #fff;
+  border: 3px solid var(--blue);
+  border-radius: 16px;
+}
+.answer-input:focus-visible { outline: 4px solid var(--green); outline-offset: 2px; }
+.answer-input.is-right { border-color: var(--right); background: #e5f5ea; }
+.answer-input.is-wrong { border-color: var(--wrong); background: #fbe9e7; }
+.answer-input:disabled { color: var(--text); }
