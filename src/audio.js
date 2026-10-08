@@ -56,7 +56,12 @@ function applyBgm() {
     currentFile = file;
     bgm.src = BASE + file; // 同じ曲のままなら、つづきから流す
   }
-  if (unlocked && !document.hidden) bgm.play().catch(() => {});
+  if (unlocked) {
+    bgm.play().catch((error) => {
+      // ブラウザに止められたときは、次に画面をさわったときに、もう一度ためす。
+      console.warn("BGMを流せませんでした:", error.name);
+    });
+  }
 }
 
 // 場面が変わったら、その場面のBGMにする。
@@ -65,11 +70,11 @@ export function setScene(name) {
   applyBgm();
 }
 
-// 画面をはじめてさわったときに呼ぶ。ここから音が出せる。
+// 画面をさわるたびに呼ぶ。はじめてさわったときから、音が出せる。
+// BGMが止まっているときは、ここで流しなおす(ブラウザに止められていた場合など)。
 export function unlock() {
-  if (unlocked) return;
   unlocked = true;
-  applyBgm();
+  if (bgm.paused) applyBgm();
 }
 
 export function playSe(name) {
@@ -95,9 +100,3 @@ export function setVolume(kind, value) {
   }
   if (kind === "bgm") applyBgm();
 }
-
-// ほかのタブを見ているあいだは、BGMを止める。
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) bgm.pause();
-  else applyBgm();
-});

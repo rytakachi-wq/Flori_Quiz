@@ -224,7 +224,12 @@ document.addEventListener("keydown", (event) => {
 });
 
 // 音:画面をはじめてさわったら音を出せるようにして、ボタンをおすと効果音をならす。
-for (const type of ["pointerdown", "keydown"]) document.addEventListener(type, unlock, { once: true, capture: true });
+for (const type of ["pointerdown", "keydown"]) {
+  document.addEventListener(type, () => {
+    unlock();
+    $("sound-hint").hidden = true;
+  }, { capture: true });
+}
 document.addEventListener("click", (event) => {
   const button = event.target.closest("button");
   if (button && !button.dataset.noSe) playSe("button");
