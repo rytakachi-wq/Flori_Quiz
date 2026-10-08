@@ -53,13 +53,13 @@
       <div class="volumes">
         <div class="volume">
           <label for="vol-bgm">BGM</label>
-          <input id="vol-bgm" type="range" min="0" max="100" step="5">
-          <output id="vol-bgm-out" for="vol-bgm"></output>
+          <input id="vol-bgm" data-volume="bgm" type="range" min="0" max="100" step="5">
+          <output data-volume-out="bgm" for="vol-bgm"></output>
         </div>
         <div class="volume">
           <label for="vol-se">こうかおん</label>
-          <input id="vol-se" type="range" min="0" max="100" step="5">
-          <output id="vol-se-out" for="vol-se"></output>
+          <input id="vol-se" data-volume="se" type="range" min="0" max="100" step="5">
+          <output data-volume-out="se" for="vol-se"></output>
         </div>
       </div>
       <p class="note">0にすると、おとが でなくなるよ。</p>
@@ -71,6 +71,7 @@
       <header class="status">
         <span id="q-progress" class="chip"></span>
         <span id="q-level" class="chip chip-level"></span>
+        <button id="btn-q-settings" class="chip chip-button" type="button">せってい</button>
         <button id="btn-quit" class="chip chip-button" type="button">やめる</button>
       </header>
       <div class="stage">
@@ -116,6 +117,25 @@
     <div class="buttons">
       <button id="btn-quit-yes" class="btn btn-sub" type="button">やめる</button>
       <button id="btn-quit-no" class="btn btn-main" type="button">つづける</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-volume" class="dialog" aria-labelledby="dlg-volume-title">
+    <p id="dlg-volume-title">せってい:おとの おおきさ</p>
+    <div class="volumes">
+      <div class="volume">
+        <label for="dlg-vol-bgm">BGM</label>
+        <input id="dlg-vol-bgm" data-volume="bgm" type="range" min="0" max="100" step="5">
+        <output data-volume-out="bgm" for="dlg-vol-bgm"></output>
+      </div>
+      <div class="volume">
+        <label for="dlg-vol-se">こうかおん</label>
+        <input id="dlg-vol-se" data-volume="se" type="range" min="0" max="100" step="5">
+        <output data-volume-out="se" for="dlg-vol-se"></output>
+      </div>
+    </div>
+    <div class="buttons">
+      <button id="btn-volume-close" class="btn btn-main" type="button">もどる</button>
     </div>
   </dialog>
 

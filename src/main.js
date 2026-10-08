@@ -218,7 +218,7 @@ function next() {
 
 document.addEventListener("keydown", (event) => {
   if ($("screen-question").hidden || answered || event.ctrlKey || event.metaKey || event.altKey) return;
-  if ($("dlg-quit").open || $("dlg-oni").open || current.type !== "choice") return;
+  if ($("dlg-quit").open || $("dlg-oni").open || $("dlg-volume").open || current.type !== "choice") return;
   const index = Number(event.key) - 1;
   if (Number.isInteger(index) && index >= 0 && index < current.choices.length) answer(index);
 });
@@ -235,19 +235,32 @@ document.addEventListener("click", (event) => {
   if (button && !button.dataset.noSe) playSe("button");
 });
 
-// せってい:BGMと効果音の大きさ(0〜100)
-for (const [kind, id] of [["bgm", "vol-bgm"], ["se", "vol-se"]]) {
-  const slider = $(id);
-  const label = $(`${id}-out`);
-  slider.value = Math.round(getVolume(kind) * 100);
-  label.textContent = slider.value;
+// せってい:BGMと効果音の大きさ(0〜100)。表紙の「せってい」と、問題を解いているときの「せってい」で、同じ大きさを使う。
+function showVolumes() {
+  for (const slider of document.querySelectorAll("[data-volume]")) {
+    slider.value = Math.round(getVolume(slider.dataset.volume) * 100);
+  }
+  for (const label of document.querySelectorAll("[data-volume-out]")) {
+    label.textContent = Math.round(getVolume(label.dataset.volumeOut) * 100);
+  }
+}
+showVolumes();
+for (const slider of document.querySelectorAll("[data-volume]")) {
+  const kind = slider.dataset.volume;
   slider.addEventListener("input", () => {
-    label.textContent = slider.value;
     setVolume(kind, Number(slider.value) / 100);
+    showVolumes();
   });
   // 効果音は、つまみをはなしたときに、ためしにならす
   if (kind === "se") slider.addEventListener("change", () => playSe("correct"));
 }
+
+// 問題を解いているときの「せってい」
+$("btn-q-settings").addEventListener("click", () => {
+  showVolumes();
+  $("dlg-volume").showModal();
+});
+$("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
 $("btn-start").addEventListener("click", () => startPlay(false));
 $("btn-records").addEventListener("click", showRecords);
