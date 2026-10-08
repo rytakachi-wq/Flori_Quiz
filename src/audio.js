@@ -7,9 +7,9 @@ const SETTINGS_KEY = "floriQuiz.settings.v2";
 // 場面ごとのBGM。音楽を変えるときは、ここのファイル名を変える。
 // 場面:cover(表紙・せいせき・せってい)、question(ふつうの問題)、oni(オニ問題)、result(結果)
 const BGM = {
-  cover: "bgm-swan-lake.mp3",
+  cover: "bgm-slime-time.mp3",
   question: "bgm-ticketless.mp3",
-  oni: "bgm-slime-time.mp3",
+  oni: "bgm-swan-lake.mp3",
   result: "bgm-swan-lake.mp3",
 };
 

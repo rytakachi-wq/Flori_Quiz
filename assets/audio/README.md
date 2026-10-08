@@ -6,9 +6,9 @@
 
 | ファイル | 元のファイル名 | 使う場面 |
 |---|---|---|
-| `bgm-swan-lake.mp3` | Kashido - Swan Lake Theme.mp3 | 表紙・せいせき・せってい、結果発表 |
+| `bgm-swan-lake.mp3` | Kashido - Swan Lake Theme.mp3 | オニ問題、結果発表 |
 | `bgm-ticketless.mp3` | Francesco DAndrea - Ticketless.mp3 | ふつうの問題を解いているとき |
-| `bgm-slime-time.mp3` | Randy Sharp - Slime Time.mp3 | オニ問題 |
+| `bgm-slime-time.mp3` | Randy Sharp - Slime Time.mp3 | 表紙・せいせき・せってい |
 
 ## 効果音
 
