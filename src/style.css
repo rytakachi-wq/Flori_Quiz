@@ -99,6 +99,8 @@ body {
   font-size: 15px;
   font-weight: bold;
 }
+.chip-button { font: inherit; font-size: 15px; font-weight: bold; color: var(--text); cursor: pointer; background: #fff; }
+.chip-button:hover { background: var(--pink); }
 .chip-level { background: var(--green); color: #5a5d12; }
 
 .stage { display: flex; align-items: center; gap: 12px; min-height: 120px; }
@@ -181,3 +183,44 @@ body {
   .question { font-size: 18px; }
   .stage { flex-direction: column; }
 }
+
+.dialog {
+  border: 3px solid var(--blue);
+  border-radius: 24px;
+  padding: 22px 26px;
+  text-align: center;
+  color: var(--text);
+  background: var(--card);
+  max-width: min(420px, 90vw);
+}
+.dialog::backdrop { background: rgba(44, 58, 66, 0.45); }
+.dialog p { margin: 0 0 16px; font-weight: bold; }
+.dialog .flori { margin: 0 auto 8px; display: block; }
+
+/* 表紙のメニュー */
+.menu { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.subtitle { margin: 6px 0 0; font-size: 18px; color: var(--blue-dark); }
+
+/* 表紙のすみのフロリ(何回かおすと、オニ問題が出る) */
+#screen-cover { position: relative; }
+.corner-flori {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 56px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  opacity: 0.9;
+}
+.corner-flori img { display: block; width: 100%; height: auto; }
+.corner-flori:focus-visible { outline: 4px solid var(--green); border-radius: 12px; }
+.corner-flori.is-tapped { animation: wiggle 0.3s; }
+@keyframes wiggle {
+  0% { transform: rotate(0); }
+  25% { transform: rotate(-14deg) scale(1.08); }
+  75% { transform: rotate(14deg) scale(1.08); }
+  100% { transform: rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) { .corner-flori.is-tapped { animation: none; } }

@@ -12,7 +12,7 @@
 | `CLAUDE.md` | AI向けの作業ルール |
 | `src/` | アプリ本体（`index.html`、`main.js`、`game.js`、`storage.js`、`style.css`） |
 | `assets/flori/` | フロリの画像（利用者が提供） |
-| `data/questions/` | 問題と解説（全20問） |
+| `data/questions/` | 問題と解説（全40問(ふつう35問+オニ5問)） |
 | `docs/` | 決定事項の記録など |
 
 ## 動かし方

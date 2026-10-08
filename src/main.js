@@ -1,7 +1,8 @@
-import { Session, MAX_LEVEL, MAX_SCORE, QUESTIONS_PER_ROUND, ROUNDS_PER_SET } from "./game.js";
-import { loadBestScore, saveBestScore } from "./storage.js";
+import { Session, OniRound, MAX_LEVEL, MAX_SCORE, MAX_SET_SCORE, QUESTIONS_PER_ROUND, ROUNDS_PER_SET } from "./game.js";
+import { loadStats, recordRound } from "./storage.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
+const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数おすと、オニ問題が出る
 const IMG = {
   think: "../assets/flori/src/book_pen.png",
   correct: "../assets/flori/wave_smile.png",
@@ -10,10 +11,13 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const screens = ["cover", "question", "result", "error"].map((name) => [name, $(`screen-${name}`)]);
+const SCREENS = ["cover", "records", "settings", "question", "result", "error"];
+
+let coverTaps = 0;
 
 function show(name) {
-  for (const [key, el] of screens) el.hidden = key !== name;
+  for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
+  if (name !== "cover") coverTaps = 0;
   window.scrollTo(0, 0);
 }
 
@@ -43,7 +47,10 @@ const renderers = {
   },
 };
 
-let session;
+let oniQuestions = [];
+let session; // ふつうの遊び(難しさのカウンターを引き継ぐ)
+let play; // いま遊んでいるもの(session かオニ問題)
+let isOni = false;
 let current = null; // 今出している問題
 let answered = false;
 
@@ -53,20 +60,28 @@ function setFlori(src, alt) {
   img.alt = alt;
 }
 
+function startPlay(oni) {
+  isOni = oni;
+  play = oni ? new OniRound(oniQuestions) : session;
+  showQuestion();
+}
+
 function showQuestion() {
-  const { question, leveledUp } = session.nextQuestion();
+  const { question, leveledUp } = play.nextQuestion();
   current = question;
   answered = false;
 
-  $("q-progress").textContent = `だい ${session.asked + 1} もん / ${QUESTIONS_PER_ROUND}もん`;
-  $("q-level").textContent = `むずかしさ ${"★".repeat(question.level)}${"☆".repeat(MAX_LEVEL - question.level)}`;
+  $("q-progress").textContent = `${isOni ? "オニ " : ""}だい ${play.asked + 1} もん / ${QUESTIONS_PER_ROUND}もん`;
+  $("q-level").textContent = isOni
+    ? "むずかしさ オニ"
+    : `むずかしさ ${"★".repeat(question.level)}${"☆".repeat(MAX_LEVEL - question.level)}`;
   $("q-text").textContent = question.text;
   $("q-feedback").hidden = true;
 
   const message = $("q-message");
-  if (leveledUp) {
+  if (leveledUp || (isOni && play.asked === 0)) {
     setFlori(IMG.surprised, "おどろくフロリ");
-    message.textContent = "おっ! むずかしく なったヨ!";
+    message.textContent = isOni ? "オニもんだいだヨ! がんばれ!" : "おっ! むずかしく なったヨ!";
     message.hidden = false;
   } else {
     setFlori(IMG.think, "本とペンを持つフロリ");
@@ -80,7 +95,7 @@ function showQuestion() {
 function answer(response) {
   if (answered) return;
   answered = true;
-  const correct = session.answer(current, response);
+  const correct = play.answer(current, response);
   renderers.markChoice(current, response);
 
   setFlori(correct ? IMG.correct : IMG.wrong, correct ? "わらうフロリ" : "目をつぶるフロリ");
@@ -89,25 +104,39 @@ function answer(response) {
   verdict.textContent = correct ? "せいかい!" : "ざんねん…";
   verdict.className = `verdict ${correct ? "is-right" : "is-wrong"}`;
   $("q-explanation").textContent = current.explanation;
-  $("btn-next").textContent = session.roundFinished ? "けっかを みる" : "つぎへ";
+  $("btn-next").textContent = play.roundFinished ? "けっかを みる" : "つぎへ";
   $("q-feedback").hidden = false;
   $("btn-next").focus();
 }
 
 function showResult() {
-  const result = session.finishRound();
-  const isRecord = saveBestScore(result.score);
+  const result = play.finishRound();
   $("r-correct").textContent = `${result.correct} / ${result.total}もん`;
   $("r-score").textContent = `${result.score}点 (${MAX_SCORE}点まんてん)`;
-  $("r-best").textContent = `${loadBestScore()}点`;
-  $("r-record").hidden = !isRecord;
-  $("r-comment").textContent = comment(result.correct);
+  $("r-comment").textContent = isOni ? oniComment(result.correct) : comment(result.correct);
 
   const setNote = $("r-set");
-  if (result.setCompleted) {
-    setNote.textContent = `${ROUNDS_PER_SET}回 ぜんぶ おわったヨ! つぎは また はじめから!`;
+  if (isOni) {
+    // オニ問題は、成績には入れない。
+    $("r-title").textContent = "オニもんだい けっか!";
+    $("r-best-row").hidden = true;
+    $("r-record").hidden = true;
+    setNote.textContent = "オニもんだいは、せいせきには はいらないヨ。";
+    $("btn-again").textContent = "もういちど ちょうせん";
   } else {
-    setNote.textContent = `${result.roundNumber}回め / ${ROUNDS_PER_SET}回(つづけて あそぶと、むずかしさも つづくヨ)`;
+    const saved = recordRound(result);
+    const stats = loadStats();
+    $("r-title").textContent = "けっかはっぴょう!";
+    $("r-best-row").hidden = false;
+    $("r-best").textContent = `${stats.best}点`;
+    $("r-record").hidden = !saved.isRecord;
+    $("btn-again").textContent = "もういちど あそぶ";
+    if (saved.setCompleted) {
+      setNote.textContent = `${ROUNDS_PER_SET}回ぶん(20問)で ${saved.setScore}点!${saved.isSetRecord ? " 20問の しんきろく!" : ""} つぎは また はじめから!`;
+      session.resetSet();
+    } else {
+      setNote.textContent = `${ROUNDS_PER_SET}回のうち ${stats.setRounds.length}回め が おわったヨ(つづけて あそぶと、むずかしさも つづくヨ)`;
+    }
   }
   setNote.hidden = false;
   show("result");
@@ -120,28 +149,82 @@ function comment(correct) {
   return "だいじょうぶ! かんがえるのが たのしいんだヨ!";
 }
 
+function oniComment(correct) {
+  if (correct === QUESTIONS_PER_ROUND) return "ええっ、ぜんぶ せいかい! てんさいだヨ!";
+  if (correct >= 3) return "オニを あいてに すごいヨ!";
+  if (correct >= 1) return "オニもんだいを とくなんて、えらいヨ!";
+  return "オニは むずかしいんだヨ。また ちょうせんしてネ!";
+}
+
+function showRecords() {
+  const s = loadStats();
+  $("s-best").textContent = `${s.best}点 / ${MAX_SCORE}点`;
+  $("s-plays").textContent = `${s.plays}回`;
+  $("s-rate").textContent = s.answered
+    ? `${Math.round((s.correct / s.answered) * 100)}%(${s.correct} / ${s.answered}もん)`
+    : "まだ ないよ";
+  const now = s.setRounds.reduce((sum, value) => sum + value, 0);
+  $("s-set-now").textContent = `${s.setRounds.length} / ${ROUNDS_PER_SET}回 (${now}点)`;
+  $("s-set-best").textContent = s.sets ? `${s.bestSet}点 / ${MAX_SET_SCORE}点` : "まだ ないよ";
+  $("s-set-count").textContent = `${s.sets}回`;
+  show("records");
+}
+
 function next() {
-  if (session.roundFinished) showResult();
+  if (play.roundFinished) showResult();
   else showQuestion();
 }
 
 document.addEventListener("keydown", (event) => {
   if ($("screen-question").hidden || answered || event.ctrlKey || event.metaKey || event.altKey) return;
+  if ($("dlg-quit").open || $("dlg-oni").open) return;
   const index = Number(event.key) - 1;
   if (Number.isInteger(index) && index >= 0 && index < current.choices.length) answer(index);
 });
 
-$("btn-start").addEventListener("click", showQuestion);
+$("btn-start").addEventListener("click", () => startPlay(false));
+$("btn-records").addEventListener("click", showRecords);
+$("btn-records-back").addEventListener("click", () => show("cover"));
+$("btn-settings").addEventListener("click", () => show("settings"));
+$("btn-settings-back").addEventListener("click", () => show("cover"));
 $("btn-next").addEventListener("click", next);
-$("btn-again").addEventListener("click", showQuestion);
+$("btn-again").addEventListener("click", () => startPlay(isOni));
 $("btn-cover").addEventListener("click", () => show("cover"));
+
+// やめる:確認してから、この回をなかったことにして表紙へ戻る。
+$("btn-quit").addEventListener("click", () => $("dlg-quit").showModal());
+$("btn-quit-no").addEventListener("click", () => $("dlg-quit").close());
+$("btn-quit-yes").addEventListener("click", () => {
+  $("dlg-quit").close();
+  play.abandonRound();
+  show("cover");
+});
+
+// 表紙のすみのフロリ:何回かおすと、オニ問題が出る。
+$("corner-flori").addEventListener("click", (event) => {
+  const button = event.currentTarget;
+  button.classList.remove("is-tapped");
+  void button.offsetWidth; // アニメーションをもう一度動かす
+  button.classList.add("is-tapped");
+  coverTaps += 1;
+  if (coverTaps >= ONI_TAPS) {
+    coverTaps = 0;
+    $("dlg-oni").showModal();
+  }
+});
+$("btn-oni-no").addEventListener("click", () => $("dlg-oni").close());
+$("btn-oni-yes").addEventListener("click", () => {
+  $("dlg-oni").close();
+  startPlay(true);
+});
 
 async function init() {
   try {
     const response = await fetch(QUESTIONS_URL);
     if (!response.ok) throw new Error(response.status);
-    const data = await response.json();
-    session = new Session(data.questions);
+    const { questions } = await response.json();
+    oniQuestions = questions.filter((q) => q.level > MAX_LEVEL);
+    session = new Session(questions.filter((q) => q.level <= MAX_LEVEL));
     show("cover");
   } catch (error) {
     console.error(error);

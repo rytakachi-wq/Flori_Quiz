@@ -15,8 +15,41 @@
       <h1 class="title">Flori_Quiz</h1>
       <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
       <p class="bubble">ヤア! ボクはフロリだヨ!<br>ひらめきクイズで あそぼう!</p>
-      <button id="btn-start" class="btn btn-main" type="button">はじめる</button>
+      <div class="menu">
+        <button id="btn-start" class="btn btn-main" type="button">はじめる</button>
+        <button id="btn-records" class="btn btn-sub" type="button">せいせき</button>
+        <button id="btn-settings" class="btn btn-sub" type="button">せってい</button>
+      </div>
       <p class="note">1回は5問。ぜんぶ せいかいで 25点!</p>
+      <button id="corner-flori" class="corner-flori" type="button" aria-label="フロリ">
+        <img src="../assets/flori/src/face_smile.png" alt="">
+      </button>
+    </section>
+
+    <!-- せいせき -->
+    <section id="screen-records" class="screen" aria-label="せいせき" hidden>
+      <h2 class="title">せいせき</h2>
+      <dl class="scores">
+        <div><dt>さいこうとくてん</dt><dd id="s-best"></dd></div>
+        <div><dt>あそんだ かいすう</dt><dd id="s-plays"></dd></div>
+        <div><dt>せいかいりつ</dt><dd id="s-rate"></dd></div>
+      </dl>
+      <h3 class="subtitle">20問(4回ぶん)の きろく</h3>
+      <dl class="scores">
+        <div><dt>いまの20問</dt><dd id="s-set-now"></dd></div>
+        <div><dt>20問の さいこう</dt><dd id="s-set-best"></dd></div>
+        <div><dt>20問を おえた かいすう</dt><dd id="s-set-count"></dd></div>
+      </dl>
+      <p class="note">きろくは、このパソコンの なかに だけ のこるよ。</p>
+      <button id="btn-records-back" class="btn btn-sub" type="button">もどる</button>
+    </section>
+
+    <!-- せってい -->
+    <section id="screen-settings" class="screen" aria-label="せってい" hidden>
+      <h2 class="title">せってい</h2>
+      <img class="flori flori-small" src="../assets/flori/src/pc_form.png" alt="パソコンに変形したフロリ">
+      <p class="bubble">いまは なにも ないよ。<br>そのうち ふえるかも!</p>
+      <button id="btn-settings-back" class="btn btn-sub" type="button">もどる</button>
     </section>
 
     <!-- 問題画面 -->
@@ -24,6 +57,7 @@
       <header class="status">
         <span id="q-progress" class="chip"></span>
         <span id="q-level" class="chip chip-level"></span>
+        <button id="btn-quit" class="chip chip-button" type="button">やめる</button>
       </header>
       <div class="stage">
         <img id="q-flori" class="flori flori-small" src="" alt="">
@@ -46,7 +80,7 @@
       <dl class="scores">
         <div><dt>せいかい</dt><dd id="r-correct"></dd></div>
         <div><dt>とくてん</dt><dd id="r-score"></dd></div>
-        <div><dt>さいこうとくてん</dt><dd id="r-best"></dd></div>
+        <div id="r-best-row"><dt>さいこうとくてん</dt><dd id="r-best"></dd></div>
       </dl>
       <p id="r-record" class="record" hidden>しんきろく!</p>
       <p id="r-set" class="note" hidden></p>
@@ -62,6 +96,23 @@
     </section>
 
   </main>
+
+  <dialog id="dlg-quit" class="dialog" aria-labelledby="dlg-quit-text">
+    <p id="dlg-quit-text">ここで やめる?<br>この回の けっかは のこらないよ。</p>
+    <div class="buttons">
+      <button id="btn-quit-yes" class="btn btn-sub" type="button">やめる</button>
+      <button id="btn-quit-no" class="btn btn-main" type="button">つづける</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-oni" class="dialog" aria-labelledby="dlg-oni-text">
+    <img class="flori flori-small" src="../assets/flori/wave_surprised.png" alt="おどろくフロリ">
+    <p id="dlg-oni-text">わあ、すごいね! よく みつけたネ!<br>とくべつな オニもんだいが 5問 あるヨ。<br>ちょうせんする?</p>
+    <div class="buttons">
+      <button id="btn-oni-no" class="btn btn-sub" type="button">やめておく</button>
+      <button id="btn-oni-yes" class="btn btn-main" type="button">ちょうせんする!</button>
+    </div>
+  </dialog>
   <script type="module" src="main.js"></script>
 </body>
 </html>
