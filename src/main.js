@@ -88,6 +88,7 @@ const renderers = {
 };
 
 let oniQuestions = [];
+let normalIds = new Set(); // ふつうの問題の番号
 let session; // ふつうの遊び(難しさのカウンターを引き継ぐ)
 let play; // いま遊んでいるもの(session かオニ問題)
 let current = null; // 今出している問題
@@ -201,6 +202,11 @@ function showRecords() {
   const s = loadStats();
   $("s-best").textContent = `${s.best}点 / ${MAX_SCORE}点`;
   $("s-plays").textContent = `${s.plays}回`;
+  // 「出会った問題」「正解した問題」は、いまある問題のうち、何問か(問題が増えても、全体の数を合わせる)
+  const seen = s.seen.filter((id) => normalIds.has(id)).length;
+  const right = s.right.filter((id) => normalIds.has(id)).length;
+  $("s-seen").textContent = `${seen} / ${normalIds.size}問`;
+  $("s-right").textContent = `${right} / ${normalIds.size}問`;
   $("s-answered").textContent = `${s.answered}問(正解 ${s.correct}問)`;
   $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : "まだ ないよ";
   const now = s.setRounds.reduce((sum, value) => sum + value, 0);
@@ -304,7 +310,9 @@ async function init() {
     if (!response.ok) throw new Error(response.status);
     const { questions } = await response.json();
     oniQuestions = questions.filter((q) => q.level > MAX_LEVEL);
-    session = new Session(questions.filter((q) => q.level <= MAX_LEVEL));
+    const normal = questions.filter((q) => q.level <= MAX_LEVEL);
+    normalIds = new Set(normal.map((q) => q.id));
+    session = new Session(normal);
     show("cover");
   } catch (error) {
     console.error(error);

@@ -14,17 +14,17 @@ const BGM = {
 };
 
 // 曲ごとの音の大きさをそろえる。元の曲は、どれも大きく作ってあり、曲によって差もある。
-// 平均の大きさ(-10.8〜-13.5 dB)を、つまみ100のとき -16 dB にそろえた値。
+// 平均の大きさ(-10.8〜-13.5 dB)を、つまみ100のとき -19 dB にそろえた値。
 // ファイルを入れかえたら、この値も測りなおす。
 const BGM_GAIN = {
-  "bgm-swan-lake.mp3": 0.75,
-  "bgm-ticketless.mp3": 0.55,
-  "bgm-slime-time.mp3": 0.71,
+  "bgm-swan-lake.mp3": 0.53,
+  "bgm-ticketless.mp3": 0.39,
+  "bgm-slime-time.mp3": 0.5,
 };
 
 // 効果音。boost は、小さい音をもち上げる倍率(ピークが 0 dB をこえない範囲)。
 const SE = {
-  button: { file: "se-button.mp3", boost: 1.7 }, // ボタンをおしたとき
+  button: { file: "se-button.mp3", boost: 2.4 }, // ボタンをおしたとき
   correct: { file: "se-chime.mp3", boost: 1 }, // せいかい
   wrong: { file: "se-wrong.mp3", boost: 2.4 }, // ふせいかい
 };

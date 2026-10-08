@@ -14,12 +14,18 @@ const EMPTY = {
   setRounds: [], // いまの20問(4回分)で終わった回の得点
   bestSet: 0, // 20問(4回分)の最高得点
   sets: 0, // 20問(4回分)を終えた回数
+  seen: [], // 出会ったことのある問題の番号
+  right: [], // 正解したことのある問題の番号
 };
 
 let cache = null;
 
 function number(value) {
   return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function ids(list) {
+  return Array.isArray(list) ? [...new Set(list.filter((id) => typeof id === "string"))] : [];
 }
 
 function clean(raw) {
@@ -32,11 +38,13 @@ function clean(raw) {
     setRounds: rounds,
     bestSet: number(raw?.bestSet),
     sets: number(raw?.sets),
+    seen: ids(raw?.seen),
+    right: ids(raw?.right),
   };
 }
 
 export function loadStats() {
-  if (cache) return { ...cache, setRounds: [...cache.setRounds] };
+  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right] };
   let stats = clean(EMPTY);
   try {
     const saved = localStorage.getItem(KEY);
@@ -59,7 +67,7 @@ function save(stats) {
 }
 
 // 5問の結果を記録する。20問(4回分)がそろったら、その合計も記録する。
-export function recordRound({ correct, total, score }) {
+export function recordRound({ correct, total, score, answers = [] }) {
   const stats = loadStats();
   const isRecord = score > stats.best;
   stats.plays += 1;
@@ -67,6 +75,8 @@ export function recordRound({ correct, total, score }) {
   stats.correct += correct;
   stats.best = Math.max(stats.best, score);
   stats.setRounds.push(score);
+  stats.seen = ids([...stats.seen, ...answers.map((answer) => answer.id)]);
+  stats.right = ids([...stats.right, ...answers.filter((answer) => answer.correct).map((answer) => answer.id)]);
 
   const result = { isRecord, setCompleted: false, setScore: 0, isSetRecord: false };
   if (stats.setRounds.length >= ROUNDS_PER_SET) {

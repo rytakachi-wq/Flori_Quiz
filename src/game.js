@@ -42,6 +42,7 @@ function roundResult(round) {
     correct: round.correct,
     total: QUESTIONS_PER_ROUND,
     score: round.correct * POINTS_PER_CORRECT,
+    answers: [...(round.roundAnswers ?? [])], // 答えた問題と、正解したか(成績の「出会った問題」「正解した問題」に使う)
   };
 }
 
@@ -66,6 +67,7 @@ export class Session {
     this.lastLevel = null;
     this.roundStartCounter = this.counter;
     this.roundUsed = [];
+    this.roundAnswers = [];
   }
 
   // 途中でやめたとき。この回の問題とカウンターを、はじめる前の状態に戻す。
@@ -100,6 +102,7 @@ export class Session {
     const correct = judge(question, response);
     this.used.add(question.id);
     this.roundUsed.push(question.id);
+    this.roundAnswers.push({ id: question.id, correct });
     this.asked += 1;
     if (correct) this.correct += 1;
     this.counter = Math.max(0, this.counter + (correct ? 1 : -1));
