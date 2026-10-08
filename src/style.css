@@ -266,3 +266,8 @@ body {
 .dialog { -webkit-user-select: none; user-select: none; }
 .corner-flori img, .flori, .logo { -webkit-user-drag: none; }
 .corner-flori img { pointer-events: none; }
+
+/* 成績の総合得点 */
+.scores.total div { background: var(--green); }
+.scores.total dt { font-size: 18px; }
+.scores.total dd { color: var(--text); font-size: 28px; }

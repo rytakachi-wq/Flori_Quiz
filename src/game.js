@@ -7,7 +7,17 @@ export const MAX_LEVEL = 4; // ふつうの問題の段階。オニ問題は段�
 const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上がる
 
 export const MAX_SCORE = QUESTIONS_PER_ROUND * POINTS_PER_CORRECT;
-export const MAX_SET_SCORE = MAX_SCORE * ROUNDS_PER_SET;
+
+// 総合得点(100点満点)。ふつうの問題は、全部で95点を、問題の数で等しくわける。オニ問題は、1問1点(5問で5点)。
+// 一度でも正解した問題の分だけ、点が入る(何度正解しても、同じ問題は1回ぶん)。
+export const NORMAL_POINTS = 95;
+export const ONI_POINTS_EACH = 1;
+export const TOTAL_POINTS = 100;
+
+export function totalScore(normalRight, normalCount, oniRight) {
+  const normal = normalCount > 0 ? Math.round((normalRight * NORMAL_POINTS) / normalCount) : 0;
+  return normal + oniRight * ONI_POINTS_EACH;
+}
 
 export function levelFromCounter(counter) {
   return Math.min(MAX_LEVEL, 1 + Math.floor(counter / COUNTER_PER_LEVEL));
@@ -131,6 +141,7 @@ export class OniRound {
   startRound() {
     this.asked = 0;
     this.correct = 0;
+    this.roundAnswers = [];
   }
 
   abandonRound() {
@@ -143,6 +154,7 @@ export class OniRound {
 
   answer(question, response) {
     const correct = judge(question, response);
+    this.roundAnswers.push({ id: question.id, correct });
     this.asked += 1;
     if (correct) this.correct += 1;
     return correct;

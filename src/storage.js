@@ -12,10 +12,9 @@ const EMPTY = {
   answered: 0, // 答えた問題の数
   correct: 0, // 正解した問題の数
   setRounds: [], // いまの20問(4回分)で終わった回の得点
-  bestSet: 0, // 20問(4回分)の最高得点
-  sets: 0, // 20問(4回分)を終えた回数
   seen: [], // 出会ったことのある問題の番号
   right: [], // 正解したことのある問題の番号
+  oniRight: [], // 正解したことのあるオニ問題の番号(総合得点にだけ使う)
 };
 
 let cache = null;
@@ -36,15 +35,14 @@ function clean(raw) {
     answered: number(raw?.answered),
     correct: number(raw?.correct),
     setRounds: rounds,
-    bestSet: number(raw?.bestSet),
-    sets: number(raw?.sets),
     seen: ids(raw?.seen),
     right: ids(raw?.right),
+    oniRight: ids(raw?.oniRight),
   };
 }
 
 export function loadStats() {
-  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right] };
+  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight] };
   let stats = clean(EMPTY);
   try {
     const saved = localStorage.getItem(KEY);
@@ -66,7 +64,7 @@ function save(stats) {
   }
 }
 
-// 5問の結果を記録する。20問(4回分)がそろったら、その合計も記録する。
+// 5問の結果を記録する。4回分そろったら、setCompleted を true にして、数えなおす。
 export function recordRound({ correct, total, score, answers = [] }) {
   const stats = loadStats();
   const isRecord = score > stats.best;
@@ -78,15 +76,20 @@ export function recordRound({ correct, total, score, answers = [] }) {
   stats.seen = ids([...stats.seen, ...answers.map((answer) => answer.id)]);
   stats.right = ids([...stats.right, ...answers.filter((answer) => answer.correct).map((answer) => answer.id)]);
 
-  const result = { isRecord, setCompleted: false, setScore: 0, isSetRecord: false };
+  const result = { isRecord, setCompleted: false };
   if (stats.setRounds.length >= ROUNDS_PER_SET) {
     result.setCompleted = true;
-    result.setScore = stats.setRounds.reduce((sum, value) => sum + value, 0);
-    result.isSetRecord = result.setScore > stats.bestSet;
-    stats.bestSet = Math.max(stats.bestSet, result.setScore);
-    stats.sets += 1;
     stats.setRounds = [];
   }
   save(stats);
   return result;
+}
+
+// オニ問題の結果を記録する。成績の遊んだ回数や正解率には入れず、はじめて正解した問題の数だけを返す(総合得点に入る)。
+export function recordOni(answers = []) {
+  const stats = loadStats();
+  const before = stats.oniRight.length;
+  stats.oniRight = ids([...stats.oniRight, ...answers.filter((answer) => answer.correct).map((answer) => answer.id)]);
+  save(stats);
+  return stats.oniRight.length - before;
 }

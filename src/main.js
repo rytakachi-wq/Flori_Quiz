@@ -1,5 +1,5 @@
-import { Session, OniRound, MAX_LEVEL, MAX_SCORE, MAX_SET_SCORE, QUESTIONS_PER_ROUND, ROUNDS_PER_SET } from "./game.js";
-import { loadStats, recordRound } from "./storage.js";
+import { Session, OniRound, MAX_LEVEL, MAX_SCORE, QUESTIONS_PER_ROUND, ROUNDS_PER_SET, TOTAL_POINTS, totalScore } from "./game.js";
+import { loadStats, recordOni, recordRound } from "./storage.js";
 import { getVolume, playSe, setScene, setVolume, unlock } from "./audio.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
@@ -89,6 +89,7 @@ const renderers = {
 
 let oniQuestions = [];
 let normalIds = new Set(); // ふつうの問題の番号
+let oniIds = new Set(); // オニ問題の番号
 let session; // ふつうの遊び(難しさのカウンターを引き継ぐ)
 let play; // いま遊んでいるもの(session かオニ問題)
 let current = null; // 今出している問題
@@ -159,11 +160,12 @@ function showResult() {
 
   const setNote = $("r-set");
   if (isOni) {
-    // オニ問題は、成績には入れない。
+    // オニ問題は、成績の「遊んだ回数」や「正解率」には入れない。はじめて正解した問題が、総合得点に1問1点で入る。
+    const gained = recordOni(result.answers);
     $("r-title").textContent = "オニもんだい けっか!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
-    setNote.textContent = "オニもんだいは、せいせきには はいらないヨ。";
+    setNote.textContent = gained > 0 ? `はじめての せいかいで、総合得点が ${gained}点 ふえたヨ!` : "総合得点は、はじめて せいかいした ときだけ ふえるヨ。";
     $("btn-again").textContent = "もういちど ちょうせん";
   } else {
     const saved = recordRound(result);
@@ -174,7 +176,7 @@ function showResult() {
     $("r-record").hidden = !saved.isRecord;
     $("btn-again").textContent = "もういちど あそぶ";
     if (saved.setCompleted) {
-      setNote.textContent = `${ROUNDS_PER_SET}回ぶん(20問)で ${saved.setScore}点!${saved.isSetRecord ? " 20問の しんきろく!" : ""} つぎは また はじめから!`;
+      setNote.textContent = `${ROUNDS_PER_SET}回 あそんだヨ! むずかしさは、また はじめから!`;
       session.resetSet();
     } else {
       setNote.textContent = `${ROUNDS_PER_SET}回のうち ${stats.setRounds.length}回め が おわったヨ(つづけて あそぶと、むずかしさも つづくヨ)`;
@@ -200,19 +202,18 @@ function oniComment(correct) {
 
 function showRecords() {
   const s = loadStats();
-  $("s-best").textContent = `${s.best}点 / ${MAX_SCORE}点`;
-  $("s-plays").textContent = `${s.plays}回`;
   // 「出会った問題」「正解した問題」は、いまある問題のうち、何問か(問題が増えても、全体の数を合わせる)
   const seen = s.seen.filter((id) => normalIds.has(id)).length;
   const right = s.right.filter((id) => normalIds.has(id)).length;
+  const oniRight = s.oniRight.filter((id) => oniIds.has(id)).length;
+  // 総合得点は、いつでも100点満点で見せる(ふつうの問題だけでは95点まで)
+  $("s-total").textContent = `${totalScore(right, normalIds.size, oniRight)}点 / ${TOTAL_POINTS}点`;
+  $("s-best").textContent = `${s.best}点 / ${MAX_SCORE}点`;
+  $("s-plays").textContent = `${s.plays}回`;
   $("s-seen").textContent = `${seen} / ${normalIds.size}問`;
   $("s-right").textContent = `${right} / ${normalIds.size}問`;
   $("s-answered").textContent = `${s.answered}問(正解 ${s.correct}問)`;
   $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : "まだ ないよ";
-  const now = s.setRounds.reduce((sum, value) => sum + value, 0);
-  $("s-set-now").textContent = `${s.setRounds.length} / ${ROUNDS_PER_SET}回(${now}点)`;
-  $("s-set-best").textContent = s.sets ? `${s.bestSet}点 / ${MAX_SET_SCORE}点` : "まだ ないよ";
-  $("s-set-count").textContent = `${s.sets}回`;
   show("records");
 }
 
@@ -310,6 +311,7 @@ async function init() {
     if (!response.ok) throw new Error(response.status);
     const { questions } = await response.json();
     oniQuestions = questions.filter((q) => q.level > MAX_LEVEL);
+    oniIds = new Set(oniQuestions.map((q) => q.id));
     const normal = questions.filter((q) => q.level <= MAX_LEVEL);
     normalIds = new Set(normal.map((q) => q.id));
     session = new Session(normal);
