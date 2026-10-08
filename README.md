@@ -24,3 +24,9 @@ python -m http.server 8000
 ```
 
 ブラウザで `http://localhost:8000/src/` を開く。
+
+## 公開
+
+GitHub Pages で公開している: https://rytakachi-wq.github.io/Flori_Quiz/
+
+`main` ブランチに push すると、1〜2分で反映される。
