@@ -257,3 +257,12 @@ body {
 .answer-input.is-right { border-color: var(--right); background: #e5f5ea; }
 .answer-input.is-wrong { border-color: var(--wrong); background: #fbe9e7; }
 .answer-input:disabled { color: var(--text); }
+
+/* すみのフロリを何回もおしたときに、画像や文字が青く選ばれてしまわないようにする */
+#screen-cover,
+.flori,
+.logo,
+.corner-flori,
+.dialog { -webkit-user-select: none; user-select: none; }
+.corner-flori img, .flori, .logo { -webkit-user-drag: none; }
+.corner-flori img { pointer-events: none; }

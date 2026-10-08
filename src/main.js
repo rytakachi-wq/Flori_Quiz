@@ -276,6 +276,7 @@ $("corner-flori").addEventListener("click", (event) => {
   coverTaps += 1;
   if (coverTaps >= ONI_TAPS) {
     coverTaps = 0;
+    window.getSelection()?.removeAllRanges(); // 連打で選ばれた部分を、ぜんぶ外す
     $("dlg-oni").showModal();
   }
 });
