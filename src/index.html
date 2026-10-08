@@ -48,7 +48,20 @@
     <section id="screen-settings" class="screen" aria-label="せってい" hidden>
       <h2 class="title">せってい</h2>
       <img class="flori flori-small" src="../assets/flori/src/pc_form.png" alt="パソコンに変形したフロリ">
-      <p class="bubble">いまは なにも ないよ。<br>そのうち ふえるかも!</p>
+      <p class="bubble">おとの おおきさを かえられるヨ!</p>
+      <div class="volumes">
+        <div class="volume">
+          <label for="vol-bgm">BGM</label>
+          <input id="vol-bgm" type="range" min="0" max="100" step="5">
+          <output id="vol-bgm-out" for="vol-bgm"></output>
+        </div>
+        <div class="volume">
+          <label for="vol-se">こうかおん</label>
+          <input id="vol-se" type="range" min="0" max="100" step="5">
+          <output id="vol-se-out" for="vol-se"></output>
+        </div>
+      </div>
+      <p class="note">0にすると、おとが でなくなるよ。</p>
       <button id="btn-settings-back" class="btn btn-sub" type="button">もどる</button>
     </section>
 

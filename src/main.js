@@ -1,5 +1,6 @@
 import { Session, OniRound, MAX_LEVEL, MAX_SCORE, MAX_SET_SCORE, QUESTIONS_PER_ROUND, ROUNDS_PER_SET } from "./game.js";
 import { loadStats, recordRound } from "./storage.js";
+import { getVolume, playSe, setScene, setVolume, unlock } from "./audio.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
 const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数おすと、オニ問題が出る
@@ -14,10 +15,19 @@ const $ = (id) => document.getElementById(id);
 const SCREENS = ["cover", "records", "settings", "question", "result", "error"];
 
 let coverTaps = 0;
+let isOni = false;
+
+// 画面ごとのBGMの場面(audio.js の BGM と対応)
+function sceneOf(name) {
+  if (name === "question") return isOni ? "oni" : "question";
+  if (name === "result") return "result";
+  return name === "error" ? null : "cover";
+}
 
 function show(name) {
   for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
   if (name !== "cover") coverTaps = 0;
+  setScene(sceneOf(name));
   window.scrollTo(0, 0);
 }
 
@@ -33,6 +43,7 @@ const renderers = {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "choice";
+        button.dataset.noSe = "1"; // 回答の音(正解・不正解)をなかせる
         button.innerHTML = `<span class="choice-no">${index + 1}</span><span class="choice-text"></span>`;
         button.querySelector(".choice-text").textContent = text;
         button.addEventListener("click", () => onAnswer(index));
@@ -55,7 +66,7 @@ const renderers = {
       list.replaceChildren();
       const form = document.createElement("form");
       form.className = "answer-form";
-      form.innerHTML = `<input id="q-input" class="answer-input" type="text" autocomplete="off" placeholder="ここに かいてね" aria-label="こたえ"><button class="btn btn-main" type="submit">こたえる</button>`;
+      form.innerHTML = `<input id="q-input" class="answer-input" type="text" autocomplete="off" placeholder="ここに かいてね" aria-label="こたえ"><button class="btn btn-main" type="submit" data-no-se="1">こたえる</button>`;
       form.addEventListener("submit", (event) => {
         event.preventDefault();
         const value = form.querySelector("input").value.trim();
@@ -79,7 +90,6 @@ const renderers = {
 let oniQuestions = [];
 let session; // ふつうの遊び(難しさのカウンターを引き継ぐ)
 let play; // いま遊んでいるもの(session かオニ問題)
-let isOni = false;
 let current = null; // 今出している問題
 let answered = false;
 
@@ -126,6 +136,7 @@ function answer(response) {
   answered = true;
   const correct = play.answer(current, response);
   renderers[current.type].mark(current, response, correct);
+  playSe(correct ? "correct" : "wrong");
 
   setFlori(correct ? IMG.correct : IMG.wrong, correct ? "わらうフロリ" : "目をつぶるフロリ");
   $("q-message").hidden = true;
@@ -211,6 +222,27 @@ document.addEventListener("keydown", (event) => {
   const index = Number(event.key) - 1;
   if (Number.isInteger(index) && index >= 0 && index < current.choices.length) answer(index);
 });
+
+// 音:画面をはじめてさわったら音を出せるようにして、ボタンをおすと効果音をならす。
+for (const type of ["pointerdown", "keydown"]) document.addEventListener(type, unlock, { once: true, capture: true });
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (button && !button.dataset.noSe) playSe("button");
+});
+
+// せってい:BGMと効果音の大きさ(0〜100)
+for (const [kind, id] of [["bgm", "vol-bgm"], ["se", "vol-se"]]) {
+  const slider = $(id);
+  const label = $(`${id}-out`);
+  slider.value = Math.round(getVolume(kind) * 100);
+  label.textContent = slider.value;
+  slider.addEventListener("input", () => {
+    label.textContent = slider.value;
+    setVolume(kind, Number(slider.value) / 100);
+  });
+  // 効果音は、つまみをはなしたときに、ためしにならす
+  if (kind === "se") slider.addEventListener("change", () => playSe("correct"));
+}
 
 $("btn-start").addEventListener("click", () => startPlay(false));
 $("btn-records").addEventListener("click", showRecords);

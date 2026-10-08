@@ -10,7 +10,8 @@
 |---|---|
 | `scheme.md` | 開発方針（最優先の仕様書） |
 | `CLAUDE.md` | AI向けの作業ルール |
-| `src/` | アプリ本体（`index.html`、`main.js`、`game.js`、`storage.js`、`style.css`） |
+| `src/` | アプリ本体（`index.html`、`main.js`、`game.js`、`storage.js`、`audio.js`、`style.css`） |
+| `assets/audio/` | BGMと効果音(利用者が提供) |
 | `assets/flori/` | フロリの画像（利用者が提供） |
 | `data/questions/` | 問題と解説（全40問(ふつう35問+オニ5問)） |
 | `docs/` | 決定事項の記録など |
