@@ -198,11 +198,27 @@ body {
 .dialog .flori { margin: 0 auto 8px; display: block; }
 
 /* 表紙のメニュー */
-.menu { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+/* 表紙のボタン:2列にそろえる。「始める」と「リラックス」は、よこいっぱい */
+.menu {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: min(420px, 100%);
+}
+.menu .btn {
+  padding: 10px 8px;
+  min-height: 52px;
+  font-size: 18px;
+  line-height: 1.25;
+  text-align: center;
+}
+.menu #btn-start { grid-column: 1 / -1; min-height: 64px; font-size: 26px; }
+.menu #btn-relax { grid-column: 1 / -1; }
+.menu .btn:disabled { opacity: 0.55; cursor: default; }
 .subtitle { margin: 6px 0 0; font-size: 18px; color: var(--blue-dark); }
 
 /* 表紙のすみのフロリ(何回かおすと、オニ問題が出る) */
-#screen-cover { position: relative; }
+#screen-cover { position: relative; padding-bottom: 76px; } /* すみのフロリが、文字にかさならないように */
 .corner-flori {
   position: absolute;
   right: 10px;

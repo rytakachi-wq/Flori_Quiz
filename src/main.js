@@ -157,10 +157,10 @@ function refreshCover() {
   const stats = loadStats();
   const today = dateKey();
   const dailyDone = stats.dailyLast === today;
-  $("btn-daily").textContent = dailyDone ? "毎日1問(今日はクリア!)" : "毎日1問";
+  $("btn-daily").textContent = dailyDone ? "毎日1問(済)" : "毎日1問";
   $("btn-daily").disabled = dailyDone;
   const left = stats.wrong.filter((id) => playableIds().has(id)).length;
-  $("btn-review").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(まだないヨ)";
+  $("btn-review").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(なし)";
   $("btn-review").disabled = left === 0;
 }
 
