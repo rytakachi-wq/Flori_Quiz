@@ -10,7 +10,7 @@
 |---|---|
 | `scheme.md` | 開発方針（最優先の仕様書） |
 | `CLAUDE.md` | AI向けの作業ルール |
-| `src/` | アプリ本体（`index.html`、`main.js`、`game.js`、`storage.js`、`audio.js`、`music.js`、`furigana.js`、`furigana-data.js`、`garden.js`、`style.css`） |
+| `src/` | アプリ本体（`index.html`、`main.js`、`game.js`、`storage.js`、`audio.js`、`music.js`、`furigana.js`、`furigana-data.js`、`garden.js`、`badges.js`、`style.css`） |
 | `assets/audio/` | 効果音(利用者が提供)。BGMは、`src/music.js` で演奏するオリジナルの曲 |
 | `assets/flori/` | フロリの画像（利用者が提供） |
 | `data/questions/` | 問題と解説（全40問(ふつう35問+オニ5問)） |
@@ -31,3 +31,4 @@ python -m http.server 8000
 GitHub Pages で公開している: https://rytakachi-wq.github.io/Flori_Quiz/
 
 `main` ブランチに push すると、1〜2分で反映される。
+

@@ -28,8 +28,10 @@
       <h1 class="title">Flori_Quiz</h1>
       <div class="hero">
         <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
+        <span id="hero-hat" class="hero-hat" aria-hidden="true"></span>
       </div>
       <p class="bubble">ヤア! ボクはフロリだヨ!<br>ひらめきクイズで遊ぼう!</p>
+      <p id="cover-title" class="cover-title"></p>
       <h2 class="mode-title">モードえらび</h2>
       <div class="menu">
         <button id="btn-start" class="tile t-start" type="button"><span class="tile-icon" aria-hidden="true">💡</span><span class="tile-label">始める</span></button>
@@ -37,8 +39,12 @@
         <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-label">おさらい</span></button>
         <button id="btn-hard" class="tile t-hard" type="button"><span class="tile-icon" aria-hidden="true">🔥</span><span class="tile-label">難しいモード</span></button>
         <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-label">みんなで対戦</span></button>
+        <button id="btn-timed" class="tile t-timed" type="button"><span class="tile-icon" aria-hidden="true">⏱️</span><span class="tile-label">制限時間</span></button>
         <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-label">リラックス</span></button>
-        <button id="btn-records" class="tile t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-label">成績</span></button>
+        <button id="btn-dex" class="tile t-small t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-label">図鑑</span></button>
+        <button id="btn-badges" class="tile t-small t-badges" type="button"><span class="tile-icon" aria-hidden="true">🏅</span><span class="tile-label">バッジ</span></button>
+        <button id="btn-dress" class="tile t-small t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-label">きせかえ</span></button>
+        <button id="btn-records" class="tile t-small t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-label">成績</span></button>
       </div>
       <p class="note">1回は5問。全部正解で25点!</p>
       <p id="sound-hint" class="note">♪ 画面をクリックすると、音楽が流れるよ。</p>
@@ -46,6 +52,39 @@
         <img src="../assets/flori/src/face_smile.png" alt="">
       </button>
     </section>
+    <!-- 問題図鑑 -->
+    <section id="screen-dex" class="screen" aria-label="問題図鑑" hidden>
+      <h2 class="title">問題図鑑</h2>
+      <p id="dex-count" class="bubble"></p>
+      <p class="note">出会った問題は、タップすると、答えと解説が読めるヨ。</p>
+      <ul id="dex-list" class="dex-list"></ul>
+      <button id="btn-dex-back" class="btn btn-sub" type="button">戻る</button>
+    </section>
+
+    <!-- バッジ・称号 -->
+    <section id="screen-badges" class="screen" aria-label="バッジと称号" hidden>
+      <h2 class="title">バッジ・称号</h2>
+      <p id="badge-title" class="bubble"></p>
+      <p id="badge-count" class="note"></p>
+      <ul id="badge-list" class="badge-list"></ul>
+      <button id="btn-badges-back" class="btn btn-sub" type="button">戻る</button>
+    </section>
+
+    <!-- きせかえ -->
+    <section id="screen-dress" class="screen" aria-label="きせかえ" hidden>
+      <h2 class="title">きせかえ</h2>
+      <div class="hero hero-small">
+        <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
+        <span id="dress-hat" class="hero-hat" aria-hidden="true"></span>
+      </div>
+      <p class="note">バッジを集めると、使えるものが増えるヨ。</p>
+      <h3 class="dress-title">かざり</h3>
+      <div id="hat-list" class="dress-list"></div>
+      <h3 class="dress-title">背景</h3>
+      <div id="theme-list" class="dress-list"></div>
+      <button id="btn-dress-back" class="btn btn-sub" type="button">戻る</button>
+    </section>
+
     <!-- みんなで対戦 -->
     <section id="screen-versus" class="screen" aria-label="みんなで対戦" hidden>
       <h2 class="title">みんなで対戦</h2>
@@ -92,6 +131,8 @@
         <div><dt>総合得点</dt><dd id="s-total"></dd></div>
       </dl>
       <dl class="scores">
+        <div><dt>称号</dt><dd id="s-title"></dd></div>
+        <div><dt>バッジ</dt><dd id="s-badges"></dd></div>
         <div><dt>遊んだ回数</dt><dd id="s-plays"></dd></div>
         <div><dt>みんなで対戦した回数</dt><dd id="s-versus"></dd></div>
         <div><dt>毎日1問</dt><dd id="s-daily"></dd></div>
@@ -129,6 +170,10 @@
         <label><input type="radio" name="furigana-screen" value="chu"> 中学以降に習う漢字だけ</label>
         <label><input type="radio" name="furigana-screen" value="none"> ふりがななし</label>
       </fieldset>
+      <fieldset class="furigana" aria-label="読み上げ">
+        <legend>読み上げ</legend>
+        <label><input type="checkbox" id="set-read"> 問題を、自動で読み上げる</label>
+      </fieldset>
       <button id="btn-settings-reset" class="btn btn-sub" type="button">初期設定に戻す</button>
       <p id="settings-message" class="note" role="status"></p>
       <button id="btn-settings-back" class="btn btn-sub" type="button">戻る</button>
@@ -148,7 +193,9 @@
         <img id="q-flori" class="flori flori-small" src="" alt="">
         <p id="q-message" class="bubble" hidden></p>
       </div>
+      <div id="q-timer" class="timer" hidden><div class="timer-track"><span id="q-timer-bar" class="timer-bar"></span></div><span id="q-timer-text" class="timer-text"></span></div>
       <p id="q-text" class="question"></p>
+      <button id="btn-read" class="btn btn-sub btn-read" type="button" data-no-se="1"><span aria-hidden="true">🔊</span> 読み上げ</button>
       <div id="q-hint-area" class="hint-area" hidden>
         <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る(−2点)</button>
         <p id="q-hint" class="hint" hidden></p>
@@ -174,6 +221,7 @@
       <ol id="r-board" class="board big" hidden></ol>
       <p id="r-record" class="record" hidden>新記録!</p>
       <p id="r-set" class="note" hidden></p>
+      <p id="r-badge" class="badge-news" hidden></p>
       <div class="buttons">
         <button id="btn-again" class="btn btn-main" type="button">続けて遊ぶ</button>
         <button id="btn-cover" class="btn btn-sub" type="button">表紙へ</button>

@@ -7,6 +7,7 @@ import {
   OniRound,
   POINTS_PER_CORRECT,
   PracticeRound,
+  TIMED_SECONDS,
   QUESTIONS_PER_ROUND,
   ROUNDS_PER_SET,
   Session,
@@ -17,10 +18,23 @@ import {
   VersusRound,
   dailyQuestion,
   dateKey,
+  pickRandom,
   previousDateKey,
   totalScore,
 } from "./game.js";
-import { loadStats, pruneStats, recordDaily, recordOni, recordReview, recordRound, recordVersus } from "./storage.js";
+import {
+  loadStats,
+  pruneStats,
+  recordBadges,
+  recordDaily,
+  recordDex,
+  recordGarden,
+  recordOni,
+  recordReview,
+  recordRound,
+  recordVersus,
+} from "./storage.js";
+import { BADGES, HATS, THEMES, badgeName, earnedBadges, loadDress, saveDress, titleFor } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
@@ -35,16 +49,16 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "versus", "relax", "records", "settings", "question", "result", "error"];
+const SCREENS = ["cover", "versus", "relax", "records", "settings", "dex", "badges", "dress", "question", "result", "error"];
 
 let coverTaps = 0;
-let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"review"(おさらい)、"daily"(毎日1問)
+let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"review"(おさらい)、"daily"(毎日1問)、"timed"(制限時間)
 let hinted = false; // いまの問題で、ヒントを見たか
 let versusPlayers = 2; // みんなで対戦する人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
-  if (name === "question") return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
+  if (name === "question") return { oni: "oni", hard: "hard", versus: "versus", timed: "timed" }[mode] ?? "question";
   if (name === "relax") return "relax";
   if (name === "result") return "result";
   return name === "error" ? null : "cover";
@@ -54,6 +68,10 @@ function show(name) {
   for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
   if (name !== "cover") coverTaps = 0;
   if (name === "cover") refreshCover();
+  if (name !== "question") {
+    stopTimer();
+    stopSpeaking();
+  }
   setScene(sceneOf(name));
   window.scrollTo(0, 0);
 }
@@ -117,6 +135,7 @@ const renderers = {
 let normalQuestions = [];
 let hardQuestions = [];
 let oniQuestions = [];
+let allQuestions = []; // 全部の問題(オニもふくむ。図鑑とバッジで使う)
 let playableQuestions = []; // ふつう+難しい問題(おさらい・毎日1問で使う)
 const hardUsed = new Set(); // 難しいモードで、もう出した問題(回をまたいで使う)
 let normalIds = new Set(); // ふつうの問題の uid(成績の記録に使う。番号がつけなおされても、変わらない)
@@ -154,9 +173,11 @@ function announce(text, jingle, then, image) {
 function refreshCover() {
   if (playableQuestions.length === 0) return;
   const stats = loadStats();
+  $("cover-title").textContent = `称号:${titleFor(currentTotal(stats))}`;
   const today = dateKey();
   const dailyDone = stats.dailyLast === today;
-  $("btn-daily").querySelector(".tile-label").textContent = dailyDone ? "毎日1問(おわり)" : "毎日1問";
+  $("btn-daily").querySelector(".tile-label").textContent = "毎日1問";
+  $("btn-daily").querySelector(".tile-icon").textContent = dailyDone ? "✅" : "📅"; // 今日の分をやったら、チェック
   $("btn-daily").disabled = dailyDone;
   const left = stats.wrong.filter((id) => playableIds().has(id)).length;
   $("btn-review").querySelector(".tile-label").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(なし)";
@@ -177,6 +198,8 @@ function startPlay(nextMode) {
     const pool = playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
     if (pool.length === 0) return show("cover");
     play = new PracticeRound(pool); // まちがえた問題を、ぜんぶ(正解すると、おさらいから消える)
+  } else if (mode === "timed") {
+    play = new PracticeRound(pickRandom(normalQuestions, QUESTIONS_PER_ROUND)); // ふつうの問題から5問
   } else if (mode === "daily") {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
   } else play = session;
@@ -197,6 +220,7 @@ function showQuestion() {
     versus: "",
     review: "おさらい ",
     daily: "毎日1問 ",
+    timed: "制限時間 ",
   }[mode];
   $("q-progress").textContent = versus
     ? `第${play.round}回戦 / ${VERSUS_ROUNDS}回戦`
@@ -208,8 +232,10 @@ function showQuestion() {
       : mode === "hard"
         ? "難しさ ★★★★"
         : versus
-          ? `${versusPlayers}人で対戦`
-          : `難しさ ${"★".repeat(question.level)}${"☆".repeat(Math.max(0, MAX_LEVEL - question.level))}`;
+          ? `${play.round}回戦 ${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} ${VERSUS_LEVEL_WORDS[play.round]}・正解で${play.round}点(${versusPlayers}人)`
+          : mode === "timed"
+            ? `1問${TIMED_SECONDS}秒`
+            : `難しさ ${"★".repeat(question.level)}${"☆".repeat(Math.max(0, MAX_LEVEL - question.level))}`;
   $("q-text").textContent = question.text;
   $("q-feedback").hidden = true;
 
@@ -231,10 +257,85 @@ function showQuestion() {
   hinted = false;
   $("q-hint").hidden = true;
   $("btn-hint").disabled = false;
-  $("q-hint-area").hidden = !(question.hint && mode !== "oni" && mode !== "versus");
+  $("q-hint-area").hidden = !(question.hint && mode !== "oni" && mode !== "versus" && mode !== "timed");
 
   renderers[question.type].render(question, answer);
   show("question");
+  if (mode === "timed") startTimer();
+  else $("q-timer").hidden = true;
+  if (readAloud()) setTimeout(() => speak(readableQuestion(question)), 400); // 自動の読み上げ
+}
+
+// 対戦の難しさ(回戦ごと):画面にも出す
+const VERSUS_LEVEL_WORDS = { 1: "やさしい", 2: "ふつう", 3: "むずかしめ" };
+
+// ---- 制限時間モード ----
+let timerId = 0;
+let timerLeft = 0;
+
+function stopTimer() {
+  clearInterval(timerId);
+  timerId = 0;
+}
+
+function renderTimer() {
+  const bar = $("q-timer-bar");
+  bar.style.width = `${Math.max(0, (timerLeft / TIMED_SECONDS) * 100)}%`;
+  bar.classList.toggle("is-low", timerLeft <= 5);
+  $("q-timer-text").textContent = `${Math.ceil(Math.max(0, timerLeft))}秒`;
+}
+
+function startTimer() {
+  stopTimer();
+  timerLeft = TIMED_SECONDS;
+  $("q-timer").hidden = false;
+  renderTimer();
+  timerId = setInterval(() => {
+    if ($("dlg-quit").open || $("dlg-volume").open) return; // 設定やめるの確認を開いている間は、とめる
+    timerLeft -= 0.1;
+    renderTimer();
+    if (timerLeft <= 0) {
+      stopTimer();
+      if (!answered) {
+        timedOut = true;
+        answer(current.type === "choice" ? -1 : ""); // 時間切れ=まちがい
+      }
+    }
+  }, 100);
+}
+let timedOut = false;
+
+// ---- 読み上げ(ブラウザの機能。ひらがなの読みは、機械まかせ)----
+const READ_KEY = "floriQuiz.readAloud";
+function readAloud() {
+  try {
+    return localStorage.getItem(READ_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function setReadAloud(on) {
+  try {
+    localStorage.setItem(READ_KEY, on ? "1" : "0");
+  } catch {
+    // 保存できなくても、そのページを開いている間は、かわったまま。
+  }
+}
+const canSpeak = "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
+function stopSpeaking() {
+  if (canSpeak) speechSynthesis.cancel();
+}
+function speak(text) {
+  if (!canSpeak) return;
+  speechSynthesis.cancel();
+  const voice = new SpeechSynthesisUtterance(text.replace(/□/g, "なにか").replace(/\n/g, "。"));
+  voice.lang = "ja-JP";
+  voice.rate = 0.95;
+  speechSynthesis.speak(voice);
+}
+function readableQuestion(question) {
+  const choices = question.type === "choice" ? question.choices.map((text, i) => `${i + 1}番、${text}`).join("。") : "";
+  return `${question.text}。${choices}`;
 }
 
 // 対戦のとき:だれの番かを、プレイヤーの色で知らせる案内板と、みんなの点数の表
@@ -268,6 +369,9 @@ function answer(response) {
   answered = true;
   const answeringPlayer = mode === "versus" ? play.player : 0;
   const answeringRound = mode === "versus" ? play.round : 0;
+  stopTimer();
+  const wasTimedOut = timedOut;
+  timedOut = false;
   const correct = play.answer(current, response, hinted);
   $("btn-hint").disabled = true;
   if (mode === "versus") renderBoard($("q-board"), play.scores, answeringPlayer);
@@ -284,7 +388,9 @@ function answer(response) {
         ? hinted
           ? `正解!(ヒントを使ったので${POINTS_PER_CORRECT - HINT_COST}点)`
           : "正解!"
-        : "残念…";
+        : wasTimedOut
+          ? "時間切れ…"
+          : "残念…";
   verdict.className = `verdict ${correct ? "is-right" : "is-wrong"}`;
   const rightText = renderers[current.type].correctText(current);
   $("q-explanation").textContent = `正解は「${rightText}」\n${current.explanation}`;
@@ -312,6 +418,7 @@ function showResult() {
   const result = play.finishRound();
   const versus = mode === "versus";
   $("btn-again").hidden = false;
+  recordDex(result.answers); // 図鑑(どのモードでも)
   $("r-correct-row").hidden = versus;
   $("r-board").hidden = true;
   if (!versus) {
@@ -339,6 +446,15 @@ function showResult() {
     result.winners.forEach((index) => $("r-board").children[index].classList.add("is-winner"));
     setNote.textContent = "";
     $("btn-again").textContent = "もう一度対戦";
+  } else if (mode === "timed") {
+    // 制限時間モード:遊んだ回数・答えた問題・正解率・総合得点に入る。最高得点は、別に数える(難しさの回数には入れない)。
+    const saved = recordRound({ ...result, mode: "timed" });
+    $("r-title").textContent = "制限時間モードの結果!";
+    $("r-best-row").hidden = false;
+    $("r-best").textContent = `${loadStats().bestTimed}点`;
+    $("r-record").hidden = !saved.isRecord;
+    setNote.textContent = gainText();
+    $("btn-again").textContent = "続けて遊ぶ";
   } else if (mode === "review") {
     // おさらい:まちがえた問題の一覧だけが変わる。成績の回数や、総合得点には入れない。
     const left = recordReview(result.answers);
@@ -389,6 +505,7 @@ function showResult() {
     }
   }
   setNote.hidden = false;
+  announceBadges($("r-badge"));
   show("result");
 }
 
@@ -422,6 +539,8 @@ function showRecords() {
   // 総合得点は、いつでも100点満点で見せる(ふつうと難しい問題だけでは95点まで)
   $("s-total").textContent = `${currentTotal(s)}点 / ${TOTAL_POINTS}点`;
   $("s-plays").textContent = `${s.plays}回`;
+  $("s-title").textContent = titleFor(currentTotal(s));
+  $("s-badges").textContent = `${s.badges.length} / ${BADGES.length}個`;
   $("s-versus").textContent = `${s.versusPlays}回`;
   // 毎日1問:きのうか今日やっていれば、続けた日数。それより前なら、0日(とぎれた)
   const today = dateKey();
@@ -496,6 +615,8 @@ for (const radio of document.querySelectorAll('input[type="radio"][name^="furiga
 // 初期設定に戻す(音の大きさと、ふりがな。成績は、そのまま)
 $("btn-settings-reset").addEventListener("click", () => {
   resetVolumes();
+  setReadAloud(false);
+  $("set-read").checked = false;
   setFuriganaMode("all");
   showVolumes();
   showFurigana();
@@ -546,6 +667,9 @@ function startGarden(size = gardenSize) {
     onSolved: (moves) => {
       $("garden-message").textContent = `全部、桜の木になったヨ!${moves}回で完成。すごいネ!`;
       playSe("correct");
+      recordGarden();
+      const fresh = awardBadges();
+      if (fresh.length) $("garden-message").textContent += `  新しいバッジ:${fresh.map(badgeName).join("、")}`;
     },
   });
   show("relax");
@@ -614,6 +738,7 @@ async function init() {
     hardIds = new Set(hardQuestions.map((q) => q.uid ?? q.id));
     oniIds = new Set(oniQuestions.map((q) => q.uid ?? q.id));
     playableQuestions = [...normal, ...hardQuestions];
+    allQuestions = questions;
     pruneStats(new Set([...normalIds, ...hardIds, ...oniIds])); // 古い番号の記録を、取りのぞく
     session = new Session(normal);
     show("cover");
@@ -642,4 +767,157 @@ function closeOpening() {
 $("opening").addEventListener("click", closeOpening);
 $("opening").addEventListener("keydown", (event) => {
   if (event.key === "Enter" || event.key === " ") closeOpening();
+});
+
+// ================= バッジ・称号 =================
+function badgeContext(stats = loadStats()) {
+  return { stats, total: currentTotal(stats), playable: playableQuestions.length, all: allQuestions.length, oni: oniQuestions.length };
+}
+
+// もらえるバッジを数えなおして、はじめてのものを、おぼえる。新しいバッジの id を返す。
+function awardBadges() {
+  const stats = loadStats();
+  const earned = earnedBadges(badgeContext(stats));
+  const fresh = earned.filter((id) => !stats.badges.includes(id));
+  if (fresh.length) recordBadges([...stats.badges, ...fresh]);
+  return fresh;
+}
+
+function announceBadges(element) {
+  const fresh = awardBadges();
+  element.hidden = fresh.length === 0;
+  if (fresh.length) {
+    const icons = fresh.map((id) => `${BADGES.find((badge) => badge.id === id).icon}${badgeName(id)}`);
+    element.textContent = `新しいバッジ!  ${icons.join("  ")}`;
+  }
+}
+
+function showBadges() {
+  awardBadges(); // これまでの記録で、もらえるものを、先にそろえる
+  const stats = loadStats();
+  const have = new Set(stats.badges);
+  $("badge-title").textContent = `いまの称号:${titleFor(currentTotal(stats))}`;
+  $("badge-count").textContent = `バッジ ${have.size} / ${BADGES.length}個`;
+  $("badge-list").replaceChildren(
+    ...BADGES.map((badge) => {
+      const item = document.createElement("li");
+      item.className = have.has(badge.id) ? "" : "locked";
+      const icon = document.createElement("span");
+      icon.className = "badge-icon";
+      icon.textContent = have.has(badge.id) ? badge.icon : "🔒";
+      const name = document.createElement("span");
+      name.className = "badge-name";
+      name.textContent = have.has(badge.id) ? badge.name : "???";
+      const text = document.createElement("span");
+      text.className = "badge-text";
+      text.textContent = badge.text;
+      item.append(icon, name, text);
+      return item;
+    }),
+  );
+  show("badges");
+}
+
+// ================= 問題図鑑 =================
+function showDex() {
+  const stats = loadStats();
+  const met = new Set([...stats.dex, ...stats.seen, ...stats.right, ...stats.oniRight]);
+  const rightSet = new Set([...stats.right, ...stats.oniRight]);
+  const sorted = [...allQuestions].sort((a, b) => a.id.localeCompare(b.id));
+  const playableList = sorted.filter((q) => q.level <= HARD_LEVEL);
+  const oniList = sorted.filter((q) => q.level > HARD_LEVEL);
+  const entry = (question, label) => {
+    const uid = question.uid ?? question.id;
+    const item = document.createElement("li");
+    if (!met.has(uid)) {
+      item.className = "locked";
+      item.textContent = `${label}  ???(まだ出会っていないヨ)`;
+      return item;
+    }
+    const details = document.createElement("details");
+    const summary = document.createElement("summary");
+    summary.textContent = `${label}  ${question.category}`;
+    const mark = document.createElement("span");
+    mark.className = "dex-mark";
+    mark.textContent = rightSet.has(uid) ? "✔ 正解したことがある" : "";
+    summary.append(mark);
+    const q = document.createElement("p");
+    q.className = "dex-q";
+    q.textContent = question.text;
+    const a = document.createElement("p");
+    a.className = "dex-a";
+    a.textContent = `答え:${renderers[question.type].correctText(question)}`;
+    const e = document.createElement("p");
+    e.className = "dex-e";
+    e.textContent = question.explanation;
+    details.append(summary, q, a, e);
+    item.append(details);
+    return item;
+  };
+  const items = playableList.map((q, i) => entry(q, `No.${i + 1}`));
+  // オニ問題は、出会ったものだけを、のせる(あることは、先にばらさない)
+  oniList.forEach((q, i) => {
+    if (met.has(q.uid ?? q.id)) items.push(entry(q, `オニ${i + 1}`));
+  });
+  const metPlayable = playableList.filter((q) => met.has(q.uid ?? q.id)).length;
+  $("dex-count").textContent = `出会った問題 ${metPlayable} / ${playableList.length}問`;
+  $("dex-list").replaceChildren(...items);
+  show("dex");
+}
+
+// ================= きせかえ・背景 =================
+let dress = loadDress();
+
+function applyDress() {
+  document.documentElement.dataset.theme = dress.theme;
+  const icon = HATS.find((hat) => hat.id === dress.hat)?.icon ?? "";
+  $("hero-hat").textContent = icon;
+  $("dress-hat").textContent = icon;
+}
+
+function showDress() {
+  awardBadges();
+  const have = new Set(loadStats().badges);
+  const make = (list, kind) =>
+    list.map((choice) => {
+      const open = !choice.unlock || have.has(choice.unlock);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}`;
+      button.disabled = !open;
+      button.textContent = `${choice.icon ?? ""} ${choice.name}`.trim();
+      if (!open) {
+        const note = document.createElement("small");
+        note.textContent = `🔒 バッジ「${badgeName(choice.unlock)}」`;
+        button.append(note);
+      }
+      button.addEventListener("click", () => {
+        dress = { ...dress, [kind]: choice.id };
+        saveDress(dress);
+        applyDress();
+        showDress();
+      });
+      return button;
+    });
+  $("hat-list").replaceChildren(...make(HATS, "hat"));
+  $("theme-list").replaceChildren(...make(THEMES, "theme"));
+  show("dress");
+}
+applyDress();
+
+$("btn-dex").addEventListener("click", showDex);
+$("btn-dex-back").addEventListener("click", () => show("cover"));
+$("btn-badges").addEventListener("click", showBadges);
+$("btn-badges-back").addEventListener("click", () => show("cover"));
+$("btn-dress").addEventListener("click", showDress);
+$("btn-dress-back").addEventListener("click", () => show("cover"));
+$("btn-timed").addEventListener("click", () => startPlay("timed"));
+
+// 読み上げ
+$("set-read").checked = readAloud();
+$("set-read").addEventListener("change", () => setReadAloud($("set-read").checked));
+$("btn-read").hidden = !canSpeak;
+$("btn-read").addEventListener("click", () => {
+  if (answered) speak(`${$("q-verdict").textContent}。正解は、${renderers[current.type].correctText(current)}。${current.explanation}`);
+  else speak(readableQuestion(current));
 });

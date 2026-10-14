@@ -9,6 +9,7 @@ export const ONI_LEVEL = 5; // オニ問題の段階
 const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上がる
 
 export const MAX_SCORE = QUESTIONS_PER_ROUND * POINTS_PER_CORRECT;
+export const TIMED_SECONDS = 20; // 制限時間モード:1問の制限時間(秒)
 export const HINT_COST = 2; // ヒントを見ると、その問題の点が2点へる(正解したとき、5点→3点)
 
 // みんなで対戦。2〜4人が、1台の画面で、順番に答えて点数を競う。3回戦(段階1・2・3)で、1回戦は1点、2回戦は2点、3回戦は3点。
@@ -339,6 +340,7 @@ export class VersusRound {
   startRound() {
     this.asked = 0;
     this.scores = Array(this.players).fill(0);
+    this.roundAnswers = []; // 図鑑のために、出た問題をおぼえる(成績には入れない)
   }
 
   get current() {
@@ -363,6 +365,7 @@ export class VersusRound {
 
   answer(question, response) {
     const correct = judge(question, response);
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct });
     if (correct) this.scores[this.current.player] += this.current.round;
     this.asked += 1;
     return correct;
@@ -382,7 +385,7 @@ export class VersusRound {
       scores: [...this.scores],
       winners: this.scores.flatMap((score, index) => (score === best ? [index] : [])),
       players: this.players,
-      answers: [],
+      answers: [...this.roundAnswers],
     };
     this.startRound();
     return result;

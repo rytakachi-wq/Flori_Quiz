@@ -21,6 +21,16 @@ const EMPTY = {
   dailyLast: "", // 毎日1問を、最後にやった日
   dailyStreak: 0, // 毎日1問を、続けている日数
   dailyDays: 0, // 毎日1問を、やった日数(ぜんぶで)
+  dailyBest: 0, // 毎日1問を、いちばん長く続けた日数
+  dex: [], // 図鑑:一度でも答えた問題の番号(どのモードでも)
+  badges: [], // もらったバッジの名前
+  perfect: 0, // 全問正解した回数(5問)
+  perfectHard: 0, // 難しいモードで、全問正解した回数
+  reviewClears: 0, // おさらいを、全部クリアした回数
+  timedPlays: 0, // 制限時間モードで遊んだ回数
+  bestTimed: 0, // 制限時間モードの最高得点
+  timedPerfect: 0, // 制限時間モードで、全問正解した回数
+  gardenClears: 0, // お花畑を完成させた回数
 };
 
 let cache = null;
@@ -54,6 +64,16 @@ function clean(raw) {
     dailyLast: text(raw?.dailyLast),
     dailyStreak: number(raw?.dailyStreak),
     dailyDays: number(raw?.dailyDays),
+    dailyBest: number(raw?.dailyBest),
+    dex: ids(raw?.dex),
+    badges: ids(raw?.badges),
+    perfect: number(raw?.perfect),
+    perfectHard: number(raw?.perfectHard),
+    reviewClears: number(raw?.reviewClears),
+    timedPlays: number(raw?.timedPlays),
+    bestTimed: number(raw?.bestTimed),
+    timedPerfect: number(raw?.timedPerfect),
+    gardenClears: number(raw?.gardenClears),
   };
 }
 
@@ -75,7 +95,7 @@ export function reconcile(stats) {
 }
 
 export function loadStats() {
-  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong] };
+  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges] };
   let stats = clean(EMPTY);
   try {
     const saved = localStorage.getItem(KEY);
@@ -108,17 +128,25 @@ function updateWrong(stats, answers) {
 }
 
 // 5問の結果を記録する。ふつうモードで4回分そろったら、setCompleted を true にして、数えなおす。
-// mode:"normal"(ふつう)、"hard"(難しい)
+// mode:"normal"(ふつう)、"hard"(難しい)、"timed"(制限時間。最高得点は別に数える。難しさの回数には入れない)
 export function recordRound({ correct, total, score, answers = [], mode = "normal" }) {
   const stats = loadStats();
   const hard = mode === "hard";
   const normal = mode === "normal";
-  const isRecord = (hard || normal) && score > (hard ? stats.bestHard : stats.best);
+  const timed = mode === "timed";
+  const isRecord = score > (hard ? stats.bestHard : timed ? stats.bestTimed : stats.best);
   stats.plays += 1;
   stats.answered += total;
   stats.correct += correct;
   if (hard) stats.bestHard = Math.max(stats.bestHard, score);
-  else if (normal) stats.best = Math.max(stats.best, score);
+  else if (timed) stats.bestTimed = Math.max(stats.bestTimed, score);
+  else stats.best = Math.max(stats.best, score);
+  if (timed) stats.timedPlays += 1;
+  if (correct === total && total === QUESTIONS_PER_ROUND) {
+    stats.perfect += 1; // 全問正解(バッジに使う)
+    if (hard) stats.perfectHard += 1;
+    if (timed) stats.timedPerfect += 1;
+  }
   if (normal) stats.setRounds.push(score); // 難しさのカウンターを最初にもどす目安は、ふつうモードだけ
   updateWrong(stats, answers);
   stats.seen = ids([...stats.seen, ...answers.map((answer) => answer.id)]);
@@ -153,6 +181,7 @@ export function recordVersus() {
 export function recordReview(answers = []) {
   const stats = loadStats();
   updateWrong(stats, answers);
+  if (answers.length > 0 && stats.wrong.length === 0) stats.reviewClears += 1;
   save(stats);
   return stats.wrong.length;
 }
@@ -164,16 +193,39 @@ export function recordDaily({ date, previous, answer }) {
   if (stats.dailyLast === date) return { already: true, streak: stats.dailyStreak, days: stats.dailyDays };
   stats.dailyStreak = stats.dailyLast === previous ? stats.dailyStreak + 1 : 1;
   stats.dailyDays += 1;
+  stats.dailyBest = Math.max(stats.dailyBest, stats.dailyStreak);
   stats.dailyLast = date;
   if (answer) updateWrong(stats, [answer]);
   save(stats);
   return { already: false, streak: stats.dailyStreak, days: stats.dailyDays };
 }
 
+// 図鑑:答えた問題を、おぼえておく(どのモードでも、オニでも対戦でも)。
+export function recordDex(answers = []) {
+  const stats = loadStats();
+  const before = stats.dex.length;
+  stats.dex = ids([...stats.dex, ...answers.map((answer) => answer.id)]);
+  if (stats.dex.length !== before) save(stats);
+}
+
+// もらったバッジを、おぼえておく。
+export function recordBadges(list) {
+  const stats = loadStats();
+  stats.badges = ids(list);
+  save(stats);
+}
+
+// お花畑を完成させた回数
+export function recordGarden() {
+  const stats = loadStats();
+  stats.gardenClears += 1;
+  save(stats);
+}
+
 // 記録の中から、いまの問題にない番号(古い形式の番号や、なくなった問題)を取りのぞく。
 export function pruneStats(validIds) {
   const stats = loadStats();
   const keep = (list) => list.filter((id) => validIds.has(id));
-  const next = reconcile({ ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight), wrong: keep(stats.wrong) });
+  const next = reconcile({ ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight), wrong: keep(stats.wrong), dex: keep(stats.dex) });
   if (JSON.stringify(next) !== JSON.stringify(stats)) save(next);
 }

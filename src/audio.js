@@ -15,6 +15,7 @@ const BGM = {
   cover: "study",
   question: "cover",
   hard: "deep",
+  timed: "deep",
   versus: "versus",
   relax: "relax",
   oni: "oni",
