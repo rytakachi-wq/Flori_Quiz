@@ -27,6 +27,7 @@ export const BADGES = [
   { id: "timed1", icon: "⏱️", name: "スピードチャレンジ", text: "制限時間をつけて、1回遊んだ", test: (c) => c.stats.timedPlays >= 1 },
   { id: "timedPerfect", icon: "⚡", name: "はやわざ名人", text: "制限時間をつけて、全問正解した", test: (c) => c.stats.timedPerfect >= 1 },
   { id: "garden", icon: "🌸", name: "お花畑のたつじん", text: "お花畑を、完成させた", test: (c) => c.stats.gardenClears >= 1 },
+  { id: "stars30", icon: "⭐", name: "ほしあつめ", text: "制限時間のごほうびの星を、30こ集めた", test: (c) => c.stats.stars >= 30 },
   { id: "total50", icon: "⭐", name: "総合得点50点", text: "総合得点が、50点になった", test: (c) => c.total >= 50 },
   { id: "total100", icon: "🌟", name: "総合得点100点", text: "総合得点が、100点になった", test: (c) => c.total >= 100 },
 ];
@@ -59,6 +60,8 @@ export const HATS = [
   { id: "grad", icon: "🎓", name: "はかせぼうし", unlock: "perfect" },
   { id: "crown", icon: "👑", name: "おうかん", unlock: "total50" },
   { id: "devil", icon: "😈", name: "オニのつの", unlock: "oni1" },
+  { id: "star", icon: "🌟", name: "ほしのかざり", unlock: { stars: 10 } },
+  { id: "gem", icon: "💎", name: "ほうせき", unlock: { stars: 30 } },
 ];
 
 export const THEMES = [
@@ -68,7 +71,21 @@ export const THEMES = [
   { id: "sunset", name: "ゆうやけ", unlock: "streak3" },
   { id: "night", name: "よぞら", unlock: "oni1" },
   { id: "rainbow", name: "にじ", unlock: "total100" },
+  { id: "starry", name: "ほしぞら", unlock: { stars: 20 } },
 ];
+
+// きせかえが使えるか(unlock:バッジの id、または { stars: 必要な星の数 }、または null)
+export function isOpen(item, { have, stars }) {
+  const u = item.unlock;
+  if (!u) return true;
+  return typeof u === "string" ? have.has(u) : stars >= u.stars;
+}
+
+// 使えないときの、もらいかたの説明
+export function lockText(item) {
+  const u = item.unlock;
+  return typeof u === "string" ? `バッジ「${badgeName(u)}」` : `制限時間のごほうびの星 ${u.stars}こ`;
+}
 
 export function badgeName(id) {
   return BADGES.find((badge) => badge.id === id)?.name ?? "";

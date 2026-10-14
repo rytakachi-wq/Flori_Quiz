@@ -35,10 +35,13 @@ function hslToRgb(h, s, l) {
   return [channel(hh + 1 / 3), channel(hh), channel(hh - 1 / 3)];
 }
 
-// 体の部分か?(水色〜青ずんだ、明るめの、あまり濃くない色)。目の青緑や、ほお・口の色、暗い顔や線は、ふくまない。
+// 体の色の画素か?(うすい水色)。目の水色・黄色、ほお、口、顔の青いふち、灰色、暗い線は、ふくまない。
 function isBody(h, s, l) {
-  return h >= 170 && h <= 255 && s >= 0.03 && s <= 0.55 && l >= 0.4;
+  return h >= 180 && h <= 235 && s >= 0.1 && s <= 0.4 && l >= 0.55;
 }
+
+// 色のつよさ(1 で、きまった色いっぱい。小さいほど、うすい)
+const STRENGTH = 0.62;
 
 // color = { hue, gain, minSat, gray }
 export function recolor(src, color) {
@@ -48,23 +51,58 @@ export function recolor(src, color) {
     const image = new Image();
     image.onload = () => {
       const scale = Math.min(1, MAX_WIDTH / image.naturalWidth);
+      const width = Math.max(1, Math.round(image.naturalWidth * scale));
+      const height = Math.max(1, Math.round(image.naturalHeight * scale));
       const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-      const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0, width, height);
+      const data = ctx.getImageData(0, 0, width, height);
       const px = data.data;
-      for (let i = 0; i < px.length; i += 4) {
-        if (px[i + 3] === 0) continue;
-        const [h, s, l] = rgbToHsl(px[i] / 255, px[i + 1] / 255, px[i + 2] / 255);
-        if (!isBody(h, s, l)) continue;
-        const nextS = color.gray ? 0 : Math.min(0.95, Math.max(s * color.gain, color.minSat));
-        const nextL = color.gray ? l : Math.max(0.45, l * 0.9); // 色をつけるぶん、少しだけ暗くして、色がはっきり見えるように
-        const [r, g, b] = hslToRgb(color.gray ? h : color.hue, nextS, nextL);
-        px[i] = Math.round(r * 255);
-        px[i + 1] = Math.round(g * 255);
-        px[i + 2] = Math.round(b * 255);
+      const total = width * height;
+      // 体の色の画素を、つながり(線で区切られた1かたまり)ごとに分ける
+      const mask = new Uint8Array(total);
+      for (let i = 0; i < total; i += 1) {
+        if (px[i * 4 + 3] < 128) continue;
+        const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
+        if (isBody(h, s, l)) mask[i] = 1;
+      }
+      const label = new Int32Array(total);
+      const parts = []; // { count, sumL }
+      const stack = new Int32Array(total);
+      for (let start = 0; start < total; start += 1) {
+        if (!mask[start] || label[start]) continue;
+        const id = parts.length + 1;
+        const part = { count: 0, sumL: 0 };
+        let top = 0;
+        stack[top++] = start;
+        label[start] = id;
+        while (top > 0) {
+          const i = stack[--top];
+          part.count += 1;
+          part.sumL += (Math.max(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]) + Math.min(px[i * 4], px[i * 4 + 1], px[i * 4 + 2])) / 510;
+          const x = i % width;
+          for (const j of [x > 0 ? i - 1 : -1, x < width - 1 ? i + 1 : -1, i - width, i + width]) {
+            if (j >= 0 && j < total && mask[j] && !label[j]) {
+              label[j] = id;
+              stack[top++] = j;
+            }
+          }
+        }
+        parts.push(part);
+      }
+      // 足もとの影は、体より、少しこい水色のかたまり。体の色にはふくめない
+      const skip = parts.map((part) => part.count > 150 && part.sumL / part.count < 0.84);
+      for (let i = 0; i < total; i += 1) {
+        const id = label[i];
+        if (!id || skip[id - 1]) continue;
+        const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
+        const target = color.gray ? 0 : Math.min(0.9, Math.max(s * color.gain, color.minSat)) * STRENGTH;
+        const [r, g, b] = hslToRgb(color.gray ? h : color.hue, color.gray ? 0 : Math.max(target, s * 0.5), l);
+        px[i * 4] = Math.round(r * 255);
+        px[i * 4 + 1] = Math.round(g * 255);
+        px[i * 4 + 2] = Math.round(b * 255);
       }
       ctx.putImageData(data, 0, 0);
       resolve(canvas.toDataURL("image/png"));

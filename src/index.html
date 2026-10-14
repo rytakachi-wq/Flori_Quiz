@@ -48,7 +48,7 @@
         <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-text"><span class="tile-label">みんなで対戦</span></span></button>
         <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-text"><span class="tile-label">リラックス</span></span></button>
         <button id="btn-dex" class="tile t-small t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-text"><span class="tile-label">図鑑</span></span></button>
-        <button id="btn-badges" class="tile t-small t-badges" type="button"><span class="tile-icon" aria-hidden="true">🏅</span><span class="tile-text"><span class="tile-label">バッジ</span></span></button>
+        <button id="btn-badges" class="tile t-small t-badges" type="button"><span class="tile-icon" aria-hidden="true">🏅</span><span class="tile-text"><span class="tile-label">バッジ・称号</span></span></button>
         <button id="btn-dress" class="tile t-small t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">きせかえ</span></span></button>
         <button id="btn-records" class="tile t-small t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span></button>
       </div>
@@ -83,7 +83,8 @@
         <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
         <span id="dress-hat" class="hero-hat" aria-hidden="true"></span>
       </div>
-      <p class="note">バッジを集めると、使えるものが増えるヨ。</p>
+      <p class="note">バッジや星を集めると、使えるものが増えるヨ。  ⭐ <span id="dress-stars">0</span>こ</p>
+      <p id="dress-message" class="note" role="status"></p>
       <h3 class="dress-title">フロリの色</h3>
       <div id="color-list" class="dress-list"></div>
       <h3 class="dress-title">かざり</h3>
@@ -141,6 +142,7 @@
       <dl class="scores">
         <div><dt>称号</dt><dd id="s-title"></dd></div>
         <div><dt>バッジ</dt><dd id="s-badges"></dd></div>
+        <div><dt>ごほうびの星</dt><dd id="s-stars"></dd></div>
         <div><dt>遊んだ回数</dt><dd id="s-plays"></dd></div>
         <div><dt>みんなで対戦した回数</dt><dd id="s-versus"></dd></div>
         <div><dt>毎日1問</dt><dd id="s-daily"></dd></div>
@@ -157,34 +159,48 @@
     <!-- せってい -->
     <section id="screen-settings" class="screen" aria-label="設定" hidden>
       <h2 class="title">設定</h2>
-      <img class="flori flori-small" src="../assets/flori/src/pc_form.png" alt="パソコンに変形したフロリ">
-      <p class="bubble">音の大きさを変えられるヨ!</p>
-      <div class="volumes">
-        <div class="volume">
-          <label for="vol-bgm">BGM</label>
-          <input id="vol-bgm" data-volume="bgm" type="range" min="0" max="100" step="5">
-          <output data-volume-out="bgm" for="vol-bgm"></output>
-        </div>
-        <div class="volume">
-          <label for="vol-se">効果音</label>
-          <input id="vol-se" data-volume="se" type="range" min="0" max="100" step="5">
-          <output data-volume-out="se" for="vol-se"></output>
-        </div>
+      <div class="settings-grid">
+        <fieldset class="setting-box">
+          <legend>音の大きさ</legend>
+          <div class="volumes">
+            <div class="volume">
+              <label for="vol-bgm">BGM</label>
+              <input id="vol-bgm" data-volume="bgm" type="range" min="0" max="100" step="5">
+              <output data-volume-out="bgm" for="vol-bgm"></output>
+            </div>
+            <div class="volume">
+              <label for="vol-se">効果音</label>
+              <input id="vol-se" data-volume="se" type="range" min="0" max="100" step="5">
+              <output data-volume-out="se" for="vol-se"></output>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset class="setting-box furigana" aria-label="ふりがな">
+          <legend>ふりがな</legend>
+          <label><input type="radio" name="furigana-screen" value="all"> すべての漢字にふりがな</label>
+          <label><input type="radio" name="furigana-screen" value="chu"> 中学以降に習う漢字だけ</label>
+          <label><input type="radio" name="furigana-screen" value="none"> ふりがななし</label>
+        </fieldset>
+        <fieldset class="setting-box furigana" aria-label="文字の大きさ">
+          <legend>文字の大きさ</legend>
+          <div class="size-row">
+            <label><input type="radio" name="size-screen" value="small"> 小</label>
+            <label><input type="radio" name="size-screen" value="normal"> ふつう</label>
+            <label><input type="radio" name="size-screen" value="large"> 大</label>
+            <label><input type="radio" name="size-screen" value="xlarge"> とても大</label>
+          </div>
+        </fieldset>
+        <fieldset class="setting-box furigana" aria-label="読み上げ">
+          <legend>読み上げ</legend>
+          <label><input type="checkbox" id="set-read"> 問題を、自動で読み上げる</label>
+        </fieldset>
       </div>
-      <p class="note">0にすると、音が出なくなるよ。</p>
-      <fieldset class="furigana" aria-label="ふりがな">
-        <legend>ふりがな</legend>
-        <label><input type="radio" name="furigana-screen" value="all"> すべての漢字にふりがな</label>
-        <label><input type="radio" name="furigana-screen" value="chu"> 中学以降に習う漢字だけ</label>
-        <label><input type="radio" name="furigana-screen" value="none"> ふりがななし</label>
-      </fieldset>
-      <fieldset class="furigana" aria-label="読み上げ">
-        <legend>読み上げ</legend>
-        <label><input type="checkbox" id="set-read"> 問題を、自動で読み上げる</label>
-      </fieldset>
-      <button id="btn-settings-reset" class="btn btn-sub" type="button">初期設定に戻す</button>
+      <p class="note">音は、0にすると出なくなるよ。</p>
+      <div class="buttons">
+        <button id="btn-settings-reset" class="btn btn-sub" type="button">初期設定に戻す</button>
+        <button id="btn-settings-back" class="btn btn-main" type="button">戻る</button>
+      </div>
       <p id="settings-message" class="note" role="status"></p>
-      <button id="btn-settings-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
     <!-- 問題画面 -->
@@ -229,6 +245,7 @@
       <ol id="r-board" class="board big" hidden></ol>
       <p id="r-record" class="record" hidden>新記録!</p>
       <p id="r-set" class="note" hidden></p>
+      <p id="r-reward" class="reward-news" hidden></p>
       <p id="r-badge" class="badge-news" hidden></p>
       <div class="buttons">
         <button id="btn-again" class="btn btn-main" type="button">続けて遊ぶ</button>
@@ -252,18 +269,22 @@
   </dialog>
 
   <dialog id="dlg-time" class="dialog" aria-labelledby="dlg-time-text">
-    <p id="dlg-time-text">制限時間をつける?<br>つけると、1問20秒で答えるヨ。</p>
+    <p id="dlg-time-text">制限時間をつける?<br>つけると、1問20秒で答えるヨ。<br>全部で、星のごほうびがもらえるヨ。</p>
     <div class="buttons buttons-choice">
-      <button id="btn-time-no" class="btn btn-main btn-big" type="button">つけない</button>
-      <button id="btn-time-yes" class="btn btn-plain btn-small" type="button">つける</button>
+      <button id="btn-time-no" class="btn btn-main btn-mid-big" type="button">つけない</button>
+      <button id="btn-time-yes" class="btn btn-plain btn-mid" type="button">つける<small>(ごほうびあり)</small></button>
       <button id="btn-time-cancel" class="btn btn-plain btn-small" type="button">やめる</button>
     </div>
   </dialog>
   <dialog id="dlg-restart" class="dialog" aria-labelledby="dlg-restart-text">
-    <p id="dlg-restart-text">最初からにする?<br>「つづきから」の記録(難しさと何回目か)が消えるヨ。<br>成績や総合得点は消えないヨ。</p>
+    <p id="dlg-restart-text">最初から、はじめる?</p>
+    <ul class="restart-list">
+      <li class="lose"><b>消えるもの</b>「つづきから」の記録(いまの難しさ・何回目か・もう出した問題)</li>
+      <li class="keep"><b>のこるもの</b>成績・総合得点・バッジ・図鑑・きせかえ</li>
+    </ul>
     <div class="buttons buttons-choice">
       <button id="btn-restart-no" class="btn btn-main btn-big" type="button">やめる</button>
-      <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">最初からにする</button>
+      <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">最初から、はじめる</button>
     </div>
   </dialog>
   <dialog id="dlg-info" class="dialog" aria-labelledby="dlg-info-text">
@@ -291,6 +312,15 @@
       <label><input type="radio" name="furigana-dialog" value="all"> すべての漢字にふりがな</label>
       <label><input type="radio" name="furigana-dialog" value="chu"> 中学以降に習う漢字だけ</label>
       <label><input type="radio" name="furigana-dialog" value="none"> ふりがななし</label>
+    </fieldset>
+    <fieldset class="furigana" aria-label="文字の大きさ">
+      <legend>文字の大きさ</legend>
+      <div class="size-row">
+        <label><input type="radio" name="size-dialog" value="small"> 小</label>
+        <label><input type="radio" name="size-dialog" value="normal"> ふつう</label>
+        <label><input type="radio" name="size-dialog" value="large"> 大</label>
+        <label><input type="radio" name="size-dialog" value="xlarge"> とても大</label>
+      </div>
     </fieldset>
     <fieldset class="furigana" aria-label="読み上げ">
       <legend>読み上げ</legend>

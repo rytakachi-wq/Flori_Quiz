@@ -23,6 +23,7 @@ import {
   totalScore,
 } from "./game.js";
 import {
+  addStars,
   loadStats,
   pruneStats,
   recordBadges,
@@ -36,7 +37,7 @@ import {
   recordRound,
   recordVersus,
 } from "./storage.js";
-import { BADGES, COLORS, HATS, THEMES, TITLES, badgeName, earnedBadges, loadDress, saveDress, titleFor } from "./badges.js";
+import { BADGES, COLORS, HATS, THEMES, TITLES, badgeName, earnedBadges, isOpen, loadDress, lockText, saveDress, titleFor } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { setFloriColor } from "./flori-color.js";
 import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
@@ -510,6 +511,15 @@ function showResult() {
     persistCourse(); // 「つづきから」の記録
   }
   setNote.hidden = false;
+  // 制限時間をつけたごほうび:正解した数ぶんの星。全問正解なら、さらに3つ(オニと対戦は、なし)
+  const reward = $("r-reward");
+  reward.hidden = true;
+  if (timeLimit && !versus && mode !== "oni") {
+    const earned = result.correct + (result.correct === result.total ? 3 : 0);
+    const stars = addStars(earned);
+    reward.textContent = `制限時間のごほうび! ⭐ +${earned}(ぜんぶで ${stars}こ)`;
+    reward.hidden = false;
+  }
   announceBadges($("r-badge"));
   show("result");
 }
@@ -546,6 +556,7 @@ function showRecords() {
   $("s-plays").textContent = `${s.plays}回`;
   $("s-title").textContent = titleFor(currentTotal(s));
   $("s-badges").textContent = `${s.badges.length} / ${BADGES.length}個`;
+  $("s-stars").textContent = `⭐ ${s.stars}こ`;
   $("s-versus").textContent = `${s.versusPlays}回`;
   // 毎日1問:きのうか今日やっていれば、続けた日数。それより前なら、0日(とぎれた)
   const today = dateKey();
@@ -622,6 +633,7 @@ $("btn-settings-reset").addEventListener("click", () => {
   resetVolumes();
   setReadAloud(false);
   syncReadSettings();
+  setTextSize("normal");
   setFuriganaMode("all");
   showVolumes();
   showFurigana();
@@ -944,21 +956,23 @@ function applyDress() {
 
 function showDress() {
   awardBadges();
-  const have = new Set(loadStats().badges);
+  const stats = loadStats();
+  const ctx = { have: new Set(stats.badges), stars: stats.stars };
+  $("dress-stars").textContent = stats.stars;
   const make = (list, kind) =>
     list.map((choice) => {
-      const open = !choice.unlock || have.has(choice.unlock);
+      const open = isOpen(choice, ctx);
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}`;
-      button.disabled = !open;
-      button.textContent = `${choice.icon ?? ""} ${choice.name}`.trim();
-      if (!open) {
-        const note = document.createElement("small");
-        note.textContent = `🔒 バッジ「${badgeName(choice.unlock)}」`;
-        button.append(note);
-      }
+      button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}${open ? "" : " is-locked"}`;
+      button.textContent = `${open ? "" : "🔒 "}${choice.icon ?? ""} ${choice.name}`.trim();
       button.addEventListener("click", () => {
+        if (!open) {
+          // まだ使えないもの:もらいかたを、知らせる
+          $("dress-message").textContent = `「${choice.name}」は、${lockText(choice)}でもらえるヨ。`;
+          return;
+        }
+        $("dress-message").textContent = "";
         dress = { ...dress, [kind]: choice.id };
         saveDress(dress);
         applyDress();
@@ -998,3 +1012,32 @@ $("btn-read").addEventListener("click", () => {
   if (answered) speak(`${$("q-verdict").textContent}。正解は、${renderers[current.type].correctText(current)}。${current.explanation}`);
   else speak(readableQuestion(current));
 });
+
+// ================= 文字の大きさ =================
+const SIZE_KEY = "floriQuiz.textSize";
+const SIZES = { small: 0.9, normal: 1, large: 1.15, xlarge: 1.3 };
+function textSize() {
+  try {
+    const saved = localStorage.getItem(SIZE_KEY);
+    return saved in SIZES ? saved : "normal";
+  } catch {
+    return "normal";
+  }
+}
+function setTextSize(size) {
+  if (!(size in SIZES)) return;
+  try {
+    localStorage.setItem(SIZE_KEY, size);
+  } catch {
+    // 保存できなくても、そのページを開いている間は、かわったまま。
+  }
+  applyTextSize();
+}
+function applyTextSize() {
+  document.documentElement.style.setProperty("--ui-zoom", String(SIZES[textSize()]));
+  for (const radio of document.querySelectorAll('input[type="radio"][name^="size-"]')) radio.checked = radio.value === textSize();
+}
+applyTextSize();
+for (const radio of document.querySelectorAll('input[type="radio"][name^="size-"]')) {
+  radio.addEventListener("change", () => setTextSize(radio.value));
+}

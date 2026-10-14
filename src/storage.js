@@ -30,6 +30,7 @@ const EMPTY = {
   timedPlays: 0, // 制限時間をつけて遊んだ回数
   timedPerfect: 0, // 制限時間をつけて、全問正解した回数
   gardenClears: 0, // お花畑を完成させた回数
+  stars: 0, // 制限時間をつけたごほうびの星
   courseCounter: 0, // 「つづきから」:ふつうモードの、難しさのカウンター
   courseUsed: [], // 「つづきから」:もう出した問題の番号
 };
@@ -74,6 +75,7 @@ function clean(raw) {
     timedPlays: number(raw?.timedPlays),
     timedPerfect: number(raw?.timedPerfect),
     gardenClears: number(raw?.gardenClears),
+    stars: number(raw?.stars),
     courseCounter: number(raw?.courseCounter),
     courseUsed: ids(raw?.courseUsed),
   };
@@ -230,6 +232,14 @@ export function resetCourse() {
   stats.courseUsed = [];
   stats.setRounds = [];
   save(stats);
+}
+
+// 制限時間をつけたごほうびの星をふやす。ぜんぶの星の数を返す。
+export function addStars(count) {
+  const stats = loadStats();
+  stats.stars += count;
+  save(stats);
+  return stats.stars;
 }
 
 // お花畑を完成させた回数
