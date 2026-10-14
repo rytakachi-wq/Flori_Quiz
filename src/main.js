@@ -1,22 +1,30 @@
 import {
   HARD_LEVEL,
+  HINT_COST,
   HardRound,
   MAX_LEVEL,
   MAX_SCORE,
   OniRound,
+  POINTS_PER_CORRECT,
+  PracticeRound,
   QUESTIONS_PER_ROUND,
   ROUNDS_PER_SET,
+  SUBJECTS,
   Session,
   TOTAL_POINTS,
   VERSUS_MAX_PLAYERS,
   VERSUS_MIN_PLAYERS,
   VERSUS_ROUNDS,
   VersusRound,
+  dailyQuestion,
+  dateKey,
+  pickRandom,
+  previousDateKey,
   totalScore,
 } from "./game.js";
-import { loadStats, pruneStats, recordOni, recordRound, recordVersus } from "./storage.js";
+import { loadStats, pruneStats, recordDaily, recordOni, recordReview, recordRound, recordVersus } from "./storage.js";
 import { GardenUI } from "./garden.js";
-import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
+import { getVolume, playJingle, playSe, playVoice, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
@@ -29,10 +37,13 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "versus", "relax", "records", "settings", "question", "result", "error"];
+const SCREENS = ["cover", "subject", "versus", "relax", "records", "settings", "question", "result", "error"];
 
 let coverTaps = 0;
-let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)
+let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"subject"(教科えらび)、"review"(おさらい)、"daily"(毎日1問)
+let subjectKey = "all"; // 教科えらびで選んだ教科(SUBJECTS のキー)
+let hinted = false; // いまの問題で、ヒントを見たか
+let streak = 0; // 連続して正解した数(声を出すために数える)
 let versusPlayers = 2; // みんなで対戦する人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
@@ -46,6 +57,7 @@ function sceneOf(name) {
 function show(name) {
   for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
   if (name !== "cover") coverTaps = 0;
+  if (name === "cover") refreshCover();
   setScene(sceneOf(name));
   window.scrollTo(0, 0);
 }
@@ -109,6 +121,7 @@ const renderers = {
 let normalQuestions = [];
 let hardQuestions = [];
 let oniQuestions = [];
+let playableQuestions = []; // ふつう+難しい問題(教科えらび・おさらい・毎日1問で使う)
 const hardUsed = new Set(); // 難しいモードで、もう出した問題(回をまたいで使う)
 let normalIds = new Set(); // ふつうの問題の uid(成績の記録に使う。番号がつけなおされても、変わらない)
 let hardIds = new Set(); // 難しい問題の uid
@@ -141,13 +154,46 @@ function announce(text, jingle, then, image) {
   }, length);
 }
 
+// はじめの声(モードごと)
+const START_VOICE = { normal: "fight", subject: "fight", daily: "fight", review: "go", hard: "cheer", oni: "wow" };
+
+// 表紙のボタンの文字(今日の毎日1問をやったか、おさらいが何問あるか)を、いまの記録に合わせる。
+function refreshCover() {
+  if (playableQuestions.length === 0) return;
+  const stats = loadStats();
+  const today = dateKey();
+  const dailyDone = stats.dailyLast === today;
+  $("btn-daily").textContent = dailyDone ? "毎日1問(今日はクリア!)" : "毎日1問";
+  $("btn-daily").disabled = dailyDone;
+  const left = stats.wrong.filter((id) => playableIds().has(id)).length;
+  $("btn-review").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(まだないヨ)";
+  $("btn-review").disabled = left === 0;
+}
+
+function playableIds() {
+  return new Set([...normalIds, ...hardIds]);
+}
+
 function startPlay(nextMode) {
   mode = nextMode;
+  streak = 0;
   if (mode === "oni") play = new OniRound(oniQuestions);
   else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
   else if (mode === "versus") play = new VersusRound(normalQuestions, versusPlayers);
-  else play = session;
+  else if (mode === "subject") {
+    const categories = SUBJECTS[subjectKey].categories;
+    const pool = playableQuestions.filter((q) => !categories || categories.includes(q.category));
+    play = new PracticeRound(pickRandom(pool, QUESTIONS_PER_ROUND));
+  } else if (mode === "review") {
+    const wrong = new Set(loadStats().wrong);
+    const pool = playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
+    if (pool.length === 0) return show("cover");
+    play = new PracticeRound(pickRandom(pool, QUESTIONS_PER_ROUND));
+  } else if (mode === "daily") {
+    play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
+  } else play = session;
   announce("それでは、スタート!", "start", showQuestion, "../assets/flori/src/body_wave.webp");
+  if (START_VOICE[mode]) playVoice(START_VOICE[mode], 700);
 }
 
 function showQuestion() {
@@ -156,10 +202,19 @@ function showQuestion() {
   answered = false;
 
   const versus = mode === "versus";
-  const prefix = { normal: "", hard: "難しい ", oni: "オニ ", versus: "" }[mode];
+  const total = play.total ?? QUESTIONS_PER_ROUND;
+  const prefix = {
+    normal: "",
+    hard: "難しい ",
+    oni: "オニ ",
+    versus: "",
+    subject: `${SUBJECTS[subjectKey].name} `,
+    review: "おさらい ",
+    daily: "毎日1問 ",
+  }[mode];
   $("q-progress").textContent = versus
     ? `第${play.round}回戦 / ${VERSUS_ROUNDS}回戦`
-    : `${prefix}第${play.asked + 1}問 / ${QUESTIONS_PER_ROUND}問`;
+    : `${prefix}第${play.asked + 1}問 / ${total}問`;
   renderTurn(versus);
   $("q-level").textContent =
     mode === "oni"
@@ -168,7 +223,7 @@ function showQuestion() {
         ? "難しさ ★★★★"
         : versus
           ? `${versusPlayers}人で対戦`
-          : `難しさ ${"★".repeat(question.level)}${"☆".repeat(MAX_LEVEL - question.level)}`;
+          : `難しさ ${"★".repeat(question.level)}${"☆".repeat(Math.max(0, MAX_LEVEL - question.level))}`;
   $("q-text").textContent = question.text;
   $("q-feedback").hidden = true;
 
@@ -186,8 +241,15 @@ function showQuestion() {
     message.hidden = true;
   }
 
+  // ヒント:ふつう・難しい・教科えらび・おさらい・毎日1問で、1問に1回だけ。オニと対戦では、出さない。
+  hinted = false;
+  $("q-hint").hidden = true;
+  $("btn-hint").disabled = false;
+  $("q-hint-area").hidden = !(question.hint && mode !== "oni" && mode !== "versus");
+
   renderers[question.type].render(question, answer);
   show("question");
+  if (mode !== "versus" && total > 1 && play.asked === total - 1) playVoice("almost", 400); // 最後の1問
 }
 
 // 対戦のとき:だれの番かを、プレイヤーの色で知らせる案内板と、みんなの点数の表
@@ -221,16 +283,31 @@ function answer(response) {
   answered = true;
   const answeringPlayer = mode === "versus" ? play.player : 0;
   const answeringRound = mode === "versus" ? play.round : 0;
-  const correct = play.answer(current, response);
+  const firstRight = !loadStats().right.includes(current.uid ?? current.id); // この問題に、はじめて正解するか
+  const correct = play.answer(current, response, hinted);
+  $("btn-hint").disabled = true;
   if (mode === "versus") renderBoard($("q-board"), play.scores, answeringPlayer);
   renderers[current.type].mark(current, response, correct);
   playSe(correct ? "correct" : "wrong");
+  if (mode !== "versus") {
+    // フロリの声:連続正解でほめる、はじめての正解でよろこぶ、まちがえたらくやしがる
+    streak = correct ? streak + 1 : 0;
+    if (!correct) playVoice("ouch", 350);
+    else if (streak >= 2) playVoice("streak", 350);
+    else if (firstRight && mode !== "oni") playVoice("nice", 350);
+  }
 
   setFlori(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
   $("q-message").hidden = true;
   const verdict = $("q-verdict");
   verdict.textContent =
-    mode === "versus" && correct ? `正解! ${PLAYER_NAMES[answeringPlayer]}に${answeringRound}点!` : correct ? "正解!" : "残念…";
+    mode === "versus" && correct
+      ? `正解! ${PLAYER_NAMES[answeringPlayer]}に${answeringRound}点!`
+      : correct
+        ? hinted
+          ? `正解!(ヒントを使ったので${POINTS_PER_CORRECT - HINT_COST}点)`
+          : "正解!"
+        : "残念…";
   verdict.className = `verdict ${correct ? "is-right" : "is-wrong"}`;
   const rightText = renderers[current.type].correctText(current);
   $("q-explanation").textContent = `正解は「${rightText}」\n${current.explanation}`;
@@ -257,15 +334,16 @@ function currentTotal(stats = loadStats()) {
 function showResult() {
   const result = play.finishRound();
   const versus = mode === "versus";
+  $("btn-again").hidden = false;
   $("r-correct-row").hidden = versus;
   $("r-board").hidden = true;
   if (!versus) {
     $("r-correct").textContent = `${result.correct} / ${result.total}問`;
-    $("r-score").textContent = `${result.score}点(${MAX_SCORE}点満点)`;
+    $("r-score").textContent = `${result.score}点(${result.total * POINTS_PER_CORRECT}点満点)`;
   }
   $("r-score-row").hidden = versus; // 対戦のときは、ひとりの得点は出さない
   $("r-comment").textContent =
-    mode === "oni" ? oniComment(result.correct) : versus ? versusComment(result) : comment(result.correct);
+    mode === "oni" ? oniComment(result.correct) : versus ? versusComment(result) : comment(result.correct, result.total);
 
   const setNote = $("r-set");
   const before = currentTotal();
@@ -284,6 +362,32 @@ function showResult() {
     result.winners.forEach((index) => $("r-board").children[index].classList.add("is-winner"));
     setNote.textContent = "";
     $("btn-again").textContent = "もう一度対戦";
+  } else if (mode === "subject") {
+    // 教科えらび:遊んだ回数・答えた問題・正解率・総合得点に入る。最高得点には入れない。
+    recordRound({ ...result, mode: "subject" });
+    $("r-title").textContent = "教科えらびの結果!";
+    $("r-best-row").hidden = true;
+    $("r-record").hidden = true;
+    setNote.textContent = gainText();
+    $("btn-again").textContent = "続けて遊ぶ";
+  } else if (mode === "review") {
+    // おさらい:まちがえた問題の一覧だけが変わる。成績の回数や、総合得点には入れない。
+    const left = recordReview(result.answers);
+    $("r-title").textContent = "おさらいの結果!";
+    $("r-best-row").hidden = true;
+    $("r-record").hidden = true;
+    setNote.textContent = left > 0 ? `まだおさらいが必要な問題は、あと${left}問だヨ。` : "おさらい完了! まちがえた問題は、もうないヨ!";
+    $("btn-again").textContent = "もう一度おさらい";
+    $("btn-again").hidden = left === 0;
+  } else if (mode === "daily") {
+    // 毎日1問:1日1回だけ記録する。続けた日数を数える。
+    const key = dateKey();
+    const saved = recordDaily({ date: key, previous: previousDateKey(key), answer: result.answers[0] });
+    $("r-title").textContent = "毎日1問の結果!";
+    $("r-best-row").hidden = true;
+    $("r-record").hidden = true;
+    setNote.textContent = `${saved.streak}日連続!(ぜんぶで${saved.days}日)また明日も、挑戦してネ!`;
+    $("btn-again").hidden = true;
   } else if (mode === "oni") {
     // オニ問題は、成績の「遊んだ回数」や「正解率」には入れない。総合得点にだけ入る。
     recordOni(result.answers);
@@ -317,11 +421,19 @@ function showResult() {
   }
   setNote.hidden = false;
   show("result");
+  if (!versus) {
+    // フロリの声:結果に合わせて
+    const { correct, total } = result;
+    if (correct === total) playVoice("great", 400);
+    else if (correct === 0) playVoice(total === 1 ? "go" : "no", 400);
+    else if (correct >= total - 1) playVoice("wow", 400);
+    else if (correct <= 1) playVoice("go", 400);
+  }
 }
 
-function comment(correct) {
-  if (correct === QUESTIONS_PER_ROUND) return "全部正解! すごいヨ!";
-  if (correct >= 3) return "いいね! よくひらめいたネ!";
+function comment(correct, total = QUESTIONS_PER_ROUND) {
+  if (correct === total) return "全部正解! すごいヨ!";
+  if (correct >= total - 2 && total > 1) return "いいね! よくひらめいたネ!";
   if (correct >= 1) return "ナイスチャレンジ! 次はもっと取れるヨ!";
   return "大丈夫! 考えるのが楽しいんだヨ!";
 }
@@ -350,6 +462,11 @@ function showRecords() {
   $("s-total").textContent = `${currentTotal(s)}点 / ${TOTAL_POINTS}点`;
   $("s-plays").textContent = `${s.plays}回`;
   $("s-versus").textContent = `${s.versusPlays}回`;
+  // 毎日1問:きのうか今日やっていれば、続けた日数。それより前なら、0日(とぎれた)
+  const today = dateKey();
+  const running = s.dailyLast === today || s.dailyLast === previousDateKey(today) ? s.dailyStreak : 0;
+  $("s-daily").textContent = `${running}日連続(ぜんぶで${s.dailyDays}日)`;
+  $("s-wrong").textContent = `${s.wrong.filter((id) => playable.has(id)).length}問`;
   $("s-seen").textContent = `${seen} / ${playable.size}問`;
   $("s-right").textContent = `${right} / ${playable.size}問`;
   $("s-answered").textContent = `${s.answered}問(正解 ${s.correct}問)`;
@@ -433,6 +550,25 @@ $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
 $("btn-start").addEventListener("click", () => startPlay("normal"));
 $("btn-hard").addEventListener("click", () => startPlay("hard"));
+$("btn-daily").addEventListener("click", () => startPlay("daily"));
+$("btn-review").addEventListener("click", () => startPlay("review"));
+$("btn-subject").addEventListener("click", () => show("subject"));
+$("btn-subject-back").addEventListener("click", () => show("cover"));
+for (const button of document.querySelectorAll("[data-subject]")) {
+  button.addEventListener("click", () => {
+    subjectKey = button.dataset.subject;
+    startPlay("subject");
+  });
+}
+// ヒント:1問に1回。見ると、その問題の点が2点へる。
+$("btn-hint").addEventListener("click", () => {
+  if (answered || hinted || !current?.hint) return;
+  hinted = true;
+  $("q-hint").textContent = `ヒント:${current.hint}`;
+  $("q-hint").hidden = false;
+  $("btn-hint").disabled = true;
+  playVoice("hmm");
+});
 $("btn-versus").addEventListener("click", () => show("versus"));
 $("btn-versus-back").addEventListener("click", () => show("cover"));
 for (const button of document.querySelectorAll("[data-players]")) {
@@ -501,6 +637,7 @@ $("corner-flori").addEventListener("click", (event) => {
   void button.offsetWidth; // アニメーションをもう一度動かす
   button.classList.add("is-tapped");
   coverTaps += 1;
+  playVoice("giggle");
   if (coverTaps >= ONI_TAPS) {
     coverTaps = 0;
     window.getSelection()?.removeAllRanges(); // 連打で選ばれた部分を、ぜんぶ外す
@@ -525,6 +662,7 @@ async function init() {
     normalIds = new Set(normal.map((q) => q.uid ?? q.id));
     hardIds = new Set(hardQuestions.map((q) => q.uid ?? q.id));
     oniIds = new Set(oniQuestions.map((q) => q.uid ?? q.id));
+    playableQuestions = [...normal, ...hardQuestions];
     pruneStats(new Set([...normalIds, ...hardIds, ...oniIds])); // 古い番号の記録を、取りのぞく
     session = new Session(normal);
     show("cover");
@@ -545,6 +683,7 @@ function closeOpening() {
   opening.classList.add("is-playing"); // フロリが、動いて登場する
   opening.querySelector(".opening-flori").hidden = false;
   const length = Math.max(2600, playJingle("opening") + 400);
+  setTimeout(() => playVoice("hello"), 700); // 声のファイルを読みこむ時間をあける
   setTimeout(() => opening.classList.add("is-leaving"), length);
   setTimeout(() => {
     opening.hidden = true;

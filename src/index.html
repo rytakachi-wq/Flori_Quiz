@@ -27,6 +27,9 @@
       <p class="bubble">ヤア! ボクはフロリだヨ!<br>ひらめきクイズで遊ぼう!</p>
       <div class="menu">
         <button id="btn-start" class="btn btn-main" type="button">始める</button>
+        <button id="btn-daily" class="btn btn-main" type="button">毎日1問</button>
+        <button id="btn-subject" class="btn btn-main" type="button">教科えらび</button>
+        <button id="btn-review" class="btn btn-main" type="button">おさらい</button>
         <button id="btn-hard" class="btn btn-hard" type="button">難しいモード</button>
         <button id="btn-versus" class="btn btn-versus" type="button">みんなで対戦</button>
         <button id="btn-relax" class="btn btn-relax" type="button">リラックス</button>
@@ -38,6 +41,21 @@
       <button id="corner-flori" class="corner-flori" type="button" aria-label="フロリ">
         <img src="../assets/flori/src/face_smile.png" alt="">
       </button>
+    </section>
+
+    <!-- 教科えらび -->
+    <section id="screen-subject" class="screen" aria-label="教科えらび" hidden>
+      <h2 class="title">教科えらび</h2>
+      <img class="flori flori-small" src="../assets/flori/src/book_pen.png" alt="本とペンを持つフロリ">
+      <p class="bubble">得意な教科で、5問だけ遊ぼう!</p>
+      <div class="game-choices">
+        <button class="btn btn-main" type="button" data-subject="science"><span class="subject-name">理系</span><span class="subject-note">理科・科学・数・論理・規則</span></button>
+        <button class="btn btn-main" type="button" data-subject="humanities"><span class="subject-name">文系</span><span class="subject-note">社会・国語・日常</span></button>
+        <button class="btn btn-main" type="button" data-subject="flash"><span class="subject-name">ひらめき</span><span class="subject-note">ひらめきの問題</span></button>
+        <button class="btn btn-main" type="button" data-subject="all"><span class="subject-name">ぜんぶ</span><span class="subject-note">全部の教科から</span></button>
+      </div>
+      <p class="note">難しいモードの問題も、まじっているヨ。</p>
+      <button id="btn-subject-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
     <!-- みんなで対戦 -->
@@ -79,6 +97,8 @@
       <dl class="scores">
         <div><dt>遊んだ回数</dt><dd id="s-plays"></dd></div>
         <div><dt>みんなで対戦した回数</dt><dd id="s-versus"></dd></div>
+        <div><dt>毎日1問</dt><dd id="s-daily"></dd></div>
+        <div><dt>おさらい待ちの問題</dt><dd id="s-wrong"></dd></div>
         <div><dt>解いた問題</dt><dd id="s-answered"></dd></div>
         <div><dt>出会った問題</dt><dd id="s-seen"></dd></div>
         <div><dt>正解した問題</dt><dd id="s-right"></dd></div>
@@ -132,6 +152,10 @@
         <p id="q-message" class="bubble" hidden></p>
       </div>
       <p id="q-text" class="question"></p>
+      <div id="q-hint-area" class="hint-area" hidden>
+        <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る(−2点)</button>
+        <p id="q-hint" class="hint" hidden></p>
+      </div>
       <ol id="q-choices" class="choices"></ol>
       <div id="q-feedback" class="feedback" hidden>
         <p id="q-verdict" class="verdict"></p>

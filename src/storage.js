@@ -17,6 +17,10 @@ const EMPTY = {
   right: [], // 正解したことのある問題の番号
   oniRight: [], // 正解したことのあるオニ問題の番号(総合得点にだけ使う)
   versusPlays: 0, // みんなで対戦した回数
+  wrong: [], // まちがえて、まだ正解していない問題の番号(おさらい用)
+  dailyLast: "", // 毎日1問を、最後にやった日
+  dailyStreak: 0, // 毎日1問を、続けている日数
+  dailyDays: 0, // 毎日1問を、やった日数(ぜんぶで)
 };
 
 let cache = null;
@@ -27,6 +31,10 @@ function number(value) {
 
 function ids(list) {
   return Array.isArray(list) ? [...new Set(list.filter((id) => typeof id === "string"))] : [];
+}
+
+function text(value) {
+  return typeof value === "string" ? value : "";
 }
 
 function clean(raw) {
@@ -42,6 +50,10 @@ function clean(raw) {
     right: ids(raw?.right),
     oniRight: ids(raw?.oniRight),
     versusPlays: number(raw?.versusPlays ?? raw?.coopPlays), // coopPlays は、協力型だったころの名前
+    wrong: ids(raw?.wrong),
+    dailyLast: text(raw?.dailyLast),
+    dailyStreak: number(raw?.dailyStreak),
+    dailyDays: number(raw?.dailyDays),
   };
 }
 
@@ -63,7 +75,7 @@ export function reconcile(stats) {
 }
 
 export function loadStats() {
-  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight] };
+  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong] };
   let stats = clean(EMPTY);
   try {
     const saved = localStorage.getItem(KEY);
@@ -85,22 +97,35 @@ function save(stats) {
   }
 }
 
+// まちがえた問題を、おぼえておく(正解したら、わすれる)。
+function updateWrong(stats, answers) {
+  const wrong = new Set(stats.wrong);
+  for (const answer of answers) {
+    if (answer.correct) wrong.delete(answer.id);
+    else wrong.add(answer.id);
+  }
+  stats.wrong = [...wrong];
+}
+
 // 5問の結果を記録する。ふつうモードで4回分そろったら、setCompleted を true にして、数えなおす。
+// mode:"normal"(ふつう)、"hard"(難しい)、"subject"(教科えらび。最高得点と、難しさの回数には入れない)
 export function recordRound({ correct, total, score, answers = [], mode = "normal" }) {
   const stats = loadStats();
   const hard = mode === "hard";
-  const isRecord = score > (hard ? stats.bestHard : stats.best);
+  const normal = mode === "normal";
+  const isRecord = (hard || normal) && score > (hard ? stats.bestHard : stats.best);
   stats.plays += 1;
   stats.answered += total;
   stats.correct += correct;
   if (hard) stats.bestHard = Math.max(stats.bestHard, score);
-  else stats.best = Math.max(stats.best, score);
-  if (!hard) stats.setRounds.push(score); // 難しさのカウンターを最初にもどす目安は、ふつうモードだけ
+  else if (normal) stats.best = Math.max(stats.best, score);
+  if (normal) stats.setRounds.push(score); // 難しさのカウンターを最初にもどす目安は、ふつうモードだけ
+  updateWrong(stats, answers);
   stats.seen = ids([...stats.seen, ...answers.map((answer) => answer.id)]);
   stats.right = ids([...stats.right, ...answers.filter((answer) => answer.correct).map((answer) => answer.id)]);
 
   const result = { isRecord, setCompleted: false };
-  if (!hard && stats.setRounds.length >= ROUNDS_PER_SET) {
+  if (normal && stats.setRounds.length >= ROUNDS_PER_SET) {
     result.setCompleted = true;
     stats.setRounds = [];
   }
@@ -124,10 +149,31 @@ export function recordVersus() {
   save(stats);
 }
 
+// おさらいの結果を記録する。まちがえた問題の一覧だけが変わる(成績の回数や、総合得点には入れない)。
+export function recordReview(answers = []) {
+  const stats = loadStats();
+  updateWrong(stats, answers);
+  save(stats);
+  return stats.wrong.length;
+}
+
+// 毎日1問の結果を記録する。1日1回だけ(その日の2回目からは、記録しない)。続けた日数を数える。
+// 戻り値:{ already: その日は、記録ずみか, streak: 続けている日数, days: やった日数(ぜんぶで) }
+export function recordDaily({ date, previous, answer }) {
+  const stats = loadStats();
+  if (stats.dailyLast === date) return { already: true, streak: stats.dailyStreak, days: stats.dailyDays };
+  stats.dailyStreak = stats.dailyLast === previous ? stats.dailyStreak + 1 : 1;
+  stats.dailyDays += 1;
+  stats.dailyLast = date;
+  if (answer) updateWrong(stats, [answer]);
+  save(stats);
+  return { already: false, streak: stats.dailyStreak, days: stats.dailyDays };
+}
+
 // 記録の中から、いまの問題にない番号(古い形式の番号や、なくなった問題)を取りのぞく。
 export function pruneStats(validIds) {
   const stats = loadStats();
   const keep = (list) => list.filter((id) => validIds.has(id));
-  const next = reconcile({ ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight) });
+  const next = reconcile({ ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight), wrong: keep(stats.wrong) });
   if (JSON.stringify(next) !== JSON.stringify(stats)) save(next);
 }

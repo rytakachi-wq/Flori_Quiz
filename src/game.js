@@ -9,6 +9,15 @@ export const ONI_LEVEL = 5; // オニ問題の段階
 const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上がる
 
 export const MAX_SCORE = QUESTIONS_PER_ROUND * POINTS_PER_CORRECT;
+export const HINT_COST = 2; // ヒントを見ると、その問題の点が2点へる(正解したとき、5点→3点)
+
+// 教科えらび。問題の「分類(category)」を、理系・文系・ひらめきに、まとめる。
+export const SUBJECTS = {
+  all: { name: "ぜんぶ", categories: null },
+  science: { name: "理系", categories: ["理科", "科学", "数", "論理", "規則"] },
+  humanities: { name: "文系", categories: ["社会", "国語", "日常"] },
+  flash: { name: "ひらめき", categories: ["ひらめき"] },
+};
 
 // みんなで対戦。2〜4人が、1台の画面で、順番に答えて点数を競う。3回戦(段階1・2・3)で、1回戦は1点、2回戦は2点、3回戦は3点。
 export const VERSUS_MIN_PLAYERS = 2;
@@ -58,11 +67,16 @@ export function judge(question, response) {
   return fn(question, response);
 }
 
+// 1問の点。正解で5点。ヒントを見たときは、HINT_COST 点へる。
+export function questionPoints(correct, hinted) {
+  return correct ? POINTS_PER_CORRECT - (hinted ? HINT_COST : 0) : 0;
+}
+
 function roundResult(round) {
   return {
     correct: round.correct,
     total: QUESTIONS_PER_ROUND,
-    score: round.correct * POINTS_PER_CORRECT,
+    score: round.points ?? round.correct * POINTS_PER_CORRECT,
     answers: [...(round.roundAnswers ?? [])], // 答えた問題と、正解したか(成績の「出会った問題」「正解した問題」に使う)
   };
 }
@@ -89,6 +103,7 @@ export class Session {
     this.roundStartCounter = this.counter;
     this.roundUsed = [];
     this.roundAnswers = [];
+    this.points = 0;
   }
 
   // 途中でやめたとき。この回の問題とカウンターを、はじめる前の状態に戻す。
@@ -119,8 +134,9 @@ export class Session {
     return { question, leveledUp };
   }
 
-  answer(question, response) {
+  answer(question, response, hinted = false) {
     const correct = judge(question, response);
+    this.points += questionPoints(correct, hinted);
     this.used.add(question.id);
     this.roundUsed.push(question.id);
     this.roundAnswers.push({ id: question.uid ?? question.id, correct }); // 成績には、番号がかわっても変わらない uid で、記録する
@@ -205,6 +221,7 @@ export class HardRound {
     this.asked = 0;
     this.correct = 0;
     this.roundAnswers = [];
+    this.points = 0;
   }
 
   // 途中でやめたとき。この回で選んだ問題を、また出せるようにもどす。
@@ -217,8 +234,9 @@ export class HardRound {
     return { question: this.questions[this.asked], leveledUp: false };
   }
 
-  answer(question, response) {
+  answer(question, response, hinted = false) {
     const correct = judge(question, response);
+    this.points += questionPoints(correct, hinted);
     this.roundAnswers.push({ id: question.uid ?? question.id, correct }); // 成績には、番号がかわっても変わらない uid で、記録する
     this.asked += 1;
     if (correct) this.correct += 1;
@@ -234,6 +252,80 @@ export class HardRound {
     this.startRound();
     return result;
   }
+}
+
+// 決まった問題を、段階の低い順に出す遊び(教科えらび・おさらい・毎日1問)。難しさの調整はない。
+export class PracticeRound {
+  constructor(questions) {
+    this.questions = [...questions].sort((a, b) => a.level - b.level || a.id.localeCompare(b.id));
+    this.startRound();
+  }
+
+  startRound() {
+    this.asked = 0;
+    this.correct = 0;
+    this.roundAnswers = [];
+    this.points = 0;
+  }
+
+  abandonRound() {
+    this.startRound();
+  }
+
+  get total() {
+    return this.questions.length;
+  }
+
+  nextQuestion() {
+    return { question: this.questions[this.asked], leveledUp: false };
+  }
+
+  answer(question, response, hinted = false) {
+    const correct = judge(question, response);
+    this.points += questionPoints(correct, hinted);
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct });
+    this.asked += 1;
+    if (correct) this.correct += 1;
+    return correct;
+  }
+
+  get roundFinished() {
+    return this.asked >= this.questions.length;
+  }
+
+  finishRound() {
+    const result = { ...roundResult(this), total: this.questions.length };
+    this.startRound();
+    return result;
+  }
+}
+
+// 問題の中から、count 問を、ランダムに選ぶ。
+export function pickRandom(pool, count, rng = Math.random) {
+  const rest = [...pool];
+  const picked = [];
+  while (picked.length < count && rest.length > 0) picked.push(rest.splice(Math.floor(rng() * rest.length), 1)[0]);
+  return picked;
+}
+
+// 日付("2026-10-14" のような文字列)。端末の日付を使う。
+export function dateKey(date = new Date()) {
+  const two = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${two(date.getMonth() + 1)}-${two(date.getDate())}`;
+}
+
+// 前の日の日付
+export function previousDateKey(key) {
+  const [y, m, d] = key.split("-").map(Number);
+  return dateKey(new Date(y, m - 1, d - 1));
+}
+
+// 毎日1問:その日の問題は、日付で決まる(同じ日は、だれでも同じ問題。番号順の問題の中から、日付をもとに選ぶ)。
+export function dailyQuestion(questions, key) {
+  const sorted = [...questions].sort((a, b) => a.id.localeCompare(b.id));
+  const [y, m, d] = key.split("-").map(Number);
+  const day = Math.floor(Date.UTC(y, m - 1, d) / 86400000); // 1970年からの日数
+  return sorted[((day % sorted.length) + sorted.length) % sorted.length];
 }
 
 // みんなで対戦。各回戦(段階1→2→3)で、全員に、同じ段階の、別々の問題を出す。ふつうモードの問題から、ランダムに選ぶ。
