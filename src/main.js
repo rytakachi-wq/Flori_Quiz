@@ -17,7 +17,6 @@ import {
   VersusRound,
   dailyQuestion,
   dateKey,
-  pickRandom,
   previousDateKey,
   totalScore,
 } from "./game.js";
@@ -157,10 +156,10 @@ function refreshCover() {
   const stats = loadStats();
   const today = dateKey();
   const dailyDone = stats.dailyLast === today;
-  $("btn-daily").textContent = dailyDone ? "毎日1問(済)" : "毎日1問";
+  $("btn-daily").querySelector(".tile-label").textContent = dailyDone ? "毎日1問(おわり)" : "毎日1問";
   $("btn-daily").disabled = dailyDone;
   const left = stats.wrong.filter((id) => playableIds().has(id)).length;
-  $("btn-review").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(なし)";
+  $("btn-review").querySelector(".tile-label").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(なし)";
   $("btn-review").disabled = left === 0;
 }
 
@@ -177,7 +176,7 @@ function startPlay(nextMode) {
     const wrong = new Set(loadStats().wrong);
     const pool = playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
     if (pool.length === 0) return show("cover");
-    play = new PracticeRound(pickRandom(pool, QUESTIONS_PER_ROUND));
+    play = new PracticeRound(pool); // まちがえた問題を、ぜんぶ(正解すると、おさらいから消える)
   } else if (mode === "daily") {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
   } else play = session;

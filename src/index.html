@@ -8,32 +8,37 @@
 </head>
 <body>
   <div id="opening" class="overlay opening" role="button" tabindex="0" aria-label="画面をさわって、スタート">
+    <div class="confetti" aria-hidden="true"><span>⭐</span><span>✨</span><span>🎈</span><span>🌸</span><span>💡</span><span>⭐</span><span>🎈</span><span>✨</span><span>🌸</span><span>💡</span></div>
     <img class="logo" src="../assets/flori/src/logo.png" alt="フロリ">
-    <p class="opening-title">ひらめきクイズ</p>
-    <p class="opening-hint">画面をさわって スタート</p>
+    <p class="opening-title" aria-label="ひらめきクイズ"><span style="--i:0">ひ</span><span style="--i:1">ら</span><span style="--i:2">め</span><span style="--i:3">き</span><span style="--i:4">ク</span><span style="--i:5">イ</span><span style="--i:6">ズ</span></p>
+    <p class="opening-hint">画面をさわって スタート!</p>
     <img class="opening-flori" src="../assets/flori/src/body_wave.webp" alt="" hidden>
   </div>
   <div id="announce" class="overlay announce" aria-live="polite" hidden>
+    <div class="confetti" aria-hidden="true"><span>⭐</span><span>✨</span><span>🎈</span><span>🌸</span><span>💡</span><span>⭐</span><span>🎈</span><span>✨</span><span>🌸</span><span>💡</span></div>
     <img id="announce-flori" class="announce-flori" alt="" hidden>
     <p id="announce-text" class="announce-text"></p>
   </div>
   <main class="app">
 
-    <!-- 表紙 -->
+    <!-- 表紙(モードえらび) -->
     <section id="screen-cover" class="screen" aria-label="表紙">
+      <button id="btn-settings" class="cover-gear" type="button" aria-label="設定"><span aria-hidden="true">⚙️</span> 設定</button>
       <img class="logo" src="../assets/flori/src/logo.png" alt="フロリ">
       <h1 class="title">Flori_Quiz</h1>
-      <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
+      <div class="hero">
+        <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
+      </div>
       <p class="bubble">ヤア! ボクはフロリだヨ!<br>ひらめきクイズで遊ぼう!</p>
+      <h2 class="mode-title">モードえらび</h2>
       <div class="menu">
-        <button id="btn-start" class="btn btn-main" type="button">始める</button>
-        <button id="btn-daily" class="btn btn-main" type="button">毎日1問</button>
-        <button id="btn-review" class="btn btn-sub" type="button">おさらい</button>
-        <button id="btn-hard" class="btn btn-hard" type="button">難しいモード</button>
-        <button id="btn-versus" class="btn btn-versus" type="button">みんなで対戦</button>
-        <button id="btn-relax" class="btn btn-relax" type="button">リラックス</button>
-        <button id="btn-records" class="btn btn-sub" type="button">成績</button>
-        <button id="btn-settings" class="btn btn-sub" type="button">設定</button>
+        <button id="btn-start" class="tile t-start" type="button"><span class="tile-icon" aria-hidden="true">💡</span><span class="tile-label">始める</span></button>
+        <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-label">毎日1問</span></button>
+        <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-label">おさらい</span></button>
+        <button id="btn-hard" class="tile t-hard" type="button"><span class="tile-icon" aria-hidden="true">🔥</span><span class="tile-label">難しいモード</span></button>
+        <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-label">みんなで対戦</span></button>
+        <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-label">リラックス</span></button>
+        <button id="btn-records" class="tile t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-label">成績</span></button>
       </div>
       <p class="note">1回は5問。全部正解で25点!</p>
       <p id="sound-hint" class="note">♪ 画面をクリックすると、音楽が流れるよ。</p>
@@ -61,7 +66,16 @@
       <h2 class="title">お花畑</h2>
       <p id="garden-message" class="bubble"></p>
       <div id="garden"></div>
-      <p id="garden-hint" class="note" hidden>ヒント:木をおすと、その木と上下左右の木が1段階育つヨ(🌱芽→🌿枝→🌳木→🌸桜の木→芽…)。全部を桜の木にしよう。光っている所を、おしてみよう。</p>
+      <div id="garden-hint" class="note garden-tips" hidden>
+        <p>ヒント:木をおすと、その木と上下左右の木が1段階育つヨ(🌱芽→🌿枝→🌳木→🌸桜の木→芽…)。全部を桜の木にしよう。光っている所を、おしてみよう。</p>
+        <p class="tips-title">解くコツ</p>
+        <ol>
+          <li>上の段から順に、そろえていこう。上の段の木を育てたいときは、その「すぐ下」の木をおすと、上の木も育つヨ。</li>
+          <li>同じ木を4回おすと、もとにもどるヨ。だから、1つの木を、4回以上おす必要はないヨ。</li>
+          <li>下の段まで来て、そろわない木が残ったら、上の段の木を何個かおしてから、もう一度、上から順にやり直そう。</li>
+          <li>行きづまったら、「ヒント」で光る木を、おしてみよう。</li>
+        </ol>
+      </div>
       <div class="buttons">
         <button class="btn btn-main" type="button" data-garden="3">易しい(3×3)</button>
         <button class="btn btn-main" type="button" data-garden="4">普通(4×4)</button>

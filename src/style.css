@@ -198,27 +198,90 @@ body {
 .dialog .flori { margin: 0 auto 8px; display: block; }
 
 /* 表紙のメニュー */
-/* 表紙のボタン:2列にそろえる。「始める」と「リラックス」は、よこいっぱい */
+/* 表紙:モードえらび。色とりどりの大きなタイルを、モザイクのように並べる */
+#screen-cover {
+  background:
+    radial-gradient(circle at 20px 20px, #eef7fb 7px, transparent 8px) 0 0 / 40px 40px,
+    var(--card);
+}
+.mode-title {
+  margin: 4px 0 0;
+  padding: 2px 22px;
+  font-size: 20px;
+  color: #fff;
+  background: var(--blue-dark);
+  border: 3px solid var(--line);
+  border-radius: 999px;
+}
+.hero {
+  display: grid;
+  place-items: center;
+  width: min(290px, 72%);
+  aspect-ratio: 1;
+  padding: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 62%, #cfe9f5 63% 80%, transparent 81%);
+}
+.hero .flori-cover { width: 78%; }
+.cover-gear {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: bold;
+  padding: 4px 12px;
+  color: var(--text);
+  background: var(--body);
+  border: 3px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
 .menu {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  width: min(420px, 100%);
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  width: min(460px, 100%);
 }
-.menu .btn {
-  padding: 10px 8px;
-  min-height: 52px;
-  font-size: 18px;
-  line-height: 1.25;
-  text-align: center;
+.tile {
+  --tile: var(--blue);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-height: 84px;
+  padding: 10px 6px;
+  font: inherit;
+  font-weight: bold;
+  color: var(--text);
+  cursor: pointer;
+  border: 4px solid var(--line);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0, rgba(255, 255, 255, 0) 50%), var(--tile);
+  box-shadow: 0 5px 0 rgba(70, 85, 94, 0.35);
+  transition: transform 0.12s, box-shadow 0.12s;
 }
-.menu #btn-start { grid-column: 1 / -1; min-height: 64px; font-size: 26px; }
-.menu #btn-relax { grid-column: 1 / -1; }
-.menu .btn:disabled { opacity: 0.55; cursor: default; }
+.tile:hover:not(:disabled) { transform: translateY(-3px) rotate(-1deg); }
+.tile:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(70, 85, 94, 0.35); }
+.tile:focus-visible { outline: 4px solid var(--green); outline-offset: 2px; }
+.tile:disabled { opacity: 0.55; cursor: default; filter: saturate(0.5); }
+.tile-icon { font-size: 30px; line-height: 1.1; }
+.tile-label { font-size: 18px; line-height: 1.25; text-align: center; }
+.t-start { grid-column: span 6; --tile: var(--blue); flex-direction: row; gap: 14px; min-height: 96px; }
+.t-start .tile-icon { font-size: 46px; }
+.t-start .tile-label { font-size: 30px; }
+.t-daily { grid-column: span 3; --tile: #ffd98a; }
+.t-review { grid-column: span 3; --tile: #dccbf2; }
+.t-hard { grid-column: span 3; --tile: var(--green); }
+.t-versus { grid-column: span 3; --tile: var(--pink); }
+.t-relax { grid-column: span 4; --tile: #bfe8d0; flex-direction: row; gap: 10px; }
+.t-records { grid-column: span 2; --tile: #ffe7a8; }
+@media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
 .subtitle { margin: 6px 0 0; font-size: 18px; color: var(--blue-dark); }
 
 /* 表紙のすみのフロリ(何回かおすと、オニ問題が出る) */
-#screen-cover { position: relative; padding-bottom: 76px; } /* すみのフロリが、文字にかさならないように */
+#screen-cover { position: relative; padding: 50px 18px 76px; } /* すみのフロリが、文字にかさならないように */
 .corner-flori {
   position: absolute;
   right: 10px;
@@ -428,3 +491,52 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 /* ヒント */
 .hint-area { display: grid; gap: 8px; justify-items: center; width: 100%; }
 .hint { margin: 0; padding: 8px 14px; background: #fffbe6; border: 2px solid var(--green); border-radius: 12px; }
+
+/* オープニング・スタート表示を、にぎやかに */
+.opening { background: linear-gradient(160deg, #fff6cf 0%, #d9f0fb 45%, #fbdde0 100%); overflow: hidden; }
+.announce { background: linear-gradient(160deg, rgba(255, 246, 207, 0.96), rgba(217, 240, 251, 0.96) 50%, rgba(251, 221, 224, 0.96)); overflow: hidden; }
+.opening-title { display: flex; }
+.opening-title span {
+  display: inline-block;
+  animation: letter-bounce 1.2s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.1s);
+  text-shadow: 3px 3px 0 #fff, -1px -1px 0 #fff;
+}
+.opening-title span:nth-child(odd) { color: var(--blue-dark); }
+.opening-title span:nth-child(even) { color: #e0869a; }
+@keyframes letter-bounce { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-12px) rotate(-4deg); } }
+.announce-text {
+  color: #e0869a;
+  -webkit-text-stroke: 3px var(--line);
+  paint-order: stroke fill;
+  text-shadow: 0 5px 0 rgba(70, 85, 94, 0.3);
+}
+.confetti { position: absolute; inset: 0; pointer-events: none; }
+.confetti span {
+  position: absolute;
+  top: -10%;
+  font-size: 28px;
+  animation: confetti-fall 4s linear infinite;
+}
+.confetti span:nth-child(1) { left: 6%; animation-delay: 0s; }
+.confetti span:nth-child(2) { left: 18%; animation-delay: 1.2s; font-size: 22px; }
+.confetti span:nth-child(3) { left: 30%; animation-delay: 0.5s; }
+.confetti span:nth-child(4) { left: 42%; animation-delay: 2.1s; font-size: 34px; }
+.confetti span:nth-child(5) { left: 54%; animation-delay: 0.9s; }
+.confetti span:nth-child(6) { left: 64%; animation-delay: 2.7s; font-size: 24px; }
+.confetti span:nth-child(7) { left: 74%; animation-delay: 0.3s; }
+.confetti span:nth-child(8) { left: 84%; animation-delay: 1.7s; font-size: 30px; }
+.confetti span:nth-child(9) { left: 92%; animation-delay: 2.4s; }
+.confetti span:nth-child(10) { left: 48%; animation-delay: 3.2s; font-size: 20px; }
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(115vh) rotate(360deg); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .confetti span, .opening-title span { animation: none; } .confetti span { top: 10%; } }
+
+/* お花畑のコツ */
+.garden-tips { width: min(460px, 100%); padding: 8px 16px; background: #fffbe6; border: 2px solid var(--green); border-radius: 12px; text-align: left; }
+.garden-tips p { margin: 4px 0; }
+.garden-tips .tips-title { font-weight: bold; color: var(--blue-dark); }
+.garden-tips ol { margin: 4px 0; padding-left: 1.4em; }
