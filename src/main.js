@@ -83,6 +83,14 @@ function startCoverIdle() {
   idleTimer = setTimeout(() => $("screen-cover").classList.add("is-lively"), 3000);
 }
 
+// 表紙で、画面にさわる・動かす・キーをおすと、動きを止めて、また3秒数えなおす
+function noteActivity() {
+  if (!$("screen-cover").hidden) startCoverIdle();
+}
+for (const type of ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"]) {
+  document.addEventListener(type, noteActivity, { passive: true });
+}
+
 function show(name) {
   for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
   if (name !== "cover") coverTaps = 0;
@@ -271,7 +279,6 @@ function showQuestion() {
           ? `${play.round}回戦 ${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} ${VERSUS_LEVEL_WORDS[play.round]}・正解で${play.round}点(${versusPlayers}人)` : `難しさ ${"★".repeat(question.level)}${"☆".repeat(Math.max(0, MAX_LEVEL - question.level))}`;
   $("q-text").textContent = question.text;
   clearTimeout(detailTimer);
-  $("q-flori").classList.remove("is-react");
   $("q-feedback").hidden = true;
 
   const message = $("q-message");
@@ -448,24 +455,23 @@ function answer(response) {
   const rightText = renderers[current.type].correctText(current);
   $("q-explanation").textContent = `正解は「${rightText}」\n${current.explanation}`;
   $("btn-next").textContent = play.roundFinished ? "結果を見る" : "次へ";
-  // まず、フロリの顔を、大きく見せる。解説と「次へ」は、少したってから出す。
+  // まず、全身のフロリを見せる(大きくはしない)。そのあとで、解説と「次へ」の所まで、画面を動かす。
+  $("q-react-flori").src = correct ? IMG.correct : IMG.wrong;
+  $("q-react-flori").alt = correct ? "笑うフロリ" : "目をつぶるフロリ";
   $("q-detail").hidden = true;
-  $("q-flori").classList.add("is-react");
   $("q-feedback").hidden = false;
-  $("q-feedback").scrollIntoView({ block: "nearest", behavior: "smooth" });
+  $("q-react").scrollIntoView({ block: "center", behavior: "smooth" });
   clearTimeout(detailTimer);
   detailTimer = setTimeout(revealDetail, REVEAL_MS);
 }
 
-const REVEAL_MS = 1500; // フロリの顔を見せる時間
+const REVEAL_MS = 1800; // 全身のフロリを見せる時間
 let detailTimer = 0;
 function revealDetail() {
   clearTimeout(detailTimer);
-  $("q-flori").classList.remove("is-react");
   $("q-detail").hidden = false;
-  // 次へのボタンに移るとき、画面が勝手に下までスクロールして、正解・不正解の表示が見えなくならないようにする。
   $("btn-next").focus({ preventScroll: true });
-  $("q-detail").scrollIntoView({ block: "nearest", behavior: "smooth" });
+  $("btn-next").scrollIntoView({ block: "end", behavior: "smooth" }); // 「次へ」のボタンまで動かす
 }
 
 // 総合得点(100点満点)を、保存した記録から数える。いまある問題だけを数える(問題が増えても、満点は100点のまま)。
@@ -519,7 +525,7 @@ function showResult() {
     $("r-title").textContent = "おさらいの結果!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
-    setNote.textContent = left > 0 ? `おさらいが必要な問題は、あと${left}問だヨ。` : "おさらい完了! まちがえた問題はもうないヨ!";
+    setNote.textContent = left > 0 ? `おさらいが必要な問題はあと${left}問だヨ。` : "おさらい完了! まちがえた問題はもうないヨ!";
     $("btn-again").textContent = "もう一度おさらい";
     $("btn-again").hidden = left === 0;
   } else if (mode === "daily") {
@@ -557,10 +563,10 @@ function showResult() {
     $("r-record").hidden = !saved.isRecord;
     $("btn-again").textContent = "続けて遊ぶ";
     if (saved.setCompleted) {
-      setNote.textContent = `${ROUNDS_PER_SET}回遊んだヨ! 難しさは、また最初から!`;
+      setNote.textContent = `${ROUNDS_PER_SET}回遊んだヨ! 難しさはまた最初から!`;
       session.resetSet();
     } else {
-      setNote.textContent = `${ROUNDS_PER_SET}回のうち${stats.setRounds.length}回目が終わったヨ(続けて遊ぶと、難しさも続くヨ)`;
+      setNote.textContent = `${ROUNDS_PER_SET}回のうち${stats.setRounds.length}回目が終わったヨ(続けて遊ぶと難しさも続くヨ)`;
     }
     persistCourse(); // 「つづきから」の記録
   }
@@ -588,14 +594,14 @@ function comment(correct, total = QUESTIONS_PER_ROUND) {
 function versusComment(result) {
   const names = result.winners.map((index) => PLAYER_NAMES[index]);
   if (result.winners.length === result.players) return "全員同点! 引き分けだヨ!";
-  if (result.winners.length > 1) return `${names.join("と")}の同点トップ! みんな、よく頑張ったネ!`;
+  if (result.winners.length > 1) return `${names.join("と")}の同点トップ! みんなよく頑張ったネ!`;
   return `${names[0]}の勝ち! おめでとう!`;
 }
 
 function oniComment(correct) {
-  if (correct === QUESTIONS_PER_ROUND) return "ええっ、全部正解! 天才だヨ!";
+  if (correct === QUESTIONS_PER_ROUND) return "ええっ! 全部正解! 天才だヨ!";
   if (correct >= 3) return "オニを相手にすごいヨ!";
-  if (correct >= 1) return "オニ問題を解くなんて、えらいヨ!";
+  if (correct >= 1) return "オニ問題を解くなんてえらいヨ!";
   return "オニは難しいんだヨ。また挑戦してネ!";
 }
 
@@ -758,7 +764,7 @@ $("btn-hard").addEventListener("click", () => {
     chooseTime("hard");
     return;
   }
-  $("dlg-hard-progress").textContent = `いままでに、${hardUsed.size} / ${hardQuestions.length}問を出したヨ。`;
+  $("dlg-hard-progress").textContent = `いままでに${hardUsed.size} / ${hardQuestions.length}問を出したヨ。`;
   $("dlg-hard").showModal();
 });
 $("btn-hard-continue").addEventListener("click", () => {
@@ -778,7 +784,7 @@ $("btn-hard-cancel").addEventListener("click", () => $("dlg-hard").close());
 $("btn-daily").addEventListener("click", () => {
   if (loadStats().dailyLast === dateKey()) {
     // 今日の分は、もう終わっている
-    $("dlg-info-text").textContent = "今日の分は、もう終わったヨ。また明日、挑戦してネ!";
+    $("dlg-info-text").textContent = "今日の分はもう終わったヨ。また明日挑戦してネ!";
     $("dlg-info").showModal();
   } else chooseTime("daily");
 });
@@ -807,7 +813,7 @@ let gardenSize = 3;
 
 function startGarden(size = gardenSize) {
   gardenSize = size;
-  $("garden-message").textContent = "木をおして、全部を桜の木にしよう。";
+  $("garden-message").textContent = "木をおして全部を桜の木にしよう。";
   $("garden-hint").hidden = true;
   garden = new GardenUI($("garden"), {
     size,
@@ -815,7 +821,7 @@ function startGarden(size = gardenSize) {
       if (moves > 0) $("garden-message").textContent = `桜の木 ${bloomed} / ${total} ・ ${moves}回`;
     },
     onSolved: (moves) => {
-      $("garden-message").textContent = `全部、桜の木になったヨ!${moves}回で完成。すごいネ!`;
+      $("garden-message").textContent = `全部桜の木になったヨ!${moves}回で完成。すごいネ!`;
       playSe("correct");
       recordGarden();
       const fresh = awardBadges();
@@ -980,22 +986,27 @@ function showBadges() {
   awardBadges(); // これまでの記録で、もらえるものを、先にそろえる
   const stats = loadStats();
   const have = new Set(stats.badges);
-  $("badge-title").textContent = `いまの称号:${titleFor(currentTotal(stats))}`;
-  $("badge-count").textContent = `バッジ ${have.size} / ${BADGES.length}個`;
+  $("badge-title").textContent = `いまの称号:${titleFor(currentTotal(stats))}  ・  バッジ ${have.size} / ${BADGES.length}個`;
+  $("badge-detail").textContent = "バッジをおすと、もらいかたが見られるヨ。";
   $("badge-list").replaceChildren(
     ...BADGES.map((badge) => {
+      const owned = have.has(badge.id);
       const item = document.createElement("li");
-      item.className = have.has(badge.id) ? "" : "locked";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `badge-chip${owned ? "" : " locked"}`;
+      button.dataset.noSe = "1";
       const icon = document.createElement("span");
       icon.className = "badge-icon";
-      icon.textContent = have.has(badge.id) ? badge.icon : "🔒";
+      icon.textContent = owned ? badge.icon : "🔒";
       const name = document.createElement("span");
       name.className = "badge-name";
-      name.textContent = have.has(badge.id) ? badge.name : "???";
-      const text = document.createElement("span");
-      text.className = "badge-text";
-      text.textContent = badge.text;
-      item.append(icon, name, text);
+      name.textContent = owned ? badge.name : "???";
+      button.append(icon, name);
+      button.addEventListener("click", () => {
+        $("badge-detail").textContent = `${owned ? `${badge.icon} ${badge.name}` : "🔒 まだ"}:${badge.text}`;
+      });
+      item.append(button);
       return item;
     }),
   );
@@ -1085,13 +1096,18 @@ function applyDress() {
   $("dress-hat").textContent = icon;
 }
 
+let dressTab = "color"; // きせかえで、いま見ている種類(color / hat / theme)
+const DRESS_LISTS = { color: COLORS, hat: HATS, theme: THEMES };
+
 function showDress() {
   awardBadges();
   const stats = loadStats();
   const ctx = { have: new Set(stats.badges), stars: stats.stars };
   $("dress-stars").textContent = stats.stars;
-  const make = (list, kind) =>
-    list.map((choice) => {
+  for (const tab of document.querySelectorAll("[data-dress-tab]")) tab.classList.toggle("is-on", tab.dataset.dressTab === dressTab);
+  const kind = dressTab;
+  $("dress-list").replaceChildren(
+    ...DRESS_LISTS[kind].map((choice) => {
       const open = isOpen(choice, ctx);
       const button = document.createElement("button");
       button.type = "button";
@@ -1102,7 +1118,7 @@ function showDress() {
       button.addEventListener("click", () => {
         if (!open) {
           // まだ使えないもの:もらいかたを、知らせる
-          $("dress-message").textContent = `「${choice.name}」は、${lockText(choice)}でもらえるヨ。`;
+          $("dress-message").textContent = `「${choice.name}」は${lockText(choice)}でもらえるヨ。`;
           return;
         }
         $("dress-message").textContent = "";
@@ -1112,11 +1128,16 @@ function showDress() {
         showDress();
       });
       return button;
-    });
-  $("color-list").replaceChildren(...make(COLORS, "color"));
-  $("hat-list").replaceChildren(...make(HATS, "hat"));
-  $("theme-list").replaceChildren(...make(THEMES, "theme"));
+    }),
+  );
   show("dress");
+}
+for (const tab of document.querySelectorAll("[data-dress-tab]")) {
+  tab.addEventListener("click", () => {
+    dressTab = tab.dataset.dressTab;
+    $("dress-message").textContent = "";
+    showDress();
+  });
 }
 applyDress();
 

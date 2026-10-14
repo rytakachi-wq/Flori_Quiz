@@ -55,13 +55,13 @@
         <button id="btn-dress" class="tile t-small t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">きせかえ</span></span></button>
         <button id="btn-records" class="tile t-small t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span></button>
       </div>
-      <p id="sound-hint" class="note">♪ 画面をクリックすると、音楽が流れるよ。</p>
+      <p id="sound-hint" class="note">♪ 画面をクリックすると音楽が流れるよ。</p>
     </section>
     <!-- 問題図鑑 -->
     <section id="screen-dex" class="screen" aria-label="問題図鑑" hidden>
       <h2 class="title">問題図鑑</h2>
       <p id="dex-count" class="bubble"></p>
-      <p class="note">答えとヒントは、のっていないヨ。問題を解いて、たしかめよう。</p>
+      <p class="note">答えとヒントはのっていないヨ。問題を解いてたしかめよう。</p>
       <ul id="dex-list" class="dex-list"></ul>
       <button id="btn-dex-back" class="btn btn-sub" type="button">戻る</button>
     </section>
@@ -70,13 +70,12 @@
     <section id="screen-badges" class="screen" aria-label="バッジと称号" hidden>
       <h2 class="title">バッジ・称号</h2>
       <p id="badge-title" class="bubble"></p>
-      <p id="badge-count" class="note"></p>
+      <p id="badge-count" class="note" hidden></p>
       <ul id="badge-list" class="badge-list"></ul>
-      <h3 class="dress-title">称号一覧</h3>
-      <p class="note">総合得点で、称号が変わるヨ。</p>
+      <p id="badge-detail" class="note badge-detail" role="status">バッジをおすと、もらいかたが見られるヨ。</p>
+      <h3 class="dress-title">称号一覧(総合得点で変わるヨ)</h3>
       <ul id="title-list" class="title-list"></ul>
-      <h3 class="dress-title">☆の称号</h3>
-      <p class="note">制限時間のごほうびの星の数で、☆の称号が変わるヨ。</p>
+      <h3 class="dress-title">☆の称号(ごほうびの星で変わるヨ)</h3>
       <ul id="star-title-list" class="title-list"></ul>
       <button id="btn-badges-back" class="btn btn-sub" type="button">戻る</button>
     </section>
@@ -90,14 +89,14 @@
           <span id="dress-hat" class="hero-hat" aria-hidden="true"></span>
         </div>
       </div>
-      <p class="note">バッジや星を集めると、使えるものが増えるヨ。  ⭐ <span id="dress-stars">0</span>こ</p>
+      <p class="note">バッジや星を集めると使えるものが増えるヨ。  ⭐ <span id="dress-stars">0</span>こ</p>
       <p id="dress-message" class="note" role="status"></p>
-      <h3 class="dress-title">フロリの色</h3>
-      <div id="color-list" class="dress-list"></div>
-      <h3 class="dress-title">かざり</h3>
-      <div id="hat-list" class="dress-list"></div>
-      <h3 class="dress-title">背景</h3>
-      <div id="theme-list" class="dress-list"></div>
+      <div class="dress-tabs" role="tablist">
+        <button class="dress-tab is-on" type="button" data-dress-tab="color">フロリの色</button>
+        <button class="dress-tab" type="button" data-dress-tab="hat">かざり</button>
+        <button class="dress-tab" type="button" data-dress-tab="theme">背景</button>
+      </div>
+      <div id="dress-list" class="dress-list"></div>
       <button id="btn-dress-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
@@ -107,12 +106,12 @@
       <div class="rules-box">
         <h3>ルール</h3>
         <ol>
-          <li><b>みんなで1台</b>2〜4人で、1台の画面を使うヨ。順番に答えよう。</li>
+          <li><b>みんなで1台</b>2〜4人で1台の画面を使うヨ。順番に答えよう。</li>
           <li><b>3回戦</b>1回戦はやさしい問題、2回戦はふつう、3回戦はむずかしめ。</li>
-          <li><b>問題</b>1回戦ごとに、1人に1問ずつ(1人で全部3問)。人によって、問題はちがうヨ。</li>
-          <li><b>点数</b>正解すると、1回戦は1点、2回戦は2点、3回戦は3点。</li>
-          <li><b>勝ち</b>合計点が一番高い人の勝ち。同じ点なら、引き分け。</li>
-          <li><b>そのほか</b>ヒントはないヨ。制限時間は、つけられるヨ。</li>
+          <li><b>問題</b>1回戦ごとに1人1問ずつ(1人で全部3問)。人によって問題はちがうヨ。</li>
+          <li><b>点数</b>正解すると1回戦は1点、2回戦は2点、3回戦は3点。</li>
+          <li><b>勝ち</b>合計点が一番高い人の勝ち。同じ点なら引き分け。</li>
+          <li><b>そのほか</b>ヒントはないヨ。制限時間はつけられるヨ。</li>
         </ol>
       </div>
       <p class="note">何人で遊ぶ?</p>
@@ -131,16 +130,16 @@
       <div id="garden"></div>
       <div id="garden-hint" class="garden-tips" hidden>
         <h3>ルール</h3>
-        <p>木をおすと、その木と上下左右の木が、1つずつ育つヨ。</p>
+        <p>木をおすと、その木と上下左右の木が1つずつ育つヨ。</p>
         <p class="stage-line">🌱芽 → 🌿枝 → 🌳木 → 🌸桜の木</p>
-        <p>桜の木の次は、芽にもどるヨ。</p>
-        <p>全部を<b>🌸桜の木</b>にしたら、クリア!</p>
+        <p>桜の木の次は芽にもどるヨ。</p>
+        <p>全部を<b>🌸桜の木</b>にしたらクリア!</p>
         <h3>解くコツ</h3>
         <ol>
-          <li><b>上の段から、順にそろえる。</b>上の木を育てたいときは、その「すぐ下」の木をおす。</li>
-          <li><b>同じ木は、3回までで十分。</b>4回おすと、もとにもどるヨ。</li>
-          <li><b>下の段に、そろわない木が残ったら。</b>上の段の木を何個かおして、もう一度、上から順にやり直す。</li>
-          <li><b>行きづまったら、「ヒント」。</b>光る木を、おしてみよう。</li>
+          <li><b>上の段から順にそろえる。</b>上の木を育てたいときは、その「すぐ下」の木をおす。</li>
+          <li><b>同じ木は3回までで十分。</b>4回おすと、もとにもどるヨ。</li>
+          <li><b>下の段にそろわない木が残ったら。</b>上の段の木を何個かおして、もう一度上から順にやり直す。</li>
+          <li><b>行きづまったら「ヒント」。</b>光る木をおしてみよう。</li>
         </ol>
       </div>
       <div class="buttons">
@@ -171,7 +170,7 @@
         <div><dt>正解した問題</dt><dd id="s-right"></dd></div>
         <div><dt>正解率</dt><dd id="s-rate"></dd></div>
       </dl>
-      <p class="note">記録は、このパソコンの中にだけ残るよ。</p>
+      <p class="note">記録はこのパソコンの中にだけ残るよ。</p>
       <button id="btn-records-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
@@ -180,7 +179,7 @@
       <h2 class="title">設定</h2>
       <div class="settings-head">
         <img class="flori flori-tiny" src="../assets/flori/src/pc_form.png" alt="パソコンに変形したフロリ">
-        <p class="bubble">音や文字の大きさを、変えられるヨ!</p>
+        <p class="bubble">音や文字の大きさを変えられるヨ!</p>
       </div>
       <div class="settings-grid">
         <fieldset class="setting-box">
@@ -215,10 +214,10 @@
         </fieldset>
         <fieldset class="setting-box furigana" aria-label="読み上げ">
           <legend>読み上げ</legend>
-          <label><input type="checkbox" id="set-read"> 問題を、自動で読み上げる</label>
+          <label><input type="checkbox" id="set-read"> 問題を自動で読み上げる</label>
         </fieldset>
       </div>
-      <p class="note">音は、0にすると出なくなるよ。</p>
+      <p class="note">音は0にすると出なくなるよ。</p>
       <div class="buttons">
         <button id="btn-settings-reset" class="btn btn-sub" type="button">初期設定に戻す</button>
         <button id="btn-settings-back" class="btn btn-main" type="button">戻る</button>
@@ -249,7 +248,10 @@
       </div>
       <ol id="q-choices" class="choices"></ol>
       <div id="q-feedback" class="feedback" hidden>
-        <p id="q-verdict" class="verdict"></p>
+        <div id="q-react" class="q-react">
+          <img id="q-react-flori" class="flori react-flori" alt="">
+          <p id="q-verdict" class="verdict"></p>
+        </div>
         <div id="q-detail" class="q-detail" hidden>
           <p id="q-explanation" class="explanation"></p>
           <button id="btn-next" class="btn btn-main" type="button"></button>
@@ -294,7 +296,7 @@
   </dialog>
 
   <dialog id="dlg-time" class="dialog" aria-labelledby="dlg-time-text">
-    <p id="dlg-time-text">制限時間をつける?<br>つけると、1問20秒で答えるヨ。<br>全部で、星のごほうびがもらえるヨ。</p>
+    <p id="dlg-time-text">制限時間をつける?<br>つけると1問20秒で答えるヨ。<br>星のごほうびがもらえるヨ。</p>
     <div class="buttons buttons-choice">
       <button id="btn-time-no" class="btn btn-main btn-mid-big" type="button">つけない</button>
       <button id="btn-time-yes" class="btn btn-plain btn-mid" type="button">つける<small>(ごほうびあり)</small></button>
@@ -302,7 +304,7 @@
     </div>
   </dialog>
   <dialog id="dlg-restart" class="dialog" aria-labelledby="dlg-restart-text">
-    <p id="dlg-restart-text">最初からにすると、データが消えるけど、本当にいいですか?</p>
+    <p id="dlg-restart-text">最初からにするとデータが消えるけど、本当にいいですか?</p>
     <div class="buttons buttons-choice">
       <button id="btn-restart-no" class="btn btn-main btn-big" type="button">やめる</button>
       <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">はい、最初から</button>
@@ -353,7 +355,7 @@
     </fieldset>
     <fieldset class="furigana" aria-label="読み上げ">
       <legend>読み上げ</legend>
-      <label><input type="checkbox" id="set-read-dlg"> 問題を、自動で読み上げる</label>
+      <label><input type="checkbox" id="set-read-dlg"> 問題を自動で読み上げる</label>
     </fieldset>
     <div class="buttons">
       <button id="btn-volume-close" class="btn btn-main" type="button">戻る</button>
