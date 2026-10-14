@@ -409,10 +409,6 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 @keyframes flori-wave { from { transform: rotate(-5deg); } to { transform: rotate(5deg) translateY(-6px); } }
 @media (prefers-reduced-motion: reduce) { .opening-flori, .announce-flori { animation: none; } }
 
-/* 教科えらび・ヒント */
-#screen-subject .game-choices { display: grid; gap: 10px; width: min(420px, 100%); }
-#screen-subject .btn { display: grid; gap: 2px; padding: 10px 18px; }
-.subject-name { font-size: 1.15em; }
-.subject-note { font-size: 0.8em; font-weight: normal; }
+/* ヒント */
 .hint-area { display: grid; gap: 8px; justify-items: center; width: 100%; }
 .hint { margin: 0; padding: 8px 14px; background: #fffbe6; border: 2px solid var(--green); border-radius: 12px; }

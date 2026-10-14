@@ -108,7 +108,7 @@ function updateWrong(stats, answers) {
 }
 
 // 5問の結果を記録する。ふつうモードで4回分そろったら、setCompleted を true にして、数えなおす。
-// mode:"normal"(ふつう)、"hard"(難しい)、"subject"(教科えらび。最高得点と、難しさの回数には入れない)
+// mode:"normal"(ふつう)、"hard"(難しい)
 export function recordRound({ correct, total, score, answers = [], mode = "normal" }) {
   const stats = loadStats();
   const hard = mode === "hard";

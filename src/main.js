@@ -9,7 +9,6 @@ import {
   PracticeRound,
   QUESTIONS_PER_ROUND,
   ROUNDS_PER_SET,
-  SUBJECTS,
   Session,
   TOTAL_POINTS,
   VERSUS_MAX_PLAYERS,
@@ -37,11 +36,10 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "subject", "versus", "relax", "records", "settings", "question", "result", "error"];
+const SCREENS = ["cover", "versus", "relax", "records", "settings", "question", "result", "error"];
 
 let coverTaps = 0;
-let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"subject"(教科えらび)、"review"(おさらい)、"daily"(毎日1問)
-let subjectKey = "all"; // 教科えらびで選んだ教科(SUBJECTS のキー)
+let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"review"(おさらい)、"daily"(毎日1問)
 let hinted = false; // いまの問題で、ヒントを見たか
 let streak = 0; // 連続して正解した数(声を出すために数える)
 let versusPlayers = 2; // みんなで対戦する人数
@@ -121,7 +119,7 @@ const renderers = {
 let normalQuestions = [];
 let hardQuestions = [];
 let oniQuestions = [];
-let playableQuestions = []; // ふつう+難しい問題(教科えらび・おさらい・毎日1問で使う)
+let playableQuestions = []; // ふつう+難しい問題(おさらい・毎日1問で使う)
 const hardUsed = new Set(); // 難しいモードで、もう出した問題(回をまたいで使う)
 let normalIds = new Set(); // ふつうの問題の uid(成績の記録に使う。番号がつけなおされても、変わらない)
 let hardIds = new Set(); // 難しい問題の uid
@@ -155,7 +153,7 @@ function announce(text, jingle, then, image) {
 }
 
 // はじめの声(モードごと)
-const START_VOICE = { normal: "fight", subject: "fight", daily: "fight", review: "go", hard: "cheer", oni: "wow" };
+const START_VOICE = { normal: "fight", daily: "fight", review: "go", hard: "cheer", oni: "wow" };
 
 // 表紙のボタンの文字(今日の毎日1問をやったか、おさらいが何問あるか)を、いまの記録に合わせる。
 function refreshCover() {
@@ -180,10 +178,7 @@ function startPlay(nextMode) {
   if (mode === "oni") play = new OniRound(oniQuestions);
   else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
   else if (mode === "versus") play = new VersusRound(normalQuestions, versusPlayers);
-  else if (mode === "subject") {
-    const pool = playableQuestions.filter((q) => subjectKey === "all" || q.subject === subjectKey);
-    play = new PracticeRound(pickRandom(pool, QUESTIONS_PER_ROUND));
-  } else if (mode === "review") {
+  else if (mode === "review") {
     const wrong = new Set(loadStats().wrong);
     const pool = playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
     if (pool.length === 0) return show("cover");
@@ -207,7 +202,6 @@ function showQuestion() {
     hard: "難しい ",
     oni: "オニ ",
     versus: "",
-    subject: `${SUBJECTS[subjectKey].name} `,
     review: "おさらい ",
     daily: "毎日1問 ",
   }[mode];
@@ -240,7 +234,7 @@ function showQuestion() {
     message.hidden = true;
   }
 
-  // ヒント:ふつう・難しい・教科えらび・おさらい・毎日1問で、1問に1回だけ。オニと対戦では、出さない。
+  // ヒント:ふつう・難しい・おさらい・毎日1問で、1問に1回だけ。オニと対戦では、出さない。
   hinted = false;
   $("q-hint").hidden = true;
   $("btn-hint").disabled = false;
@@ -361,14 +355,6 @@ function showResult() {
     result.winners.forEach((index) => $("r-board").children[index].classList.add("is-winner"));
     setNote.textContent = "";
     $("btn-again").textContent = "もう一度対戦";
-  } else if (mode === "subject") {
-    // 教科えらび:遊んだ回数・答えた問題・正解率・総合得点に入る。最高得点には入れない。
-    recordRound({ ...result, mode: "subject" });
-    $("r-title").textContent = "教科えらびの結果!";
-    $("r-best-row").hidden = true;
-    $("r-record").hidden = true;
-    setNote.textContent = gainText();
-    $("btn-again").textContent = "続けて遊ぶ";
   } else if (mode === "review") {
     // おさらい:まちがえた問題の一覧だけが変わる。成績の回数や、総合得点には入れない。
     const left = recordReview(result.answers);
@@ -551,14 +537,6 @@ $("btn-start").addEventListener("click", () => startPlay("normal"));
 $("btn-hard").addEventListener("click", () => startPlay("hard"));
 $("btn-daily").addEventListener("click", () => startPlay("daily"));
 $("btn-review").addEventListener("click", () => startPlay("review"));
-$("btn-subject").addEventListener("click", () => show("subject"));
-$("btn-subject-back").addEventListener("click", () => show("cover"));
-for (const button of document.querySelectorAll("[data-subject]")) {
-  button.addEventListener("click", () => {
-    subjectKey = button.dataset.subject;
-    startPlay("subject");
-  });
-}
 // ヒント:1問に1回。見ると、その問題の点が2点へる。
 $("btn-hint").addEventListener("click", () => {
   if (answered || hinted || !current?.hint) return;
