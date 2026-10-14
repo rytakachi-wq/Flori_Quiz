@@ -12,8 +12,8 @@ const SETTINGS_KEY = "floriQuiz.settings.v2";
 // 場面:cover(表紙・成績・設定)、question(ふつうの問題)、hard(難しいモード)、versus(みんなで対戦)、
 //      relax(リラックス)、oni(オニ問題)、result(結果)
 const BGM = {
-  cover: "cover",
-  question: "study",
+  cover: "study",
+  question: "cover",
   hard: "deep",
   versus: "versus",
   relax: "relax",
@@ -140,6 +140,11 @@ export function playSe(name) {
 
 export function getVolume(kind) {
   return volumes[kind];
+}
+
+// 音の大きさを、はじめの大きさにもどす。
+export function resetVolumes() {
+  for (const kind of Object.keys(DEFAULTS)) setVolume(kind, DEFAULTS[kind]);
 }
 
 export function setVolume(kind, value) {

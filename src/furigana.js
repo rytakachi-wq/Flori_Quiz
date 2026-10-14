@@ -170,6 +170,22 @@ try {
   // 読めなければ、はじめの設定(すべての漢字)にする。
 }
 
+// 辞書の一覧(漢字とふりがなを、見くらべるため)。読みの順に、ならべる。
+// single:漢字1字  chu:中学以降に習う漢字をふくむ
+export function dictionaryList() {
+  const list = [...lexicon].map(([key, segs]) => {
+    const reading = segs.map(([text, ruby]) => ruby ?? text).join("");
+    return {
+      key,
+      reading,
+      html: rubyHtml(key, "all"),
+      single: [...key].length === 1,
+      chu: [...key].some((ch) => KANJI.test(ch) && !kyoiku.has(ch)),
+    };
+  });
+  return list.sort((x, y) => x.reading.localeCompare(y.reading, "ja") || x.key.localeCompare(y.key, "ja"));
+}
+
 export function getFuriganaMode() {
   return mode;
 }

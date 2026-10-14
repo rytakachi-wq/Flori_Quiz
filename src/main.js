@@ -16,8 +16,8 @@ import {
 } from "./game.js";
 import { loadStats, pruneStats, recordOni, recordRound, recordVersus } from "./storage.js";
 import { GardenUI } from "./garden.js";
-import { getVolume, playJingle, playSe, setScene, setVolume, unlock } from "./audio.js";
-import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
+import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
+import { dictionaryList, getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
 const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数おすと、オニ問題が出る
@@ -29,7 +29,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "versus", "relax", "records", "settings", "question", "result", "error"];
+const SCREENS = ["cover", "versus", "relax", "records", "settings", "kanji", "question", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)
@@ -125,8 +125,14 @@ function setFlori(src, alt) {
 }
 
 // 画面いっぱいに、ひとことを出して、短い曲を鳴らしてから、つぎへ進む(「それでは、スタート!」など)。
-function announce(text, jingle, then) {
+function announce(text, jingle, then, image) {
   $("announce-text").textContent = text;
+  const flori = $("announce-flori");
+  flori.src = image;
+  flori.hidden = false;
+  flori.style.animation = "none";
+  void flori.offsetWidth; // フロリの登場を、はじめから動かす
+  flori.style.animation = "";
   $("announce").hidden = false;
   const length = Math.max(1600, playJingle(jingle) + 300);
   setTimeout(() => {
@@ -141,7 +147,7 @@ function startPlay(nextMode) {
   else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
   else if (mode === "versus") play = new VersusRound(normalQuestions, versusPlayers);
   else play = session;
-  announce("それでは、スタート!", "start", showQuestion);
+  announce("それでは、スタート!", "start", showQuestion, "../assets/flori/src/body_wave.webp");
 }
 
 function showQuestion() {
@@ -342,8 +348,6 @@ function showRecords() {
   const right = s.right.filter((id) => playable.has(id)).length;
   // 総合得点は、いつでも100点満点で見せる(ふつうと難しい問題だけでは95点まで)
   $("s-total").textContent = `${currentTotal(s)}点 / ${TOTAL_POINTS}点`;
-  $("s-best").textContent = `${s.best}点 / ${MAX_SCORE}点`;
-  $("s-best-hard").textContent = `${s.bestHard}点 / ${MAX_SCORE}点`;
   $("s-plays").textContent = `${s.plays}回`;
   $("s-versus").textContent = `${s.versusPlays}回`;
   $("s-seen").textContent = `${seen} / ${playable.size}問`;
@@ -354,7 +358,7 @@ function showRecords() {
 }
 
 function next() {
-  if (play.roundFinished) announce("結果発表〜!", "result", showResult);
+  if (play.roundFinished) announce("結果発表〜!", "result", showResult, "../assets/flori/wave_surprised.png");
   else showQuestion();
 }
 
@@ -411,6 +415,40 @@ for (const radio of document.querySelectorAll('input[type="radio"][name^="furiga
   });
 }
 
+// 初期設定に戻す(音の大きさと、ふりがな。成績は、そのまま)
+$("btn-settings-reset").addEventListener("click", () => {
+  resetVolumes();
+  setFuriganaMode("all");
+  showVolumes();
+  showFurigana();
+  $("settings-message").textContent = "初期設定に戻したヨ。";
+});
+
+// 漢字とふりがなの一覧
+let kanjiFilter = "all";
+function showKanjiList() {
+  const list = dictionaryList();
+  const shown = list.filter(
+    (item) => kanjiFilter === "all" || (kanjiFilter === "single" && item.single) || (kanjiFilter === "word" && !item.single) || (kanjiFilter === "chu" && item.chu),
+  );
+  $("kanji-list").innerHTML = shown.map((item) => `<li${item.chu ? ' class="is-chu"' : ""}>${item.html}</li>`).join("");
+  $("kanji-count").textContent = `${shown.length}個(ぜんぶで${list.length}個)`;
+  for (const button of document.querySelectorAll("[data-kanji-filter]")) {
+    button.classList.toggle("is-on", button.dataset.kanjiFilter === kanjiFilter);
+  }
+}
+$("btn-kanji-list").addEventListener("click", () => {
+  show("kanji");
+  showKanjiList();
+});
+for (const button of document.querySelectorAll("[data-kanji-filter]")) {
+  button.addEventListener("click", () => {
+    kanjiFilter = button.dataset.kanjiFilter;
+    showKanjiList();
+  });
+}
+$("btn-kanji-back").addEventListener("click", () => show("settings"));
+
 // 問題を解いているときの「せってい」
 $("btn-q-settings").addEventListener("click", () => {
   showVolumes();
@@ -463,7 +501,10 @@ for (const button of document.querySelectorAll("[data-garden]")) {
 
 $("btn-records").addEventListener("click", showRecords);
 $("btn-records-back").addEventListener("click", () => show("cover"));
-$("btn-settings").addEventListener("click", () => show("settings"));
+$("btn-settings").addEventListener("click", () => {
+  $("settings-message").textContent = "";
+  show("settings");
+});
 $("btn-settings-back").addEventListener("click", () => show("cover"));
 $("btn-next").addEventListener("click", next);
 $("btn-again").addEventListener("click", () => startPlay(mode));
@@ -524,13 +565,15 @@ init();
 // ゲームを開いたときのオープニング。画面をさわると、曲がなって、表紙になる(ブラウザは、さわるまで音を出せない)。
 function closeOpening() {
   const opening = $("opening");
-  if (opening.hidden) return;
+  if (opening.hidden || opening.classList.contains("is-playing")) return;
   unlock();
-  opening.classList.add("is-leaving");
-  const length = Math.max(1200, playJingle("opening") + 200);
+  opening.classList.add("is-playing"); // フロリが、動いて登場する
+  opening.querySelector(".opening-flori").hidden = false;
+  const length = Math.max(2600, playJingle("opening") + 400);
+  setTimeout(() => opening.classList.add("is-leaving"), length);
   setTimeout(() => {
     opening.hidden = true;
-  }, length);
+  }, length + 600);
 }
 $("opening").addEventListener("click", closeOpening);
 $("opening").addEventListener("keydown", (event) => {
