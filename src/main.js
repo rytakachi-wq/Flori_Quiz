@@ -17,6 +17,7 @@ import {
 } from "./game.js";
 import { loadStats, recordCoop, recordOni, recordRound } from "./storage.js";
 import { getVolume, playSe, setScene, setVolume, unlock } from "./audio.js";
+import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
 const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数おすと、オニ問題が出る
@@ -83,7 +84,7 @@ const renderers = {
       list.replaceChildren();
       const form = document.createElement("form");
       form.className = "answer-form";
-      form.innerHTML = `<input id="q-input" class="answer-input" type="text" autocomplete="off" placeholder="ここに かいてね" aria-label="こたえ"><button class="btn btn-main" type="submit" data-no-se="1">こたえる</button>`;
+      form.innerHTML = `<input id="q-input" class="answer-input" type="text" autocomplete="off" placeholder="ここに書いてね" aria-label="答え"><button class="btn btn-main" type="submit" data-no-se="1">答える</button>`;
       form.addEventListener("submit", (event) => {
         event.preventDefault();
         const value = form.querySelector("input").value.trim();
@@ -136,31 +137,31 @@ function showQuestion() {
   current = question;
   answered = false;
 
-  const prefix = { normal: "", hard: "むずかしい ", oni: "オニ ", coop: "みんなで " }[mode];
+  const prefix = { normal: "", hard: "難しい ", oni: "オニ ", coop: "みんなで " }[mode];
   const total = mode === "coop" ? COOP_QUESTIONS : QUESTIONS_PER_ROUND;
-  $("q-progress").textContent = `${prefix}だい ${play.asked + 1} もん / ${total}もん`;
+  $("q-progress").textContent = `${prefix}第${play.asked + 1}問 / ${total}問`;
   const turn = $("q-player");
   turn.hidden = mode !== "coop";
-  if (mode === "coop") turn.textContent = `プレイヤー${play.player + 1}の ばんだヨ! みんなで そうだん してもOK!`;
+  if (mode === "coop") turn.textContent = `プレイヤー${play.player + 1}の番だヨ! みんなで相談してもOK!`;
   $("q-level").textContent =
     mode === "oni"
-      ? "むずかしさ オニ"
+      ? "難しさ オニ"
       : mode === "hard"
-        ? "むずかしさ ★★★★"
+        ? "難しさ ★★★★"
         : mode === "coop"
-          ? `${coopPlayers}人で チーム`
-          : `むずかしさ ${"★".repeat(question.level)}${"☆".repeat(MAX_LEVEL - question.level)}`;
+          ? `${coopPlayers}人でチーム`
+          : `難しさ ${"★".repeat(question.level)}${"☆".repeat(MAX_LEVEL - question.level)}`;
   $("q-text").textContent = question.text;
   $("q-feedback").hidden = true;
 
   const message = $("q-message");
   if (leveledUp || ((mode === "hard" || mode === "oni") && play.asked === 0)) {
-    setFlori(IMG.surprised, "おどろくフロリ");
+    setFlori(IMG.surprised, "驚くフロリ");
     message.textContent = {
-      normal: "おっ! むずかしく なったヨ!",
-      hard: "むずかしいモードだヨ! じっくり かんがえてネ!",
-      oni: "オニもんだいだヨ! がんばれ!",
-      coop: "おっ! むずかしく なったヨ!",
+      normal: "おっ! 難しくなったヨ!",
+      hard: "難しいモードだヨ! じっくり考えてネ!",
+      oni: "オニ問題だヨ! がんばれ!",
+      coop: "おっ! 難しくなったヨ!",
     }[mode];
     message.hidden = false;
   } else {
@@ -179,14 +180,14 @@ function answer(response) {
   renderers[current.type].mark(current, response, correct);
   playSe(correct ? "correct" : "wrong");
 
-  setFlori(correct ? IMG.correct : IMG.wrong, correct ? "わらうフロリ" : "目をつぶるフロリ");
+  setFlori(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
   $("q-message").hidden = true;
   const verdict = $("q-verdict");
-  verdict.textContent = correct ? "せいかい!" : "ざんねん…";
+  verdict.textContent = correct ? "正解!" : "残念…";
   verdict.className = `verdict ${correct ? "is-right" : "is-wrong"}`;
   const rightText = renderers[current.type].correctText(current);
-  $("q-explanation").textContent = `せいかいは 「${rightText}」\n${current.explanation}`;
-  $("btn-next").textContent = play.roundFinished ? "けっかを みる" : "つぎへ";
+  $("q-explanation").textContent = `正解は「${rightText}」\n${current.explanation}`;
+  $("btn-next").textContent = play.roundFinished ? "結果を見る" : "次へ";
   $("q-feedback").hidden = false;
   $("btn-next").focus();
 }
@@ -206,8 +207,8 @@ function currentTotal(stats = loadStats()) {
 
 function showResult() {
   const result = play.finishRound();
-  $("r-correct").textContent = `${result.correct} / ${result.total}もん`;
-  $("r-score").textContent = `${result.score}点 (${MAX_SCORE}点まんてん)`;
+  $("r-correct").textContent = `${result.correct} / ${result.total}問`;
+  $("r-score").textContent = `${result.score}点(${MAX_SCORE}点満点)`;
   $("r-comment").textContent =
     mode === "oni" ? oniComment(result.correct) : mode === "coop" ? coopComment(result) : comment(result.correct);
   $("r-score-row").hidden = mode === "coop"; // みんなで あそぶときは、点数は出さない
@@ -217,47 +218,47 @@ function showResult() {
   // 総合得点は、はじめて正解した問題の分だけ、ふえる。
   const gainText = () => {
     const gained = currentTotal() - before;
-    return gained > 0 ? `はじめての せいかいで、総合得点が ${gained}点 ふえたヨ!` : "総合得点は、はじめて せいかいした ときだけ ふえるヨ。";
+    return gained > 0 ? `初めての正解で、総合得点が${gained}点増えたヨ!` : "総合得点は、初めて正解したときだけ増えるヨ。";
   };
   if (mode === "coop") {
     // みんなで遊ぶ結果は、ひとりで遊ぶ記録(遊んだ回数、正解率、総合得点など)には入れない。
     recordCoop(result);
-    $("r-title").textContent = "みんなの けっか!";
+    $("r-title").textContent = "みんなの結果!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
     setNote.textContent = result.cleared
-      ? `もくひょう(${COOP_GOAL}もん)たっせい! みんなで よく がんばったネ!`
-      : `もくひょうまで あと ${COOP_GOAL - result.correct}もん! また みんなで ちょうせんしよう!`;
-    $("btn-again").textContent = "もういちど みんなで あそぶ";
+      ? `目標(${COOP_GOAL}問)達成! みんなでよく頑張ったネ!`
+      : `目標まであと${COOP_GOAL - result.correct}問! またみんなで挑戦しよう!`;
+    $("btn-again").textContent = "もう一度みんなで遊ぶ";
   } else if (mode === "oni") {
     // オニ問題は、成績の「遊んだ回数」や「正解率」には入れない。総合得点にだけ入る。
     recordOni(result.answers);
-    $("r-title").textContent = "オニもんだい けっか!";
+    $("r-title").textContent = "オニ問題の結果!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
     setNote.textContent = gainText();
-    $("btn-again").textContent = "もういちど ちょうせん";
+    $("btn-again").textContent = "もう一度挑戦";
   } else if (mode === "hard") {
     const saved = recordRound({ ...result, mode: "hard" });
-    $("r-title").textContent = "むずかしいモード けっか!";
+    $("r-title").textContent = "難しいモードの結果!";
     $("r-best-row").hidden = false;
     $("r-best").textContent = `${loadStats().bestHard}点`;
     $("r-record").hidden = !saved.isRecord;
     setNote.textContent = gainText();
-    $("btn-again").textContent = "もういちど ちょうせん";
+    $("btn-again").textContent = "もう一度挑戦";
   } else {
     const saved = recordRound(result);
     const stats = loadStats();
-    $("r-title").textContent = "けっかはっぴょう!";
+    $("r-title").textContent = "結果発表!";
     $("r-best-row").hidden = false;
     $("r-best").textContent = `${stats.best}点`;
     $("r-record").hidden = !saved.isRecord;
-    $("btn-again").textContent = "もういちど あそぶ";
+    $("btn-again").textContent = "もう一度遊ぶ";
     if (saved.setCompleted) {
-      setNote.textContent = `${ROUNDS_PER_SET}回 あそんだヨ! むずかしさは、また はじめから!`;
+      setNote.textContent = `${ROUNDS_PER_SET}回遊んだヨ! 難しさは、また最初から!`;
       session.resetSet();
     } else {
-      setNote.textContent = `${ROUNDS_PER_SET}回のうち ${stats.setRounds.length}回め が おわったヨ(つづけて あそぶと、むずかしさも つづくヨ)`;
+      setNote.textContent = `${ROUNDS_PER_SET}回のうち${stats.setRounds.length}回目が終わったヨ(続けて遊ぶと、難しさも続くヨ)`;
     }
   }
   setNote.hidden = false;
@@ -265,23 +266,23 @@ function showResult() {
 }
 
 function comment(correct) {
-  if (correct === QUESTIONS_PER_ROUND) return "ぜんぶ せいかい! すごいヨ!";
-  if (correct >= 3) return "いいね! よく ひらめいたネ!";
-  if (correct >= 1) return "ナイスチャレンジ! つぎは もっと とれるヨ!";
-  return "だいじょうぶ! かんがえるのが たのしいんだヨ!";
+  if (correct === QUESTIONS_PER_ROUND) return "全部正解! すごいヨ!";
+  if (correct >= 3) return "いいね! よくひらめいたネ!";
+  if (correct >= 1) return "ナイスチャレンジ! 次はもっと取れるヨ!";
+  return "大丈夫! 考えるのが楽しいんだヨ!";
 }
 
 function coopComment(result) {
-  if (result.correct === result.total) return "ぜんぶ せいかい! みんな さいこうのチームだヨ!";
-  if (result.cleared) return "すごい! みんなの ちからで たっせいだヨ!";
-  return "おしい! そうだんしながら、もう1回 やってみよう!";
+  if (result.correct === result.total) return "全部正解! みんな最高のチームだヨ!";
+  if (result.cleared) return "すごい! みんなの力で達成だヨ!";
+  return "おしい! 相談しながら、もう1回やってみよう!";
 }
 
 function oniComment(correct) {
-  if (correct === QUESTIONS_PER_ROUND) return "ええっ、ぜんぶ せいかい! てんさいだヨ!";
-  if (correct >= 3) return "オニを あいてに すごいヨ!";
-  if (correct >= 1) return "オニもんだいを とくなんて、えらいヨ!";
-  return "オニは むずかしいんだヨ。また ちょうせんしてネ!";
+  if (correct === QUESTIONS_PER_ROUND) return "ええっ、全部正解! 天才だヨ!";
+  if (correct >= 3) return "オニを相手にすごいヨ!";
+  if (correct >= 1) return "オニ問題を解くなんて、えらいヨ!";
+  return "オニは難しいんだヨ。また挑戦してネ!";
 }
 
 function showRecords() {
@@ -295,11 +296,11 @@ function showRecords() {
   $("s-best").textContent = `${s.best}点 / ${MAX_SCORE}点`;
   $("s-best-hard").textContent = `${s.bestHard}点 / ${MAX_SCORE}点`;
   $("s-plays").textContent = `${s.plays}回`;
-  $("s-coop").textContent = `${s.coopPlays}回(もくひょう たっせい ${s.coopClears}回)`;
+  $("s-coop").textContent = `${s.coopPlays}回(目標達成${s.coopClears}回)`;
   $("s-seen").textContent = `${seen} / ${playable.size}問`;
   $("s-right").textContent = `${right} / ${playable.size}問`;
   $("s-answered").textContent = `${s.answered}問(正解 ${s.correct}問)`;
-  $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : "まだ ないよ";
+  $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : "まだないよ";
   show("records");
 }
 
@@ -345,6 +346,20 @@ for (const slider of document.querySelectorAll("[data-volume]")) {
   });
   // 効果音は、つまみをはなしたときに、ためしにならす
   if (kind === "se") slider.addEventListener("change", () => playSe("correct"));
+}
+
+// ふりがな:3つから選ぶ(すべての漢字 / 中学以降に習う漢字だけ / なし)。設定の画面と、問題を解いているときの設定で、同じ設定を使う。
+function showFurigana() {
+  for (const radio of document.querySelectorAll('input[type="radio"][name^="furigana"]')) {
+    radio.checked = radio.value === getFuriganaMode();
+  }
+}
+showFurigana();
+for (const radio of document.querySelectorAll('input[type="radio"][name^="furigana"]')) {
+  radio.addEventListener("change", () => {
+    setFuriganaMode(radio.value);
+    showFurigana();
+  });
 }
 
 // 問題を解いているときの「せってい」
@@ -420,4 +435,5 @@ async function init() {
   }
 }
 
+startFurigana();
 init();

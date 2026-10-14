@@ -14,34 +14,34 @@
       <img class="logo" src="../assets/flori/src/logo.png" alt="フロリ">
       <h1 class="title">Flori_Quiz</h1>
       <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-      <p class="bubble">ヤア! ボクはフロリだヨ!<br>ひらめきクイズで あそぼう!</p>
+      <p class="bubble">ヤア! ボクはフロリだヨ!<br>ひらめきクイズで遊ぼう!</p>
       <div class="menu">
-        <button id="btn-start" class="btn btn-main" type="button">はじめる</button>
-        <button id="btn-hard" class="btn btn-hard" type="button">むずかしいモード</button>
-        <button id="btn-coop" class="btn btn-coop" type="button">みんなで あそぶ</button>
+        <button id="btn-start" class="btn btn-main" type="button">始める</button>
+        <button id="btn-hard" class="btn btn-hard" type="button">難しいモード</button>
+        <button id="btn-coop" class="btn btn-coop" type="button">みんなで遊ぶ</button>
         <button id="btn-records" class="btn btn-sub" type="button">成績</button>
-        <button id="btn-settings" class="btn btn-sub" type="button">せってい</button>
+        <button id="btn-settings" class="btn btn-sub" type="button">設定</button>
       </div>
-      <p class="note">1回は5問。ぜんぶ せいかいで 25点!</p>
-      <p id="sound-hint" class="note">♪ 画面を クリックすると、おんがくが ながれるよ。</p>
+      <p class="note">1回は5問。全部正解で25点!</p>
+      <p id="sound-hint" class="note">♪ 画面をクリックすると、音楽が流れるよ。</p>
       <button id="corner-flori" class="corner-flori" type="button" aria-label="フロリ">
         <img src="../assets/flori/src/face_smile.png" alt="">
       </button>
     </section>
 
     <!-- みんなで あそぶ -->
-    <section id="screen-coop" class="screen" aria-label="みんなで あそぶ" hidden>
-      <h2 class="title">みんなで あそぶ</h2>
+    <section id="screen-coop" class="screen" aria-label="みんなで遊ぶ" hidden>
+      <h2 class="title">みんなで遊ぶ</h2>
       <img class="flori flori-small" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-      <p class="bubble">1台の画面を かこんで、みんなで そうだん しながら とこう!<br>じゅんばんに こたえる人を かわるヨ。</p>
-      <p class="note">全部で10問。7問 せいかいで、もくひょう たっせい!</p>
-      <p class="note">何人で あそぶ?</p>
+      <p class="bubble">1台の画面を囲んで、みんなで相談しながら解こう!<br>順番に答える人が代わるヨ。</p>
+      <p class="note">全部で10問。7問正解で、目標達成!</p>
+      <p class="note">何人で遊ぶ?</p>
       <div class="buttons">
         <button class="btn btn-main" type="button" data-players="2">2人</button>
         <button class="btn btn-main" type="button" data-players="3">3人</button>
         <button class="btn btn-main" type="button" data-players="4">4人</button>
       </div>
-      <button id="btn-coop-back" class="btn btn-sub" type="button">もどる</button>
+      <button id="btn-coop-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
     <!-- せいせき -->
@@ -52,7 +52,7 @@
       </dl>
       <dl class="scores">
         <div><dt>最高得点(1回)</dt><dd id="s-best"></dd></div>
-        <div><dt>最高得点(むずかしい)</dt><dd id="s-best-hard"></dd></div>
+        <div><dt>最高得点(難しい)</dt><dd id="s-best-hard"></dd></div>
         <div><dt>遊んだ回数</dt><dd id="s-plays"></dd></div>
         <div><dt>みんなで遊んだ回数</dt><dd id="s-coop"></dd></div>
         <div><dt>解いた問題</dt><dd id="s-answered"></dd></div>
@@ -61,14 +61,14 @@
         <div><dt>正解率</dt><dd id="s-rate"></dd></div>
       </dl>
       <p class="note">記録は、このパソコンの中にだけ残るよ。</p>
-      <button id="btn-records-back" class="btn btn-sub" type="button">もどる</button>
+      <button id="btn-records-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
     <!-- せってい -->
-    <section id="screen-settings" class="screen" aria-label="せってい" hidden>
-      <h2 class="title">せってい</h2>
+    <section id="screen-settings" class="screen" aria-label="設定" hidden>
+      <h2 class="title">設定</h2>
       <img class="flori flori-small" src="../assets/flori/src/pc_form.png" alt="パソコンに変形したフロリ">
-      <p class="bubble">おとの おおきさを かえられるヨ!</p>
+      <p class="bubble">音の大きさを変えられるヨ!</p>
       <div class="volumes">
         <div class="volume">
           <label for="vol-bgm">BGM</label>
@@ -76,13 +76,19 @@
           <output data-volume-out="bgm" for="vol-bgm"></output>
         </div>
         <div class="volume">
-          <label for="vol-se">こうかおん</label>
+          <label for="vol-se">効果音</label>
           <input id="vol-se" data-volume="se" type="range" min="0" max="100" step="5">
           <output data-volume-out="se" for="vol-se"></output>
         </div>
       </div>
-      <p class="note">0にすると、おとが でなくなるよ。</p>
-      <button id="btn-settings-back" class="btn btn-sub" type="button">もどる</button>
+      <p class="note">0にすると、音が出なくなるよ。</p>
+      <fieldset class="furigana" aria-label="ふりがな">
+        <legend>ふりがな</legend>
+        <label><input type="radio" name="furigana-screen" value="all"> すべての漢字にふりがな</label>
+        <label><input type="radio" name="furigana-screen" value="chu"> 中学以降に習う漢字だけ</label>
+        <label><input type="radio" name="furigana-screen" value="none"> ふりがななし</label>
+      </fieldset>
+      <button id="btn-settings-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
     <!-- 問題画面 -->
@@ -90,7 +96,7 @@
       <header class="status">
         <span id="q-progress" class="chip"></span>
         <span id="q-level" class="chip chip-level"></span>
-        <button id="btn-q-settings" class="chip chip-button" type="button">せってい</button>
+        <button id="btn-q-settings" class="chip chip-button" type="button">設定</button>
         <button id="btn-quit" class="chip chip-button" type="button">やめる</button>
       </header>
       <p id="q-player" class="turn" hidden></p>
@@ -109,39 +115,39 @@
 
     <!-- 結果画面 -->
     <section id="screen-result" class="screen" aria-label="結果" hidden>
-      <h2 id="r-title" class="title">けっかはっぴょう!</h2>
+      <h2 id="r-title" class="title">結果発表!</h2>
       <img class="flori flori-cover" src="../assets/flori/wave_nikkori.png" alt="にっこりするフロリ">
       <p id="r-comment" class="bubble"></p>
       <dl class="scores">
-        <div><dt>せいかい</dt><dd id="r-correct"></dd></div>
-        <div id="r-score-row"><dt>とくてん</dt><dd id="r-score"></dd></div>
-        <div id="r-best-row"><dt>さいこうとくてん</dt><dd id="r-best"></dd></div>
+        <div><dt>正解</dt><dd id="r-correct"></dd></div>
+        <div id="r-score-row"><dt>得点</dt><dd id="r-score"></dd></div>
+        <div id="r-best-row"><dt>最高得点</dt><dd id="r-best"></dd></div>
       </dl>
-      <p id="r-record" class="record" hidden>しんきろく!</p>
+      <p id="r-record" class="record" hidden>新記録!</p>
       <p id="r-set" class="note" hidden></p>
       <div class="buttons">
-        <button id="btn-again" class="btn btn-main" type="button">もういちど あそぶ</button>
-        <button id="btn-cover" class="btn btn-sub" type="button">ひょうしへ</button>
+        <button id="btn-again" class="btn btn-main" type="button">もう一度遊ぶ</button>
+        <button id="btn-cover" class="btn btn-sub" type="button">表紙へ</button>
       </div>
     </section>
 
     <!-- 読み込み失敗 -->
     <section id="screen-error" class="screen" aria-label="エラー" hidden>
-      <p class="bubble">もんだいを よみこめなかったよ。<br>ページを ひらきなおしてね。</p>
+      <p class="bubble">問題を読み込めなかったよ。<br>ページを開き直してね。</p>
     </section>
 
   </main>
 
   <dialog id="dlg-quit" class="dialog" aria-labelledby="dlg-quit-text">
-    <p id="dlg-quit-text">ここで やめる?<br>この回の けっかは のこらないよ。</p>
+    <p id="dlg-quit-text">ここでやめる?<br>この回の結果は残らないよ。</p>
     <div class="buttons">
       <button id="btn-quit-yes" class="btn btn-sub" type="button">やめる</button>
-      <button id="btn-quit-no" class="btn btn-main" type="button">つづける</button>
+      <button id="btn-quit-no" class="btn btn-main" type="button">続ける</button>
     </div>
   </dialog>
 
   <dialog id="dlg-volume" class="dialog" aria-labelledby="dlg-volume-title">
-    <p id="dlg-volume-title">せってい:おとの おおきさ</p>
+    <p id="dlg-volume-title">設定:音の大きさ</p>
     <div class="volumes">
       <div class="volume">
         <label for="dlg-vol-bgm">BGM</label>
@@ -149,22 +155,28 @@
         <output data-volume-out="bgm" for="dlg-vol-bgm"></output>
       </div>
       <div class="volume">
-        <label for="dlg-vol-se">こうかおん</label>
+        <label for="dlg-vol-se">効果音</label>
         <input id="dlg-vol-se" data-volume="se" type="range" min="0" max="100" step="5">
         <output data-volume-out="se" for="dlg-vol-se"></output>
       </div>
     </div>
+    <fieldset class="furigana" aria-label="ふりがな">
+      <legend>ふりがな</legend>
+      <label><input type="radio" name="furigana-dialog" value="all"> すべての漢字にふりがな</label>
+      <label><input type="radio" name="furigana-dialog" value="chu"> 中学以降に習う漢字だけ</label>
+      <label><input type="radio" name="furigana-dialog" value="none"> ふりがななし</label>
+    </fieldset>
     <div class="buttons">
-      <button id="btn-volume-close" class="btn btn-main" type="button">もどる</button>
+      <button id="btn-volume-close" class="btn btn-main" type="button">戻る</button>
     </div>
   </dialog>
 
   <dialog id="dlg-oni" class="dialog" aria-labelledby="dlg-oni-text">
-    <img class="flori flori-small" src="../assets/flori/wave_surprised.png" alt="おどろくフロリ">
-    <p id="dlg-oni-text">わあ、すごいね! よく みつけたネ!<br>とくべつな オニもんだいが 5問 あるヨ。<br>ちょうせんする?</p>
+    <img class="flori flori-small" src="../assets/flori/wave_surprised.png" alt="驚くフロリ">
+    <p id="dlg-oni-text">わあ、すごいね! よく見つけたネ!<br>特別なオニ問題が5問あるヨ。<br>挑戦する?</p>
     <div class="buttons">
       <button id="btn-oni-no" class="btn btn-sub" type="button">やめておく</button>
-      <button id="btn-oni-yes" class="btn btn-main" type="button">ちょうせんする!</button>
+      <button id="btn-oni-yes" class="btn btn-main" type="button">挑戦する!</button>
     </div>
   </dialog>
   <script type="module" src="main.js"></script>

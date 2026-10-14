@@ -287,3 +287,23 @@ body {
   border: 2px solid var(--line);
   border-radius: 14px;
 }
+
+/* ふりがな */
+ruby { ruby-align: center; }
+rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-dark); }
+.question, .explanation, .bubble, .note, .choice-text, .verdict, .btn, .chip, .turn { line-height: 2; }
+.choice { min-height: 60px; }
+
+/* ふりがなの設定 */
+.furigana {
+  width: min(460px, 100%);
+  margin: 0;
+  padding: 10px 16px;
+  border: 2px solid var(--blue);
+  border-radius: 14px;
+  background: var(--body);
+  text-align: left;
+}
+.furigana legend { padding: 0 8px; font-weight: bold; }
+.furigana label { display: block; padding: 4px 0; cursor: pointer; }
+.furigana input { accent-color: var(--blue-dark); margin-right: 6px; }
