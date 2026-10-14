@@ -112,27 +112,9 @@
         <label><input type="radio" name="furigana-screen" value="chu"> 中学以降に習う漢字だけ</label>
         <label><input type="radio" name="furigana-screen" value="none"> ふりがななし</label>
       </fieldset>
-      <div class="buttons">
-        <button id="btn-kanji-list" class="btn btn-main" type="button">漢字とふりがなの一覧</button>
-        <button id="btn-settings-reset" class="btn btn-sub" type="button">初期設定に戻す</button>
-      </div>
+      <button id="btn-settings-reset" class="btn btn-sub" type="button">初期設定に戻す</button>
       <p id="settings-message" class="note" role="status"></p>
       <button id="btn-settings-back" class="btn btn-sub" type="button">戻る</button>
-    </section>
-
-    <!-- 漢字とふりがなの一覧 -->
-    <section id="screen-kanji" class="screen" aria-label="漢字とふりがなの一覧" hidden>
-      <h2 class="title">漢字とふりがなの一覧</h2>
-      <p class="note">このゲームで使う漢字と、ことばの読みを、読みの順にならべたヨ。<span class="chu-mark">青い字</span>は、中学以降に習う漢字をふくむもの。</p>
-      <div class="buttons">
-        <button class="btn btn-sub" type="button" data-kanji-filter="all">ぜんぶ</button>
-        <button class="btn btn-sub" type="button" data-kanji-filter="single">漢字1字</button>
-        <button class="btn btn-sub" type="button" data-kanji-filter="word">ことば</button>
-        <button class="btn btn-sub" type="button" data-kanji-filter="chu">中学以降</button>
-      </div>
-      <p id="kanji-count" class="note"></p>
-      <ul id="kanji-list" class="kanji-list" data-no-ruby></ul>
-      <button id="btn-kanji-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
     <!-- 問題画面 -->

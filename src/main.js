@@ -17,7 +17,7 @@ import {
 import { loadStats, pruneStats, recordOni, recordRound, recordVersus } from "./storage.js";
 import { GardenUI } from "./garden.js";
 import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
-import { dictionaryList, getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
+import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
 const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数おすと、オニ問題が出る
@@ -29,7 +29,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "versus", "relax", "records", "settings", "kanji", "question", "result", "error"];
+const SCREENS = ["cover", "versus", "relax", "records", "settings", "question", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)
@@ -423,31 +423,6 @@ $("btn-settings-reset").addEventListener("click", () => {
   showFurigana();
   $("settings-message").textContent = "初期設定に戻したヨ。";
 });
-
-// 漢字とふりがなの一覧
-let kanjiFilter = "all";
-function showKanjiList() {
-  const list = dictionaryList();
-  const shown = list.filter(
-    (item) => kanjiFilter === "all" || (kanjiFilter === "single" && item.single) || (kanjiFilter === "word" && !item.single) || (kanjiFilter === "chu" && item.chu),
-  );
-  $("kanji-list").innerHTML = shown.map((item) => `<li${item.chu ? ' class="is-chu"' : ""}>${item.html}</li>`).join("");
-  $("kanji-count").textContent = `${shown.length}個(ぜんぶで${list.length}個)`;
-  for (const button of document.querySelectorAll("[data-kanji-filter]")) {
-    button.classList.toggle("is-on", button.dataset.kanjiFilter === kanjiFilter);
-  }
-}
-$("btn-kanji-list").addEventListener("click", () => {
-  show("kanji");
-  showKanjiList();
-});
-for (const button of document.querySelectorAll("[data-kanji-filter]")) {
-  button.addEventListener("click", () => {
-    kanjiFilter = button.dataset.kanjiFilter;
-    showKanjiList();
-  });
-}
-$("btn-kanji-back").addEventListener("click", () => show("settings"));
 
 // 問題を解いているときの「せってい」
 $("btn-q-settings").addEventListener("click", () => {

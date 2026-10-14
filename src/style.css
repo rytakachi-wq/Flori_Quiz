@@ -408,10 +408,3 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 }
 @keyframes flori-wave { from { transform: rotate(-5deg); } to { transform: rotate(5deg) translateY(-6px); } }
 @media (prefers-reduced-motion: reduce) { .opening-flori, .announce-flori { animation: none; } }
-
-/* 漢字とふりがなの一覧 */
-.kanji-list { display: flex; flex-wrap: wrap; gap: 6px; width: min(640px, 100%); padding: 0; margin: 0; list-style: none; }
-.kanji-list li { padding: 14px 10px 4px; background: #fff; border: 2px solid var(--line); border-radius: 10px; font-size: 18px; }
-.kanji-list li.is-chu { border-color: var(--blue); color: var(--blue-dark); }
-.chu-mark { color: var(--blue-dark); font-weight: bold; }
-[data-kanji-filter].is-on { background: var(--blue); color: #fff; }
