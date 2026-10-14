@@ -271,3 +271,6 @@ body {
 .scores.total div { background: var(--green); }
 .scores.total dt { font-size: 18px; }
 .scores.total dd { color: var(--text); font-size: 28px; }
+
+/* 難しいモードのボタン */
+.btn-hard { background: var(--green); color: var(--text); }

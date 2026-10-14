@@ -7,7 +7,8 @@ const KEY = "floriQuiz.stats";
 const OLD_BEST_KEY = "floriQuiz.bestScore"; // 最高得点だけだったころの保存
 
 const EMPTY = {
-  best: 0, // 5問の最高得点
+  best: 0, // 5問の最高得点(ふつうモード)
+  bestHard: 0, // 5問の最高得点(難しいモード)
   plays: 0, // 遊んだ回数(5問を1回と数える)
   answered: 0, // 答えた問題の数
   correct: 0, // 正解した問題の数
@@ -31,6 +32,7 @@ function clean(raw) {
   const rounds = Array.isArray(raw?.setRounds) ? raw.setRounds.map(number).slice(0, ROUNDS_PER_SET - 1) : [];
   return {
     best: number(raw?.best),
+    bestHard: number(raw?.bestHard),
     plays: number(raw?.plays),
     answered: number(raw?.answered),
     correct: number(raw?.correct),
@@ -64,20 +66,22 @@ function save(stats) {
   }
 }
 
-// 5問の結果を記録する。4回分そろったら、setCompleted を true にして、数えなおす。
-export function recordRound({ correct, total, score, answers = [] }) {
+// 5問の結果を記録する。ふつうモードで4回分そろったら、setCompleted を true にして、数えなおす。
+export function recordRound({ correct, total, score, answers = [], mode = "normal" }) {
   const stats = loadStats();
-  const isRecord = score > stats.best;
+  const hard = mode === "hard";
+  const isRecord = score > (hard ? stats.bestHard : stats.best);
   stats.plays += 1;
   stats.answered += total;
   stats.correct += correct;
-  stats.best = Math.max(stats.best, score);
-  stats.setRounds.push(score);
+  if (hard) stats.bestHard = Math.max(stats.bestHard, score);
+  else stats.best = Math.max(stats.best, score);
+  if (!hard) stats.setRounds.push(score); // 難しさのカウンターを最初にもどす目安は、ふつうモードだけ
   stats.seen = ids([...stats.seen, ...answers.map((answer) => answer.id)]);
   stats.right = ids([...stats.right, ...answers.filter((answer) => answer.correct).map((answer) => answer.id)]);
 
   const result = { isRecord, setCompleted: false };
-  if (stats.setRounds.length >= ROUNDS_PER_SET) {
+  if (!hard && stats.setRounds.length >= ROUNDS_PER_SET) {
     result.setCompleted = true;
     stats.setRounds = [];
   }

@@ -3,20 +3,26 @@
 export const QUESTIONS_PER_ROUND = 5; // 1回の問題数
 export const ROUNDS_PER_SET = 4; // 4回で20問
 export const POINTS_PER_CORRECT = 5; // 1問5点(5問で25点満点)
-export const MAX_LEVEL = 4; // ふつうの問題の段階。オニ問題は段階5で、別あつかい。
+export const MAX_LEVEL = 3; // ふつうモードの段階(1〜3)
+export const HARD_LEVEL = 4; // 難しいモードの問題の段階
+export const ONI_LEVEL = 5; // オニ問題の段階
 const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上がる
 
 export const MAX_SCORE = QUESTIONS_PER_ROUND * POINTS_PER_CORRECT;
 
-// 総合得点(100点満点)。ふつうの問題は、全部で95点を、問題の数で等しくわける。オニ問題は、1問1点(5問で5点)。
-// 一度でも正解した問題の分だけ、点が入る(何度正解しても、同じ問題は1回ぶん)。
-export const NORMAL_POINTS = 95;
-export const ONI_POINTS_EACH = 1;
-export const TOTAL_POINTS = 100;
+// 総合得点(100点満点)。ふつうの問題が60点、難しい問題が35点、オニ問題が5点。
+// それぞれ、一度でも正解した問題の数の割合で、点が入る(何度正解しても、同じ問題は1回ぶん)。
+// 問題の数が増えても、満点は100点のままになる。
+export const POOL_POINTS = { normal: 60, hard: 35, oni: 5 };
+export const TOTAL_POINTS = POOL_POINTS.normal + POOL_POINTS.hard + POOL_POINTS.oni;
 
-export function totalScore(normalRight, normalCount, oniRight) {
-  const normal = normalCount > 0 ? Math.round((normalRight * NORMAL_POINTS) / normalCount) : 0;
-  return normal + oniRight * ONI_POINTS_EACH;
+export function totalScore({ normalRight, normalCount, hardRight, hardCount, oniRight, oniCount }) {
+  const part = (points, right, count) => (count > 0 ? (points * right) / count : 0);
+  return Math.round(
+    part(POOL_POINTS.normal, normalRight, normalCount) +
+      part(POOL_POINTS.hard, hardRight, hardCount) +
+      part(POOL_POINTS.oni, oniRight, oniCount),
+  );
 }
 
 export function levelFromCounter(counter) {
@@ -145,6 +151,60 @@ export class OniRound {
   }
 
   abandonRound() {
+    this.startRound();
+  }
+
+  nextQuestion() {
+    return { question: this.questions[this.asked], leveledUp: false };
+  }
+
+  answer(question, response) {
+    const correct = judge(question, response);
+    this.roundAnswers.push({ id: question.id, correct });
+    this.asked += 1;
+    if (correct) this.correct += 1;
+    return correct;
+  }
+
+  get roundFinished() {
+    return this.asked >= QUESTIONS_PER_ROUND;
+  }
+
+  finishRound() {
+    const result = roundResult(this);
+    this.startRound();
+    return result;
+  }
+}
+
+// 難しいモードの遊び。難しい問題から、まだ出していない5問を、ランダムに選ぶ(難しさの調整はない)。
+// used は、ページを開いている間、回をまたいで使う(全部出したら、また最初から)。
+export class HardRound {
+  constructor(questions, used = new Set(), rng = Math.random) {
+    this.used = used;
+    let pool = questions.filter((q) => !used.has(q.id));
+    if (pool.length < QUESTIONS_PER_ROUND) {
+      used.clear();
+      pool = [...questions];
+    }
+    const picked = [];
+    while (picked.length < QUESTIONS_PER_ROUND && pool.length > 0) {
+      picked.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+    }
+    this.questions = picked;
+    for (const q of picked) used.add(q.id);
+    this.startRound();
+  }
+
+  startRound() {
+    this.asked = 0;
+    this.correct = 0;
+    this.roundAnswers = [];
+  }
+
+  // 途中でやめたとき。この回で選んだ問題を、また出せるようにもどす。
+  abandonRound() {
+    for (const q of this.questions) this.used.delete(q.id);
     this.startRound();
   }
 

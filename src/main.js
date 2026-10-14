@@ -1,4 +1,15 @@
-import { Session, OniRound, MAX_LEVEL, MAX_SCORE, QUESTIONS_PER_ROUND, ROUNDS_PER_SET, TOTAL_POINTS, totalScore } from "./game.js";
+import {
+  HARD_LEVEL,
+  HardRound,
+  MAX_LEVEL,
+  MAX_SCORE,
+  OniRound,
+  QUESTIONS_PER_ROUND,
+  ROUNDS_PER_SET,
+  Session,
+  TOTAL_POINTS,
+  totalScore,
+} from "./game.js";
 import { loadStats, recordOni, recordRound } from "./storage.js";
 import { getVolume, playSe, setScene, setVolume, unlock } from "./audio.js";
 
@@ -15,11 +26,11 @@ const $ = (id) => document.getElementById(id);
 const SCREENS = ["cover", "records", "settings", "question", "result", "error"];
 
 let coverTaps = 0;
-let isOni = false;
+let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
-  if (name === "question") return isOni ? "oni" : "question";
+  if (name === "question") return mode === "oni" ? "oni" : mode === "hard" ? "hard" : "question";
   if (name === "result") return "result";
   return name === "error" ? null : "cover";
 }
@@ -87,8 +98,11 @@ const renderers = {
   },
 };
 
+let hardQuestions = [];
 let oniQuestions = [];
+const hardUsed = new Set(); // 難しいモードで、もう出した問題(回をまたいで使う)
 let normalIds = new Set(); // ふつうの問題の番号
+let hardIds = new Set(); // 難しい問題の番号
 let oniIds = new Set(); // オニ問題の番号
 let session; // ふつうの遊び(難しさのカウンターを引き継ぐ)
 let play; // いま遊んでいるもの(session かオニ問題)
@@ -101,9 +115,11 @@ function setFlori(src, alt) {
   img.alt = alt;
 }
 
-function startPlay(oni) {
-  isOni = oni;
-  play = oni ? new OniRound(oniQuestions) : session;
+function startPlay(nextMode) {
+  mode = nextMode;
+  if (mode === "oni") play = new OniRound(oniQuestions);
+  else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
+  else play = session;
   showQuestion();
 }
 
@@ -112,17 +128,25 @@ function showQuestion() {
   current = question;
   answered = false;
 
-  $("q-progress").textContent = `${isOni ? "オニ " : ""}だい ${play.asked + 1} もん / ${QUESTIONS_PER_ROUND}もん`;
-  $("q-level").textContent = isOni
-    ? "むずかしさ オニ"
-    : `むずかしさ ${"★".repeat(question.level)}${"☆".repeat(MAX_LEVEL - question.level)}`;
+  const prefix = { normal: "", hard: "むずかしい ", oni: "オニ " }[mode];
+  $("q-progress").textContent = `${prefix}だい ${play.asked + 1} もん / ${QUESTIONS_PER_ROUND}もん`;
+  $("q-level").textContent =
+    mode === "oni"
+      ? "むずかしさ オニ"
+      : mode === "hard"
+        ? "むずかしさ ★★★★"
+        : `むずかしさ ${"★".repeat(question.level)}${"☆".repeat(MAX_LEVEL - question.level)}`;
   $("q-text").textContent = question.text;
   $("q-feedback").hidden = true;
 
   const message = $("q-message");
-  if (leveledUp || (isOni && play.asked === 0)) {
+  if (leveledUp || (mode !== "normal" && play.asked === 0)) {
     setFlori(IMG.surprised, "おどろくフロリ");
-    message.textContent = isOni ? "オニもんだいだヨ! がんばれ!" : "おっ! むずかしく なったヨ!";
+    message.textContent = {
+      normal: "おっ! むずかしく なったヨ!",
+      hard: "むずかしいモードだヨ! じっくり かんがえてネ!",
+      oni: "オニもんだいだヨ! がんばれ!",
+    }[mode];
     message.hidden = false;
   } else {
     setFlori(IMG.think, "本とペンを持つフロリ");
@@ -152,20 +176,47 @@ function answer(response) {
   $("btn-next").focus();
 }
 
+// 総合得点(100点満点)を、保存した記録から数える。いまある問題だけを数える(問題が増えても、満点は100点のまま)。
+function currentTotal(stats = loadStats()) {
+  const count = (list, ids) => list.filter((id) => ids.has(id)).length;
+  return totalScore({
+    normalRight: count(stats.right, normalIds),
+    normalCount: normalIds.size,
+    hardRight: count(stats.right, hardIds),
+    hardCount: hardIds.size,
+    oniRight: count(stats.oniRight, oniIds),
+    oniCount: oniIds.size,
+  });
+}
+
 function showResult() {
   const result = play.finishRound();
   $("r-correct").textContent = `${result.correct} / ${result.total}もん`;
   $("r-score").textContent = `${result.score}点 (${MAX_SCORE}点まんてん)`;
-  $("r-comment").textContent = isOni ? oniComment(result.correct) : comment(result.correct);
+  $("r-comment").textContent = mode === "oni" ? oniComment(result.correct) : comment(result.correct);
 
   const setNote = $("r-set");
-  if (isOni) {
-    // オニ問題は、成績の「遊んだ回数」や「正解率」には入れない。はじめて正解した問題が、総合得点に1問1点で入る。
-    const gained = recordOni(result.answers);
+  const before = currentTotal();
+  // 総合得点は、はじめて正解した問題の分だけ、ふえる。
+  const gainText = () => {
+    const gained = currentTotal() - before;
+    return gained > 0 ? `はじめての せいかいで、総合得点が ${gained}点 ふえたヨ!` : "総合得点は、はじめて せいかいした ときだけ ふえるヨ。";
+  };
+  if (mode === "oni") {
+    // オニ問題は、成績の「遊んだ回数」や「正解率」には入れない。総合得点にだけ入る。
+    recordOni(result.answers);
     $("r-title").textContent = "オニもんだい けっか!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
-    setNote.textContent = gained > 0 ? `はじめての せいかいで、総合得点が ${gained}点 ふえたヨ!` : "総合得点は、はじめて せいかいした ときだけ ふえるヨ。";
+    setNote.textContent = gainText();
+    $("btn-again").textContent = "もういちど ちょうせん";
+  } else if (mode === "hard") {
+    const saved = recordRound({ ...result, mode: "hard" });
+    $("r-title").textContent = "むずかしいモード けっか!";
+    $("r-best-row").hidden = false;
+    $("r-best").textContent = `${loadStats().bestHard}点`;
+    $("r-record").hidden = !saved.isRecord;
+    setNote.textContent = gainText();
     $("btn-again").textContent = "もういちど ちょうせん";
   } else {
     const saved = recordRound(result);
@@ -202,16 +253,17 @@ function oniComment(correct) {
 
 function showRecords() {
   const s = loadStats();
-  // 「出会った問題」「正解した問題」は、いまある問題のうち、何問か(問題が増えても、全体の数を合わせる)
-  const seen = s.seen.filter((id) => normalIds.has(id)).length;
-  const right = s.right.filter((id) => normalIds.has(id)).length;
-  const oniRight = s.oniRight.filter((id) => oniIds.has(id)).length;
-  // 総合得点は、いつでも100点満点で見せる(ふつうの問題だけでは95点まで)
-  $("s-total").textContent = `${totalScore(right, normalIds.size, oniRight)}点 / ${TOTAL_POINTS}点`;
+  // 「出会った問題」「正解した問題」は、いまある問題(ふつう+難しい)のうち、何問か。問題が増えても、全体の数を合わせる。
+  const playable = new Set([...normalIds, ...hardIds]);
+  const seen = s.seen.filter((id) => playable.has(id)).length;
+  const right = s.right.filter((id) => playable.has(id)).length;
+  // 総合得点は、いつでも100点満点で見せる(ふつうと難しい問題だけでは95点まで)
+  $("s-total").textContent = `${currentTotal(s)}点 / ${TOTAL_POINTS}点`;
   $("s-best").textContent = `${s.best}点 / ${MAX_SCORE}点`;
+  $("s-best-hard").textContent = `${s.bestHard}点 / ${MAX_SCORE}点`;
   $("s-plays").textContent = `${s.plays}回`;
-  $("s-seen").textContent = `${seen} / ${normalIds.size}問`;
-  $("s-right").textContent = `${right} / ${normalIds.size}問`;
+  $("s-seen").textContent = `${seen} / ${playable.size}問`;
+  $("s-right").textContent = `${right} / ${playable.size}問`;
   $("s-answered").textContent = `${s.answered}問(正解 ${s.correct}問)`;
   $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : "まだ ないよ";
   show("records");
@@ -268,13 +320,14 @@ $("btn-q-settings").addEventListener("click", () => {
 });
 $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
-$("btn-start").addEventListener("click", () => startPlay(false));
+$("btn-start").addEventListener("click", () => startPlay("normal"));
+$("btn-hard").addEventListener("click", () => startPlay("hard"));
 $("btn-records").addEventListener("click", showRecords);
 $("btn-records-back").addEventListener("click", () => show("cover"));
 $("btn-settings").addEventListener("click", () => show("settings"));
 $("btn-settings-back").addEventListener("click", () => show("cover"));
 $("btn-next").addEventListener("click", next);
-$("btn-again").addEventListener("click", () => startPlay(isOni));
+$("btn-again").addEventListener("click", () => startPlay(mode));
 $("btn-cover").addEventListener("click", () => show("cover"));
 
 // やめる:確認してから、この回をなかったことにして表紙へ戻る。
@@ -302,7 +355,7 @@ $("corner-flori").addEventListener("click", (event) => {
 $("btn-oni-no").addEventListener("click", () => $("dlg-oni").close());
 $("btn-oni-yes").addEventListener("click", () => {
   $("dlg-oni").close();
-  startPlay(true);
+  startPlay("oni");
 });
 
 async function init() {
@@ -310,10 +363,12 @@ async function init() {
     const response = await fetch(QUESTIONS_URL);
     if (!response.ok) throw new Error(response.status);
     const { questions } = await response.json();
-    oniQuestions = questions.filter((q) => q.level > MAX_LEVEL);
-    oniIds = new Set(oniQuestions.map((q) => q.id));
     const normal = questions.filter((q) => q.level <= MAX_LEVEL);
+    hardQuestions = questions.filter((q) => q.level === HARD_LEVEL);
+    oniQuestions = questions.filter((q) => q.level > HARD_LEVEL);
     normalIds = new Set(normal.map((q) => q.id));
+    hardIds = new Set(hardQuestions.map((q) => q.id));
+    oniIds = new Set(oniQuestions.map((q) => q.id));
     session = new Session(normal);
     show("cover");
   } catch (error) {
