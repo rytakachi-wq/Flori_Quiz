@@ -36,8 +36,9 @@ import {
   recordRound,
   recordVersus,
 } from "./storage.js";
-import { BADGES, COLORS, HATS, THEMES, badgeName, earnedBadges, loadDress, saveDress, titleFor } from "./badges.js";
+import { BADGES, COLORS, HATS, THEMES, TITLES, badgeName, earnedBadges, loadDress, saveDress, titleFor } from "./badges.js";
 import { GardenUI } from "./garden.js";
+import { setFloriColor } from "./flori-color.js";
 import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, readingOf, setFuriganaMode, startFurigana } from "./furigana.js";
 
@@ -189,7 +190,7 @@ function refreshCover() {
   const dailyDone = stats.dailyLast === today;
   $("btn-daily").querySelector(".tile-label").textContent = "毎日1問";
   $("btn-daily").querySelector(".tile-icon").textContent = dailyDone ? "✅" : "📅"; // 今日の分をやったら、チェック
-  $("btn-daily").disabled = dailyDone;
+  $("btn-daily").classList.toggle("is-done", dailyDone);
   const left = stats.wrong.filter((id) => playableIds().has(id)).length;
   $("btn-review").querySelector(".tile-label").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(なし)";
   $("btn-review").disabled = left === 0;
@@ -206,7 +207,7 @@ function playableIds() {
 
 function startPlay(nextMode) {
   mode = nextMode;
-  if (mode === "oni" || mode === "versus") timeLimit = false; // オニと対戦には、制限時間はない
+  if (mode === "oni") timeLimit = false; // オニ問題には、制限時間はない
   if (mode === "oni") play = new OniRound(oniQuestions);
   else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
   else if (mode === "versus") play = new VersusRound(normalQuestions, versusPlayers);
@@ -342,7 +343,7 @@ function speak(text) {
   // 漢字は、ふりがな(辞書の読み)に置きかえて、読みまちがいを減らす
   const voice = new SpeechSynthesisUtterance(readingOf(text).replace(/□/g, "なにか").replace(/\n/g, "。"));
   voice.lang = "ja-JP";
-  voice.rate = 1.2;
+  voice.rate = 1.6;
   speechSynthesis.speak(voice);
 }
 function readableQuestion(question) {
@@ -671,7 +672,14 @@ $("btn-restart-yes").addEventListener("click", () => {
   chooseTime("normal");
 });
 $("btn-hard").addEventListener("click", () => chooseTime("hard"));
-$("btn-daily").addEventListener("click", () => chooseTime("daily"));
+$("btn-daily").addEventListener("click", () => {
+  if (loadStats().dailyLast === dateKey()) {
+    // 今日の分は、もう終わっている
+    $("dlg-info-text").textContent = "今日の分は、もう終わったヨ。また明日、挑戦してネ!";
+    $("dlg-info").showModal();
+  } else chooseTime("daily");
+});
+$("btn-info-close").addEventListener("click", () => $("dlg-info").close());
 $("btn-review").addEventListener("click", () => chooseTime("review"));
 // ヒント:1問に1回。見ると、その問題の点が2点へる。
 $("btn-hint").addEventListener("click", () => {
@@ -686,7 +694,7 @@ $("btn-versus-back").addEventListener("click", () => show("cover"));
 for (const button of document.querySelectorAll("[data-players]")) {
   button.addEventListener("click", () => {
     versusPlayers = Math.min(VERSUS_MAX_PLAYERS, Math.max(VERSUS_MIN_PLAYERS, Number(button.dataset.players)));
-    startPlay("versus");
+    chooseTime("versus"); // 対戦でも、制限時間をつけられる
   });
 }
 
@@ -858,6 +866,17 @@ function showBadges() {
       return item;
     }),
   );
+  // 称号一覧:総合得点で決まる
+  const total = currentTotal(stats);
+  const now = titleFor(total);
+  $("title-list").replaceChildren(
+    ...[...TITLES].reverse().map((title) => {
+      const item = document.createElement("li");
+      item.className = title.name === now ? "is-now" : total >= title.min ? "" : "locked";
+      item.textContent = `${title.min}点〜  ${title.name}${title.name === now ? "  ← いま" : ""}`;
+      return item;
+    }),
+  );
   show("badges");
 }
 
@@ -917,7 +936,7 @@ let dress = loadDress();
 
 function applyDress() {
   document.documentElement.dataset.theme = dress.theme;
-  document.documentElement.style.setProperty("--flori-filter", COLORS.find((color) => color.id === dress.color)?.filter ?? "none");
+  setFloriColor(COLORS.find((color) => color.id === dress.color) ?? null);
   const icon = HATS.find((hat) => hat.id === dress.hat)?.icon ?? "";
   $("hero-hat").textContent = icon;
   $("dress-hat").textContent = icon;

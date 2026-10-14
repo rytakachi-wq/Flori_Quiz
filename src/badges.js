@@ -74,14 +74,22 @@ export function badgeName(id) {
   return BADGES.find((badge) => badge.id === id)?.name ?? "";
 }
 
-// フロリの色(色相をずらす。フロリの絵を描き直すのではなく、色あいを変えるだけ)
+// フロリの色(体の水色の部分だけ、色あいをかえる。目・ほお・口・線は、そのまま。flori-color.js)
+// hue:色あい(0〜360)  gain:もとの色のこさを何倍にするか  minSat:いちばん薄い所でも、これだけは色をつける  gray:灰色
 export const COLORS = [
-  { id: "original", name: "もとの色", filter: "none", unlock: null },
-  { id: "pink", name: "ピンク", filter: "hue-rotate(140deg) saturate(2.2)", unlock: "first" },
-  { id: "green", name: "みどり", filter: "hue-rotate(280deg) saturate(2.2)", unlock: "right10" },
-  { id: "yellow", name: "きいろ", filter: "hue-rotate(215deg) saturate(2.5)", unlock: "play10" },
-  { id: "purple", name: "むらさき", filter: "hue-rotate(70deg) saturate(2.2)", unlock: "perfect" },
-  { id: "orange", name: "オレンジ", filter: "hue-rotate(185deg) saturate(2.6)", unlock: "streak3" },
+  { id: "original", name: "もとの色", original: true, unlock: null },
+  { id: "pink", name: "ピンク", hue: 338, gain: 2.6, minSat: 0.65, unlock: "first" },
+  { id: "green", name: "みどり", hue: 130, gain: 2.4, minSat: 0.5, unlock: "right10" },
+  { id: "yellow", name: "きいろ", hue: 50, gain: 3, minSat: 0.85, unlock: "play10" },
+  { id: "purple", name: "むらさき", hue: 272, gain: 2.2, minSat: 0.5, unlock: "perfect" },
+  { id: "orange", name: "オレンジ", hue: 28, gain: 3, minSat: 0.9, unlock: "streak3" },
+  { id: "red", name: "あか", hue: 2, gain: 3, minSat: 0.8, unlock: "right20" },
+  { id: "mint", name: "ミント", hue: 165, gain: 2.2, minSat: 0.5, unlock: "versus1" },
+  { id: "lime", name: "きみどり", hue: 85, gain: 2.6, minSat: 0.7, unlock: "review" },
+  { id: "lavender", name: "ラベンダー", hue: 255, gain: 1.8, minSat: 0.45, unlock: "dex10" },
+  { id: "peach", name: "もも", hue: 18, gain: 2.4, minSat: 0.7, unlock: "timed1" },
+  { id: "gray", name: "はいいろ", gray: true, unlock: "perfect5" },
+  { id: "gold", name: "きん", hue: 42, gain: 3, minSat: 0.9, unlock: "total50" },
 ];
 
 const DEFAULT_DRESS = { hat: "none", theme: "sky", color: "original" };

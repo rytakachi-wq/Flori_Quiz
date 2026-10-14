@@ -70,6 +70,9 @@
       <p id="badge-title" class="bubble"></p>
       <p id="badge-count" class="note"></p>
       <ul id="badge-list" class="badge-list"></ul>
+      <h3 class="dress-title">称号一覧</h3>
+      <p class="note">総合得点で、称号が変わるヨ。</p>
+      <ul id="title-list" class="title-list"></ul>
       <button id="btn-badges-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
@@ -250,17 +253,23 @@
 
   <dialog id="dlg-time" class="dialog" aria-labelledby="dlg-time-text">
     <p id="dlg-time-text">制限時間をつける?<br>つけると、1問20秒で答えるヨ。</p>
-    <div class="buttons">
-      <button id="btn-time-yes" class="btn btn-main" type="button">つける</button>
-      <button id="btn-time-no" class="btn btn-main" type="button">つけない</button>
-      <button id="btn-time-cancel" class="btn btn-sub" type="button">やめる</button>
+    <div class="buttons buttons-choice">
+      <button id="btn-time-no" class="btn btn-main btn-big" type="button">つけない</button>
+      <button id="btn-time-yes" class="btn btn-plain btn-small" type="button">つける</button>
+      <button id="btn-time-cancel" class="btn btn-plain btn-small" type="button">やめる</button>
     </div>
   </dialog>
   <dialog id="dlg-restart" class="dialog" aria-labelledby="dlg-restart-text">
     <p id="dlg-restart-text">最初からにする?<br>「つづきから」の記録(難しさと何回目か)が消えるヨ。<br>成績や総合得点は消えないヨ。</p>
+    <div class="buttons buttons-choice">
+      <button id="btn-restart-no" class="btn btn-main btn-big" type="button">やめる</button>
+      <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">最初からにする</button>
+    </div>
+  </dialog>
+  <dialog id="dlg-info" class="dialog" aria-labelledby="dlg-info-text">
+    <p id="dlg-info-text"></p>
     <div class="buttons">
-      <button id="btn-restart-yes" class="btn btn-sub" type="button">最初からにする</button>
-      <button id="btn-restart-no" class="btn btn-main" type="button">やめる</button>
+      <button id="btn-info-close" class="btn btn-main" type="button">わかった</button>
     </div>
   </dialog>
   <dialog id="dlg-volume" class="dialog" aria-labelledby="dlg-volume-title">
