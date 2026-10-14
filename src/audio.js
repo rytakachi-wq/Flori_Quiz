@@ -13,8 +13,8 @@ const SETTINGS_KEY = "floriQuiz.settings.v2";
 //      relax(リラックス)、oni(オニ問題)、result(結果)
 const BGM = {
   cover: "cover",
-  question: "question",
-  hard: "question",
+  question: "study",
+  hard: "deep",
   versus: "cover",
   relax: "relax",
   oni: "oni",

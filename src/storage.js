@@ -1,7 +1,7 @@
 // 端末内に保存する成績。名前や個人情報は入れない。
 // 保存できない環境でも遊べるように、失敗しても、そのページを開いている間は覚えておく。
 
-import { ROUNDS_PER_SET } from "./game.js";
+import { MAX_SCORE, QUESTIONS_PER_ROUND, ROUNDS_PER_SET } from "./game.js";
 
 const KEY = "floriQuiz.stats";
 const OLD_BEST_KEY = "floriQuiz.bestScore"; // 最高得点だけだったころの保存
@@ -45,6 +45,23 @@ function clean(raw) {
   };
 }
 
+// 数字どうしが、食いちがわないように、そろえる。
+// ・答えた問題は、5問×遊んだ回数(オニ問題は数えない)。古い記録や、なくなった問題の整理で、ずれたときの直し。
+// ・正解した問題の数は、「正解した問題の種類」以上、「答えた問題」以下。
+// ・正解した問題は、出会った問題でもある。
+export function reconcile(stats) {
+  const next = { ...stats };
+  const unique = ids([...next.seen, ...next.right]);
+  next.seen = unique;
+  const rounds = Math.max(next.plays, Math.ceil(next.answered / QUESTIONS_PER_ROUND), next.best > 0 || next.bestHard > 0 ? 1 : 0, Math.ceil(unique.length / QUESTIONS_PER_ROUND));
+  next.plays = rounds;
+  next.answered = rounds * QUESTIONS_PER_ROUND;
+  next.correct = Math.min(next.answered, Math.max(next.correct, next.right.length));
+  next.best = Math.min(next.best, MAX_SCORE);
+  next.bestHard = Math.min(next.bestHard, MAX_SCORE);
+  return next;
+}
+
 export function loadStats() {
   if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight] };
   let stats = clean(EMPTY);
@@ -55,7 +72,7 @@ export function loadStats() {
   } catch {
     // 読めなければ、はじめからにする。
   }
-  cache = stats;
+  cache = reconcile(stats);
   return loadStats();
 }
 
@@ -111,8 +128,6 @@ export function recordVersus() {
 export function pruneStats(validIds) {
   const stats = loadStats();
   const keep = (list) => list.filter((id) => validIds.has(id));
-  const next = { ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight) };
-  if (next.seen.length !== stats.seen.length || next.right.length !== stats.right.length || next.oniRight.length !== stats.oniRight.length) {
-    save(next);
-  }
+  const next = reconcile({ ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight) });
+  if (JSON.stringify(next) !== JSON.stringify(stats)) save(next);
 }

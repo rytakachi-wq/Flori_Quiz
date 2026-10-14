@@ -338,61 +338,29 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 .board.big li.is-winner { box-shadow: 0 0 0 5px var(--green); }
 .board.big li.is-winner::before { content: "👑 "; }
 
-/* リラックス:スライドパズル */
+/* リラックス:お花畑 */
 .btn-relax { background: var(--green); color: var(--text); }
-.puzzle-board {
+.garden {
   display: grid;
   grid-template-columns: repeat(var(--size), 1fr);
-  gap: 2px;
-  width: min(340px, 100%);
-  aspect-ratio: 4 / 5;
-  padding: 3px;
-  background: var(--line);
-  border-radius: 12px;
-  touch-action: manipulation;
+  gap: 8px;
+  width: min(360px, 100%);
+  padding: 10px;
+  background: var(--body);
+  border-radius: 16px;
 }
-.puzzle-board .tile {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 3px 6px;
-  border: 0;
-  border-radius: 4px;
-  background-color: #dcecf5;
-  background-repeat: no-repeat;
-  color: var(--blue-dark);
-  font: inherit;
-  font-size: 13px;
-  font-weight: bold;
+.garden .flower {
+  aspect-ratio: 1;
+  font-size: clamp(28px, 9vw, 48px);
   line-height: 1;
-  opacity: 1;
+  background: #fff;
+  border: 3px solid var(--blue);
+  border-radius: 14px;
   cursor: pointer;
 }
-.puzzle-board .tile:disabled { color: var(--blue-dark); }
-.puzzle-board.is-solved .tile { color: transparent; }
-.puzzle-board .tile:hover:not(:disabled) { filter: brightness(1.06); }
-.puzzle-board .tile.is-blank { background: var(--body); cursor: default; }
-.puzzle-board .tile:focus-visible { outline: 4px solid var(--green); outline-offset: -4px; }
-.puzzle-board.is-solved { gap: 0; }
-.puzzle-board.is-solved .tile { border-radius: 0; opacity: 1; }
+.garden .flower.stage-2 { background: #fff0f4; border-color: var(--pink); }
+.garden .flower:hover:not(:disabled) { filter: brightness(0.96); }
+.garden .flower:focus-visible { outline: 4px solid var(--green); outline-offset: 2px; }
+.garden .flower:disabled { cursor: default; }
+.garden.is-solved { background: #fff0f4; }
 
-/* リラックス:あそびの選びかた */
-.game-choices { display: grid; gap: 12px; width: min(520px, 100%); }
-.game-choice { padding: 10px 16px 14px; background: var(--body); border-radius: 16px; text-align: center; }
-.game-choice h3 { margin: 0; color: var(--blue-dark); }
-.game-choice .note { margin: 2px 0 8px; }
-
-/* 落ちものパズル */
-.game-wrap { display: flex; gap: 16px; align-items: flex-start; justify-content: center; }
-#game-canvas {
-  height: min(540px, 60vh);
-  width: auto;
-  background: #f3f9fc;
-  border: 3px solid var(--line);
-  border-radius: 12px;
-}
-.game-side { text-align: center; }
-.game-side .note { margin: 0 0 4px; }
-#game-next { width: 64px; height: 64px; background: #f3f9fc; border: 2px solid var(--blue); border-radius: 10px; }
-.pad { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-.pad .btn { min-width: 72px; padding: 8px 18px; }

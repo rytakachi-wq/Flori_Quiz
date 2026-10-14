@@ -31,6 +31,12 @@ const CHORDS = {
   Em7: ["E3", "G3", "B3", "D4"],
   Cmaj7: ["C3", "E3", "G3", "B3"],
   D: ["D3", "F#3", "A3"],
+  Am7: ["A2", "C3", "E3", "G3"],
+  Fmaj7: ["F2", "A2", "C3", "E3"],
+  Dm7: ["D3", "F3", "A3", "C4"],
+  G7: ["G2", "B2", "D3", "F3"],
+  E7: ["E3", "G#3", "B3", "D4"],
+  B7: ["B2", "D#3", "F#3", "A3"],
 };
 
 const shift = (note, semitones) => {
@@ -67,23 +73,43 @@ export const TRACKS = {
     ],
   },
 
-  // ふつうの問題・難しいモード:落ち着いて、考えられる曲
-  question: {
-    bpm: 90,
+  // ふつうの問題:時計の音と、マリンバのような音で、じっくり考える曲
+  study: {
+    bpm: 88,
     trim: 1,
-    chords: ["Am", "F", "C", "G", "Am", "F", "G", "Am"],
-    pad: 0.034,
-    arp: true,
-    drums: "h...h...h...h...",
+    chords: ["Am7", "Fmaj7", "Cmaj7", "G7", "Am7", "Fmaj7", "Dm7", "E7"],
+    pad: 0.03,
+    tick: "beat",
+    mallet: true,
     lead: [
-      [[0, "E5", 6], [8, "C5", 4], [12, "B4", 4]],
-      [[0, "A4", 6], [8, "C5", 4], [12, "A4", 4]],
-      [[0, "G4", 6], [8, "E5", 4], [12, "D5", 4]],
-      [[0, "B4", 6], [8, "D5", 4], [12, "G4", 4]],
-      [[0, "C5", 6], [8, "E5", 4], [12, "A4", 4]],
-      [[0, "F5", 6], [8, "E5", 4], [12, "C5", 4]],
-      [[0, "D5", 6], [8, "B4", 4], [12, "G4", 4]],
-      [[0, "A4", 12]],
+      [[0, "E5", 3], [4, "A5", 2], [6, "G5", 2], [8, "E5", 4]],
+      [[0, "C5", 3], [4, "F5", 2], [6, "E5", 2], [8, "C5", 4]],
+      [[0, "E5", 3], [4, "G5", 2], [6, "E5", 2], [8, "D5", 4]],
+      [[0, "D5", 3], [4, "F5", 2], [6, "D5", 2], [8, "B4", 4], [12, "D5", 2]],
+      [[0, "A4", 3], [4, "C5", 2], [6, "E5", 2], [8, "G5", 4]],
+      [[0, "A5", 3], [4, "G5", 2], [6, "F5", 2], [8, "E5", 4]],
+      [[0, "D5", 3], [4, "F5", 2], [6, "A5", 2], [8, "G5", 4]],
+      [[0, "G#5", 3], [4, "B5", 2], [6, "G#5", 2], [8, "E5", 6]],
+    ],
+  },
+
+  // 難しいモード:時計の音が細かくなり、集中して考える曲
+  deep: {
+    bpm: 80,
+    trim: 1,
+    chords: ["Em7", "Cmaj7", "Am7", "B7", "Em7", "Cmaj7", "Am7", "B7"],
+    pad: 0.034,
+    tick: "eighth",
+    mallet: true,
+    lead: [
+      [[0, "B4", 4], [4, "E5", 2], [6, "G5", 2], [8, "F#5", 4], [12, "E5", 2], [14, "D5", 2]],
+      [[0, "E5", 4], [4, "G5", 2], [6, "B5", 2], [8, "A5", 4], [12, "G5", 4]],
+      [[0, "C5", 4], [4, "E5", 2], [6, "A5", 2], [8, "G5", 4], [12, "E5", 4]],
+      [[0, "D#5", 4], [4, "F#5", 2], [6, "A5", 2], [8, "B5", 6]],
+      [[0, "G5", 4], [4, "F#5", 2], [6, "E5", 2], [8, "B4", 4], [12, "E5", 4]],
+      [[0, "G5", 4], [4, "E5", 2], [6, "C5", 2], [8, "B4", 4], [12, "D5", 4]],
+      [[0, "A4", 2], [2, "C5", 2], [4, "E5", 4], [8, "A5", 4], [12, "G5", 4]],
+      [[0, "F#5", 4], [4, "D#5", 2], [6, "F#5", 2], [8, "B4", 8]],
     ],
   },
 
@@ -244,12 +270,11 @@ export function scheduleBar(ctx, out, name, bar, time) {
       }
     }
   }
-  // アルペジオ:コードの音を、やさしく、くり返す(考える曲用)
-  if (track.arp) {
-    const tones = chord.map((n) => shift(n, 24));
-    const order = [0, 1, 2, 1];
-    for (let s = 0; s < 16; s += 2) {
-      tone(ctx, out, { note: tones[order[(s / 2) % 4]], time: time + s * step, length: step * 1.4, type: "sine", gain: 0.05, attack: 0.01, release: 0.25 });
+  // 時計の音:コツ、コツ、と、考える時間をきざむ
+  if (track.tick) {
+    const every = track.tick === "eighth" ? 2 : 4;
+    for (let s = 0; s < 16; s += every) {
+      noiseHit(ctx, out, time + s * step, { gain: s % 8 === 0 ? 0.05 : 0.03, filter: "bandpass", frequency: s % 8 === 0 ? 2200 : 3300, length: 0.03 });
     }
   }
   // ベル:やわらかい音を、ときどき(リラックス用)
@@ -261,7 +286,8 @@ export function scheduleBar(ctx, out, name, bar, time) {
   }
   // メロディ
   for (const [s, note, len] of track.lead[index]) {
-    tone(ctx, out, { note, time: time + s * step, length: step * len * 0.9, type: "triangle", gain: 0.1, attack: 0.015, release: 0.18 });
+    if (track.mallet) tone(ctx, out, { note, time: time + s * step, length: step * len * 0.35, type: "sine", gain: 0.13, attack: 0.004, release: 0.45 });
+    else tone(ctx, out, { note, time: time + s * step, length: step * len * 0.9, type: "triangle", gain: 0.1, attack: 0.015, release: 0.18 });
   }
   // ドラム
   if (track.drums) {

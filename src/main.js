@@ -15,8 +15,7 @@ import {
   totalScore,
 } from "./game.js";
 import { loadStats, pruneStats, recordOni, recordRound, recordVersus } from "./storage.js";
-import { SlidePuzzle } from "./puzzle.js";
-import { FallingUI } from "./falling-ui.js";
+import { GardenUI } from "./garden.js";
 import { getVolume, playSe, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
 
@@ -30,7 +29,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "versus", "relax", "puzzle", "game", "records", "settings", "question", "result", "error"];
+const SCREENS = ["cover", "versus", "relax", "records", "settings", "question", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)
@@ -39,7 +38,7 @@ let versusPlayers = 2; // みんなで対戦する人数
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
   if (name === "question") return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
-  if (name === "relax" || name === "puzzle" || name === "game") return "relax";
+  if (name === "relax") return "relax";
   if (name === "result") return "result";
   return name === "error" ? null : "cover";
 }
@@ -47,7 +46,6 @@ function sceneOf(name) {
 function show(name) {
   for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
   if (name !== "cover") coverTaps = 0;
-  if (name !== "game") stopFalling();
   setScene(sceneOf(name));
   window.scrollTo(0, 0);
 }
@@ -420,144 +418,32 @@ for (const button of document.querySelectorAll("[data-players]")) {
   });
 }
 
-// リラックス:スライドパズル(点数も時間もない)
-const PUZZLE_IMAGES = [
-  "../assets/flori/src/body_wave.webp",
-  "../assets/flori/wave_smile.png",
-  "../assets/flori/wave_nikkori.png",
-  "../assets/flori/wave_surprised.png",
-  "../assets/flori/wave_wrong.png",
-];
-let puzzle = null;
-let puzzleSize = 3;
+// リラックス:お花畑(点数も時間もない)
+let garden = null;
+let gardenSize = 3;
 
-function startPuzzle(size = puzzleSize) {
-  puzzleSize = size;
-  const image = PUZZLE_IMAGES[Math.floor(Math.random() * PUZZLE_IMAGES.length)];
-  puzzle = new SlidePuzzle($("puzzle"), {
+function startGarden(size = gardenSize) {
+  gardenSize = size;
+  $("garden-message").textContent = "花をおして、全部を満開にしよう。";
+  garden = new GardenUI($("garden"), {
     size,
-    image,
+    onChange: ({ bloomed, total, moves }) => {
+      if (moves > 0) $("garden-message").textContent = `満開 ${bloomed} / ${total} ・ ${moves}回`;
+    },
     onSolved: (moves) => {
-      $("puzzle-message").textContent = `できた! ${moves}回で完成したヨ! すごいネ!`;
+      $("garden-message").textContent = `全部、満開!${moves}回で完成したヨ。すごいネ!`;
       playSe("correct");
     },
   });
-  puzzle.shuffle();
-  $("puzzle-message").textContent = "空いている所の隣のタイルを、クリックしてね。";
-  $("btn-puzzle-peek").textContent = "見本を見る";
-  show("puzzle");
+  show("relax");
 }
 
-// 落ちものパズル(ぽんぽんブロブ・ばい菌バスター)
-const FALLING = {
-  pop: {
-    title: "ぽんぽんブロブ",
-    help: "同じ色を4つ以上くっつけると、ぽん!と消えるヨ。消えたあとに続けて消えると「連鎖」!",
-    options: { slow: { speed: 1000 }, normal: { speed: 650 } },
-  },
-  virus: {
-    title: "ばい菌バスター",
-    help: "ばい菌と同じ色のカプセルを、縦か横に4つ並べて消そう。ばい菌を全部消したら、勝ち!",
-    options: { 4: { viruses: 4, speed: 900 }, 8: { viruses: 8, speed: 900 } },
-  },
-};
-let falling = null;
-let fallingConfig = null;
-
-function stopFalling() {
-  falling?.destroy();
-  falling = null;
-}
-
-function fallingStatus(kind, info) {
-  if (info.paused) return "一時停止中。「一時停止」をもう一度押すと、続きから!";
-  if (kind === "pop") {
-    const chain = info.chain >= 2 ? `${info.chain}連鎖!  ` : "";
-    return `${chain}スコア ${info.score}点 ・ 最大連鎖 ${info.maxChain}`;
-  }
-  return `残りのばい菌 ${info.left} / ${info.total}匹 ・ スコア ${info.score}点`;
-}
-
-function startFalling(kind, option) {
-  fallingConfig = { kind, option };
-  const config = FALLING[kind];
-  show("game");
-  $("game-title").textContent = config.title;
-  $("game-help").textContent = `${config.help}  ←→:動かす / ↓:早く落とす / ↑・Z・X:回す / P:一時停止`;
-  $("btn-game-pause").textContent = "一時停止";
-  falling = new FallingUI({
-    canvas: $("game-canvas"),
-    nextCanvas: $("game-next"),
-    kind,
-    options: config.options[option],
-    onStatus: (info) => {
-      $("game-status").textContent = fallingStatus(kind, info);
-      if (info.paused !== undefined) $("btn-game-pause").textContent = info.paused ? "続ける" : "一時停止";
-    },
-    onEnd: (state, info) => {
-      $("game-status").textContent =
-        state === "won"
-          ? `ばい菌を全部やっつけたヨ! すごい! スコア ${info.score}点`
-          : kind === "pop"
-            ? `ビンがいっぱいになっちゃった! スコア ${info.score}点・最大${info.maxChain}連鎖。もう一度やってみよう!`
-            : "ビンがいっぱいになっちゃった! もう一度やってみよう!";
-      if (state === "won") playSe("correct");
-    },
-  });
-}
-
-for (const button of document.querySelectorAll("[data-falling]")) {
-  button.addEventListener("click", () => startFalling(button.dataset.falling, button.dataset.option));
-}
-for (const button of document.querySelectorAll(".pad [data-action]")) {
-  button.addEventListener("click", () => falling?.press(button.dataset.action));
-}
-$("btn-game-pause").addEventListener("click", () => falling?.press("pause"));
-$("btn-game-again").addEventListener("click", () => fallingConfig && startFalling(fallingConfig.kind, fallingConfig.option));
-$("btn-game-back").addEventListener("click", () => show("relax"));
-// キー操作
-document.addEventListener("keydown", (event) => {
-  if ($("screen-game").hidden || !falling || event.ctrlKey || event.metaKey || event.altKey) return;
-  const actions = {
-    ArrowLeft: "left",
-    ArrowRight: "right",
-    ArrowDown: "down",
-    ArrowUp: "rotate",
-    x: "rotate",
-    X: "rotate",
-    " ": "rotate",
-    z: "rotate-back",
-    Z: "rotate-back",
-    p: "pause",
-    P: "pause",
-  };
-  const action = actions[event.key];
-  if (!action) return;
-  event.preventDefault();
-  falling.press(action);
-});
-
-$("btn-relax").addEventListener("click", () => show("relax"));
+$("btn-relax").addEventListener("click", () => startGarden());
 $("btn-relax-back").addEventListener("click", () => show("cover"));
-for (const button of document.querySelectorAll("[data-puzzle]")) {
-  button.addEventListener("click", () => startPuzzle(Number(button.dataset.puzzle)));
+$("btn-garden-again").addEventListener("click", () => startGarden());
+for (const button of document.querySelectorAll("[data-garden]")) {
+  button.addEventListener("click", () => startGarden(Number(button.dataset.garden)));
 }
-$("btn-puzzle-again").addEventListener("click", () => startPuzzle());
-$("btn-puzzle-back").addEventListener("click", () => show("relax"));
-$("btn-puzzle-peek").addEventListener("click", () => {
-  const next = !puzzle.preview;
-  puzzle.setPreview(next);
-  $("btn-puzzle-peek").textContent = next ? "もとにもどす" : "見本を見る";
-});
-// 矢印キー:押した向きに、タイルが動く
-document.addEventListener("keydown", (event) => {
-  if ($("screen-puzzle").hidden || !puzzle) return;
-  const directions = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
-  const direction = directions[event.key];
-  if (!direction) return;
-  event.preventDefault();
-  puzzle.moveByDirection(...direction);
-});
 
 $("btn-records").addEventListener("click", showRecords);
 $("btn-records-back").addEventListener("click", () => show("cover"));
