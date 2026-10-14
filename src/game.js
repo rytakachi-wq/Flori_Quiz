@@ -89,6 +89,13 @@ export class Session {
     this.startRound();
   }
 
+  // 「つづきから」:保存した、難しさのカウンターと、出した問題を、もどす。
+  restore(counter, usedIds) {
+    this.counter = counter;
+    this.used = new Set(usedIds);
+    this.startRound();
+  }
+
   startRound() {
     this.asked = 0;
     this.correct = 0;

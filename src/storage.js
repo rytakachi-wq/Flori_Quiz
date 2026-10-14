@@ -27,10 +27,11 @@ const EMPTY = {
   perfect: 0, // 全問正解した回数(5問)
   perfectHard: 0, // 難しいモードで、全問正解した回数
   reviewClears: 0, // おさらいを、全部クリアした回数
-  timedPlays: 0, // 制限時間モードで遊んだ回数
-  bestTimed: 0, // 制限時間モードの最高得点
-  timedPerfect: 0, // 制限時間モードで、全問正解した回数
+  timedPlays: 0, // 制限時間をつけて遊んだ回数
+  timedPerfect: 0, // 制限時間をつけて、全問正解した回数
   gardenClears: 0, // お花畑を完成させた回数
+  courseCounter: 0, // 「つづきから」:ふつうモードの、難しさのカウンター
+  courseUsed: [], // 「つづきから」:もう出した問題の番号
 };
 
 let cache = null;
@@ -71,9 +72,10 @@ function clean(raw) {
     perfectHard: number(raw?.perfectHard),
     reviewClears: number(raw?.reviewClears),
     timedPlays: number(raw?.timedPlays),
-    bestTimed: number(raw?.bestTimed),
     timedPerfect: number(raw?.timedPerfect),
     gardenClears: number(raw?.gardenClears),
+    courseCounter: number(raw?.courseCounter),
+    courseUsed: ids(raw?.courseUsed),
   };
 }
 
@@ -95,7 +97,7 @@ export function reconcile(stats) {
 }
 
 export function loadStats() {
-  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges] };
+  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges], courseUsed: [...cache.courseUsed] };
   let stats = clean(EMPTY);
   try {
     const saved = localStorage.getItem(KEY);
@@ -128,18 +130,16 @@ function updateWrong(stats, answers) {
 }
 
 // 5問の結果を記録する。ふつうモードで4回分そろったら、setCompleted を true にして、数えなおす。
-// mode:"normal"(ふつう)、"hard"(難しい)、"timed"(制限時間。最高得点は別に数える。難しさの回数には入れない)
-export function recordRound({ correct, total, score, answers = [], mode = "normal" }) {
+// mode:"normal"(ふつう)、"hard"(難しい)  timed:制限時間をつけて遊んだか(バッジに使う)
+export function recordRound({ correct, total, score, answers = [], mode = "normal", timed = false }) {
   const stats = loadStats();
   const hard = mode === "hard";
   const normal = mode === "normal";
-  const timed = mode === "timed";
-  const isRecord = score > (hard ? stats.bestHard : timed ? stats.bestTimed : stats.best);
+  const isRecord = score > (hard ? stats.bestHard : stats.best);
   stats.plays += 1;
   stats.answered += total;
   stats.correct += correct;
   if (hard) stats.bestHard = Math.max(stats.bestHard, score);
-  else if (timed) stats.bestTimed = Math.max(stats.bestTimed, score);
   else stats.best = Math.max(stats.best, score);
   if (timed) stats.timedPlays += 1;
   if (correct === total && total === QUESTIONS_PER_ROUND) {
@@ -215,6 +215,23 @@ export function recordBadges(list) {
   save(stats);
 }
 
+// 「つづきから」の記録(ふつうモードの難しさのカウンターと、もう出した問題)
+export function saveCourse({ counter, used }) {
+  const stats = loadStats();
+  stats.courseCounter = counter;
+  stats.courseUsed = ids(used);
+  save(stats);
+}
+
+// 「最初から」:つづきの記録を消す(成績・総合得点は、そのまま)
+export function resetCourse() {
+  const stats = loadStats();
+  stats.courseCounter = 0;
+  stats.courseUsed = [];
+  stats.setRounds = [];
+  save(stats);
+}
+
 // お花畑を完成させた回数
 export function recordGarden() {
   const stats = loadStats();
@@ -226,6 +243,6 @@ export function recordGarden() {
 export function pruneStats(validIds) {
   const stats = loadStats();
   const keep = (list) => list.filter((id) => validIds.has(id));
-  const next = reconcile({ ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight), wrong: keep(stats.wrong), dex: keep(stats.dex) });
+  const next = reconcile({ ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight), wrong: keep(stats.wrong), dex: keep(stats.dex), courseUsed: keep(stats.courseUsed) });
   if (JSON.stringify(next) !== JSON.stringify(stats)) save(next);
 }

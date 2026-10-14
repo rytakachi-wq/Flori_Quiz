@@ -29,15 +29,17 @@ import {
   recordDaily,
   recordDex,
   recordGarden,
+  resetCourse,
+  saveCourse,
   recordOni,
   recordReview,
   recordRound,
   recordVersus,
 } from "./storage.js";
-import { BADGES, HATS, THEMES, badgeName, earnedBadges, loadDress, saveDress, titleFor } from "./badges.js";
+import { BADGES, COLORS, HATS, THEMES, badgeName, earnedBadges, loadDress, saveDress, titleFor } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
-import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
+import { getFuriganaMode, readingOf, setFuriganaMode, startFurigana } from "./furigana.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
 const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数おすと、オニ問題が出る
@@ -52,13 +54,17 @@ const $ = (id) => document.getElementById(id);
 const SCREENS = ["cover", "versus", "relax", "records", "settings", "dex", "badges", "dress", "question", "result", "error"];
 
 let coverTaps = 0;
-let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"review"(おさらい)、"daily"(毎日1問)、"timed"(制限時間)
+let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"review"(おさらい)、"daily"(毎日1問)
+let timeLimit = false; // この回に、制限時間をつけるか(ふつう・難しい・おさらい・毎日1問で、はじめに聞く)
 let hinted = false; // いまの問題で、ヒントを見たか
 let versusPlayers = 2; // みんなで対戦する人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
-  if (name === "question") return { oni: "oni", hard: "hard", versus: "versus", timed: "timed" }[mode] ?? "question";
+  if (name === "question") {
+    if (timeLimit && (mode === "normal" || mode === "review" || mode === "daily")) return "timed"; // 制限時間つきは、はやい曲
+    return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
+  }
   if (name === "relax") return "relax";
   if (name === "result") return "result";
   return name === "error" ? null : "cover";
@@ -135,6 +141,7 @@ const renderers = {
 let normalQuestions = [];
 let hardQuestions = [];
 let oniQuestions = [];
+const idToUid = new Map(); // 問題の番号 → uid(「つづきから」の保存に使う)
 let allQuestions = []; // 全部の問題(オニもふくむ。図鑑とバッジで使う)
 let playableQuestions = []; // ふつう+難しい問題(おさらい・毎日1問で使う)
 const hardUsed = new Set(); // 難しいモードで、もう出した問題(回をまたいで使う)
@@ -153,7 +160,10 @@ function setFlori(src, alt) {
 }
 
 // 画面いっぱいに、ひとことを出して、短い曲を鳴らしてから、つぎへ進む(「それでは、スタート!」など)。
+let announcing = false; // 大きな表示を出している間は、ほかの操作(キーボードの連打など)を受けつけない
 function announce(text, jingle, then, image) {
+  if (announcing) return;
+  announcing = true;
   $("announce-text").textContent = text;
   const flori = $("announce-flori");
   flori.src = image;
@@ -165,6 +175,7 @@ function announce(text, jingle, then, image) {
   const length = Math.max(1600, playJingle(jingle) + 300);
   setTimeout(() => {
     $("announce").hidden = true;
+    announcing = false;
     then();
   }, length);
 }
@@ -182,6 +193,11 @@ function refreshCover() {
   const left = stats.wrong.filter((id) => playableIds().has(id)).length;
   $("btn-review").querySelector(".tile-label").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(なし)";
   $("btn-review").disabled = left === 0;
+  // つづきから:いまの回数と難しさ。記録がなければ、押せない
+  const saved = hasCourse(stats);
+  $("btn-continue").disabled = !saved;
+  const level = Math.min(MAX_LEVEL, 1 + Math.floor(stats.courseCounter / 3));
+  $("continue-sub").textContent = saved ? `${stats.setRounds.length + 1}回目 ・ ${"★".repeat(level)}${"☆".repeat(MAX_LEVEL - level)}` : "まだないヨ";
 }
 
 function playableIds() {
@@ -190,6 +206,7 @@ function playableIds() {
 
 function startPlay(nextMode) {
   mode = nextMode;
+  if (mode === "oni" || mode === "versus") timeLimit = false; // オニと対戦には、制限時間はない
   if (mode === "oni") play = new OniRound(oniQuestions);
   else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
   else if (mode === "versus") play = new VersusRound(normalQuestions, versusPlayers);
@@ -198,8 +215,6 @@ function startPlay(nextMode) {
     const pool = playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
     if (pool.length === 0) return show("cover");
     play = new PracticeRound(pool); // まちがえた問題を、ぜんぶ(正解すると、おさらいから消える)
-  } else if (mode === "timed") {
-    play = new PracticeRound(pickRandom(normalQuestions, QUESTIONS_PER_ROUND)); // ふつうの問題から5問
   } else if (mode === "daily") {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
   } else play = session;
@@ -220,11 +235,10 @@ function showQuestion() {
     versus: "",
     review: "おさらい ",
     daily: "毎日1問 ",
-    timed: "制限時間 ",
   }[mode];
   $("q-progress").textContent = versus
     ? `第${play.round}回戦 / ${VERSUS_ROUNDS}回戦`
-    : `${prefix}第${play.asked + 1}問 / ${total}問`;
+    : `${timeLimit ? "⏱ " : ""}${prefix}第${play.asked + 1}問 / ${total}問`;
   renderTurn(versus);
   $("q-level").textContent =
     mode === "oni"
@@ -232,10 +246,7 @@ function showQuestion() {
       : mode === "hard"
         ? "難しさ ★★★★"
         : versus
-          ? `${play.round}回戦 ${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} ${VERSUS_LEVEL_WORDS[play.round]}・正解で${play.round}点(${versusPlayers}人)`
-          : mode === "timed"
-            ? `1問${TIMED_SECONDS}秒`
-            : `難しさ ${"★".repeat(question.level)}${"☆".repeat(Math.max(0, MAX_LEVEL - question.level))}`;
+          ? `${play.round}回戦 ${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} ${VERSUS_LEVEL_WORDS[play.round]}・正解で${play.round}点(${versusPlayers}人)` : `難しさ ${"★".repeat(question.level)}${"☆".repeat(Math.max(0, MAX_LEVEL - question.level))}`;
   $("q-text").textContent = question.text;
   $("q-feedback").hidden = true;
 
@@ -257,11 +268,11 @@ function showQuestion() {
   hinted = false;
   $("q-hint").hidden = true;
   $("btn-hint").disabled = false;
-  $("q-hint-area").hidden = !(question.hint && mode !== "oni" && mode !== "versus" && mode !== "timed");
+  $("q-hint-area").hidden = !(question.hint && mode !== "oni" && mode !== "versus");
 
   renderers[question.type].render(question, answer);
   show("question");
-  if (mode === "timed") startTimer();
+  if (timeLimit) startTimer();
   else $("q-timer").hidden = true;
   if (readAloud()) setTimeout(() => speak(readableQuestion(question)), 400); // 自動の読み上げ
 }
@@ -328,9 +339,10 @@ function stopSpeaking() {
 function speak(text) {
   if (!canSpeak) return;
   speechSynthesis.cancel();
-  const voice = new SpeechSynthesisUtterance(text.replace(/□/g, "なにか").replace(/\n/g, "。"));
+  // 漢字は、ふりがな(辞書の読み)に置きかえて、読みまちがいを減らす
+  const voice = new SpeechSynthesisUtterance(readingOf(text).replace(/□/g, "なにか").replace(/\n/g, "。"));
   voice.lang = "ja-JP";
-  voice.rate = 0.95;
+  voice.rate = 1.2;
   speechSynthesis.speak(voice);
 }
 function readableQuestion(question) {
@@ -434,7 +446,7 @@ function showResult() {
   // 総合得点は、はじめて正解した問題の分だけ、ふえる。
   const gainText = () => {
     const gained = currentTotal() - before;
-    return gained > 0 ? `初めての正解で、総合得点が${gained}点増えたヨ!` : "総合得点は、初めて正解したときだけ増えるヨ。";
+    return gained > 0 ? `初めての正解で総合得点が${gained}点増えたヨ!` : "総合得点は初めて正解したときだけ増えるヨ。";
   };
   if (versus) {
     // みんなで対戦した結果は、ひとりで遊ぶ記録(遊んだ回数、正解率、総合得点など)には入れない。
@@ -446,22 +458,13 @@ function showResult() {
     result.winners.forEach((index) => $("r-board").children[index].classList.add("is-winner"));
     setNote.textContent = "";
     $("btn-again").textContent = "もう一度対戦";
-  } else if (mode === "timed") {
-    // 制限時間モード:遊んだ回数・答えた問題・正解率・総合得点に入る。最高得点は、別に数える(難しさの回数には入れない)。
-    const saved = recordRound({ ...result, mode: "timed" });
-    $("r-title").textContent = "制限時間モードの結果!";
-    $("r-best-row").hidden = false;
-    $("r-best").textContent = `${loadStats().bestTimed}点`;
-    $("r-record").hidden = !saved.isRecord;
-    setNote.textContent = gainText();
-    $("btn-again").textContent = "続けて遊ぶ";
   } else if (mode === "review") {
     // おさらい:まちがえた問題の一覧だけが変わる。成績の回数や、総合得点には入れない。
     const left = recordReview(result.answers);
     $("r-title").textContent = "おさらいの結果!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
-    setNote.textContent = left > 0 ? `まだおさらいが必要な問題は、あと${left}問だヨ。` : "おさらい完了! まちがえた問題は、もうないヨ!";
+    setNote.textContent = left > 0 ? `おさらいが必要な問題は、あと${left}問だヨ。` : "おさらい完了! まちがえた問題はもうないヨ!";
     $("btn-again").textContent = "もう一度おさらい";
     $("btn-again").hidden = left === 0;
   } else if (mode === "daily") {
@@ -471,7 +474,7 @@ function showResult() {
     $("r-title").textContent = "毎日1問の結果!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
-    setNote.textContent = `${saved.streak}日連続!(ぜんぶで${saved.days}日)また明日も、挑戦してネ!`;
+    setNote.textContent = `${saved.streak}日連続!(ぜんぶで${saved.days}日)また明日も挑戦してネ!`;
     $("btn-again").hidden = true;
   } else if (mode === "oni") {
     // オニ問題は、成績の「遊んだ回数」や「正解率」には入れない。総合得点にだけ入る。
@@ -482,7 +485,7 @@ function showResult() {
     setNote.textContent = gainText();
     $("btn-again").textContent = "もう一度挑戦";
   } else if (mode === "hard") {
-    const saved = recordRound({ ...result, mode: "hard" });
+    const saved = recordRound({ ...result, mode: "hard", timed: timeLimit });
     $("r-title").textContent = "難しいモードの結果!";
     $("r-best-row").hidden = false;
     $("r-best").textContent = `${loadStats().bestHard}点`;
@@ -490,7 +493,7 @@ function showResult() {
     setNote.textContent = gainText();
     $("btn-again").textContent = "もう一度挑戦";
   } else {
-    const saved = recordRound(result);
+    const saved = recordRound({ ...result, timed: timeLimit });
     const stats = loadStats();
     $("r-title").textContent = "結果発表!";
     $("r-best-row").hidden = false;
@@ -503,6 +506,7 @@ function showResult() {
     } else {
       setNote.textContent = `${ROUNDS_PER_SET}回のうち${stats.setRounds.length}回目が終わったヨ(続けて遊ぶと、難しさも続くヨ)`;
     }
+    persistCourse(); // 「つづきから」の記録
   }
   setNote.hidden = false;
   announceBadges($("r-badge"));
@@ -616,7 +620,7 @@ for (const radio of document.querySelectorAll('input[type="radio"][name^="furiga
 $("btn-settings-reset").addEventListener("click", () => {
   resetVolumes();
   setReadAloud(false);
-  $("set-read").checked = false;
+  syncReadSettings();
   setFuriganaMode("all");
   showVolumes();
   showFurigana();
@@ -630,10 +634,45 @@ $("btn-q-settings").addEventListener("click", () => {
 });
 $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
-$("btn-start").addEventListener("click", () => startPlay("normal"));
-$("btn-hard").addEventListener("click", () => startPlay("hard"));
-$("btn-daily").addEventListener("click", () => startPlay("daily"));
-$("btn-review").addEventListener("click", () => startPlay("review"));
+// 問題を解く前に、制限時間をつけるかを聞く(ふつう・難しい・おさらい・毎日1問)
+let pendingMode = null;
+function chooseTime(nextMode) {
+  pendingMode = nextMode;
+  $("dlg-time").showModal();
+}
+function closeTimeDialog(limit) {
+  $("dlg-time").close();
+  if (limit === null) return;
+  timeLimit = limit;
+  startPlay(pendingMode);
+}
+$("btn-time-yes").addEventListener("click", () => closeTimeDialog(true));
+$("btn-time-no").addEventListener("click", () => closeTimeDialog(false));
+$("btn-time-cancel").addEventListener("click", () => closeTimeDialog(null));
+
+// 「つづきから」と「最初から」(ふつうモードの、難しさと、何回目かを、つづける)
+function hasCourse(stats = loadStats()) {
+  return stats.courseUsed.length > 0 || stats.courseCounter > 0 || stats.setRounds.length > 0;
+}
+function persistCourse() {
+  saveCourse({ counter: session.counter, used: [...session.used].map((id) => idToUid.get(id)).filter(Boolean) });
+}
+$("btn-continue").addEventListener("click", () => chooseTime("normal"));
+$("btn-start").addEventListener("click", () => {
+  if (hasCourse()) $("dlg-restart").showModal(); // つづきの記録が消えるので、警告する
+  else chooseTime("normal");
+});
+$("btn-restart-no").addEventListener("click", () => $("dlg-restart").close());
+$("btn-restart-yes").addEventListener("click", () => {
+  $("dlg-restart").close();
+  resetCourse();
+  session = new Session(normalQuestions);
+  refreshCover();
+  chooseTime("normal");
+});
+$("btn-hard").addEventListener("click", () => chooseTime("hard"));
+$("btn-daily").addEventListener("click", () => chooseTime("daily"));
+$("btn-review").addEventListener("click", () => chooseTime("review"));
 // ヒント:1問に1回。見ると、その問題の点が2点へる。
 $("btn-hint").addEventListener("click", () => {
   if (answered || hinted || !current?.hint) return;
@@ -657,7 +696,7 @@ let gardenSize = 3;
 
 function startGarden(size = gardenSize) {
   gardenSize = size;
-  $("garden-message").textContent = "花をおして、全部を満開にしよう。";
+  $("garden-message").textContent = "花をおして全部を満開にしよう。";
   $("garden-hint").hidden = true;
   garden = new GardenUI($("garden"), {
     size,
@@ -740,7 +779,11 @@ async function init() {
     playableQuestions = [...normal, ...hardQuestions];
     allQuestions = questions;
     pruneStats(new Set([...normalIds, ...hardIds, ...oniIds])); // 古い番号の記録を、取りのぞく
+    for (const q of normal) idToUid.set(q.id, q.uid ?? q.id);
     session = new Session(normal);
+    const saved = loadStats();
+    const uidToId = new Map([...idToUid].map(([id, uid]) => [uid, id]));
+    session.restore(saved.courseCounter, saved.courseUsed.map((uid) => uidToId.get(uid)).filter(Boolean)); // つづきから
     show("cover");
   } catch (error) {
     console.error(error);
@@ -834,24 +877,28 @@ function showDex() {
       item.textContent = `${label}  ???(まだ出会っていないヨ)`;
       return item;
     }
-    const details = document.createElement("details");
-    const summary = document.createElement("summary");
-    summary.textContent = `${label}  ${question.category}`;
+    const head = document.createElement("p");
+    head.className = "dex-head";
+    head.textContent = `${label}  ${question.category}`;
     const mark = document.createElement("span");
     mark.className = "dex-mark";
     mark.textContent = rightSet.has(uid) ? "✔ 正解したことがある" : "";
-    summary.append(mark);
+    head.append(mark);
     const q = document.createElement("p");
     q.className = "dex-q";
     q.textContent = question.text;
-    const a = document.createElement("p");
-    a.className = "dex-a";
-    a.textContent = `答え:${renderers[question.type].correctText(question)}`;
-    const e = document.createElement("p");
-    e.className = "dex-e";
-    e.textContent = question.explanation;
-    details.append(summary, q, a, e);
-    item.append(details);
+    item.append(head, q);
+    if (question.type === "choice") {
+      const list = document.createElement("ol");
+      list.className = "dex-choices";
+      list.type = "A";
+      for (const text of question.choices) {
+        const choice = document.createElement("li");
+        choice.textContent = text;
+        list.append(choice);
+      }
+      item.append(list); // 答えと解説とヒントは、のせない(問題を解いて、たしかめる)
+    }
     return item;
   };
   const items = playableList.map((q, i) => entry(q, `No.${i + 1}`));
@@ -870,6 +917,7 @@ let dress = loadDress();
 
 function applyDress() {
   document.documentElement.dataset.theme = dress.theme;
+  document.documentElement.style.setProperty("--flori-filter", COLORS.find((color) => color.id === dress.color)?.filter ?? "none");
   const icon = HATS.find((hat) => hat.id === dress.hat)?.icon ?? "";
   $("hero-hat").textContent = icon;
   $("dress-hat").textContent = icon;
@@ -899,6 +947,7 @@ function showDress() {
       });
       return button;
     });
+  $("color-list").replaceChildren(...make(COLORS, "color"));
   $("hat-list").replaceChildren(...make(HATS, "hat"));
   $("theme-list").replaceChildren(...make(THEMES, "theme"));
   show("dress");
@@ -911,11 +960,20 @@ $("btn-badges").addEventListener("click", showBadges);
 $("btn-badges-back").addEventListener("click", () => show("cover"));
 $("btn-dress").addEventListener("click", showDress);
 $("btn-dress-back").addEventListener("click", () => show("cover"));
-$("btn-timed").addEventListener("click", () => startPlay("timed"));
 
 // 読み上げ
-$("set-read").checked = readAloud();
-$("set-read").addEventListener("change", () => setReadAloud($("set-read").checked));
+function syncReadSettings() {
+  $("set-read").checked = readAloud();
+  $("set-read-dlg").checked = readAloud();
+}
+syncReadSettings();
+for (const box of [$("set-read"), $("set-read-dlg")]) {
+  box.addEventListener("change", () => {
+    setReadAloud(box.checked);
+    syncReadSettings();
+    if (!box.checked) stopSpeaking();
+  });
+}
 $("btn-read").hidden = !canSpeak;
 $("btn-read").addEventListener("click", () => {
   if (answered) speak(`${$("q-verdict").textContent}。正解は、${renderers[current.type].correctText(current)}。${current.explanation}`);

@@ -23,40 +23,43 @@
 
     <!-- 表紙(モードえらび) -->
     <section id="screen-cover" class="screen" aria-label="表紙">
-      <button id="btn-settings" class="cover-gear" type="button" aria-label="設定"><span aria-hidden="true">⚙️</span> 設定</button>
-      <img class="logo" src="../assets/flori/src/logo.png" alt="フロリ">
-      <h1 class="title">Flori_Quiz</h1>
-      <div class="hero">
-        <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-        <span id="hero-hat" class="hero-hat" aria-hidden="true"></span>
-      </div>
-      <p class="bubble">ヤア! ボクはフロリだヨ!<br>ひらめきクイズで遊ぼう!</p>
-      <p id="cover-title" class="cover-title"></p>
-      <h2 class="mode-title">モードえらび</h2>
-      <div class="menu">
-        <button id="btn-start" class="tile t-start" type="button"><span class="tile-icon" aria-hidden="true">💡</span><span class="tile-label">始める</span></button>
-        <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-label">毎日1問</span></button>
-        <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-label">おさらい</span></button>
-        <button id="btn-hard" class="tile t-hard" type="button"><span class="tile-icon" aria-hidden="true">🔥</span><span class="tile-label">難しいモード</span></button>
-        <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-label">みんなで対戦</span></button>
-        <button id="btn-timed" class="tile t-timed" type="button"><span class="tile-icon" aria-hidden="true">⏱️</span><span class="tile-label">制限時間</span></button>
-        <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-label">リラックス</span></button>
-        <button id="btn-dex" class="tile t-small t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-label">図鑑</span></button>
-        <button id="btn-badges" class="tile t-small t-badges" type="button"><span class="tile-icon" aria-hidden="true">🏅</span><span class="tile-label">バッジ</span></button>
-        <button id="btn-dress" class="tile t-small t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-label">きせかえ</span></button>
-        <button id="btn-records" class="tile t-small t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-label">成績</span></button>
-      </div>
-      <p class="note">1回は5問。全部正解で25点!</p>
-      <p id="sound-hint" class="note">♪ 画面をクリックすると、音楽が流れるよ。</p>
       <button id="corner-flori" class="corner-flori" type="button" aria-label="フロリ">
         <img src="../assets/flori/src/face_smile.png" alt="">
       </button>
+      <button id="btn-settings" class="cover-gear" type="button" aria-label="設定"><span aria-hidden="true">⚙️</span> 設定</button>
+      <img class="logo logo-small" src="../assets/flori/src/logo.png" alt="フロリ">
+      <h1 class="sr-only">Flori_Quiz</h1>
+      <div class="cover-stage">
+        <div class="hero hero-cover">
+          <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
+          <span id="hero-hat" class="hero-hat" aria-hidden="true"></span>
+        </div>
+        <div class="speech">
+          <p>ヤア! ボクはフロリだヨ!<br>ひらめきクイズで遊ぼう!</p>
+          <p id="cover-title" class="cover-title"></p>
+        </div>
+      </div>
+      <div class="menu">
+        <button id="btn-continue" class="tile t-continue" type="button"><span class="tile-icon" aria-hidden="true">💡</span><span class="tile-text"><span class="tile-label">つづきから</span><span id="continue-sub" class="tile-sub"></span></span></button>
+        <button id="btn-start" class="tile t-start" type="button"><span class="tile-icon" aria-hidden="true">🔄</span><span class="tile-text"><span class="tile-label">最初から</span></span></button>
+        <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-text"><span class="tile-label">毎日1問</span></span></button>
+        <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">おさらい</span></span></button>
+        <button id="btn-hard" class="tile t-hard" type="button"><span class="tile-icon" aria-hidden="true">🔥</span><span class="tile-text"><span class="tile-label">難しいモード</span></span></button>
+        <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-text"><span class="tile-label">みんなで対戦</span></span></button>
+        <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-text"><span class="tile-label">リラックス</span></span></button>
+        <button id="btn-dex" class="tile t-small t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-text"><span class="tile-label">図鑑</span></span></button>
+        <button id="btn-badges" class="tile t-small t-badges" type="button"><span class="tile-icon" aria-hidden="true">🏅</span><span class="tile-text"><span class="tile-label">バッジ</span></span></button>
+        <button id="btn-dress" class="tile t-small t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">きせかえ</span></span></button>
+        <button id="btn-records" class="tile t-small t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span></button>
+      </div>
+      <p class="note">1回は5問。全部正解で25点!</p>
+      <p id="sound-hint" class="note">♪ 画面をクリックすると、音楽が流れるよ。</p>
     </section>
     <!-- 問題図鑑 -->
     <section id="screen-dex" class="screen" aria-label="問題図鑑" hidden>
       <h2 class="title">問題図鑑</h2>
       <p id="dex-count" class="bubble"></p>
-      <p class="note">出会った問題は、タップすると、答えと解説が読めるヨ。</p>
+      <p class="note">答えとヒントは、のっていないヨ。問題を解いて、たしかめよう。</p>
       <ul id="dex-list" class="dex-list"></ul>
       <button id="btn-dex-back" class="btn btn-sub" type="button">戻る</button>
     </section>
@@ -78,6 +81,8 @@
         <span id="dress-hat" class="hero-hat" aria-hidden="true"></span>
       </div>
       <p class="note">バッジを集めると、使えるものが増えるヨ。</p>
+      <h3 class="dress-title">フロリの色</h3>
+      <div id="color-list" class="dress-list"></div>
       <h3 class="dress-title">かざり</h3>
       <div id="hat-list" class="dress-list"></div>
       <h3 class="dress-title">背景</h3>
@@ -89,8 +94,8 @@
     <section id="screen-versus" class="screen" aria-label="みんなで対戦" hidden>
       <h2 class="title">みんなで対戦</h2>
       <img class="flori flori-small" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-      <p class="bubble">1台の画面で、順番に答えて、点数を競おう!<br>1回戦、2回戦、3回戦と、だんだん難しくなるヨ。</p>
-      <p class="note">1人3問。正解すると、1回戦は1点、2回戦は2点、3回戦は3点!</p>
+      <p class="bubble">1台の画面で順番に答えて、点数を競おう!<br>1回戦、2回戦、3回戦と、だんだん難しくなるヨ。</p>
+      <p class="note">1人3問。正解すると1回戦は1点、2回戦は2点、3回戦は3点!</p>
       <p class="note">何人で遊ぶ?</p>
       <div class="buttons">
         <button class="btn btn-main" type="button" data-players="2">2人</button>
@@ -106,13 +111,13 @@
       <p id="garden-message" class="bubble"></p>
       <div id="garden"></div>
       <div id="garden-hint" class="note garden-tips" hidden>
-        <p>ヒント:木をおすと、その木と上下左右の木が1段階育つヨ(🌱芽→🌿枝→🌳木→🌸桜の木→芽…)。全部を桜の木にしよう。光っている所を、おしてみよう。</p>
+        <p>ヒント:木をおすと、その木と上下左右の木が1段階育つヨ(🌱芽→🌿枝→🌳木→🌸桜の木→芽…)。全部を桜の木にしよう。光っている所をおしてみよう。</p>
         <p class="tips-title">解くコツ</p>
         <ol>
-          <li>上の段から順に、そろえていこう。上の段の木を育てたいときは、その「すぐ下」の木をおすと、上の木も育つヨ。</li>
-          <li>同じ木を4回おすと、もとにもどるヨ。だから、1つの木を、4回以上おす必要はないヨ。</li>
-          <li>下の段まで来て、そろわない木が残ったら、上の段の木を何個かおしてから、もう一度、上から順にやり直そう。</li>
-          <li>行きづまったら、「ヒント」で光る木を、おしてみよう。</li>
+          <li>上の段から順にそろえていこう。上の段の木を育てたいときは、その「すぐ下」の木をおすと上の木も育つヨ。</li>
+          <li>同じ木を4回おすと、もとにもどるヨ。だから、1つの木を4回以上おす必要はないヨ。</li>
+          <li>下の段まで来てそろわない木が残ったら、上の段の木を何個かおしてから、もう一度上から順にやり直そう。</li>
+          <li>行きづまったら、「ヒント」で光る木をおしてみよう。</li>
         </ol>
       </div>
       <div class="buttons">
@@ -243,6 +248,21 @@
     </div>
   </dialog>
 
+  <dialog id="dlg-time" class="dialog" aria-labelledby="dlg-time-text">
+    <p id="dlg-time-text">制限時間をつける?<br>つけると、1問20秒で答えるヨ。</p>
+    <div class="buttons">
+      <button id="btn-time-yes" class="btn btn-main" type="button">つける</button>
+      <button id="btn-time-no" class="btn btn-main" type="button">つけない</button>
+      <button id="btn-time-cancel" class="btn btn-sub" type="button">やめる</button>
+    </div>
+  </dialog>
+  <dialog id="dlg-restart" class="dialog" aria-labelledby="dlg-restart-text">
+    <p id="dlg-restart-text">最初からにする?<br>「つづきから」の記録(難しさと何回目か)が消えるヨ。<br>成績や総合得点は消えないヨ。</p>
+    <div class="buttons">
+      <button id="btn-restart-yes" class="btn btn-sub" type="button">最初からにする</button>
+      <button id="btn-restart-no" class="btn btn-main" type="button">やめる</button>
+    </div>
+  </dialog>
   <dialog id="dlg-volume" class="dialog" aria-labelledby="dlg-volume-title">
     <p id="dlg-volume-title">設定:音の大きさ</p>
     <div class="volumes">
@@ -262,6 +282,10 @@
       <label><input type="radio" name="furigana-dialog" value="all"> すべての漢字にふりがな</label>
       <label><input type="radio" name="furigana-dialog" value="chu"> 中学以降に習う漢字だけ</label>
       <label><input type="radio" name="furigana-dialog" value="none"> ふりがななし</label>
+    </fieldset>
+    <fieldset class="furigana" aria-label="読み上げ">
+      <legend>読み上げ</legend>
+      <label><input type="checkbox" id="set-read-dlg"> 問題を、自動で読み上げる</label>
     </fieldset>
     <div class="buttons">
       <button id="btn-volume-close" class="btn btn-main" type="button">戻る</button>

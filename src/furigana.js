@@ -151,6 +151,13 @@ export function segments(text) {
 }
 
 // 設定(mode)に合わせた、ルビつきの HTML
+// 読み上げ用:漢字を、辞書の読み(ふりがな)に置きかえた文。辞書にない漢字は、そのまま。
+export function readingOf(text) {
+  return segments(text)
+    .map(({ text: t, reading }) => reading || t)
+    .join("");
+}
+
 export function rubyHtml(text, mode) {
   if (mode === "none") return escapeHtml(text);
   return segments(text)

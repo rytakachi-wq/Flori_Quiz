@@ -199,11 +199,6 @@ body {
 
 /* 表紙のメニュー */
 /* 表紙:モードえらび。色とりどりの大きなタイルを、モザイクのように並べる */
-#screen-cover {
-  background:
-    radial-gradient(circle at 20px 20px, #eef7fb 7px, transparent 8px) 0 0 / 40px 40px,
-    var(--card);
-}
 .mode-title {
   margin: 4px 0 0;
   padding: 2px 22px;
@@ -213,17 +208,36 @@ body {
   border: 3px solid var(--line);
   border-radius: 999px;
 }
+.cover-stage { display: flex; align-items: center; gap: 14px; width: min(460px, 100%); }
 .hero {
+  position: relative;
+  flex: none;
   display: grid;
   place-items: center;
-  width: min(290px, 72%);
+  width: clamp(84px, 17vh, 140px);
   aspect-ratio: 1;
-  padding: 18px;
   border-radius: 50%;
   background: radial-gradient(circle, #fff 0 62%, #cfe9f5 63% 80%, transparent 81%);
 }
-.hero .flori-cover { width: 78%; }
-.hero { position: relative; }
+.hero .flori-cover { width: 84%; }
+/* フロリのセリフ:ふきだしの、とがりが、フロリのほうを向く */
+.speech {
+  position: relative;
+  flex: 1;
+  padding: 8px 14px;
+  background: var(--green);
+  border: 3px solid var(--line);
+  border-radius: 20px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.6;
+}
+.speech::before, .speech::after { content: ""; position: absolute; top: 34%; border-style: solid; border-color: transparent; }
+.speech::before { left: -21px; border-width: 11px 20px 11px 0; border-right-color: var(--line); }
+.speech::after { left: -15px; top: calc(34% + 3px); border-width: 8px 15px 8px 0; border-right-color: var(--green); }
+.speech p { margin: 0; }
+.logo-small { width: clamp(100px, 15vh, 150px); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .hero-small { width: min(190px, 60%); }
 .hero-hat { position: absolute; top: 5%; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 44px; line-height: 1; pointer-events: none; }
 .hero-small .hero-hat { font-size: 32px; }
@@ -245,18 +259,18 @@ body {
 .menu {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 12px;
+  gap: clamp(6px, 1.2vh, 10px);
   width: min(460px, 100%);
 }
 .tile {
   --tile: var(--blue);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 0;
-  min-height: 84px;
-  padding: 10px 6px;
+  gap: 8px;
+  min-height: clamp(42px, 6.8vh, 60px);
+  padding: 6px 6px;
   font: inherit;
   font-weight: bold;
   color: var(--text);
@@ -271,19 +285,23 @@ body {
 .tile:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(70, 85, 94, 0.35); }
 .tile:focus-visible { outline: 4px solid var(--green); outline-offset: 2px; }
 .tile:disabled { opacity: 0.55; cursor: default; filter: saturate(0.5); }
-.tile-icon { font-size: 30px; line-height: 1.1; }
-.tile-label { font-size: 18px; line-height: 1.25; text-align: center; }
-.t-start { grid-column: span 12; --tile: var(--blue); flex-direction: row; gap: 14px; min-height: 96px; }
-.t-start .tile-icon { font-size: 46px; }
-.t-start .tile-label { font-size: 30px; }
-.t-daily, .t-review, .t-hard, .t-versus, .t-timed, .t-relax { grid-column: span 6; }
+.tile-icon { font-size: 24px; line-height: 1.1; }
+.tile-label { font-size: 17px; line-height: 1.25; text-align: center; }
+.t-continue { grid-column: span 8; --tile: var(--blue); flex-direction: row; gap: 12px; min-height: clamp(60px, 10vh, 88px); }
+.t-continue .tile-icon { font-size: clamp(32px, 5.5vh, 46px); }
+.t-continue .tile-label { font-size: clamp(22px, 3.6vh, 30px); }
+.t-start { grid-column: span 4; --tile: #cfe3f7; flex-direction: column; gap: 0; min-height: clamp(60px, 10vh, 88px); }
+.t-start .tile-icon { font-size: 26px; }
+.tile-text { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+.tile-sub { font-size: 12px; font-weight: normal; }
+.t-daily, .t-review, .t-hard, .t-versus { grid-column: span 6; }
+.t-relax { grid-column: span 12; }
 .t-daily { --tile: #ffd98a; }
 .t-review { --tile: #dccbf2; }
 .t-hard { --tile: var(--green); }
 .t-versus { --tile: var(--pink); }
-.t-timed { --tile: #ffc7a8; }
 .t-relax { --tile: #bfe8d0; }
-.t-small { grid-column: span 3; min-height: 72px; padding: 8px 2px; border-radius: 18px; }
+.t-small { flex-direction: column; gap: 0; grid-column: span 3; min-height: clamp(46px, 6.8vh, 62px); padding: 8px 2px; border-radius: 18px; }
 .t-small .tile-icon { font-size: 24px; }
 .t-small .tile-label { font-size: 12.5px; letter-spacing: -0.03em; white-space: nowrap; }
 .t-small { border-width: 3px; }
@@ -295,12 +313,12 @@ body {
 .subtitle { margin: 6px 0 0; font-size: 18px; color: var(--blue-dark); }
 
 /* 表紙のすみのフロリ(何回かおすと、オニ問題が出る) */
-#screen-cover { position: relative; padding: 50px 18px 76px; } /* すみのフロリが、文字にかさならないように */
+#screen-cover { position: relative; padding: 14px 14px 18px; gap: clamp(6px, 1.4vh, 12px); }
 .corner-flori {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: 56px;
+  left: 10px;
+  top: 10px;
+  width: 46px;
   padding: 0;
   border: 0;
   background: none;
@@ -572,7 +590,7 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 .dex-list li.locked { opacity: 0.6; border-style: dashed; }
 .dex-list summary { cursor: pointer; font-weight: bold; padding: 4px 0; }
 .dex-list .dex-q { margin: 4px 0; font-weight: bold; white-space: pre-line; }
-.dex-list .dex-a, .dex-list .dex-e { margin: 4px 0; font-size: 16px; }
+.dex-list .dex-choices { margin: 2px 0 6px; padding-left: 1.4em; font-size: 16px; }
 .dex-mark { margin-left: 6px; color: var(--right); }
 
 /* バッジ */
@@ -597,3 +615,18 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 :root[data-theme="sunset"] { --bg: #ffeed8; --blue: #f4b072; --blue-dark: #bf6a1e; }
 :root[data-theme="night"] { --bg: #262e4d; --blue: #8c9bd4; --blue-dark: #4a5a9e; }
 :root[data-theme="rainbow"] { --bg: linear-gradient(135deg, #ffd9d9, #fff3c4, #d9f7d9, #d9ecff, #ead9ff); --blue: #c9a8f0; --blue-dark: #7a50bd; }
+
+/* フロリの色(きせかえ) */
+.flori, .flori-cover, .opening-flori, .announce-flori, .corner-flori img { filter: var(--flori-filter, none); }
+
+/* せまい画面(スマホ)で、表紙のボタンの文字が、折り返さないように */
+@media (max-width: 420px) {
+  .tile { gap: 5px; padding-left: 3px; padding-right: 3px; }
+  .tile-icon { font-size: 20px; }
+  .tile-label { font-size: 15px; white-space: nowrap; }
+  .t-continue .tile-icon { font-size: 32px; }
+  .t-continue .tile-label { font-size: 21px; }
+  .t-start .tile-label { font-size: 15px; }
+  .t-small .tile-label { font-size: 12px; }
+  .speech { font-size: 16px; padding: 6px 10px; }
+}
