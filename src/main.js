@@ -31,7 +31,9 @@ import {
   recordDex,
   recordGarden,
   resetCourse,
+  resetHardCourse,
   saveCourse,
+  saveHardCourse,
   recordOni,
   recordReview,
   recordRound,
@@ -72,10 +74,25 @@ function sceneOf(name) {
   return name === "error" ? null : "cover";
 }
 
+// 表紙のフロリ:表紙を出して3秒たったら、動きだす
+let idleTimer = 0;
+function startCoverIdle() {
+  clearTimeout(idleTimer);
+  $("screen-cover").classList.remove("is-lively");
+  if (!$("opening").hidden) return; // オープニングの間は、まだ
+  idleTimer = setTimeout(() => $("screen-cover").classList.add("is-lively"), 3000);
+}
+
 function show(name) {
   for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
   if (name !== "cover") coverTaps = 0;
-  if (name === "cover") refreshCover();
+  if (name === "cover") {
+    refreshCover();
+    startCoverIdle();
+  } else {
+    clearTimeout(idleTimer);
+    $("screen-cover").classList.remove("is-lively");
+  }
   if (name !== "question") {
     stopTimer();
     stopSpeaking();
@@ -199,6 +216,7 @@ function refreshCover() {
   const saved = hasCourse(stats);
   $("btn-continue").disabled = !saved;
   const level = Math.min(MAX_LEVEL, 1 + Math.floor(stats.courseCounter / 3));
+  $("hard-sub").textContent = hardUsed.size > 0 ? `つづき ${hardUsed.size}/${hardQuestions.length}問` : "";
   $("continue-sub").textContent = saved ? `${stats.setRounds.length + 1}回目 ・ ${"★".repeat(level)}${"☆".repeat(MAX_LEVEL - level)}` : "まだないヨ";
 }
 
@@ -488,6 +506,7 @@ function showResult() {
     $("btn-again").textContent = "もう一度挑戦";
   } else if (mode === "hard") {
     const saved = recordRound({ ...result, mode: "hard", timed: timeLimit });
+    persistHard(); // 「つづきから」の記録
     $("r-title").textContent = "難しいモードの結果!";
     $("r-best-row").hidden = false;
     $("r-best").textContent = `${loadStats().bestHard}点`;
@@ -683,7 +702,30 @@ $("btn-restart-yes").addEventListener("click", () => {
   refreshCover();
   chooseTime("normal");
 });
-$("btn-hard").addEventListener("click", () => chooseTime("hard"));
+// 難しいモードの「つづきから」と「最初から」(もう出した問題を、おぼえておく)
+function persistHard() {
+  saveHardCourse([...hardUsed].map((id) => idToUid.get(id)).filter(Boolean));
+}
+$("btn-hard").addEventListener("click", () => {
+  if (hardUsed.size === 0) {
+    chooseTime("hard");
+    return;
+  }
+  $("dlg-hard-progress").textContent = `いままでに、${hardUsed.size} / ${hardQuestions.length}問を出したヨ。`;
+  $("dlg-hard").showModal();
+});
+$("btn-hard-continue").addEventListener("click", () => {
+  $("dlg-hard").close();
+  chooseTime("hard");
+});
+$("btn-hard-new").addEventListener("click", () => {
+  $("dlg-hard").close();
+  hardUsed.clear();
+  resetHardCourse();
+  refreshCover();
+  chooseTime("hard");
+});
+$("btn-hard-cancel").addEventListener("click", () => $("dlg-hard").close());
 $("btn-daily").addEventListener("click", () => {
   if (loadStats().dailyLast === dateKey()) {
     // 今日の分は、もう終わっている
@@ -716,7 +758,7 @@ let gardenSize = 3;
 
 function startGarden(size = gardenSize) {
   gardenSize = size;
-  $("garden-message").textContent = "花をおして全部を満開にしよう。";
+  $("garden-message").textContent = "木をおして、全部を桜の木にしよう。";
   $("garden-hint").hidden = true;
   garden = new GardenUI($("garden"), {
     size,
@@ -800,10 +842,12 @@ async function init() {
     allQuestions = questions;
     pruneStats(new Set([...normalIds, ...hardIds, ...oniIds])); // 古い番号の記録を、取りのぞく
     for (const q of normal) idToUid.set(q.id, q.uid ?? q.id);
+    for (const q of hardQuestions) idToUid.set(q.id, q.uid ?? q.id);
     session = new Session(normal);
     const saved = loadStats();
     const uidToId = new Map([...idToUid].map(([id, uid]) => [uid, id]));
     session.restore(saved.courseCounter, saved.courseUsed.map((uid) => uidToId.get(uid)).filter(Boolean)); // つづきから
+    for (const uid of saved.hardUsed) if (uidToId.has(uid)) hardUsed.add(uidToId.get(uid)); // 難しいモードの、つづきから
     show("cover");
   } catch (error) {
     console.error(error);
@@ -825,6 +869,7 @@ function closeOpening() {
   setTimeout(() => opening.classList.add("is-leaving"), length);
   setTimeout(() => {
     opening.hidden = true;
+    startCoverIdle();
   }, length + 600);
 }
 $("opening").addEventListener("click", closeOpening);

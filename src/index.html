@@ -31,8 +31,10 @@
       <h1 class="sr-only">Flori_Quiz</h1>
       <div class="cover-stage">
         <div class="hero hero-cover">
-          <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-          <span id="hero-hat" class="hero-hat" aria-hidden="true"></span>
+          <div class="hero-fig">
+            <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
+            <span id="hero-hat" class="hero-hat" aria-hidden="true"></span>
+          </div>
         </div>
         <div class="speech">
           <p>ヤア! ボクはフロリだヨ!<br>ひらめきクイズで遊ぼう!</p>
@@ -44,7 +46,7 @@
         <button id="btn-start" class="tile t-start" type="button"><span class="tile-icon" aria-hidden="true">🔄</span><span class="tile-text"><span class="tile-label">最初から</span></span></button>
         <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-text"><span class="tile-label">毎日1問</span></span></button>
         <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">おさらい</span></span></button>
-        <button id="btn-hard" class="tile t-hard" type="button"><span class="tile-icon" aria-hidden="true">🔥</span><span class="tile-text"><span class="tile-label">難しいモード</span></span></button>
+        <button id="btn-hard" class="tile t-hard" type="button"><span class="tile-icon" aria-hidden="true">🔥</span><span class="tile-text"><span class="tile-label">難しいモード</span><span id="hard-sub" class="tile-sub"></span></span></button>
         <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-text"><span class="tile-label">みんなで対戦</span></span></button>
         <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-text"><span class="tile-label">リラックス</span></span></button>
         <button id="btn-dex" class="tile t-small t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-text"><span class="tile-label">図鑑</span></span></button>
@@ -52,7 +54,6 @@
         <button id="btn-dress" class="tile t-small t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">きせかえ</span></span></button>
         <button id="btn-records" class="tile t-small t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span></button>
       </div>
-      <p class="note">1回は5問。全部正解で25点!</p>
       <p id="sound-hint" class="note">♪ 画面をクリックすると、音楽が流れるよ。</p>
     </section>
     <!-- 問題図鑑 -->
@@ -80,8 +81,10 @@
     <section id="screen-dress" class="screen" aria-label="きせかえ" hidden>
       <h2 class="title">きせかえ</h2>
       <div class="hero hero-small">
-        <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-        <span id="dress-hat" class="hero-hat" aria-hidden="true"></span>
+        <div class="hero-fig">
+          <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
+          <span id="dress-hat" class="hero-hat" aria-hidden="true"></span>
+        </div>
       </div>
       <p class="note">バッジや星を集めると、使えるものが増えるヨ。  ⭐ <span id="dress-stars">0</span>こ</p>
       <p id="dress-message" class="note" role="status"></p>
@@ -97,9 +100,17 @@
     <!-- みんなで対戦 -->
     <section id="screen-versus" class="screen" aria-label="みんなで対戦" hidden>
       <h2 class="title">みんなで対戦</h2>
-      <img class="flori flori-small" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-      <p class="bubble">1台の画面で順番に答えて、点数を競おう!<br>1回戦、2回戦、3回戦と、だんだん難しくなるヨ。</p>
-      <p class="note">1人3問。正解すると1回戦は1点、2回戦は2点、3回戦は3点!</p>
+      <div class="rules-box">
+        <h3>ルール</h3>
+        <ol>
+          <li><b>みんなで1台</b>2〜4人で、1台の画面を使うヨ。順番に答えよう。</li>
+          <li><b>3回戦</b>1回戦はやさしい問題、2回戦はふつう、3回戦はむずかしめ。</li>
+          <li><b>問題</b>1回戦ごとに、1人に1問ずつ(1人で全部3問)。人によって、問題はちがうヨ。</li>
+          <li><b>点数</b>正解すると、1回戦は1点、2回戦は2点、3回戦は3点。</li>
+          <li><b>勝ち</b>合計点が一番高い人の勝ち。同じ点なら、引き分け。</li>
+          <li><b>そのほか</b>ヒントはないヨ。制限時間は、つけられるヨ。</li>
+        </ol>
+      </div>
       <p class="note">何人で遊ぶ?</p>
       <div class="buttons">
         <button class="btn btn-main" type="button" data-players="2">2人</button>
@@ -114,14 +125,18 @@
       <h2 class="title">お花畑</h2>
       <p id="garden-message" class="bubble"></p>
       <div id="garden"></div>
-      <div id="garden-hint" class="note garden-tips" hidden>
-        <p>ヒント:木をおすと、その木と上下左右の木が1段階育つヨ(🌱芽→🌿枝→🌳木→🌸桜の木→芽…)。全部を桜の木にしよう。光っている所をおしてみよう。</p>
-        <p class="tips-title">解くコツ</p>
+      <div id="garden-hint" class="garden-tips" hidden>
+        <h3>ルール</h3>
+        <p>木をおすと、その木と上下左右の木が、1つずつ育つヨ。</p>
+        <p class="stage-line">🌱芽 → 🌿枝 → 🌳木 → 🌸桜の木</p>
+        <p>桜の木の次は、芽にもどるヨ。</p>
+        <p>全部を<b>🌸桜の木</b>にしたら、クリア!</p>
+        <h3>解くコツ</h3>
         <ol>
-          <li>上の段から順にそろえていこう。上の段の木を育てたいときは、その「すぐ下」の木をおすと上の木も育つヨ。</li>
-          <li>同じ木を4回おすと、もとにもどるヨ。だから、1つの木を4回以上おす必要はないヨ。</li>
-          <li>下の段まで来てそろわない木が残ったら、上の段の木を何個かおしてから、もう一度上から順にやり直そう。</li>
-          <li>行きづまったら、「ヒント」で光る木をおしてみよう。</li>
+          <li><b>上の段から、順にそろえる。</b>上の木を育てたいときは、その「すぐ下」の木をおす。</li>
+          <li><b>同じ木は、3回までで十分。</b>4回おすと、もとにもどるヨ。</li>
+          <li><b>下の段に、そろわない木が残ったら。</b>上の段の木を何個かおして、もう一度、上から順にやり直す。</li>
+          <li><b>行きづまったら、「ヒント」。</b>光る木を、おしてみよう。</li>
         </ol>
       </div>
       <div class="buttons">
@@ -285,6 +300,18 @@
     <div class="buttons buttons-choice">
       <button id="btn-restart-no" class="btn btn-main btn-big" type="button">やめる</button>
       <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">最初から、はじめる</button>
+    </div>
+  </dialog>
+  <dialog id="dlg-hard" class="dialog" aria-labelledby="dlg-hard-text">
+    <p id="dlg-hard-text">難しいモード<br><span id="dlg-hard-progress"></span></p>
+    <ul class="restart-list">
+      <li class="lose"><b>「最初から」で消えるもの</b>もう出した問題の記録(また、はじめから出る)</li>
+      <li class="keep"><b>のこるもの</b>成績・総合得点・バッジ・図鑑・きせかえ</li>
+    </ul>
+    <div class="buttons buttons-choice">
+      <button id="btn-hard-continue" class="btn btn-main btn-big" type="button">つづきから</button>
+      <button id="btn-hard-new" class="btn btn-plain btn-small" type="button">最初から</button>
+      <button id="btn-hard-cancel" class="btn btn-plain btn-small" type="button">やめる</button>
     </div>
   </dialog>
   <dialog id="dlg-info" class="dialog" aria-labelledby="dlg-info-text">

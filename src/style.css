@@ -219,7 +219,8 @@ body {
   border-radius: 50%;
   background: radial-gradient(circle, #fff 0 62%, #cfe9f5 63% 80%, transparent 81%);
 }
-.hero .flori-cover { width: 84%; }
+.hero .hero-fig { position: relative; width: 84%; }
+.hero .flori-cover { width: 100%; display: block; }
 /* フロリのセリフ:ふきだしの、とがりが、フロリのほうを向く */
 .speech {
   position: relative;
@@ -240,7 +241,7 @@ body {
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .hero-small { width: min(190px, 60%); }
 .hero { container-type: inline-size; }
-.hero-hat { position: absolute; top: -17cqw; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 44cqw; line-height: 1; pointer-events: none; }
+.hero-hat { position: absolute; top: -15cqw; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 44cqw; line-height: 1; pointer-events: none; }
 .hero-small .hero-hat { font-size: 44cqw; }
 .cover-title { margin: 0; font-size: 15px; font-weight: bold; color: var(--blue-dark); }
 .cover-gear {
@@ -300,6 +301,7 @@ body {
 .t-daily { --tile: #ffd98a; }
 .t-review { --tile: #dccbf2; }
 .t-hard { --tile: var(--green); }
+.t-hard, .t-versus { min-height: clamp(54px, 9vh, 80px); }
 .t-versus { --tile: var(--pink); }
 .t-relax { --tile: #bfe8d0; }
 .t-small { flex-direction: column; gap: 0; grid-column: span 3; min-height: clamp(50px, 7.4vh, 68px); padding: 8px 2px; border-radius: 18px; }
@@ -319,7 +321,7 @@ body {
   position: absolute;
   left: 10px;
   top: 10px;
-  width: 62px;
+  width: 70px;
   padding: 0;
   border: 0;
   background: none;
@@ -569,10 +571,14 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 @media (prefers-reduced-motion: reduce) { .confetti span, .opening-title span { animation: none; } .confetti span { top: 10%; } }
 
 /* お花畑のコツ */
-.garden-tips { width: min(460px, 100%); padding: 8px 16px; background: #fffbe6; border: 2px solid var(--green); border-radius: 12px; text-align: left; }
-.garden-tips p { margin: 4px 0; }
-.garden-tips .tips-title { font-weight: bold; color: var(--blue-dark); }
-.garden-tips ol { margin: 4px 0; padding-left: 1.4em; }
+.garden-tips { width: min(480px, 100%); padding: 10px 18px 12px; background: #fffbe6; border: 3px solid var(--green); border-radius: 16px; text-align: left; font-size: 17px; line-height: 1.75; }
+.garden-tips h3 { margin: 6px 0 2px; font-size: 17px; color: var(--blue-dark); border-bottom: 2px dotted var(--green); }
+.garden-tips h3:first-child { margin-top: 0; }
+.garden-tips p { margin: 2px 0; }
+.garden-tips .stage-line { padding: 4px 10px; background: #fff; border-radius: 10px; text-align: center; font-weight: bold; }
+.garden-tips ol { margin: 4px 0 0; padding-left: 1.5em; }
+.garden-tips li { margin: 4px 0; }
+.garden-tips li b { display: block; color: var(--text); }
 
 /* 制限時間・読み上げ */
 .timer { display: flex; align-items: center; gap: 10px; width: 100%; }
@@ -587,11 +593,12 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 
 /* 問題図鑑 */
 .dex-list, .badge-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; width: min(560px, 100%); }
-.dex-list li { background: var(--body); border: 2px solid var(--blue); border-radius: 12px; padding: 6px 14px; }
+.dex-list li { background: var(--body); border: 2px solid var(--blue); border-radius: 10px; padding: 3px 12px; font-size: 15px; line-height: 1.55; }
 .dex-list li.locked { opacity: 0.6; border-style: dashed; }
 .dex-list summary { cursor: pointer; font-weight: bold; padding: 4px 0; }
-.dex-list .dex-q { margin: 4px 0; font-weight: bold; white-space: pre-line; }
-.dex-list .dex-choices { margin: 2px 0 6px; padding-left: 1.4em; font-size: 16px; }
+.dex-list .dex-q { margin: 2px 0; font-weight: bold; font-size: 15px; white-space: pre-line; }
+.dex-list .dex-choices { margin: 2px 0 4px; padding-left: 1.4em; font-size: 14px; }
+.dex-list .dex-head { margin: 0; font-size: 14px; }
 .dex-mark { margin-left: 6px; color: var(--right); }
 
 /* バッジ */
@@ -628,7 +635,7 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
   .t-start .tile-label { font-size: 15px; }
   .t-small .tile-label { font-size: 12px; }
   .speech { font-size: 16px; padding: 6px 10px; }
-  .corner-flori { width: 54px; }
+  .corner-flori { width: 60px; }
   .cover-gear { font-size: 16px; padding: 5px 12px; }
 }
 
@@ -710,3 +717,22 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 #screen-badges .title-list { grid-template-columns: 1fr 1fr 1fr; gap: 4px; width: min(640px, 100%); }
 #screen-badges .title-list li { padding: 3px 8px; font-size: 14px; }
 :root[data-theme="starry"] { --bg: #232a5c; --blue: #9aa6e8; --blue-dark: #4655b8; }
+
+/* 対戦のルール説明 */
+.rules-box { width: min(560px, 100%); padding: 8px 16px 10px; background: var(--body); border: 3px solid var(--pink); border-radius: 16px; text-align: left; }
+.rules-box h3 { margin: 0 0 4px; font-size: 18px; color: var(--blue-dark); }
+.rules-box ol { margin: 0; padding-left: 1.4em; font-size: 16px; line-height: 1.65; }
+.rules-box li { margin: 3px 0; }
+.rules-box b { margin-right: 0.6em; color: #c0587a; }
+
+/* 表紙のフロリ:3秒たったら、動きだす */
+.hero-fig { transform-origin: 50% 90%; }
+#screen-cover.is-lively .hero-fig { animation: floriHop 2.8s ease-in-out infinite; }
+@keyframes floriHop {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  12% { transform: translateY(-9px) rotate(-3deg); }
+  24% { transform: translateY(0) rotate(0deg); }
+  36% { transform: translateY(-6px) rotate(3deg); }
+  48% { transform: translateY(0) rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) { #screen-cover.is-lively .hero-fig { animation: none; } }

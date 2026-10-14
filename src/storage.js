@@ -33,6 +33,7 @@ const EMPTY = {
   stars: 0, // 制限時間をつけたごほうびの星
   courseCounter: 0, // 「つづきから」:ふつうモードの、難しさのカウンター
   courseUsed: [], // 「つづきから」:もう出した問題の番号
+  hardUsed: [], // 難しいモードの「つづきから」:もう出した問題の番号
 };
 
 let cache = null;
@@ -78,6 +79,7 @@ function clean(raw) {
     stars: number(raw?.stars),
     courseCounter: number(raw?.courseCounter),
     courseUsed: ids(raw?.courseUsed),
+    hardUsed: ids(raw?.hardUsed),
   };
 }
 
@@ -99,7 +101,7 @@ export function reconcile(stats) {
 }
 
 export function loadStats() {
-  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges], courseUsed: [...cache.courseUsed] };
+  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges], courseUsed: [...cache.courseUsed], hardUsed: [...cache.hardUsed] };
   let stats = clean(EMPTY);
   try {
     const saved = localStorage.getItem(KEY);
@@ -225,6 +227,20 @@ export function saveCourse({ counter, used }) {
   save(stats);
 }
 
+// 難しいモードの「つづきから」:もう出した問題を、保存する
+export function saveHardCourse(used) {
+  const stats = loadStats();
+  stats.hardUsed = ids(used);
+  save(stats);
+}
+
+// 難しいモードの「最初から」
+export function resetHardCourse() {
+  const stats = loadStats();
+  stats.hardUsed = [];
+  save(stats);
+}
+
 // 「最初から」:つづきの記録を消す(成績・総合得点は、そのまま)
 export function resetCourse() {
   const stats = loadStats();
@@ -253,6 +269,6 @@ export function recordGarden() {
 export function pruneStats(validIds) {
   const stats = loadStats();
   const keep = (list) => list.filter((id) => validIds.has(id));
-  const next = reconcile({ ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight), wrong: keep(stats.wrong), dex: keep(stats.dex), courseUsed: keep(stats.courseUsed) });
+  const next = reconcile({ ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight), wrong: keep(stats.wrong), dex: keep(stats.dex), courseUsed: keep(stats.courseUsed), hardUsed: keep(stats.hardUsed) });
   if (JSON.stringify(next) !== JSON.stringify(stats)) save(next);
 }
