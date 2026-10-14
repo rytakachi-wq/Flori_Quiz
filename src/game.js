@@ -10,11 +10,10 @@ const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上�
 
 export const MAX_SCORE = QUESTIONS_PER_ROUND * POINTS_PER_CORRECT;
 
-// みんなであそぶ(協力型)。全員で10問を、順番に答えて、7問以上の正解を目指す。
-export const COOP_QUESTIONS = 10;
-export const COOP_GOAL = 7;
-export const COOP_MIN_PLAYERS = 2;
-export const COOP_MAX_PLAYERS = 4;
+// みんなで対戦。2〜4人が、1台の画面で、順番に答えて点数を競う。3回戦(段階1・2・3)で、1回戦は1点、2回戦は2点、3回戦は3点。
+export const VERSUS_MIN_PLAYERS = 2;
+export const VERSUS_MAX_PLAYERS = 4;
+export const VERSUS_ROUNDS = 3;
 
 // 総合得点(100点満点)。ふつうの問題が60点、難しい問題が35点、オニ問題が5点。
 // それぞれ、一度でも正解した問題の数の割合で、点が入る(何度正解しても、同じ問題は1回ぶん)。
@@ -237,39 +236,56 @@ export class HardRound {
   }
 }
 
-// みんなであそぶ(協力型)。1台の画面を、2〜4人で囲む。相談しながら、順番に答える係を交代して、チームで正解数をためる。
-// 難しさの調整は、ふつうモードと同じ(ただし、ひとりで遊ぶ記録とは、別に数える)。
-export class CoopRound {
+// みんなで対戦。各回戦(段階1→2→3)で、全員に、同じ段階の、別々の問題を出す。ふつうモードの問題から、ランダムに選ぶ。
+// 正解すると、回戦の数だけ点が入る(1回戦は1点、2回戦は2点、3回戦は3点)。最後に、点数が一番高い人が勝ち(同点は引き分け)。
+export class VersusRound {
   constructor(questions, players, rng = Math.random) {
-    this.session = new Session(questions, rng);
     this.players = players;
+    this.sequence = [];
+    for (let round = 1; round <= VERSUS_ROUNDS; round += 1) {
+      const pool = questions.filter((q) => q.level === round);
+      for (let player = 0; player < players && pool.length > 0; player += 1) {
+        const question = pool.splice(Math.floor(rng() * pool.length), 1)[0];
+        this.sequence.push({ question, round, player });
+      }
+    }
     this.startRound();
   }
 
   startRound() {
     this.asked = 0;
-    this.correct = 0;
-    this.session.resetSet();
+    this.scores = Array(this.players).fill(0);
   }
 
-  // 次に答える人(0から数える)。人数で、順番に交代する。
+  get current() {
+    return this.sequence[this.asked] ?? this.sequence[this.sequence.length - 1];
+  }
+
   get player() {
-    return this.asked % this.players;
+    return this.current.player;
+  }
+
+  get round() {
+    return this.current.round;
+  }
+
+  get total() {
+    return this.sequence.length;
   }
 
   nextQuestion() {
-    return this.session.nextQuestion();
+    return { question: this.current.question, leveledUp: false };
   }
 
   answer(question, response) {
-    const correct = this.session.answer(question, response);
+    const correct = judge(question, response);
+    if (correct) this.scores[this.current.player] += this.current.round;
     this.asked += 1;
-    if (correct) this.correct += 1;
     return correct;
   }
 
   get roundFinished() {
-    return this.asked >= COOP_QUESTIONS;
+    return this.asked >= this.sequence.length;
   }
 
   abandonRound() {
@@ -277,11 +293,11 @@ export class CoopRound {
   }
 
   finishRound() {
+    const best = Math.max(...this.scores);
     const result = {
-      correct: this.correct,
-      total: COOP_QUESTIONS,
+      scores: [...this.scores],
+      winners: this.scores.flatMap((score, index) => (score === best ? [index] : [])),
       players: this.players,
-      cleared: this.correct >= COOP_GOAL,
       answers: [],
     };
     this.startRound();

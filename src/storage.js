@@ -16,8 +16,7 @@ const EMPTY = {
   seen: [], // 出会ったことのある問題の番号
   right: [], // 正解したことのある問題の番号
   oniRight: [], // 正解したことのあるオニ問題の番号(総合得点にだけ使う)
-  coopPlays: 0, // みんなで遊んだ回数
-  coopClears: 0, // そのうち、目標を達成した回数
+  versusPlays: 0, // みんなで対戦した回数
 };
 
 let cache = null;
@@ -42,8 +41,7 @@ function clean(raw) {
     seen: ids(raw?.seen),
     right: ids(raw?.right),
     oniRight: ids(raw?.oniRight),
-    coopPlays: number(raw?.coopPlays),
-    coopClears: number(raw?.coopClears),
+    versusPlays: number(raw?.versusPlays ?? raw?.coopPlays), // coopPlays は、協力型だったころの名前
   };
 }
 
@@ -102,10 +100,9 @@ export function recordOni(answers = []) {
   return stats.oniRight.length - before;
 }
 
-// みんなで遊んだ結果を記録する。ひとりで遊ぶ記録(遊んだ回数・正解率・総合得点など)には、入れない。
-export function recordCoop({ cleared }) {
+// みんなで対戦した結果を記録する。ひとりで遊ぶ記録(遊んだ回数・正解率・総合得点など)には、入れない。
+export function recordVersus() {
   const stats = loadStats();
-  stats.coopPlays += 1;
-  if (cleared) stats.coopClears += 1;
+  stats.versusPlays += 1;
   save(stats);
 }

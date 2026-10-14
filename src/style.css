@@ -57,7 +57,7 @@ body {
 
 .flori { height: auto; max-width: 100%; }
 .flori-cover { width: min(260px, 60%); }
-.flori-small { width: min(190px, 40vw); max-height: 230px; object-fit: contain; }
+.flori-small { height: 220px; width: auto; max-width: 100%; object-fit: contain; }
 
 .bubble {
   margin: 0;
@@ -103,7 +103,7 @@ body {
 .chip-button:hover { background: var(--pink); }
 .chip-level { background: var(--green); color: #5a5d12; }
 
-.stage { display: flex; align-items: center; gap: 12px; min-height: 120px; }
+.stage { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 224px; }
 
 .question {
   margin: 0;
@@ -276,15 +276,15 @@ body {
 .btn-hard { background: var(--green); color: var(--text); }
 
 /* みんなで あそぶ */
-.btn-coop { background: var(--pink); color: var(--text); }
+.btn-versus { background: var(--pink); color: var(--text); }
 .turn {
   margin: 0;
   width: 100%;
   padding: 8px 16px;
   text-align: center;
   font-weight: bold;
-  background: var(--pink);
-  border: 2px solid var(--line);
+  color: var(--text);
+  border: 3px solid var(--line);
   border-radius: 14px;
 }
 
@@ -307,3 +307,71 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 .furigana legend { padding: 0 8px; font-weight: bold; }
 .furigana label { display: block; padding: 4px 0; cursor: pointer; }
 .furigana input { accent-color: var(--blue-dark); margin-right: 6px; }
+
+/* プレイヤーの色(4人ぶん)。案内板、点数の表、結果で、同じ色を使う */
+:root {
+  --p1: #f4a6a0; /* 赤(ほおのピンクより濃い) */
+  --p2: #7ec3e0; /* 水色 */
+  --p3: #b9d96a; /* 黄緑 */
+  --p4: #f4c27a; /* オレンジ */
+}
+.turn.p1, .board .p1 { background: var(--p1); }
+.turn.p2, .board .p2 { background: var(--p2); }
+.turn.p3, .board .p3 { background: var(--p3); }
+.turn.p4, .board .p4 { background: var(--p4); }
+
+.board { list-style: none; margin: 0; padding: 0; width: 100%; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.board li {
+  flex: 1 1 130px;
+  padding: 4px 12px;
+  text-align: center;
+  font-weight: bold;
+  color: var(--text);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  opacity: 0.6;
+}
+.board li.is-active, .board.big li { opacity: 1; }
+.board li.is-active { box-shadow: 0 0 0 4px var(--green); }
+.board.big { flex-direction: column; width: min(420px, 100%); }
+.board.big li { flex: none; font-size: 22px; }
+.board.big li.is-winner { box-shadow: 0 0 0 5px var(--green); }
+.board.big li.is-winner::before { content: "👑 "; }
+
+/* リラックス:スライドパズル */
+.btn-relax { background: var(--green); color: var(--text); }
+.puzzle-board {
+  display: grid;
+  grid-template-columns: repeat(var(--size), 1fr);
+  gap: 2px;
+  width: min(340px, 100%);
+  aspect-ratio: 4 / 5;
+  padding: 3px;
+  background: var(--line);
+  border-radius: 12px;
+  touch-action: manipulation;
+}
+.puzzle-board .tile {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 4px;
+  background-color: #dcecf5;
+  background-repeat: no-repeat;
+  color: var(--blue-dark);
+  font: inherit;
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1;
+  opacity: 1;
+  cursor: pointer;
+}
+.puzzle-board .tile:disabled { color: var(--blue-dark); }
+.puzzle-board.is-solved .tile { color: transparent; }
+.puzzle-board .tile:hover:not(:disabled) { filter: brightness(1.06); }
+.puzzle-board .tile.is-blank { background: var(--body); cursor: default; }
+.puzzle-board .tile:focus-visible { outline: 4px solid var(--green); outline-offset: -4px; }
+.puzzle-board.is-solved { gap: 0; }
+.puzzle-board.is-solved .tile { border-radius: 0; opacity: 1; }

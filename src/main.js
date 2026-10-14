@@ -1,9 +1,4 @@
 import {
-  COOP_GOAL,
-  COOP_QUESTIONS,
-  COOP_MAX_PLAYERS,
-  COOP_MIN_PLAYERS,
-  CoopRound,
   HARD_LEVEL,
   HardRound,
   MAX_LEVEL,
@@ -13,9 +8,14 @@ import {
   ROUNDS_PER_SET,
   Session,
   TOTAL_POINTS,
+  VERSUS_MAX_PLAYERS,
+  VERSUS_MIN_PLAYERS,
+  VERSUS_ROUNDS,
+  VersusRound,
   totalScore,
 } from "./game.js";
-import { loadStats, recordCoop, recordOni, recordRound } from "./storage.js";
+import { loadStats, recordOni, recordRound, recordVersus } from "./storage.js";
+import { SlidePuzzle } from "./puzzle.js";
 import { getVolume, playSe, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
 
@@ -29,15 +29,16 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "coop", "records", "settings", "question", "result", "error"];
+const SCREENS = ["cover", "versus", "relax", "puzzle", "records", "settings", "question", "result", "error"];
 
 let coverTaps = 0;
-let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"coop"(みんなで)
-let coopPlayers = 2; // みんなで遊ぶ人数
+let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)
+let versusPlayers = 2; // みんなで対戦する人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
-  if (name === "question") return { oni: "oni", hard: "hard", coop: "coop" }[mode] ?? "question";
+  if (name === "question") return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
+  if (name === "relax" || name === "puzzle") return "relax";
   if (name === "result") return "result";
   return name === "error" ? null : "cover";
 }
@@ -127,7 +128,7 @@ function startPlay(nextMode) {
   mode = nextMode;
   if (mode === "oni") play = new OniRound(oniQuestions);
   else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
-  else if (mode === "coop") play = new CoopRound(normalQuestions, coopPlayers);
+  else if (mode === "versus") play = new VersusRound(normalQuestions, versusPlayers);
   else play = session;
   showQuestion();
 }
@@ -137,32 +138,31 @@ function showQuestion() {
   current = question;
   answered = false;
 
-  const prefix = { normal: "", hard: "難しい ", oni: "オニ ", coop: "みんなで " }[mode];
-  const total = mode === "coop" ? COOP_QUESTIONS : QUESTIONS_PER_ROUND;
-  $("q-progress").textContent = `${prefix}第${play.asked + 1}問 / ${total}問`;
-  const turn = $("q-player");
-  turn.hidden = mode !== "coop";
-  if (mode === "coop") turn.textContent = `プレイヤー${play.player + 1}の番だヨ! みんなで相談してもOK!`;
+  const versus = mode === "versus";
+  const prefix = { normal: "", hard: "難しい ", oni: "オニ ", versus: "" }[mode];
+  $("q-progress").textContent = versus
+    ? `第${play.round}回戦 / ${VERSUS_ROUNDS}回戦`
+    : `${prefix}第${play.asked + 1}問 / ${QUESTIONS_PER_ROUND}問`;
+  renderTurn(versus);
   $("q-level").textContent =
     mode === "oni"
       ? "難しさ オニ"
       : mode === "hard"
         ? "難しさ ★★★★"
-        : mode === "coop"
-          ? `${coopPlayers}人でチーム`
+        : versus
+          ? `${versusPlayers}人で対戦`
           : `難しさ ${"★".repeat(question.level)}${"☆".repeat(MAX_LEVEL - question.level)}`;
   $("q-text").textContent = question.text;
   $("q-feedback").hidden = true;
 
   const message = $("q-message");
-  if (leveledUp || ((mode === "hard" || mode === "oni") && play.asked === 0)) {
+  const roundStart = versus && play.player === 0; // 対戦で、新しい回戦の最初の問題
+  if (leveledUp || roundStart || ((mode === "hard" || mode === "oni") && play.asked === 0)) {
     setFlori(IMG.surprised, "驚くフロリ");
-    message.textContent = {
-      normal: "おっ! 難しくなったヨ!",
-      hard: "難しいモードだヨ! じっくり考えてネ!",
-      oni: "オニ問題だヨ! がんばれ!",
-      coop: "おっ! 難しくなったヨ!",
-    }[mode];
+    message.textContent =
+      mode === "versus"
+        ? `第${play.round}回戦だヨ! 正解で${play.round}点!`
+        : { normal: "おっ! 難しくなったヨ!", hard: "難しいモードだヨ! じっくり考えてネ!", oni: "オニ問題だヨ! がんばれ!" }[mode];
     message.hidden = false;
   } else {
     setFlori(IMG.think, "本とペンを持つフロリ");
@@ -173,23 +173,55 @@ function showQuestion() {
   show("question");
 }
 
+// 対戦のとき:だれの番かを、プレイヤーの色で知らせる案内板と、みんなの点数の表
+const PLAYER_NAMES = ["プレイヤー1", "プレイヤー2", "プレイヤー3", "プレイヤー4"];
+
+function renderBoard(list, scores, active) {
+  list.replaceChildren(
+    ...scores.map((score, index) => {
+      const item = document.createElement("li");
+      item.className = `p${index + 1}${index === active ? " is-active" : ""}`;
+      item.textContent = `${PLAYER_NAMES[index]}  ${score}点`;
+      return item;
+    }),
+  );
+  list.hidden = false;
+}
+
+function renderTurn(versus) {
+  const turn = $("q-player");
+  const board = $("q-board");
+  turn.hidden = !versus;
+  board.hidden = !versus;
+  if (!versus) return;
+  turn.className = `turn p${play.player + 1}`;
+  turn.textContent = `${PLAYER_NAMES[play.player]}の番だヨ!(正解で${play.round}点)`;
+  renderBoard(board, play.scores, play.player);
+}
+
 function answer(response) {
   if (answered) return;
   answered = true;
+  const answeringPlayer = mode === "versus" ? play.player : 0;
+  const answeringRound = mode === "versus" ? play.round : 0;
   const correct = play.answer(current, response);
+  if (mode === "versus") renderBoard($("q-board"), play.scores, answeringPlayer);
   renderers[current.type].mark(current, response, correct);
   playSe(correct ? "correct" : "wrong");
 
   setFlori(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
   $("q-message").hidden = true;
   const verdict = $("q-verdict");
-  verdict.textContent = correct ? "正解!" : "残念…";
+  verdict.textContent =
+    mode === "versus" && correct ? `正解! ${PLAYER_NAMES[answeringPlayer]}に${answeringRound}点!` : correct ? "正解!" : "残念…";
   verdict.className = `verdict ${correct ? "is-right" : "is-wrong"}`;
   const rightText = renderers[current.type].correctText(current);
   $("q-explanation").textContent = `正解は「${rightText}」\n${current.explanation}`;
   $("btn-next").textContent = play.roundFinished ? "結果を見る" : "次へ";
   $("q-feedback").hidden = false;
-  $("btn-next").focus();
+  // 次へのボタンに移るとき、画面が勝手に下までスクロールして、正解・不正解の表示が見えなくならないようにする。
+  $("btn-next").focus({ preventScroll: true });
+  $("q-feedback").scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 // 総合得点(100点満点)を、保存した記録から数える。いまある問題だけを数える(問題が増えても、満点は100点のまま)。
@@ -207,11 +239,16 @@ function currentTotal(stats = loadStats()) {
 
 function showResult() {
   const result = play.finishRound();
-  $("r-correct").textContent = `${result.correct} / ${result.total}問`;
-  $("r-score").textContent = `${result.score}点(${MAX_SCORE}点満点)`;
+  const versus = mode === "versus";
+  $("r-correct-row").hidden = versus;
+  $("r-board").hidden = true;
+  if (!versus) {
+    $("r-correct").textContent = `${result.correct} / ${result.total}問`;
+    $("r-score").textContent = `${result.score}点(${MAX_SCORE}点満点)`;
+  }
+  $("r-score-row").hidden = versus; // 対戦のときは、ひとりの得点は出さない
   $("r-comment").textContent =
-    mode === "oni" ? oniComment(result.correct) : mode === "coop" ? coopComment(result) : comment(result.correct);
-  $("r-score-row").hidden = mode === "coop"; // みんなで あそぶときは、点数は出さない
+    mode === "oni" ? oniComment(result.correct) : versus ? versusComment(result) : comment(result.correct);
 
   const setNote = $("r-set");
   const before = currentTotal();
@@ -220,16 +257,16 @@ function showResult() {
     const gained = currentTotal() - before;
     return gained > 0 ? `初めての正解で、総合得点が${gained}点増えたヨ!` : "総合得点は、初めて正解したときだけ増えるヨ。";
   };
-  if (mode === "coop") {
-    // みんなで遊ぶ結果は、ひとりで遊ぶ記録(遊んだ回数、正解率、総合得点など)には入れない。
-    recordCoop(result);
-    $("r-title").textContent = "みんなの結果!";
+  if (versus) {
+    // みんなで対戦した結果は、ひとりで遊ぶ記録(遊んだ回数、正解率、総合得点など)には入れない。
+    recordVersus();
+    $("r-title").textContent = "対戦の結果!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
-    setNote.textContent = result.cleared
-      ? `目標(${COOP_GOAL}問)達成! みんなでよく頑張ったネ!`
-      : `目標まであと${COOP_GOAL - result.correct}問! またみんなで挑戦しよう!`;
-    $("btn-again").textContent = "もう一度みんなで遊ぶ";
+    renderBoard($("r-board"), result.scores, -1);
+    result.winners.forEach((index) => $("r-board").children[index].classList.add("is-winner"));
+    setNote.textContent = "";
+    $("btn-again").textContent = "もう一度対戦";
   } else if (mode === "oni") {
     // オニ問題は、成績の「遊んだ回数」や「正解率」には入れない。総合得点にだけ入る。
     recordOni(result.answers);
@@ -272,10 +309,11 @@ function comment(correct) {
   return "大丈夫! 考えるのが楽しいんだヨ!";
 }
 
-function coopComment(result) {
-  if (result.correct === result.total) return "全部正解! みんな最高のチームだヨ!";
-  if (result.cleared) return "すごい! みんなの力で達成だヨ!";
-  return "おしい! 相談しながら、もう1回やってみよう!";
+function versusComment(result) {
+  const names = result.winners.map((index) => PLAYER_NAMES[index]);
+  if (result.winners.length === result.players) return "全員同点! 引き分けだヨ!";
+  if (result.winners.length > 1) return `${names.join("と")}の同点トップ! みんな、よく頑張ったネ!`;
+  return `${names[0]}の勝ち! おめでとう!`;
 }
 
 function oniComment(correct) {
@@ -296,7 +334,7 @@ function showRecords() {
   $("s-best").textContent = `${s.best}点 / ${MAX_SCORE}点`;
   $("s-best-hard").textContent = `${s.bestHard}点 / ${MAX_SCORE}点`;
   $("s-plays").textContent = `${s.plays}回`;
-  $("s-coop").textContent = `${s.coopPlays}回(目標達成${s.coopClears}回)`;
+  $("s-versus").textContent = `${s.versusPlays}回`;
   $("s-seen").textContent = `${seen} / ${playable.size}問`;
   $("s-right").textContent = `${right} / ${playable.size}問`;
   $("s-answered").textContent = `${s.answered}問(正解 ${s.correct}問)`;
@@ -371,14 +409,65 @@ $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
 $("btn-start").addEventListener("click", () => startPlay("normal"));
 $("btn-hard").addEventListener("click", () => startPlay("hard"));
-$("btn-coop").addEventListener("click", () => show("coop"));
-$("btn-coop-back").addEventListener("click", () => show("cover"));
+$("btn-versus").addEventListener("click", () => show("versus"));
+$("btn-versus-back").addEventListener("click", () => show("cover"));
 for (const button of document.querySelectorAll("[data-players]")) {
   button.addEventListener("click", () => {
-    coopPlayers = Math.min(COOP_MAX_PLAYERS, Math.max(COOP_MIN_PLAYERS, Number(button.dataset.players)));
-    startPlay("coop");
+    versusPlayers = Math.min(VERSUS_MAX_PLAYERS, Math.max(VERSUS_MIN_PLAYERS, Number(button.dataset.players)));
+    startPlay("versus");
   });
 }
+
+// リラックス:スライドパズル(点数も時間もない)
+const PUZZLE_IMAGES = [
+  "../assets/flori/src/body_wave.webp",
+  "../assets/flori/wave_smile.png",
+  "../assets/flori/wave_nikkori.png",
+  "../assets/flori/wave_surprised.png",
+  "../assets/flori/wave_wrong.png",
+];
+let puzzle = null;
+let puzzleSize = 3;
+
+function startPuzzle(size = puzzleSize) {
+  puzzleSize = size;
+  const image = PUZZLE_IMAGES[Math.floor(Math.random() * PUZZLE_IMAGES.length)];
+  puzzle = new SlidePuzzle($("puzzle"), {
+    size,
+    image,
+    onSolved: (moves) => {
+      $("puzzle-message").textContent = `できた! ${moves}回で完成したヨ! すごいネ!`;
+      playSe("correct");
+    },
+  });
+  puzzle.shuffle();
+  $("puzzle-message").textContent = "空いている所の隣のタイルを、クリックしてね。";
+  $("btn-puzzle-peek").textContent = "見本を見る";
+  show("puzzle");
+}
+
+$("btn-relax").addEventListener("click", () => show("relax"));
+$("btn-relax-back").addEventListener("click", () => show("cover"));
+for (const button of document.querySelectorAll("[data-puzzle]")) {
+  button.addEventListener("click", () => startPuzzle(Number(button.dataset.puzzle)));
+}
+$("btn-puzzle-again").addEventListener("click", () => startPuzzle());
+$("btn-puzzle-back").addEventListener("click", () => show("relax"));
+$("btn-puzzle-peek").addEventListener("click", () => {
+  const next = !puzzle.preview;
+  puzzle.setPreview(next);
+  $("btn-puzzle-peek").textContent = next ? "もとにもどす" : "見本を見る";
+});
+// 矢印キー:押した向きに、タイルが動く
+document.addEventListener("keydown", (event) => {
+  if ($("screen-puzzle").hidden || !puzzle) return;
+  const directions = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  const direction = directions[event.key];
+  if (!direction) return;
+  event.preventDefault();
+  puzzle.moveByDirection(...direction);
+});
+
 $("btn-records").addEventListener("click", showRecords);
 $("btn-records-back").addEventListener("click", () => show("cover"));
 $("btn-settings").addEventListener("click", () => show("settings"));
