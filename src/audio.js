@@ -97,6 +97,13 @@ export function unlock() {
   else if (context.state === "suspended") context.resume();
 }
 
+// ゲームの画面を見ていないとき(ほかのタブや、ほかのアプリを見ているとき)は、音を止める。もどったら、つづきから。
+document.addEventListener("visibilitychange", () => {
+  if (!context) return;
+  if (document.hidden) context.suspend().catch(() => {});
+  else if (unlocked) context.resume().catch(() => {});
+});
+
 export function playSe(name) {
   const se = SE[name];
   if (!se || volumes.se === 0) return;

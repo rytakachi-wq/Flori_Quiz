@@ -39,7 +39,8 @@ let versusPlayers = 2; // みんなで対戦する人数
 function sceneOf(name) {
   if (name === "question") return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
   if (name === "relax") return "relax";
-  return null; // 表紙・成績・設定・結果などでは、BGMを鳴らさない
+  if (name === "result") return "result";
+  return name === "error" ? null : "cover";
 }
 
 function show(name) {
