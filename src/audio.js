@@ -58,10 +58,25 @@ let context = null;
 let music = null;
 const buffers = {};
 
+let holding = false; // 短い曲(オープニングなど)を鳴らしている間は、BGMを始めない
+
 function applyBgm() {
   if (!music) return;
   music.setVolume(curve(volumes.bgm)); // 0のときも止めずに、音量だけを0にする
-  music.play(BGM[scene] ?? null);
+  music.play(holding ? null : (BGM[scene] ?? null));
+}
+
+// 短い曲(オープニング、スタート、結果発表の前)を鳴らす。鳴り終わるまで、BGMは止める。長さ(ミリ秒)を返す。
+export function playJingle(name) {
+  if (!music || context?.state !== "running") return 0;
+  holding = true;
+  applyBgm();
+  const seconds = music.jingle(name);
+  setTimeout(() => {
+    holding = false;
+    applyBgm();
+  }, seconds * 1000);
+  return seconds * 1000;
 }
 
 // 場面が変わったら、その場面のBGMにする。

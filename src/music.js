@@ -1,10 +1,12 @@
 // BGM。このゲームのために作った、オリジナルの曲を、ブラウザの中で演奏する(WebAudio)。
 // 曲のファイルがないので、利用許諾の問題がなく、クレジットも要らない。
 //
-// 曲の作り方:1曲は、8小節のループ。小節ごとに、コード(和音)と、メロディ(lead)を書く。
+// 曲の作り方:1曲は、16小節のループ(前の8小節=A、後ろの8小節=B)。小節ごとに、コード(和音)と、メロディ(lead)を書く。
 //   時間は「ステップ」で数える(1小節=16ステップ。4ステップ=1拍)。
 //   メロディは [ステップ, 音, 長さ(ステップ)]、音は "C5" のように書く。
+//   曲ごとに、メロディの音色(voice)、ベースの弾きかた(bass)、ドラムを変えて、聞きわけられるようにしている。
 // 新しい曲を足すときは、TRACKS に1つ足して、audio.js の BGM に、場面と曲名を書く。
+// 短い効果の曲(オープニングなど)は、JINGLES に書く。
 
 const SEMITONE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
@@ -25,19 +27,20 @@ const CHORDS = {
   G: ["G2", "B2", "D3"],
   Em: ["E3", "G3", "B3"],
   Dm: ["D3", "F3", "A3"],
+  Gm: ["G2", "Bb2", "D3"],
   Bb: ["Bb2", "D3", "F3"],
   A: ["A2", "C#3", "E3"],
   Gmaj7: ["G3", "B3", "D4", "F#4"],
   Em7: ["E3", "G3", "B3", "D4"],
   Cmaj7: ["C3", "E3", "G3", "B3"],
   D: ["D3", "F#3", "A3"],
-  Gm: ["G2", "Bb2", "D3"],
   Am7: ["A2", "C3", "E3", "G3"],
   Fmaj7: ["F2", "A2", "C3", "E3"],
   Dm7: ["D3", "F3", "A3", "C4"],
   G7: ["G2", "B2", "D3", "F3"],
   E7: ["E3", "G#3", "B3", "D4"],
   B7: ["B2", "D#3", "F#3", "A3"],
+  D7: ["D3", "F#3", "A3", "C4"],
 };
 
 const shift = (note, semitones) => {
@@ -53,15 +56,19 @@ function sparkle(chord, high = false) {
   return order.map((i, k) => [k * 2, high && i === 2 ? shift(tones[i], 12) : tones[i], 2]);
 }
 
+// voice:メロディの音色  bass:ベースの弾きかた  drums/drumsB:ドラム(A・Bの部分)  tick:時計の音
 export const TRACKS = {
-  // 表紙・成績・設定・みんなで対戦:明るくて、軽快な曲
+  // 表紙・成績・設定:明るくて、軽快な曲(ピコピコした音)
   cover: {
     bpm: 112,
-    trim: 1.05,
-    chords: ["C", "Am", "F", "G", "C", "F", "G", "C"],
+    trim: 1.2,
+    voice: "square",
+    bass: "root",
     pad: 0.03,
     stab: true,
     drums: "k.h.s.h.k.h.s.h.",
+    drumsB: "k.hhs.hkk.hhs.hh",
+    chords: ["C", "Am", "F", "G", "C", "F", "G", "C", "F", "G", "Em", "Am", "F", "G", "C", "G"],
     lead: [
       [[0, "E5", 4], [4, "G5", 4], [8, "E5", 2], [10, "D5", 2], [12, "C5", 4]],
       [[0, "C5", 4], [4, "E5", 4], [8, "A4", 4], [12, "C5", 4]],
@@ -71,17 +78,26 @@ export const TRACKS = {
       [[0, "A5", 4], [4, "F5", 4], [8, "C5", 4], [12, "F5", 4]],
       [[0, "D5", 4], [4, "G5", 4], [8, "B4", 4], [12, "D5", 4]],
       [[0, "C5", 12]],
+      [[0, "A5", 4], [4, "C6", 4], [8, "A5", 2], [10, "G5", 2], [12, "F5", 4]],
+      [[0, "B5", 4], [4, "D6", 4], [8, "B5", 2], [10, "A5", 2], [12, "G5", 4]],
+      [[0, "G5", 4], [4, "B5", 4], [8, "E6", 4], [12, "B5", 4]],
+      [[0, "A5", 2], [2, "C6", 2], [4, "E6", 4], [8, "C6", 4], [12, "A5", 4]],
+      [[0, "C6", 4], [4, "A5", 4], [8, "F5", 4], [12, "A5", 4]],
+      [[0, "D6", 4], [4, "B5", 4], [8, "G5", 4], [12, "B5", 4]],
+      [[0, "E6", 4], [4, "C6", 4], [8, "G5", 4], [12, "E5", 4]],
+      [[0, "D5", 2], [2, "F5", 2], [4, "G5", 4], [8, "B5", 8]],
     ],
   },
 
   // ふつうの問題:時計の音と、マリンバのような音で、じっくり考える曲
   study: {
     bpm: 88,
-    trim: 1,
-    chords: ["Am7", "Fmaj7", "Cmaj7", "G7", "Am7", "Fmaj7", "Dm7", "E7"],
-    pad: 0.03,
+    trim: 1.4,
+    voice: "mallet",
+    bass: "walk",
+    pad: 0.034,
     tick: "beat",
-    mallet: true,
+    chords: ["Am7", "Fmaj7", "Cmaj7", "G7", "Am7", "Fmaj7", "Dm7", "E7", "Dm7", "G7", "Cmaj7", "Am7", "Dm7", "G7", "Em7", "E7"],
     lead: [
       [[0, "E5", 3], [4, "A5", 2], [6, "G5", 2], [8, "E5", 4]],
       [[0, "C5", 3], [4, "F5", 2], [6, "E5", 2], [8, "C5", 4]],
@@ -91,17 +107,26 @@ export const TRACKS = {
       [[0, "A5", 3], [4, "G5", 2], [6, "F5", 2], [8, "E5", 4]],
       [[0, "D5", 3], [4, "F5", 2], [6, "A5", 2], [8, "G5", 4]],
       [[0, "G#5", 3], [4, "B5", 2], [6, "G#5", 2], [8, "E5", 6]],
+      [[0, "F5", 3], [4, "A5", 2], [6, "C6", 2], [8, "A5", 4]],
+      [[0, "B5", 3], [4, "D6", 2], [6, "B5", 2], [8, "G5", 4]],
+      [[0, "E5", 3], [4, "G5", 2], [6, "B5", 2], [8, "C6", 4]],
+      [[0, "E5", 3], [4, "A5", 2], [6, "C6", 2], [8, "B5", 4]],
+      [[0, "D5", 2], [2, "F5", 2], [4, "A5", 4], [8, "D6", 4], [12, "C6", 4]],
+      [[0, "B5", 2], [2, "G5", 2], [4, "D5", 4], [8, "F5", 4], [12, "G5", 4]],
+      [[0, "G5", 3], [4, "B5", 2], [6, "E6", 2], [8, "D6", 4]],
+      [[0, "G#5", 2], [2, "B5", 2], [4, "E6", 4], [8, "D6", 2], [10, "B5", 2], [12, "G#5", 4]],
     ],
   },
 
-  // 難しいモード:時計の音が細かくなり、集中して考える曲
+  // 難しいモード:速い時計の音と、するどい音で、追いつめられるように考える曲
   deep: {
-    bpm: 104,
-    trim: 1,
-    chords: ["Em7", "Cmaj7", "Am7", "B7", "Em7", "Cmaj7", "Am7", "B7"],
-    pad: 0.034,
+    bpm: 132,
+    trim: 1.75,
+    voice: "saw",
+    bass: "pulse",
+    pad: 0.03,
     tick: "eighth",
-    mallet: true,
+    chords: ["Em7", "Cmaj7", "Am7", "B7", "Em7", "Cmaj7", "Am7", "B7", "Am7", "D7", "Gmaj7", "Cmaj7", "Am7", "D7", "B7", "B7"],
     lead: [
       [[0, "B4", 4], [4, "E5", 2], [6, "G5", 2], [8, "F#5", 4], [12, "E5", 2], [14, "D5", 2]],
       [[0, "E5", 4], [4, "G5", 2], [6, "B5", 2], [8, "A5", 4], [12, "G5", 4]],
@@ -111,18 +136,28 @@ export const TRACKS = {
       [[0, "G5", 4], [4, "E5", 2], [6, "C5", 2], [8, "B4", 4], [12, "D5", 4]],
       [[0, "A4", 2], [2, "C5", 2], [4, "E5", 4], [8, "A5", 4], [12, "G5", 4]],
       [[0, "F#5", 4], [4, "D#5", 2], [6, "F#5", 2], [8, "B4", 8]],
+      [[0, "E5", 2], [2, "A5", 2], [4, "C6", 4], [8, "B5", 2], [10, "A5", 2], [12, "E5", 4]],
+      [[0, "F#5", 2], [2, "A5", 2], [4, "D6", 4], [8, "C6", 2], [10, "A5", 2], [12, "F#5", 4]],
+      [[0, "D5", 2], [2, "G5", 2], [4, "B5", 4], [8, "F#5", 2], [10, "D5", 2], [12, "B4", 4]],
+      [[0, "E5", 2], [2, "G5", 2], [4, "B5", 4], [8, "C6", 4], [12, "G5", 4]],
+      [[0, "A5", 2], [2, "C6", 2], [4, "E6", 4], [8, "D6", 2], [10, "C6", 2], [12, "A5", 4]],
+      [[0, "A5", 2], [2, "D6", 2], [4, "F#6", 4], [8, "E6", 2], [10, "D6", 2], [12, "A5", 4]],
+      [[0, "F#5", 2], [2, "A5", 2], [4, "B5", 4], [8, "D#6", 4], [12, "F#6", 4]],
+      [[0, "D#6", 4], [4, "B5", 4], [8, "F#5", 8]],
     ],
   },
 
   // オニ問題:速くて、のしかかるような、緊迫感のある曲(ニ短調。低い音が、ずっと8分で、つめよってくる)
   oni: {
     bpm: 152,
-    trim: 1.1,
-    chords: ["Dm", "Dm", "Bb", "A", "Dm", "Gm", "Bb", "A"],
+    trim: 1.3,
+    voice: "buzz",
+    bass: "drive",
     pad: 0.02,
-    ostinato: true,
     stab: true,
     drums: "k.hkk.hkk.hks.hk",
+    drumsB: "kkhkk.hkkkhks.hk",
+    chords: ["Dm", "Dm", "Bb", "A", "Dm", "Gm", "Bb", "A", "Gm", "Dm", "A", "Dm", "Bb", "C", "A", "A"],
     lead: [
       [[0, "D5", 1], [1, "D5", 1], [2, "F5", 2], [4, "D5", 1], [5, "D5", 1], [6, "A5", 2], [8, "G#5", 2], [10, "A5", 2], [12, "F5", 4]],
       [[0, "D5", 1], [1, "D5", 1], [2, "F5", 2], [4, "A5", 4], [8, "G5", 2], [10, "F5", 2], [12, "E5", 4]],
@@ -132,17 +167,28 @@ export const TRACKS = {
       [[0, "G5", 1], [1, "G5", 1], [2, "Bb5", 2], [4, "D6", 4], [8, "C6", 2], [10, "Bb5", 2], [12, "G5", 4]],
       [[0, "Bb5", 1], [1, "Bb5", 1], [2, "D6", 2], [4, "F6", 4], [8, "E6", 2], [10, "D6", 2], [12, "Bb5", 4]],
       [[0, "C#6", 2], [2, "C#6", 2], [4, "E6", 2], [6, "C#6", 2], [8, "A5", 2], [10, "C#6", 2], [12, "E6", 4]],
+      [[0, "G5", 1], [1, "G5", 1], [2, "Bb5", 2], [4, "D6", 4], [8, "Bb5", 2], [10, "G5", 2], [12, "D5", 4]],
+      [[0, "A5", 1], [1, "A5", 1], [2, "F5", 2], [4, "D5", 4], [8, "F5", 2], [10, "A5", 2], [12, "D6", 4]],
+      [[0, "E5", 1], [1, "E5", 1], [2, "G5", 2], [4, "C#6", 4], [8, "E6", 2], [10, "C#6", 2], [12, "A5", 4]],
+      [[0, "D6", 2], [2, "A5", 2], [4, "F5", 2], [6, "A5", 2], [8, "D6", 2], [10, "F6", 2], [12, "A5", 4]],
+      [[0, "D6", 1], [1, "D6", 1], [2, "F6", 2], [4, "D6", 4], [8, "Bb5", 4], [12, "F5", 4]],
+      [[0, "E6", 1], [1, "E6", 1], [2, "G6", 2], [4, "E6", 4], [8, "C6", 4], [12, "G5", 4]],
+      [[0, "C#6", 2], [2, "E6", 2], [4, "A6", 4], [8, "G6", 2], [10, "E6", 2], [12, "C#6", 4]],
+      [[0, "A5", 2], [2, "A5", 2], [4, "A5", 2], [6, "A5", 2], [8, "E6", 8]],
     ],
   },
 
-  // みんなで対戦:はずんだリズムの、わくわくする、競争の曲
+  // みんなで対戦:はずんだリズムの、わくわくする、競争の曲(ブラスのような音)
   versus: {
     bpm: 134,
-    trim: 1.05,
-    chords: ["C", "G", "Am", "F", "C", "G", "F", "G"],
+    trim: 1.25,
+    voice: "brass",
+    bass: "bounce",
     pad: 0.025,
     stab: true,
     drums: "k.hks.hkk.hks.hk",
+    drumsB: "k.h.s.hhk.h.s.hh",
+    chords: ["C", "G", "Am", "F", "C", "G", "F", "G", "Am", "Em", "F", "G", "Am", "Em", "F", "G"],
     lead: [
       [[0, "G5", 2], [2, "E5", 2], [4, "G5", 4], [8, "A5", 2], [10, "G5", 2], [12, "E5", 4]],
       [[0, "D5", 2], [2, "G5", 2], [4, "B5", 4], [8, "A5", 2], [10, "G5", 2], [12, "D5", 4]],
@@ -152,16 +198,26 @@ export const TRACKS = {
       [[0, "B5", 2], [2, "D6", 2], [4, "G6", 4], [8, "F6", 2], [10, "D6", 2], [12, "B5", 4]],
       [[0, "A5", 2], [2, "C6", 2], [4, "F6", 4], [8, "E6", 2], [10, "C6", 2], [12, "A5", 4]],
       [[0, "G5", 2], [2, "B5", 2], [4, "D6", 4], [8, "G5", 8]],
+      [[0, "E5", 2], [2, "A5", 2], [4, "C6", 2], [6, "A5", 2], [8, "E6", 4], [12, "C6", 4]],
+      [[0, "G5", 2], [2, "B5", 2], [4, "E6", 2], [6, "B5", 2], [8, "G6", 4], [12, "E6", 4]],
+      [[0, "A5", 2], [2, "C6", 2], [4, "F6", 2], [6, "C6", 2], [8, "A5", 4], [12, "F5", 4]],
+      [[0, "B5", 2], [2, "D6", 2], [4, "G6", 2], [6, "D6", 2], [8, "B5", 4], [12, "G5", 4]],
+      [[0, "C6", 2], [2, "E6", 2], [4, "A6", 4], [8, "G6", 2], [10, "E6", 2], [12, "C6", 4]],
+      [[0, "B5", 2], [2, "E6", 2], [4, "G6", 4], [8, "D6", 2], [10, "E6", 2], [12, "B5", 4]],
+      [[0, "C6", 2], [2, "F6", 2], [4, "A6", 4], [8, "G6", 2], [10, "F6", 2], [12, "C6", 4]],
+      [[0, "D6", 2], [2, "G5", 2], [4, "B5", 2], [6, "D6", 2], [8, "G6", 8]],
     ],
   },
 
-  // リラックス(パズル):ゆっくりで、やさしい曲
+  // リラックス(お花畑):ゆっくりで、やさしい曲(フルートのような音と、ベル)
   relax: {
     bpm: 70,
-    trim: 1.06,
-    chords: ["Gmaj7", "Em7", "Cmaj7", "D", "Gmaj7", "Em7", "Cmaj7", "D"],
+    trim: 0.85,
+    voice: "soft",
+    bass: "sustain",
     pad: 0.04,
     bells: true,
+    chords: ["Gmaj7", "Em7", "Cmaj7", "D", "Gmaj7", "Em7", "Cmaj7", "D", "Cmaj7", "Am7", "D", "Gmaj7", "Cmaj7", "Em7", "D", "D"],
     lead: [
       [[0, "B4", 8], [8, "A4", 4], [12, "G4", 4]],
       [[0, "G4", 8], [8, "B4", 4], [12, "D5", 4]],
@@ -171,17 +227,28 @@ export const TRACKS = {
       [[0, "E5", 8], [8, "D5", 8]],
       [[0, "G5", 8], [8, "E5", 8]],
       [[0, "F#5", 8], [8, "A4", 8]],
+      [[0, "E5", 8], [8, "G5", 4], [12, "B5", 4]],
+      [[0, "C6", 8], [8, "A5", 4], [12, "E5", 4]],
+      [[0, "F#5", 8], [8, "A5", 4], [12, "D6", 4]],
+      [[0, "B5", 8], [8, "G5", 8]],
+      [[0, "G5", 8], [8, "E5", 8]],
+      [[0, "B5", 8], [8, "G5", 4], [12, "E5", 4]],
+      [[0, "A5", 8], [8, "F#5", 4], [12, "D5", 4]],
+      [[0, "F#5", 14]],
     ],
   },
 
   // 結果発表:にぎやかで、お祝いの曲
   result: {
     bpm: 120,
-    trim: 1.03,
-    chords: ["C", "F", "G", "C", "Am", "F", "G", "C"],
+    trim: 1.1,
+    voice: "triangle",
+    bass: "root",
     pad: 0.03,
     stab: true,
     drums: "k.h.s.h.k.h.s.h.",
+    drumsB: "k.hhs.hkk.hhs.hh",
+    chords: ["C", "F", "G", "C", "Am", "F", "G", "C", "Dm", "G", "C", "Am", "F", "G", "Em", "C"],
     lead: [
       sparkle("C"),
       sparkle("F"),
@@ -191,7 +258,45 @@ export const TRACKS = {
       sparkle("F"),
       sparkle("G", true),
       [[0, "C6", 12]],
+      sparkle("Dm"),
+      sparkle("G"),
+      sparkle("C", true),
+      sparkle("Am"),
+      sparkle("F", true),
+      sparkle("G"),
+      sparkle("Em", true),
+      [[0, "C6", 4], [4, "E6", 4], [8, "G6", 6]],
     ],
+  },
+};
+
+// ---- 短い曲(オープニングなど)----
+// notes:[ステップ, 音, 長さ]  hits:ドラム [ステップ, "k"|"s"]  chord:[ステップ, コード名]  steps:全体の長さ
+export const JINGLES = {
+  // ゲームを開いたとき:きらきらとのぼって、ファンファーレ
+  opening: {
+    bpm: 128,
+    steps: 28,
+    notes: [[0, "C5", 2], [2, "E5", 2], [4, "G5", 2], [6, "C6", 2], [8, "E6", 2], [10, "G5", 2], [12, "C6", 2], [14, "E6", 2], [16, "G6", 12]],
+    hits: [[0, "k"], [8, "k"], [12, "s"], [16, "k"], [16, "s"]],
+    chord: [16, "C"],
+  },
+  // 問題をはじめるとき:「それでは、スタート!」
+  start: {
+    bpm: 144,
+    steps: 18,
+    notes: [[0, "G5", 2], [4, "G5", 2], [8, "G5", 2], [12, "C6", 6]],
+    hits: [[0, "k"], [4, "k"], [8, "k"], [12, "k"], [12, "s"]],
+    chord: [12, "C"],
+  },
+  // 結果発表の前:ドラムロール、そして、ジャン!
+  result: {
+    bpm: 120,
+    steps: 28,
+    notes: [[16, "C6", 2], [18, "E6", 2], [20, "G6", 8]],
+    hits: [[16, "k"], [20, "k"]],
+    roll: [0, 16], // [はじめ, 終わり]のステップ。だんだん細かく、大きく
+    chord: [20, "C"],
   },
 };
 
@@ -254,6 +359,20 @@ function noiseHit(ctx, out, time, { gain, filter, frequency, length }) {
   source.stop(time + length + 0.02);
 }
 
+const snare = (ctx, out, time, gain = 0.05) => noiseHit(ctx, out, time, { gain, filter: "bandpass", frequency: 1800, length: 0.1 });
+const hat = (ctx, out, time) => noiseHit(ctx, out, time, { gain: 0.018, filter: "highpass", frequency: 7000, length: 0.04 });
+
+// メロディの音色ごとの、音の出しかた(len は、音の長さ=秒)
+const VOICES = {
+  triangle: (len) => ({ type: "triangle", gain: 0.1, attack: 0.015, length: len * 0.9, release: 0.18 }),
+  mallet: (len) => ({ type: "sine", gain: 0.13, attack: 0.004, length: len * 0.35, release: 0.45 }),
+  square: (len) => ({ type: "square", gain: 0.04, attack: 0.008, length: len * 0.7, release: 0.1, lowpass: 3200 }),
+  saw: (len) => ({ type: "sawtooth", gain: 0.06, attack: 0.004, length: len * 0.4, release: 0.22, lowpass: 2000 }),
+  buzz: (len) => ({ type: "sawtooth", gain: 0.05, attack: 0.004, length: len * 0.85, release: 0.07, lowpass: 3000 }),
+  brass: (len) => ({ type: "sawtooth", gain: 0.06, attack: 0.03, length: len * 0.85, release: 0.12, lowpass: 1600 }),
+  soft: (len) => ({ type: "sine", gain: 0.11, attack: 0.07, length: len * 0.95, release: 0.5 }),
+};
+
 // ---- 1小節ぶんを、予約する ----
 export function trackBarSeconds(name) {
   return (60 / TRACKS[name].bpm) * 4;
@@ -262,10 +381,14 @@ export function trackBarSeconds(name) {
 export function scheduleBar(ctx, out, name, bar, time) {
   const track = TRACKS[name];
   const index = bar % track.chords.length;
+  const second = index >= track.chords.length / 2; // Bの部分
   const step = 60 / track.bpm / 4;
   const chord = CHORDS[track.chords[index]];
   const barLength = step * 16;
   const root = chord[0];
+  const fifth = shift(root, 7);
+  const put = (note, s, len, gain, extra = {}) =>
+    tone(ctx, out, { note, time: time + s * step, length: step * len, gain, ...extra });
 
   // パッド:やさしい和音を、小節の間、のばす
   if (track.pad) {
@@ -273,22 +396,29 @@ export function scheduleBar(ctx, out, name, bar, time) {
       tone(ctx, out, { note: shift(note, 12), time, length: barLength * 0.92, type: "sine", gain: track.pad, attack: 0.25, release: 0.35 });
     }
   }
-  // ベース:根音を、リズムにのせて弾く
-  if (track.ostinato) {
-    for (let s = 0; s < 16; s += 2) {
-      tone(ctx, out, { note: root, time: time + s * step, length: step * 1.6, type: "triangle", gain: s % 8 === 0 ? 0.14 : 0.09, attack: 0.005, release: 0.08 });
-    }
-  } else if (!track.bells) {
-    for (const [s, note, len] of [[0, root, 6], [8, root, 3], [12, shift(root, 7), 3]]) {
-      tone(ctx, out, { note, time: time + s * step, length: step * len, type: "triangle", gain: 0.12, attack: 0.01, release: 0.1 });
-    }
+  // ベース:曲ごとに、弾きかたを変える
+  const bass = track.bass ?? "root";
+  if (bass === "root") {
+    for (const [s, note, len] of [[0, root, 6], [8, root, 3], [12, fifth, 3]]) put(note, s, len, 0.12, { type: "triangle", release: 0.1 });
+  } else if (bass === "walk") {
+    // 歩くように:根音→5度→1オクターブ上→5度
+    for (const [s, note] of [[0, root], [4, fifth], [8, shift(root, 12)], [12, fifth]]) put(note, s, 3, 0.11, { type: "triangle", release: 0.12 });
+  } else if (bass === "pulse") {
+    // 8分で、ぶるぶると
+    for (let s = 0; s < 16; s += 2) put(root, s, 1.4, s % 8 === 0 ? 0.11 : 0.07, { type: "sawtooth", lowpass: 420, release: 0.06, attack: 0.004 });
+  } else if (bass === "drive") {
+    // 8分で、おし寄せる。小節の頭と、うらを強く
+    for (let s = 0; s < 16; s += 2) put(s % 4 === 2 ? shift(root, 12) : root, s, 1.5, s % 8 === 0 ? 0.15 : 0.1, { type: "sawtooth", lowpass: 520, release: 0.06, attack: 0.004 });
+  } else if (bass === "bounce") {
+    // はずむように:うら拍に、根音と5度
+    for (const [s, note] of [[0, root], [3, root], [6, fifth], [8, root], [11, root], [14, fifth]]) put(note, s, 2, 0.12, { type: "triangle", release: 0.08 });
+  } else if (bass === "sustain") {
+    put(root, 0, 15, 0.1, { type: "sine", attack: 0.15, release: 0.4 });
   }
   // コードのリズム(うら拍の、みじい和音)
   if (track.stab) {
     for (const s of [4, 12]) {
-      for (const note of chord) {
-        tone(ctx, out, { note: shift(note, 12), time: time + s * step, length: step * 1.2, type: "square", gain: 0.012, attack: 0.005, release: 0.06, lowpass: 1400 });
-      }
+      for (const note of chord) put(shift(note, 12), s, 1.2, 0.012, { type: "square", attack: 0.005, release: 0.06, lowpass: 1400 });
     }
   }
   // 時計の音:コツ、コツ、と、考える時間をきざむ
@@ -298,27 +428,59 @@ export function scheduleBar(ctx, out, name, bar, time) {
       noiseHit(ctx, out, time + s * step, { gain: s % 8 === 0 ? 0.05 : 0.03, filter: "bandpass", frequency: s % 8 === 0 ? 2200 : 3300, length: 0.03 });
     }
   }
-  // ベル:やわらかい音を、ときどき(リラックス用)
+  // ベル:やわらかい音を、ときどき(リラックス用)。Bの部分は、1つ高い音から
   if (track.bells) {
     const tones = chord.map((n) => shift(n, 24));
-    for (let s = 0; s < 16; s += 4) {
-      tone(ctx, out, { note: tones[(s / 4) % tones.length], time: time + s * step, length: step * 2, type: "sine", gain: 0.045, attack: 0.01, release: 0.9 });
-    }
+    for (let s = 0; s < 16; s += 4) put(tones[(s / 4 + (second ? 1 : 0)) % tones.length], s, 2, 0.045, { attack: 0.01, release: 0.9 });
   }
   // メロディ
+  const voice = VOICES[track.voice ?? "triangle"];
   for (const [s, note, len] of track.lead[index]) {
-    if (track.mallet) tone(ctx, out, { note, time: time + s * step, length: step * len * 0.35, type: "sine", gain: 0.13, attack: 0.004, release: 0.45 });
-    else tone(ctx, out, { note, time: time + s * step, length: step * len * 0.9, type: "triangle", gain: 0.1, attack: 0.015, release: 0.18 });
+    tone(ctx, out, { note, time: time + s * step, ...voice(step * len) });
   }
-  // ドラム
-  if (track.drums) {
-    [...track.drums].forEach((mark, s) => {
+  // ドラム(Bの部分は、パターンを変える。8小節めは、ドラムのフィル)
+  const drums = second && track.drumsB ? track.drumsB : track.drums;
+  if (drums) {
+    [...drums].forEach((mark, s) => {
       const t = time + s * step;
       if (mark === "k") kick(ctx, out, t, 0.2);
-      else if (mark === "s") noiseHit(ctx, out, t, { gain: 0.05, filter: "bandpass", frequency: 1800, length: 0.1 });
-      else if (mark === "h") noiseHit(ctx, out, t, { gain: 0.018, filter: "highpass", frequency: 7000, length: 0.04 });
+      else if (mark === "s") snare(ctx, out, t);
+      else if (mark === "h") hat(ctx, out, t);
     });
+    if (index % 8 === 7) for (let s = 12; s < 16; s += 1) snare(ctx, out, time + s * step, 0.03 + (s - 12) * 0.01);
   }
+}
+
+// 短い曲を、予約する。長さ(秒)を返す。
+export function scheduleJingle(ctx, out, name, time) {
+  const jingle = JINGLES[name];
+  const step = 60 / jingle.bpm / 4;
+  for (const [s, note, len] of jingle.notes) {
+    tone(ctx, out, { note, time: time + s * step, length: step * len * 0.9, type: "triangle", gain: 0.2, attack: 0.01, release: 0.2 });
+    tone(ctx, out, { note: shift(note, 12), time: time + s * step, length: step * len * 0.6, type: "sine", gain: 0.08, attack: 0.01, release: 0.3 });
+  }
+  for (const [s, mark] of jingle.hits) {
+    if (mark === "k") kick(ctx, out, time + s * step, 0.22);
+    else if (mark === "s") snare(ctx, out, time + s * step, 0.07);
+  }
+  if (jingle.roll) {
+    // ドラムロール:だんだん、細かく、大きく
+    const [from, to] = jingle.roll;
+    let s = from;
+    while (s < to) {
+      const progress = (s - from) / (to - from);
+      snare(ctx, out, time + s * step, 0.025 + progress * 0.06);
+      s += progress < 0.5 ? 1 : 0.5;
+    }
+  }
+  if (jingle.chord) {
+    const [s, chordName] = jingle.chord;
+    for (const note of CHORDS[chordName]) {
+      tone(ctx, out, { note: shift(note, 12), time: time + s * step, length: step * (jingle.steps - s) * 0.8, type: "triangle", gain: 0.1, attack: 0.01, release: 0.4 });
+    }
+    noiseHit(ctx, out, time + s * step, { gain: 0.05, filter: "highpass", frequency: 5000, length: 0.5 }); // シンバル
+  }
+  return step * jingle.steps;
 }
 
 // ---- 演奏する係 ----
@@ -340,6 +502,12 @@ export class MusicPlayer {
 
   get name() {
     return this.current?.name ?? null;
+  }
+
+  // 短い曲(オープニングなど)を鳴らす。長さ(秒)を返す。
+  jingle(name) {
+    if (!JINGLES[name]) return 0;
+    return scheduleJingle(this.ctx, this.volume, name, this.ctx.currentTime + 0.05);
   }
 
   // 曲を切りかえる(同じ曲なら、そのまま続ける)。name が null なら、止める。

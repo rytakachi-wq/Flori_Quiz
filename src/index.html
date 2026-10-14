@@ -7,6 +7,14 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="opening" class="overlay opening" role="button" tabindex="0" aria-label="画面をさわって、スタート">
+    <img class="logo" src="../assets/flori/src/logo.png" alt="フロリ">
+    <p class="opening-title">ひらめきクイズ</p>
+    <p class="opening-hint">画面をさわって スタート</p>
+  </div>
+  <div id="announce" class="overlay announce" aria-live="polite" hidden>
+    <p id="announce-text" class="announce-text"></p>
+  </div>
   <main class="app">
 
     <!-- 表紙 -->
@@ -50,7 +58,7 @@
       <h2 class="title">お花畑</h2>
       <p id="garden-message" class="bubble"></p>
       <div id="garden"></div>
-      <p id="garden-hint" class="note" hidden>ヒント:木をおすと、その木と上下左右の木が1段階育つヨ(🌱芽→🪵株→🌳木→🌸桜の木→芽…)。全部を桜の木にしよう。光っている所を、おしてみよう。</p>
+      <p id="garden-hint" class="note" hidden>ヒント:木をおすと、その木と上下左右の木が1段階育つヨ(🌱芽→🌿枝→🌳木→🌸桜の木→芽…)。全部を桜の木にしよう。光っている所を、おしてみよう。</p>
       <div class="buttons">
         <button class="btn btn-main" type="button" data-garden="3">易しい(3×3)</button>
         <button class="btn btn-main" type="button" data-garden="4">普通(4×4)</button>
@@ -144,7 +152,7 @@
       <p id="r-record" class="record" hidden>新記録!</p>
       <p id="r-set" class="note" hidden></p>
       <div class="buttons">
-        <button id="btn-again" class="btn btn-main" type="button">もう一度遊ぶ</button>
+        <button id="btn-again" class="btn btn-main" type="button">続けて遊ぶ</button>
         <button id="btn-cover" class="btn btn-sub" type="button">表紙へ</button>
       </div>
     </section>

@@ -16,7 +16,7 @@ import {
 } from "./game.js";
 import { loadStats, pruneStats, recordOni, recordRound, recordVersus } from "./storage.js";
 import { GardenUI } from "./garden.js";
-import { getVolume, playSe, setScene, setVolume, unlock } from "./audio.js";
+import { getVolume, playJingle, playSe, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
@@ -124,13 +124,24 @@ function setFlori(src, alt) {
   img.alt = alt;
 }
 
+// 画面いっぱいに、ひとことを出して、短い曲を鳴らしてから、つぎへ進む(「それでは、スタート!」など)。
+function announce(text, jingle, then) {
+  $("announce-text").textContent = text;
+  $("announce").hidden = false;
+  const length = Math.max(1600, playJingle(jingle) + 300);
+  setTimeout(() => {
+    $("announce").hidden = true;
+    then();
+  }, length);
+}
+
 function startPlay(nextMode) {
   mode = nextMode;
   if (mode === "oni") play = new OniRound(oniQuestions);
   else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
   else if (mode === "versus") play = new VersusRound(normalQuestions, versusPlayers);
   else play = session;
-  showQuestion();
+  announce("それでは、スタート!", "start", showQuestion);
 }
 
 function showQuestion() {
@@ -290,7 +301,7 @@ function showResult() {
     $("r-best-row").hidden = false;
     $("r-best").textContent = `${stats.best}点`;
     $("r-record").hidden = !saved.isRecord;
-    $("btn-again").textContent = "もう一度遊ぶ";
+    $("btn-again").textContent = "続けて遊ぶ";
     if (saved.setCompleted) {
       setNote.textContent = `${ROUNDS_PER_SET}回遊んだヨ! 難しさは、また最初から!`;
       session.resetSet();
@@ -343,7 +354,7 @@ function showRecords() {
 }
 
 function next() {
-  if (play.roundFinished) showResult();
+  if (play.roundFinished) announce("結果発表〜!", "result", showResult);
   else showQuestion();
 }
 
@@ -509,3 +520,19 @@ async function init() {
 
 startFurigana();
 init();
+
+// ゲームを開いたときのオープニング。画面をさわると、曲がなって、表紙になる(ブラウザは、さわるまで音を出せない)。
+function closeOpening() {
+  const opening = $("opening");
+  if (opening.hidden) return;
+  unlock();
+  opening.classList.add("is-leaving");
+  const length = Math.max(1200, playJingle("opening") + 200);
+  setTimeout(() => {
+    opening.hidden = true;
+  }, length);
+}
+$("opening").addEventListener("click", closeOpening);
+$("opening").addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") closeOpening();
+});
