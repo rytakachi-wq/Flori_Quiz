@@ -23,7 +23,7 @@ import {
 } from "./game.js";
 import { loadStats, pruneStats, recordDaily, recordOni, recordReview, recordRound, recordVersus } from "./storage.js";
 import { GardenUI } from "./garden.js";
-import { getVolume, playJingle, playSe, playVoice, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
+import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
@@ -41,7 +41,6 @@ const SCREENS = ["cover", "versus", "relax", "records", "settings", "question", 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"review"(おさらい)、"daily"(毎日1問)
 let hinted = false; // いまの問題で、ヒントを見たか
-let streak = 0; // 連続して正解した数(声を出すために数える)
 let versusPlayers = 2; // みんなで対戦する人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
@@ -152,9 +151,6 @@ function announce(text, jingle, then, image) {
   }, length);
 }
 
-// はじめの声(モードごと)
-const START_VOICE = { normal: "fight", daily: "fight", review: "go", hard: "cheer", oni: "wow" };
-
 // 表紙のボタンの文字(今日の毎日1問をやったか、おさらいが何問あるか)を、いまの記録に合わせる。
 function refreshCover() {
   if (playableQuestions.length === 0) return;
@@ -174,7 +170,6 @@ function playableIds() {
 
 function startPlay(nextMode) {
   mode = nextMode;
-  streak = 0;
   if (mode === "oni") play = new OniRound(oniQuestions);
   else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
   else if (mode === "versus") play = new VersusRound(normalQuestions, versusPlayers);
@@ -187,7 +182,6 @@ function startPlay(nextMode) {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
   } else play = session;
   announce("それでは、スタート!", "start", showQuestion, "../assets/flori/src/body_wave.webp");
-  if (START_VOICE[mode]) playVoice(START_VOICE[mode], 700);
 }
 
 function showQuestion() {
@@ -242,7 +236,6 @@ function showQuestion() {
 
   renderers[question.type].render(question, answer);
   show("question");
-  if (mode !== "versus" && total > 1 && play.asked === total - 1) playVoice("almost", 400); // 最後の1問
 }
 
 // 対戦のとき:だれの番かを、プレイヤーの色で知らせる案内板と、みんなの点数の表
@@ -276,19 +269,11 @@ function answer(response) {
   answered = true;
   const answeringPlayer = mode === "versus" ? play.player : 0;
   const answeringRound = mode === "versus" ? play.round : 0;
-  const firstRight = !loadStats().right.includes(current.uid ?? current.id); // この問題に、はじめて正解するか
   const correct = play.answer(current, response, hinted);
   $("btn-hint").disabled = true;
   if (mode === "versus") renderBoard($("q-board"), play.scores, answeringPlayer);
   renderers[current.type].mark(current, response, correct);
   playSe(correct ? "correct" : "wrong");
-  if (mode !== "versus") {
-    // フロリの声:連続正解でほめる、はじめての正解でよろこぶ、まちがえたらくやしがる
-    streak = correct ? streak + 1 : 0;
-    if (!correct) playVoice("ouch", 350);
-    else if (streak >= 2) playVoice("streak", 350);
-    else if (firstRight && mode !== "oni") playVoice("nice", 350);
-  }
 
   setFlori(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
   $("q-message").hidden = true;
@@ -406,14 +391,6 @@ function showResult() {
   }
   setNote.hidden = false;
   show("result");
-  if (!versus) {
-    // フロリの声:結果に合わせて
-    const { correct, total } = result;
-    if (correct === total) playVoice("great", 400);
-    else if (correct === 0) playVoice(total === 1 ? "go" : "no", 400);
-    else if (correct >= total - 1) playVoice("wow", 400);
-    else if (correct <= 1) playVoice("go", 400);
-  }
 }
 
 function comment(correct, total = QUESTIONS_PER_ROUND) {
@@ -544,7 +521,6 @@ $("btn-hint").addEventListener("click", () => {
   $("q-hint").textContent = `ヒント:${current.hint}`;
   $("q-hint").hidden = false;
   $("btn-hint").disabled = true;
-  playVoice("hmm");
 });
 $("btn-versus").addEventListener("click", () => show("versus"));
 $("btn-versus-back").addEventListener("click", () => show("cover"));
@@ -614,7 +590,6 @@ $("corner-flori").addEventListener("click", (event) => {
   void button.offsetWidth; // アニメーションをもう一度動かす
   button.classList.add("is-tapped");
   coverTaps += 1;
-  playVoice("giggle");
   if (coverTaps >= ONI_TAPS) {
     coverTaps = 0;
     window.getSelection()?.removeAllRanges(); // 連打で選ばれた部分を、ぜんぶ外す
@@ -660,7 +635,6 @@ function closeOpening() {
   opening.classList.add("is-playing"); // フロリが、動いて登場する
   opening.querySelector(".opening-flori").hidden = false;
   const length = Math.max(2600, playJingle("opening") + 400);
-  setTimeout(() => playVoice("hello"), 700); // 声のファイルを読みこむ時間をあける
   setTimeout(() => opening.classList.add("is-leaving"), length);
   setTimeout(() => {
     opening.hidden = true;

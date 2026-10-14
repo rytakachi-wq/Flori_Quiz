@@ -28,23 +28,6 @@ const SE = {
   wrong: { file: "se-wrong.mp3", boost: 2.4 }, // ふせいかい
 };
 
-// フロリの声(ファイル)。効果音と同じ大きさのつまみで鳴る。boost は、小さい声をもち上げる倍率。
-const VOICE = {
-  hello: { file: "voice/voice-yaa-bang.mp3", boost: 1 }, // やあ!(オープニング)
-  cheer: { file: "voice/voice-furefure.mp3", boost: 1 }, // フレーフレー(難しいモードのはじめ)
-  fight: { file: "voice/voice-ganbatte.mp3", boost: 1 }, // 頑張って!(ふつうのはじめ)
-  go: { file: "voice/voice-ganbare.mp3", boost: 1 }, // がんばれー(おさらいのはじめ・点が低かったとき)
-  streak: { file: "voice/voice-sonochoushi.mp3", boost: 1.2 }, // その調子その調子!(連続正解)
-  almost: { file: "voice/voice-atochotto.mp3", boost: 1 }, // あとちょっと〜!(最後の問題)
-  great: { file: "voice/voice-yattaa.mp3", boost: 1 }, // やったーー!(全問正解)
-  nice: { file: "voice/voice-yattane.mp3", boost: 1.8 }, // やったね!(はじめての正解)
-  ouch: { file: "voice/voice-uu.mp3", boost: 1 }, // ううっ…(まちがい)
-  hmm: { file: "voice/voice-n.mp3", boost: 1.3 }, // ん?(ヒント)
-  no: { file: "voice/voice-usso.mp3", boost: 1 }, // うっそお…(全問まちがい)
-  wow: { file: "voice/voice-oo.mp3", boost: 1 }, // おぉ…!(オニのはじめ・おしい結果)
-  giggle: { file: "voice/voice-kyahaha.mp3", boost: 1 }, // きゃはははっ!(表紙のフロリ)
-};
-
 const DEFAULTS = { bgm: 0.7, se: 0.8 };
 const volumes = { ...DEFAULTS };
 
@@ -111,7 +94,7 @@ async function prepare() {
     music = new MusicPlayer(context);
     applyBgm();
     await Promise.all(
-      [...Object.entries(SE), ...Object.entries(VOICE).map(([name, voice]) => [`voice:${name}`, voice])].map(async ([name, { file }]) => {
+      Object.entries(SE).map(async ([name, { file }]) => {
         const data = await (await fetch(BASE + file)).arrayBuffer();
         buffers[name] = await context.decodeAudioData(data);
       }),
@@ -153,26 +136,6 @@ export function playSe(name) {
   const sound = new Audio(BASE + se.file);
   sound.volume = Math.min(1, level);
   sound.play().catch(() => {});
-}
-
-// フロリの声を鳴らす。delay(ミリ秒)だけ、あとから。声は、1つずつ(前の声が鳴っていたら、止めて、かわる)。
-let voiceSource = null;
-export function playVoice(name, delay = 0) {
-  const voice = VOICE[name];
-  const buffer = buffers[`voice:${name}`];
-  if (!voice || !buffer || volumes.se === 0 || !context || context.state !== "running") return;
-  const source = context.createBufferSource();
-  const gain = context.createGain();
-  source.buffer = buffer;
-  gain.gain.value = curve(volumes.se) * voice.boost;
-  source.connect(gain).connect(context.destination);
-  try {
-    voiceSource?.stop();
-  } catch {
-    // もう鳴り終わっていた。
-  }
-  voiceSource = source;
-  source.start(context.currentTime + delay / 1000);
 }
 
 export function getVolume(kind) {
