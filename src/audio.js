@@ -4,25 +4,18 @@
 const BASE = "../assets/audio/";
 const SETTINGS_KEY = "floriQuiz.settings.v2";
 
-// 場面ごとのBGM。音楽を変えるときは、ここのファイル名を変える。
-// 場面:cover(表紙・せいせき・せってい)、question(ふつうの問題)、hard(難しいモード)、versus(みんなで対戦)、relax(リラックス)、oni(オニ問題)、result(結果)
+// 場面ごとのBGM。音楽を入れるときは、ここにファイル名を書く(assets/audio/ に置く)。
+// 場面:cover(表紙・せいせき・せってい)、question(ふつうの問題)、hard(難しいモード)、versus(みんなで対戦)、
+//      relax(リラックス)、oni(オニ問題)、result(結果)
+// いまは、曲の差しかえ中(前の曲は、利用条件の問題で外した)。書いていない場面は、BGMが流れない。
 const BGM = {
-  cover: "bgm-slime-time.mp3",
-  question: "bgm-ticketless.mp3",
-  hard: "bgm-ticketless.mp3",
-  versus: "bgm-ticketless.mp3",
-  relax: "bgm-swan-lake.mp3",
-  oni: "bgm-swan-lake.mp3",
-  result: "bgm-swan-lake.mp3",
+  // cover: "bgm-cover.mp3",
 };
 
-// 曲ごとの音の大きさをそろえる。元の曲は、どれも大きく作ってあり、曲によって差もある。
-// 平均の大きさ(-10.8〜-13.5 dB)を、つまみ100のとき -19 dB にそろえた値。
-// ファイルを入れかえたら、この値も測りなおす。
+// 曲ごとの音の大きさをそろえる倍率(0〜1)。曲を入れたら、平均の大きさを測って、ここに書く。書かないと、そのままの大きさ。
+// 測り方:曲を読みこんで、平均の大きさ(RMS)を出し、つまみ100のとき、すべての曲が同じ大きさ(例 -19 dB)になるようにする。
 const BGM_GAIN = {
-  "bgm-swan-lake.mp3": 0.53,
-  "bgm-ticketless.mp3": 0.39,
-  "bgm-slime-time.mp3": 0.5,
+  // "bgm-cover.mp3": 0.5,
 };
 
 // 効果音。boost は、小さい音をもち上げる倍率(ピークが 0 dB をこえない範囲)。
