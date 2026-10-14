@@ -736,3 +736,44 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
   48% { transform: translateY(0) rotate(0deg); }
 }
 @media (prefers-reduced-motion: reduce) { #screen-cover.is-lively .hero-fig { animation: none; } }
+
+/* バッジを、背景に */
+.badge-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.badge-bg span { position: absolute; opacity: 0.34; animation: badgeFloat 7s ease-in-out infinite alternate; }
+@keyframes badgeFloat { from { transform: translateY(0) rotate(var(--rot, 0deg)); } to { transform: translateY(-14px) rotate(calc(var(--rot, 0deg) + 8deg)); } }
+.app { position: relative; z-index: 1; }
+@media (prefers-reduced-motion: reduce) { .badge-bg span { animation: none; } }
+
+/* 設定のフロリ */
+.settings-head { display: flex; align-items: center; gap: 12px; width: min(660px, 100%); justify-content: center; }
+.flori-tiny { height: clamp(64px, 12vh, 96px); width: auto; }
+.settings-head .bubble { padding: 6px 14px; font-size: 16px; line-height: 1.5; }
+
+/* 結果発表:1画面に収まるように */
+#screen-result { gap: 8px; padding: 14px 14px 16px; }
+#screen-result .title { font-size: clamp(24px, 4.6vh, 34px); }
+#screen-result .flori-cover { width: auto; height: clamp(96px, 19vh, 168px); }
+#screen-result .bubble { padding: 6px 16px; line-height: 1.5; }
+#screen-result .scores { grid-template-columns: repeat(3, 1fr); width: min(560px, 100%); gap: 6px; }
+#screen-result .scores div { flex-direction: column; align-items: center; gap: 0; padding: 4px 8px; }
+#screen-result .scores dt { font-size: 13px; line-height: 1.3; }
+#screen-result .scores dd { font-size: 18px; line-height: 1.3; }
+#screen-result .note { margin: 0; line-height: 1.5; }
+#screen-result .record, #screen-result .reward-news, #screen-result .badge-news { padding: 4px 14px; line-height: 1.5; }
+
+/* 解説の前に、フロリの顔を見せる */
+.stage .flori { transition: transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.stage .flori.is-react { transform: scale(1.45); position: relative; z-index: 2; }
+.q-detail { display: grid; gap: 12px; justify-items: center; width: 100%; animation: pop-in 0.35s ease-out; }
+.timer.is-paused .timer-bar { background: repeating-linear-gradient(45deg, #b9c6cf, #b9c6cf 8px, #dfe8ee 8px, #dfe8ee 16px); }
+@media (prefers-reduced-motion: reduce) { .stage .flori.is-react { transform: none; } }
+:root[data-theme="comet"] { --bg: linear-gradient(160deg, #1b2350, #3b2a6e); --blue: #b48cf0; --blue-dark: #6a4fc0; }
+.dress-item { border-width: 3px; }
+
+/* きせかえ:項目が多くても、1画面に収まるように */
+#screen-dress .hero-small { width: min(clamp(72px, 12vh, 104px), 50%); }
+#screen-dress .dress-list { gap: 3px 5px; }
+#screen-dress .dress-item { padding: 0 8px; font-size: 13px; line-height: 1.55; }
+#screen-dress .dress-item.is-locked { opacity: 0.55; border-style: dashed; }
+#screen-dress .dress-title { margin: 0; font-size: 15px; line-height: 1.4; }
+#screen-dress { gap: 5px; }

@@ -39,7 +39,7 @@ import {
   recordRound,
   recordVersus,
 } from "./storage.js";
-import { BADGES, COLORS, HATS, THEMES, TITLES, badgeName, earnedBadges, isOpen, loadDress, lockText, saveDress, titleFor } from "./badges.js";
+import { BADGES, COLORS, HATS, THEMES, TITLES, badgeName, earnedBadges, isOpen, loadDress, lockText, saveDress, starTitleFor, STAR_TITLES, titleFor } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { setFloriColor } from "./flori-color.js";
 import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
@@ -96,6 +96,7 @@ function show(name) {
   if (name !== "question") {
     stopTimer();
     stopSpeaking();
+    clearTimeout(detailTimer);
   }
   setScene(sceneOf(name));
   window.scrollTo(0, 0);
@@ -203,7 +204,8 @@ function announce(text, jingle, then, image) {
 function refreshCover() {
   if (playableQuestions.length === 0) return;
   const stats = loadStats();
-  $("cover-title").textContent = `称号:${titleFor(currentTotal(stats))}`;
+  const starTitle = starTitleFor(stats.stars);
+  $("cover-title").textContent = `称号:${titleFor(currentTotal(stats))}${starTitle ? `  ☆${starTitle}` : ""}`;
   const today = dateKey();
   const dailyDone = stats.dailyLast === today;
   $("btn-daily").querySelector(".tile-label").textContent = "毎日1問";
@@ -268,6 +270,8 @@ function showQuestion() {
         : versus
           ? `${play.round}回戦 ${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} ${VERSUS_LEVEL_WORDS[play.round]}・正解で${play.round}点(${versusPlayers}人)` : `難しさ ${"★".repeat(question.level)}${"☆".repeat(Math.max(0, MAX_LEVEL - question.level))}`;
   $("q-text").textContent = question.text;
+  clearTimeout(detailTimer);
+  $("q-flori").classList.remove("is-react");
   $("q-feedback").hidden = true;
 
   const message = $("q-message");
@@ -313,7 +317,8 @@ function renderTimer() {
   const bar = $("q-timer-bar");
   bar.style.width = `${Math.max(0, (timerLeft / TIMED_SECONDS) * 100)}%`;
   bar.classList.toggle("is-low", timerLeft <= 5);
-  $("q-timer-text").textContent = `${Math.ceil(Math.max(0, timerLeft))}秒`;
+  $("q-timer-text").textContent = speaking ? "読み上げ中" : `${Math.ceil(Math.max(0, timerLeft))}秒`;
+  $("q-timer").classList.toggle("is-paused", speaking);
 }
 
 function startTimer() {
@@ -323,6 +328,11 @@ function startTimer() {
   renderTimer();
   timerId = setInterval(() => {
     if ($("dlg-quit").open || $("dlg-volume").open) return; // 設定やめるの確認を開いている間は、とめる
+    if (speaking) {
+      // 読み上げが終わるまで、とめる(終わりの知らせが来ないときの、ほけんつき)
+      if (Date.now() - speakingSince > 1500 && !speechSynthesis.speaking && !speechSynthesis.pending) setSpeaking(false);
+      else return;
+    }
     timerLeft -= 0.1;
     renderTimer();
     if (timerLeft <= 0) {
@@ -353,8 +363,16 @@ function setReadAloud(on) {
   }
 }
 const canSpeak = "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
+let speaking = false; // 読み上げている間は、制限時間を止める
+let speakingSince = 0;
+function setSpeaking(on) {
+  speaking = on;
+  speakingSince = Date.now();
+  if (timerId) renderTimer();
+}
 function stopSpeaking() {
   if (canSpeak) speechSynthesis.cancel();
+  setSpeaking(false);
 }
 function speak(text) {
   if (!canSpeak) return;
@@ -363,6 +381,9 @@ function speak(text) {
   const voice = new SpeechSynthesisUtterance(readingOf(text).replace(/□/g, "なにか").replace(/\n/g, "。"));
   voice.lang = "ja-JP";
   voice.rate = 1.6;
+  voice.onend = () => setSpeaking(false);
+  voice.onerror = () => setSpeaking(false);
+  setSpeaking(true);
   speechSynthesis.speak(voice);
 }
 function readableQuestion(question) {
@@ -427,10 +448,24 @@ function answer(response) {
   const rightText = renderers[current.type].correctText(current);
   $("q-explanation").textContent = `正解は「${rightText}」\n${current.explanation}`;
   $("btn-next").textContent = play.roundFinished ? "結果を見る" : "次へ";
+  // まず、フロリの顔を、大きく見せる。解説と「次へ」は、少したってから出す。
+  $("q-detail").hidden = true;
+  $("q-flori").classList.add("is-react");
   $("q-feedback").hidden = false;
+  $("q-feedback").scrollIntoView({ block: "nearest", behavior: "smooth" });
+  clearTimeout(detailTimer);
+  detailTimer = setTimeout(revealDetail, REVEAL_MS);
+}
+
+const REVEAL_MS = 1500; // フロリの顔を見せる時間
+let detailTimer = 0;
+function revealDetail() {
+  clearTimeout(detailTimer);
+  $("q-flori").classList.remove("is-react");
+  $("q-detail").hidden = false;
   // 次へのボタンに移るとき、画面が勝手に下までスクロールして、正解・不正解の表示が見えなくならないようにする。
   $("btn-next").focus({ preventScroll: true });
-  $("q-feedback").scrollIntoView({ block: "nearest", behavior: "smooth" });
+  $("q-detail").scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 // 総合得点(100点満点)を、保存した記録から数える。いまある問題だけを数える(問題が増えても、満点は100点のまま)。
@@ -690,17 +725,29 @@ function persistCourse() {
   saveCourse({ counter: session.counter, used: [...session.used].map((id) => idToUid.get(id)).filter(Boolean) });
 }
 $("btn-continue").addEventListener("click", () => chooseTime("normal"));
+// 「最初から」:データが消えるので、本当にいいか、聞く
+let restartAction = null;
+function askRestart(action) {
+  restartAction = action;
+  $("dlg-restart").showModal();
+}
 $("btn-start").addEventListener("click", () => {
-  if (hasCourse()) $("dlg-restart").showModal(); // つづきの記録が消えるので、警告する
-  else chooseTime("normal");
+  if (!hasCourse()) {
+    chooseTime("normal");
+    return;
+  }
+  askRestart(() => {
+    resetCourse();
+    session = new Session(normalQuestions);
+    refreshCover();
+    chooseTime("normal");
+  });
 });
 $("btn-restart-no").addEventListener("click", () => $("dlg-restart").close());
 $("btn-restart-yes").addEventListener("click", () => {
   $("dlg-restart").close();
-  resetCourse();
-  session = new Session(normalQuestions);
-  refreshCover();
-  chooseTime("normal");
+  restartAction?.();
+  restartAction = null;
 });
 // 難しいモードの「つづきから」と「最初から」(もう出した問題を、おぼえておく)
 function persistHard() {
@@ -720,10 +767,12 @@ $("btn-hard-continue").addEventListener("click", () => {
 });
 $("btn-hard-new").addEventListener("click", () => {
   $("dlg-hard").close();
-  hardUsed.clear();
-  resetHardCourse();
-  refreshCover();
-  chooseTime("hard");
+  askRestart(() => {
+    hardUsed.clear();
+    resetHardCourse();
+    refreshCover();
+    chooseTime("hard");
+  });
 });
 $("btn-hard-cancel").addEventListener("click", () => $("dlg-hard").close());
 $("btn-daily").addEventListener("click", () => {
@@ -840,6 +889,7 @@ async function init() {
     oniIds = new Set(oniQuestions.map((q) => q.uid ?? q.id));
     playableQuestions = [...normal, ...hardQuestions];
     allQuestions = questions;
+    renderBadgeBackground();
     pruneStats(new Set([...normalIds, ...hardIds, ...oniIds])); // 古い番号の記録を、取りのぞく
     for (const q of normal) idToUid.set(q.id, q.uid ?? q.id);
     for (const q of hardQuestions) idToUid.set(q.id, q.uid ?? q.id);
@@ -887,8 +937,34 @@ function awardBadges() {
   const stats = loadStats();
   const earned = earnedBadges(badgeContext(stats));
   const fresh = earned.filter((id) => !stats.badges.includes(id));
-  if (fresh.length) recordBadges([...stats.badges, ...fresh]);
+  if (fresh.length) {
+    recordBadges([...stats.badges, ...fresh]);
+    renderBadgeBackground();
+  }
   return fresh;
+}
+
+// もらったバッジを、背景に、うっすらとちらす(ふんわり動く)
+function renderBadgeBackground() {
+  const have = loadStats().badges;
+  const layer = $("badge-bg");
+  layer.replaceChildren(
+    ...have.flatMap((id, index) => {
+      const badge = BADGES.find((item) => item.id === id);
+      if (!badge) return [];
+      return [0, 1].map((copy) => {
+        const span = document.createElement("span");
+        const n = index * 2 + copy;
+        span.textContent = badge.icon;
+        span.style.left = `${(n * 61.8 + 7) % 96}%`;
+        span.style.top = `${(n * 38.2 + (copy ? 41 : 9)) % 92}%`;
+        span.style.fontSize = `${30 + ((n * 7) % 22)}px`;
+        span.style.setProperty("--rot", `${((n * 29) % 50) - 25}deg`);
+        span.style.animationDelay = `${(n % 7) * -0.9}s`;
+        return span;
+      });
+    }),
+  );
 }
 
 function announceBadges(element) {
@@ -930,7 +1006,17 @@ function showBadges() {
     ...[...TITLES].reverse().map((title) => {
       const item = document.createElement("li");
       item.className = title.name === now ? "is-now" : total >= title.min ? "" : "locked";
-      item.textContent = `${title.min}点〜  ${title.name}${title.name === now ? "  ← いま" : ""}`;
+      item.textContent = `${title.min}点〜  ${title.name}`;
+      return item;
+    }),
+  );
+  // ☆の称号:ごほうびの星の数で、きまる
+  const starNow = starTitleFor(stats.stars);
+  $("star-title-list").replaceChildren(
+    ...[...STAR_TITLES].reverse().map((title) => {
+      const item = document.createElement("li");
+      item.className = title.name === starNow ? "is-now" : stats.stars >= title.min ? "" : "locked";
+      item.textContent = `☆ ${title.min}こ〜  ${title.name}`;
       return item;
     }),
   );
@@ -1010,7 +1096,9 @@ function showDress() {
       const button = document.createElement("button");
       button.type = "button";
       button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}${open ? "" : " is-locked"}`;
-      button.textContent = `${open ? "" : "🔒 "}${choice.icon ?? ""} ${choice.name}`.trim();
+      button.textContent = `${choice.icon ?? ""} ${choice.name}`.trim();
+      button.style.borderColor = choice.tint; // 縁を、その色に
+      if (dress[kind] === choice.id) button.style.backgroundColor = `color-mix(in srgb, ${choice.tint} 35%, white)`;
       button.addEventListener("click", () => {
         if (!open) {
           // まだ使えないもの:もらいかたを、知らせる

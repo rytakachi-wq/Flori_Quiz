@@ -27,7 +27,9 @@ export const BADGES = [
   { id: "timed1", icon: "⏱️", name: "スピードチャレンジ", text: "制限時間をつけて、1回遊んだ", test: (c) => c.stats.timedPlays >= 1 },
   { id: "timedPerfect", icon: "⚡", name: "はやわざ名人", text: "制限時間をつけて、全問正解した", test: (c) => c.stats.timedPerfect >= 1 },
   { id: "garden", icon: "🌸", name: "お花畑のたつじん", text: "お花畑を、完成させた", test: (c) => c.stats.gardenClears >= 1 },
+  { id: "stars10", icon: "☆", name: "ほしひろい", text: "制限時間のごほうびの星を、10こ集めた", test: (c) => c.stats.stars >= 10 },
   { id: "stars30", icon: "⭐", name: "ほしあつめ", text: "制限時間のごほうびの星を、30こ集めた", test: (c) => c.stats.stars >= 30 },
+  { id: "stars100", icon: "🌟", name: "ほしの王様", text: "制限時間のごほうびの星を、100こ集めた", test: (c) => c.stats.stars >= 100 },
   { id: "total50", icon: "⭐", name: "総合得点50点", text: "総合得点が、50点になった", test: (c) => c.total >= 50 },
   { id: "total100", icon: "🌟", name: "総合得点100点", text: "総合得点が、100点になった", test: (c) => c.total >= 100 },
 ];
@@ -42,6 +44,18 @@ export const TITLES = [
   { min: 0, name: "ひらめきのたまご" },
 ];
 
+// ☆の称号:ごほうびの星の数で、きまる(10こから)
+export const STAR_TITLES = [
+  { min: 100, name: "ほしの王様" },
+  { min: 60, name: "ほしのまほうつかい" },
+  { min: 30, name: "ほしあつめ名人" },
+  { min: 10, name: "ほしひろい" },
+];
+
+export function starTitleFor(stars) {
+  return STAR_TITLES.find((title) => stars >= title.min)?.name ?? "";
+}
+
 export function titleFor(total) {
   return TITLES.find((title) => total >= title.min).name;
 }
@@ -53,25 +67,28 @@ export function earnedBadges(ctx) {
 
 // きせかえ(かざり)と背景。unlock は、必要なバッジの id(null なら、はじめから使える)
 export const HATS = [
-  { id: "none", icon: "", name: "なし", unlock: null },
-  { id: "ribbon", icon: "🎀", name: "リボン", unlock: "first" },
-  { id: "cap", icon: "🧢", name: "ぼうし", unlock: "play10" },
-  { id: "sakura", icon: "🌸", name: "さくら", unlock: "garden" },
-  { id: "grad", icon: "🎓", name: "はかせぼうし", unlock: "perfect" },
-  { id: "crown", icon: "👑", name: "おうかん", unlock: "total50" },
-  { id: "devil", icon: "😈", name: "オニのつの", unlock: "oni1" },
-  { id: "star", icon: "🌟", name: "ほしのかざり", unlock: { stars: 10 } },
-  { id: "gem", icon: "💎", name: "ほうせき", unlock: { stars: 30 } },
+  { id: "none", icon: "", name: "なし", tint: "#46555e", unlock: null },
+  { id: "ribbon", icon: "🎀", name: "リボン", tint: "#d8455c", unlock: "first" },
+  { id: "cap", icon: "🧢", name: "ぼうし", tint: "#4a78d8", unlock: "play10" },
+  { id: "sakura", icon: "🌸", name: "さくら", tint: "#f0809e", unlock: "garden" },
+  { id: "grad", icon: "🎓", name: "はかせぼうし", tint: "#3a3a5c", unlock: "perfect" },
+  { id: "crown", icon: "👑", name: "おうかん", tint: "#e0a020", unlock: "total50" },
+  { id: "devil", icon: "😈", name: "オニのつの", tint: "#8a4fc7", unlock: "oni1" },
+  { id: "starpin", icon: "⭐", name: "スターバッジ", tint: "#f0c030", unlock: { stars: 5 } },
+  { id: "star", icon: "🌟", name: "ほしのかざり", tint: "#f2b61e", unlock: { stars: 10 } },
+  { id: "gem", icon: "💎", name: "ほうせき", tint: "#3fb5d8", unlock: { stars: 30 } },
+  { id: "comet", icon: "☄️", name: "ながれぼし", tint: "#7a8ef0", unlock: { stars: 50 } },
 ];
 
 export const THEMES = [
-  { id: "sky", name: "あおぞら", unlock: null },
-  { id: "sakura", name: "さくら", unlock: "garden" },
-  { id: "forest", name: "もり", unlock: "right20" },
-  { id: "sunset", name: "ゆうやけ", unlock: "streak3" },
-  { id: "night", name: "よぞら", unlock: "oni1" },
-  { id: "rainbow", name: "にじ", unlock: "total100" },
-  { id: "starry", name: "ほしぞら", unlock: { stars: 20 } },
+  { id: "sky", name: "あおぞら", tint: "#7ec3e0", unlock: null },
+  { id: "sakura", name: "さくら", tint: "#f0a8bd", unlock: "garden" },
+  { id: "forest", name: "もり", tint: "#9fd49a", unlock: "right20" },
+  { id: "sunset", name: "ゆうやけ", tint: "#f4b072", unlock: "streak3" },
+  { id: "night", name: "よぞら", tint: "#8c9bd4", unlock: "oni1" },
+  { id: "rainbow", name: "にじ", tint: "#c9a8f0", unlock: "total100" },
+  { id: "starry", name: "ほしぞら", tint: "#9aa6e8", unlock: { stars: 20 } },
+  { id: "comet", name: "ながれぼし", tint: "#b48cf0", unlock: { stars: 50 } },
 ];
 
 // きせかえが使えるか(unlock:バッジの id、または { stars: 必要な星の数 }、または null)
@@ -94,19 +111,20 @@ export function badgeName(id) {
 // フロリの色(体の水色の部分だけ、色あいをかえる。目・ほお・口・線は、そのまま。flori-color.js)
 // hue:色あい(0〜360)  gain:もとの色のこさを何倍にするか  minSat:いちばん薄い所でも、これだけは色をつける  gray:灰色
 export const COLORS = [
-  { id: "original", name: "もとの色", original: true, unlock: null },
-  { id: "pink", name: "ピンク", hue: 338, gain: 2.6, minSat: 0.65, unlock: "first" },
-  { id: "green", name: "みどり", hue: 130, gain: 2.4, minSat: 0.5, unlock: "right10" },
-  { id: "yellow", name: "きいろ", hue: 50, gain: 3, minSat: 0.85, unlock: "play10" },
-  { id: "purple", name: "むらさき", hue: 272, gain: 2.2, minSat: 0.5, unlock: "perfect" },
-  { id: "orange", name: "オレンジ", hue: 28, gain: 3, minSat: 0.9, unlock: "streak3" },
-  { id: "red", name: "あか", hue: 2, gain: 3, minSat: 0.8, unlock: "right20" },
-  { id: "mint", name: "ミント", hue: 165, gain: 2.2, minSat: 0.5, unlock: "versus1" },
-  { id: "lime", name: "きみどり", hue: 85, gain: 2.6, minSat: 0.7, unlock: "review" },
-  { id: "lavender", name: "ラベンダー", hue: 255, gain: 1.8, minSat: 0.45, unlock: "dex10" },
-  { id: "peach", name: "もも", hue: 18, gain: 2.4, minSat: 0.7, unlock: "timed1" },
-  { id: "gray", name: "はいいろ", gray: true, unlock: "perfect5" },
-  { id: "gold", name: "きん", hue: 42, gain: 3, minSat: 0.9, unlock: "total50" },
+  { id: "original", name: "もとの色", original: true, tint: "#46555e", unlock: null },
+  { id: "pink", name: "ピンク", hue: 338, gain: 2.6, minSat: 0.65, tint: "#e0709c", unlock: "first" },
+  { id: "green", name: "みどり", hue: 130, gain: 2.4, minSat: 0.5, tint: "#4fae6a", unlock: "right10" },
+  { id: "yellow", name: "きいろ", hue: 50, gain: 3, minSat: 0.85, tint: "#e0b920", unlock: "play10" },
+  { id: "purple", name: "むらさき", hue: 272, gain: 2.2, minSat: 0.5, tint: "#9a6ad0", unlock: "perfect" },
+  { id: "orange", name: "オレンジ", hue: 28, gain: 3, minSat: 0.9, tint: "#ec8a3a", unlock: "streak3" },
+  { id: "red", name: "あか", hue: 2, gain: 3, minSat: 0.8, tint: "#d8504a", unlock: "right20" },
+  { id: "mint", name: "ミント", hue: 165, gain: 2.2, minSat: 0.5, tint: "#3fb89a", unlock: "versus1" },
+  { id: "lime", name: "きみどり", hue: 85, gain: 2.6, minSat: 0.7, tint: "#98c534", unlock: "review" },
+  { id: "lavender", name: "ラベンダー", hue: 255, gain: 1.8, minSat: 0.45, tint: "#8c84dc", unlock: "dex10" },
+  { id: "peach", name: "もも", hue: 18, gain: 2.4, minSat: 0.7, tint: "#f09a80", unlock: "timed1" },
+  { id: "gray", name: "はいいろ", gray: true, tint: "#8a8f94", unlock: "perfect5" },
+  { id: "gold", name: "きん", hue: 42, gain: 3, minSat: 0.9, tint: "#d9a21c", unlock: "total50" },
+  { id: "starcolor", name: "ほしいろ", hue: 52, gain: 3, minSat: 0.75, tint: "#f0c828", unlock: { stars: 50 } },
 ];
 
 const DEFAULT_DRESS = { hat: "none", theme: "sky", color: "original" };

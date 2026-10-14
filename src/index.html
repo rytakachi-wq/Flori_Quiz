@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="badge-bg" class="badge-bg" aria-hidden="true"></div>
   <div id="opening" class="overlay opening" role="button" tabindex="0" aria-label="画面をさわって、スタート">
     <div class="confetti" aria-hidden="true"><span>⭐</span><span>✨</span><span>🎈</span><span>🌸</span><span>💡</span><span>⭐</span><span>🎈</span><span>✨</span><span>🌸</span><span>💡</span></div>
     <img class="logo" src="../assets/flori/src/logo.png" alt="フロリ">
@@ -74,6 +75,9 @@
       <h3 class="dress-title">称号一覧</h3>
       <p class="note">総合得点で、称号が変わるヨ。</p>
       <ul id="title-list" class="title-list"></ul>
+      <h3 class="dress-title">☆の称号</h3>
+      <p class="note">制限時間のごほうびの星の数で、☆の称号が変わるヨ。</p>
+      <ul id="star-title-list" class="title-list"></ul>
       <button id="btn-badges-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
@@ -174,6 +178,10 @@
     <!-- せってい -->
     <section id="screen-settings" class="screen" aria-label="設定" hidden>
       <h2 class="title">設定</h2>
+      <div class="settings-head">
+        <img class="flori flori-tiny" src="../assets/flori/src/pc_form.png" alt="パソコンに変形したフロリ">
+        <p class="bubble">音や文字の大きさを、変えられるヨ!</p>
+      </div>
       <div class="settings-grid">
         <fieldset class="setting-box">
           <legend>音の大きさ</legend>
@@ -242,8 +250,10 @@
       <ol id="q-choices" class="choices"></ol>
       <div id="q-feedback" class="feedback" hidden>
         <p id="q-verdict" class="verdict"></p>
-        <p id="q-explanation" class="explanation"></p>
-        <button id="btn-next" class="btn btn-main" type="button"></button>
+        <div id="q-detail" class="q-detail" hidden>
+          <p id="q-explanation" class="explanation"></p>
+          <button id="btn-next" class="btn btn-main" type="button"></button>
+        </div>
       </div>
     </section>
 
@@ -292,22 +302,14 @@
     </div>
   </dialog>
   <dialog id="dlg-restart" class="dialog" aria-labelledby="dlg-restart-text">
-    <p id="dlg-restart-text">最初から、はじめる?</p>
-    <ul class="restart-list">
-      <li class="lose"><b>消えるもの</b>「つづきから」の記録(いまの難しさ・何回目か・もう出した問題)</li>
-      <li class="keep"><b>のこるもの</b>成績・総合得点・バッジ・図鑑・きせかえ</li>
-    </ul>
+    <p id="dlg-restart-text">最初からにすると、データが消えるけど、本当にいいですか?</p>
     <div class="buttons buttons-choice">
       <button id="btn-restart-no" class="btn btn-main btn-big" type="button">やめる</button>
-      <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">最初から、はじめる</button>
+      <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">はい、最初から</button>
     </div>
   </dialog>
   <dialog id="dlg-hard" class="dialog" aria-labelledby="dlg-hard-text">
     <p id="dlg-hard-text">難しいモード<br><span id="dlg-hard-progress"></span></p>
-    <ul class="restart-list">
-      <li class="lose"><b>「最初から」で消えるもの</b>もう出した問題の記録(また、はじめから出る)</li>
-      <li class="keep"><b>のこるもの</b>成績・総合得点・バッジ・図鑑・きせかえ</li>
-    </ul>
     <div class="buttons buttons-choice">
       <button id="btn-hard-continue" class="btn btn-main btn-big" type="button">つづきから</button>
       <button id="btn-hard-new" class="btn btn-plain btn-small" type="button">最初から</button>
