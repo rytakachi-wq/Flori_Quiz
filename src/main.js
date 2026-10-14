@@ -39,8 +39,7 @@ let versusPlayers = 2; // みんなで対戦する人数
 function sceneOf(name) {
   if (name === "question") return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
   if (name === "relax") return "relax";
-  if (name === "result") return "result";
-  return name === "error" ? null : "cover";
+  return null; // 表紙・成績・設定・結果などでは、BGMを鳴らさない
 }
 
 function show(name) {
@@ -425,13 +424,14 @@ let gardenSize = 3;
 function startGarden(size = gardenSize) {
   gardenSize = size;
   $("garden-message").textContent = "花をおして、全部を満開にしよう。";
+  $("garden-hint").hidden = true;
   garden = new GardenUI($("garden"), {
     size,
     onChange: ({ bloomed, total, moves }) => {
-      if (moves > 0) $("garden-message").textContent = `満開 ${bloomed} / ${total} ・ ${moves}回`;
+      if (moves > 0) $("garden-message").textContent = `桜の木 ${bloomed} / ${total} ・ ${moves}回`;
     },
     onSolved: (moves) => {
-      $("garden-message").textContent = `全部、満開!${moves}回で完成したヨ。すごいネ!`;
+      $("garden-message").textContent = `全部、桜の木になったヨ!${moves}回で完成。すごいネ!`;
       playSe("correct");
     },
   });
@@ -440,6 +440,10 @@ function startGarden(size = gardenSize) {
 
 $("btn-relax").addEventListener("click", () => startGarden());
 $("btn-relax-back").addEventListener("click", () => show("cover"));
+$("btn-garden-hint").addEventListener("click", () => {
+  $("garden-hint").hidden = false;
+  garden?.hint();
+});
 $("btn-garden-again").addEventListener("click", () => startGarden());
 for (const button of document.querySelectorAll("[data-garden]")) {
   button.addEventListener("click", () => startGarden(Number(button.dataset.garden)));

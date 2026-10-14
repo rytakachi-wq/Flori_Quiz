@@ -50,10 +50,11 @@
       <h2 class="title">お花畑</h2>
       <p id="garden-message" class="bubble"></p>
       <div id="garden"></div>
-      <p class="note">花をおすと、その花と上下左右の花に水がかかって、1段階育つヨ。全部の花を満開(🌸)にしよう。</p>
+      <p id="garden-hint" class="note" hidden>ヒント:木をおすと、その木と上下左右の木が1段階育つヨ(🌱芽→🪵株→🌳木→🌸桜の木→芽…)。全部を桜の木にしよう。光っている所を、おしてみよう。</p>
       <div class="buttons">
         <button class="btn btn-main" type="button" data-garden="3">易しい(3×3)</button>
         <button class="btn btn-main" type="button" data-garden="4">普通(4×4)</button>
+        <button id="btn-garden-hint" class="btn btn-sub" type="button">ヒント</button>
         <button id="btn-garden-again" class="btn btn-sub" type="button">もう一度</button>
         <button id="btn-relax-back" class="btn btn-sub" type="button">戻る</button>
       </div>

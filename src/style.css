@@ -358,9 +358,10 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
   border-radius: 14px;
   cursor: pointer;
 }
-.garden .flower.stage-2 { background: #fff0f4; border-color: var(--pink); }
+.garden .flower.stage-3 { background: #fff0f4; border-color: var(--pink); }
 .garden .flower:hover:not(:disabled) { filter: brightness(0.96); }
 .garden .flower:focus-visible { outline: 4px solid var(--green); outline-offset: 2px; }
+.garden .flower.is-hint { box-shadow: 0 0 0 4px var(--green), 0 0 14px 4px var(--green); }
 .garden .flower:disabled { cursor: default; }
 .garden.is-solved { background: #fff0f4; }
 
