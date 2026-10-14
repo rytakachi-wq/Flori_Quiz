@@ -375,3 +375,24 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 .puzzle-board .tile:focus-visible { outline: 4px solid var(--green); outline-offset: -4px; }
 .puzzle-board.is-solved { gap: 0; }
 .puzzle-board.is-solved .tile { border-radius: 0; opacity: 1; }
+
+/* リラックス:あそびの選びかた */
+.game-choices { display: grid; gap: 12px; width: min(520px, 100%); }
+.game-choice { padding: 10px 16px 14px; background: var(--body); border-radius: 16px; text-align: center; }
+.game-choice h3 { margin: 0; color: var(--blue-dark); }
+.game-choice .note { margin: 2px 0 8px; }
+
+/* 落ちものパズル */
+.game-wrap { display: flex; gap: 16px; align-items: flex-start; justify-content: center; }
+#game-canvas {
+  height: min(540px, 60vh);
+  width: auto;
+  background: #f3f9fc;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+}
+.game-side { text-align: center; }
+.game-side .note { margin: 0 0 4px; }
+#game-next { width: 64px; height: 64px; background: #f3f9fc; border: 2px solid var(--blue); border-radius: 10px; }
+.pad { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.pad .btn { min-width: 72px; padding: 8px 18px; }

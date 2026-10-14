@@ -123,7 +123,7 @@ export class Session {
     const correct = judge(question, response);
     this.used.add(question.id);
     this.roundUsed.push(question.id);
-    this.roundAnswers.push({ id: question.id, correct });
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct }); // 成績には、番号がかわっても変わらない uid で、記録する
     this.asked += 1;
     if (correct) this.correct += 1;
     this.counter = Math.max(0, this.counter + (correct ? 1 : -1));
@@ -165,7 +165,7 @@ export class OniRound {
 
   answer(question, response) {
     const correct = judge(question, response);
-    this.roundAnswers.push({ id: question.id, correct });
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct }); // 成績には、番号がかわっても変わらない uid で、記録する
     this.asked += 1;
     if (correct) this.correct += 1;
     return correct;
@@ -219,7 +219,7 @@ export class HardRound {
 
   answer(question, response) {
     const correct = judge(question, response);
-    this.roundAnswers.push({ id: question.id, correct });
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct }); // 成績には、番号がかわっても変わらない uid で、記録する
     this.asked += 1;
     if (correct) this.correct += 1;
     return correct;

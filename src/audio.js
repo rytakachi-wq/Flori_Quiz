@@ -1,24 +1,27 @@
-// BGM と効果音。大きさは、せっていで変えられる(端末内に保存。個人情報ではない)。
+// BGM と効果音。大きさは、設定で変えられる(端末内に保存。個人情報ではない)。
 // ブラウザの決まりで、画面を1回さわるまでは、音を出せない。
+//
+// BGMは、このゲームのために作ったオリジナルの曲を、ブラウザの中で演奏する(music.js)。曲のファイルはない。
+
+import { MusicPlayer } from "./music.js";
 
 const BASE = "../assets/audio/";
 const SETTINGS_KEY = "floriQuiz.settings.v2";
 
-// 場面ごとのBGM。音楽を入れるときは、ここにファイル名を書く(assets/audio/ に置く)。
-// 場面:cover(表紙・せいせき・せってい)、question(ふつうの問題)、hard(難しいモード)、versus(みんなで対戦)、
+// 場面ごとのBGM(曲の名前は、music.js の TRACKS)。
+// 場面:cover(表紙・成績・設定)、question(ふつうの問題)、hard(難しいモード)、versus(みんなで対戦)、
 //      relax(リラックス)、oni(オニ問題)、result(結果)
-// いまは、曲の差しかえ中(前の曲は、利用条件の問題で外した)。書いていない場面は、BGMが流れない。
 const BGM = {
-  // cover: "bgm-cover.mp3",
+  cover: "cover",
+  question: "question",
+  hard: "question",
+  versus: "cover",
+  relax: "relax",
+  oni: "oni",
+  result: "result",
 };
 
-// 曲ごとの音の大きさをそろえる倍率(0〜1)。曲を入れたら、平均の大きさを測って、ここに書く。書かないと、そのままの大きさ。
-// 測り方:曲を読みこんで、平均の大きさ(RMS)を出し、つまみ100のとき、すべての曲が同じ大きさ(例 -19 dB)になるようにする。
-const BGM_GAIN = {
-  // "bgm-cover.mp3": 0.5,
-};
-
-// 効果音。boost は、小さい音をもち上げる倍率(ピークが 0 dB をこえない範囲)。
+// 効果音(ファイル)。boost は、小さい音をもち上げる倍率(ピークが 0 dB をこえない範囲)。
 const SE = {
   button: { file: "se-button.mp3", boost: 2.4 }, // ボタンをおしたとき
   correct: { file: "se-chime.mp3", boost: 1 }, // せいかい
@@ -49,32 +52,16 @@ try {
   // 読めなければ、はじめの大きさにする。
 }
 
-const bgm = new Audio();
-bgm.loop = true;
-bgm.preload = "none";
-
 let scene = null;
 let unlocked = false;
-let currentFile = "";
+let context = null;
+let music = null;
+const buffers = {};
 
 function applyBgm() {
-  const file = BGM[scene];
-  if (!file) {
-    bgm.pause();
-    return;
-  }
-  // 0のときも止めずに、音量だけを0にする(止めると、つまみを動かすたびに止めたり流したりして、流れなくなることがある)
-  bgm.volume = curve(volumes.bgm) * (BGM_GAIN[file] ?? 1);
-  if (file !== currentFile) {
-    currentFile = file;
-    bgm.src = BASE + file; // 同じ曲のままなら、つづきから流す
-  }
-  if (unlocked && bgm.paused) {
-    bgm.play().catch((error) => {
-      // ブラウザに止められたときは、次に画面をさわったときに、もう一度ためす。
-      console.warn("BGMを流せませんでした:", error.name);
-    });
-  }
+  if (!music) return;
+  music.setVolume(curve(volumes.bgm)); // 0のときも止めずに、音量だけを0にする
+  music.play(BGM[scene] ?? null);
 }
 
 // 場面が変わったら、その場面のBGMにする。
@@ -83,14 +70,14 @@ export function setScene(name) {
   applyBgm();
 }
 
+// 音を出す準備。画面をさわったときに、1回だけ行う(ブラウザの決まり)。
 // 効果音は、小さい音をもち上げるため、WebAudio で鳴らす(使えないときは、ふつうの再生)。
-let context = null;
-const buffers = {};
-
-async function prepareSe() {
+async function prepare() {
   if (context || !window.AudioContext) return;
   try {
     context = new AudioContext();
+    music = new MusicPlayer(context);
+    applyBgm();
     await Promise.all(
       Object.entries(SE).map(async ([name, { file }]) => {
         const data = await (await fetch(BASE + file)).arrayBuffer();
@@ -98,17 +85,16 @@ async function prepareSe() {
       }),
     );
   } catch (error) {
-    console.warn("効果音の準備に失敗しました:", error.name);
+    console.warn("音の準備に失敗しました:", error.name);
   }
 }
 
 // 画面をさわるたびに呼ぶ。はじめてさわったときから、音が出せる。
-// BGMが止まっているときは、ここで流しなおす(ブラウザに止められていた場合など)。
+// ブラウザに止められていたときは、ここで動かしなおす。
 export function unlock() {
   unlocked = true;
-  if (!context) prepareSe();
+  if (!context) prepare();
   else if (context.state === "suspended") context.resume();
-  applyBgm();
 }
 
 export function playSe(name) {
@@ -124,6 +110,7 @@ export function playSe(name) {
     source.start();
     return;
   }
+  if (!unlocked) return;
   const sound = new Audio(BASE + se.file);
   sound.volume = Math.min(1, level);
   sound.play().catch(() => {});

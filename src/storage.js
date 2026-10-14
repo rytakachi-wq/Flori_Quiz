@@ -106,3 +106,13 @@ export function recordVersus() {
   stats.versusPlays += 1;
   save(stats);
 }
+
+// 記録の中から、いまの問題にない番号(古い形式の番号や、なくなった問題)を取りのぞく。
+export function pruneStats(validIds) {
+  const stats = loadStats();
+  const keep = (list) => list.filter((id) => validIds.has(id));
+  const next = { ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight) };
+  if (next.seen.length !== stats.seen.length || next.right.length !== stats.right.length || next.oniRight.length !== stats.oniRight.length) {
+    save(next);
+  }
+}

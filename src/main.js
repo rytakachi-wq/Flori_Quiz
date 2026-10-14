@@ -14,8 +14,9 @@ import {
   VersusRound,
   totalScore,
 } from "./game.js";
-import { loadStats, recordOni, recordRound, recordVersus } from "./storage.js";
+import { loadStats, pruneStats, recordOni, recordRound, recordVersus } from "./storage.js";
 import { SlidePuzzle } from "./puzzle.js";
+import { FallingUI } from "./falling-ui.js";
 import { getVolume, playSe, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, setFuriganaMode, startFurigana } from "./furigana.js";
 
@@ -29,7 +30,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "versus", "relax", "puzzle", "records", "settings", "question", "result", "error"];
+const SCREENS = ["cover", "versus", "relax", "puzzle", "game", "records", "settings", "question", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)
@@ -38,7 +39,7 @@ let versusPlayers = 2; // みんなで対戦する人数
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
   if (name === "question") return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
-  if (name === "relax" || name === "puzzle") return "relax";
+  if (name === "relax" || name === "puzzle" || name === "game") return "relax";
   if (name === "result") return "result";
   return name === "error" ? null : "cover";
 }
@@ -46,6 +47,7 @@ function sceneOf(name) {
 function show(name) {
   for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
   if (name !== "cover") coverTaps = 0;
+  if (name !== "game") stopFalling();
   setScene(sceneOf(name));
   window.scrollTo(0, 0);
 }
@@ -110,9 +112,9 @@ let normalQuestions = [];
 let hardQuestions = [];
 let oniQuestions = [];
 const hardUsed = new Set(); // 難しいモードで、もう出した問題(回をまたいで使う)
-let normalIds = new Set(); // ふつうの問題の番号
-let hardIds = new Set(); // 難しい問題の番号
-let oniIds = new Set(); // オニ問題の番号
+let normalIds = new Set(); // ふつうの問題の uid(成績の記録に使う。番号がつけなおされても、変わらない)
+let hardIds = new Set(); // 難しい問題の uid
+let oniIds = new Set(); // オニ問題の uid
 let session; // ふつうの遊び(難しさのカウンターを引き継ぐ)
 let play; // いま遊んでいるもの(session かオニ問題)
 let current = null; // 今出している問題
@@ -446,6 +448,95 @@ function startPuzzle(size = puzzleSize) {
   show("puzzle");
 }
 
+// 落ちものパズル(ぽんぽんブロブ・ばい菌バスター)
+const FALLING = {
+  pop: {
+    title: "ぽんぽんブロブ",
+    help: "同じ色を4つ以上くっつけると、ぽん!と消えるヨ。消えたあとに続けて消えると「連鎖」!",
+    options: { slow: { speed: 1000 }, normal: { speed: 650 } },
+  },
+  virus: {
+    title: "ばい菌バスター",
+    help: "ばい菌と同じ色のカプセルを、縦か横に4つ並べて消そう。ばい菌を全部消したら、勝ち!",
+    options: { 4: { viruses: 4, speed: 900 }, 8: { viruses: 8, speed: 900 } },
+  },
+};
+let falling = null;
+let fallingConfig = null;
+
+function stopFalling() {
+  falling?.destroy();
+  falling = null;
+}
+
+function fallingStatus(kind, info) {
+  if (info.paused) return "一時停止中。「一時停止」をもう一度押すと、続きから!";
+  if (kind === "pop") {
+    const chain = info.chain >= 2 ? `${info.chain}連鎖!  ` : "";
+    return `${chain}スコア ${info.score}点 ・ 最大連鎖 ${info.maxChain}`;
+  }
+  return `残りのばい菌 ${info.left} / ${info.total}匹 ・ スコア ${info.score}点`;
+}
+
+function startFalling(kind, option) {
+  fallingConfig = { kind, option };
+  const config = FALLING[kind];
+  show("game");
+  $("game-title").textContent = config.title;
+  $("game-help").textContent = `${config.help}  ←→:動かす / ↓:早く落とす / ↑・Z・X:回す / P:一時停止`;
+  $("btn-game-pause").textContent = "一時停止";
+  falling = new FallingUI({
+    canvas: $("game-canvas"),
+    nextCanvas: $("game-next"),
+    kind,
+    options: config.options[option],
+    onStatus: (info) => {
+      $("game-status").textContent = fallingStatus(kind, info);
+      if (info.paused !== undefined) $("btn-game-pause").textContent = info.paused ? "続ける" : "一時停止";
+    },
+    onEnd: (state, info) => {
+      $("game-status").textContent =
+        state === "won"
+          ? `ばい菌を全部やっつけたヨ! すごい! スコア ${info.score}点`
+          : kind === "pop"
+            ? `ビンがいっぱいになっちゃった! スコア ${info.score}点・最大${info.maxChain}連鎖。もう一度やってみよう!`
+            : "ビンがいっぱいになっちゃった! もう一度やってみよう!";
+      if (state === "won") playSe("correct");
+    },
+  });
+}
+
+for (const button of document.querySelectorAll("[data-falling]")) {
+  button.addEventListener("click", () => startFalling(button.dataset.falling, button.dataset.option));
+}
+for (const button of document.querySelectorAll(".pad [data-action]")) {
+  button.addEventListener("click", () => falling?.press(button.dataset.action));
+}
+$("btn-game-pause").addEventListener("click", () => falling?.press("pause"));
+$("btn-game-again").addEventListener("click", () => fallingConfig && startFalling(fallingConfig.kind, fallingConfig.option));
+$("btn-game-back").addEventListener("click", () => show("relax"));
+// キー操作
+document.addEventListener("keydown", (event) => {
+  if ($("screen-game").hidden || !falling || event.ctrlKey || event.metaKey || event.altKey) return;
+  const actions = {
+    ArrowLeft: "left",
+    ArrowRight: "right",
+    ArrowDown: "down",
+    ArrowUp: "rotate",
+    x: "rotate",
+    X: "rotate",
+    " ": "rotate",
+    z: "rotate-back",
+    Z: "rotate-back",
+    p: "pause",
+    P: "pause",
+  };
+  const action = actions[event.key];
+  if (!action) return;
+  event.preventDefault();
+  falling.press(action);
+});
+
 $("btn-relax").addEventListener("click", () => show("relax"));
 $("btn-relax-back").addEventListener("click", () => show("cover"));
 for (const button of document.querySelectorAll("[data-puzzle]")) {
@@ -513,9 +604,10 @@ async function init() {
     normalQuestions = normal;
     hardQuestions = questions.filter((q) => q.level === HARD_LEVEL);
     oniQuestions = questions.filter((q) => q.level > HARD_LEVEL);
-    normalIds = new Set(normal.map((q) => q.id));
-    hardIds = new Set(hardQuestions.map((q) => q.id));
-    oniIds = new Set(oniQuestions.map((q) => q.id));
+    normalIds = new Set(normal.map((q) => q.uid ?? q.id));
+    hardIds = new Set(hardQuestions.map((q) => q.uid ?? q.id));
+    oniIds = new Set(oniQuestions.map((q) => q.uid ?? q.id));
+    pruneStats(new Set([...normalIds, ...hardIds, ...oniIds])); // 古い番号の記録を、取りのぞく
     session = new Session(normal);
     show("cover");
   } catch (error) {

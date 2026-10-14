@@ -49,13 +49,59 @@
     <section id="screen-relax" class="screen" aria-label="リラックス" hidden>
       <h2 class="title">リラックス</h2>
       <img class="flori flori-small" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-      <p class="bubble">ゆっくり遊ぼう。点数も時間もないヨ。</p>
-      <p class="note">フロリのスライドパズル。難しさを選んでね。</p>
-      <div class="buttons">
-        <button class="btn btn-main" type="button" data-puzzle="3">易しい(3×3)</button>
-        <button class="btn btn-main" type="button" data-puzzle="4">普通(4×4)</button>
+      <p class="bubble">ゆっくり遊ぼう。点数に追われないヨ。</p>
+      <div class="game-choices">
+        <div class="game-choice">
+          <h3>スライドパズル</h3>
+          <p class="note">フロリの絵を、もとにもどそう。</p>
+          <div class="buttons">
+            <button class="btn btn-main" type="button" data-puzzle="3">易しい(3×3)</button>
+            <button class="btn btn-main" type="button" data-puzzle="4">普通(4×4)</button>
+          </div>
+        </div>
+        <div class="game-choice">
+          <h3>ぽんぽんブロブ</h3>
+          <p class="note">落ちてくる2つを動かして、同じ色を4つくっつけて消そう。連鎖に挑戦!</p>
+          <div class="buttons">
+            <button class="btn btn-main" type="button" data-falling="pop" data-option="slow">ゆっくり</button>
+            <button class="btn btn-main" type="button" data-falling="pop" data-option="normal">普通</button>
+          </div>
+        </div>
+        <div class="game-choice">
+          <h3>ばい菌バスター</h3>
+          <p class="note">カプセルを落として、ビンの中のばい菌を全部やっつけよう。</p>
+          <div class="buttons">
+            <button class="btn btn-main" type="button" data-falling="virus" data-option="4">ばい菌4匹</button>
+            <button class="btn btn-main" type="button" data-falling="virus" data-option="8">ばい菌8匹</button>
+          </div>
+        </div>
       </div>
       <button id="btn-relax-back" class="btn btn-sub" type="button">戻る</button>
+    </section>
+
+    <!-- 落ちものパズル -->
+    <section id="screen-game" class="screen" aria-label="パズルゲーム" hidden>
+      <h2 id="game-title" class="title"></h2>
+      <p id="game-status" class="bubble"></p>
+      <div class="game-wrap">
+        <canvas id="game-canvas" aria-label="ゲームの画面"></canvas>
+        <div class="game-side">
+          <p class="note">次</p>
+          <canvas id="game-next" width="64" height="64" aria-label="次に落ちてくるもの"></canvas>
+        </div>
+      </div>
+      <p id="game-help" class="note"></p>
+      <div class="pad">
+        <button class="btn btn-sub" type="button" data-action="left" data-no-se="1" aria-label="左へ">◀</button>
+        <button class="btn btn-sub" type="button" data-action="rotate" data-no-se="1" aria-label="回す">回す</button>
+        <button class="btn btn-sub" type="button" data-action="right" data-no-se="1" aria-label="右へ">▶</button>
+        <button class="btn btn-sub" type="button" data-action="down" data-no-se="1" aria-label="下へ">▼</button>
+      </div>
+      <div class="buttons">
+        <button id="btn-game-pause" class="btn btn-sub" type="button">一時停止</button>
+        <button id="btn-game-again" class="btn btn-main" type="button">もう一度</button>
+        <button id="btn-game-back" class="btn btn-sub" type="button">戻る</button>
+      </div>
     </section>
 
     <!-- スライドパズル -->
