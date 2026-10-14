@@ -11,12 +11,12 @@ const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上�
 export const MAX_SCORE = QUESTIONS_PER_ROUND * POINTS_PER_CORRECT;
 export const HINT_COST = 2; // ヒントを見ると、その問題の点が2点へる(正解したとき、5点→3点)
 
-// 教科えらび。問題の「分類(category)」を、理系・文系・ひらめきに、まとめる。
+// 教科えらび。問題ごとの subject(理系 science / 文系 humanities)で分ける。
+// 分け方は、問題の分類(理科・数・社会など)をもとに、「ひらめき」の問題は、利用者が1問ずつ決めた。
 export const SUBJECTS = {
-  all: { name: "ぜんぶ", categories: null },
-  science: { name: "理系", categories: ["理科", "科学", "数", "論理", "規則"] },
-  humanities: { name: "文系", categories: ["社会", "国語", "日常"] },
-  flash: { name: "ひらめき", categories: ["ひらめき"] },
+  all: { name: "ぜんぶ" },
+  science: { name: "理系" },
+  humanities: { name: "文系" },
 };
 
 // みんなで対戦。2〜4人が、1台の画面で、順番に答えて点数を競う。3回戦(段階1・2・3)で、1回戦は1点、2回戦は2点、3回戦は3点。

@@ -181,8 +181,7 @@ function startPlay(nextMode) {
   else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
   else if (mode === "versus") play = new VersusRound(normalQuestions, versusPlayers);
   else if (mode === "subject") {
-    const categories = SUBJECTS[subjectKey].categories;
-    const pool = playableQuestions.filter((q) => !categories || categories.includes(q.category));
+    const pool = playableQuestions.filter((q) => subjectKey === "all" || q.subject === subjectKey);
     play = new PracticeRound(pickRandom(pool, QUESTIONS_PER_ROUND));
   } else if (mode === "review") {
     const wrong = new Set(loadStats().wrong);
