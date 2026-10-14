@@ -274,3 +274,16 @@ body {
 
 /* 難しいモードのボタン */
 .btn-hard { background: var(--green); color: var(--text); }
+
+/* みんなで あそぶ */
+.btn-coop { background: var(--pink); color: var(--text); }
+.turn {
+  margin: 0;
+  width: 100%;
+  padding: 8px 16px;
+  text-align: center;
+  font-weight: bold;
+  background: var(--pink);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+}

@@ -1,4 +1,9 @@
 import {
+  COOP_GOAL,
+  COOP_QUESTIONS,
+  COOP_MAX_PLAYERS,
+  COOP_MIN_PLAYERS,
+  CoopRound,
   HARD_LEVEL,
   HardRound,
   MAX_LEVEL,
@@ -10,7 +15,7 @@ import {
   TOTAL_POINTS,
   totalScore,
 } from "./game.js";
-import { loadStats, recordOni, recordRound } from "./storage.js";
+import { loadStats, recordCoop, recordOni, recordRound } from "./storage.js";
 import { getVolume, playSe, setScene, setVolume, unlock } from "./audio.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
@@ -23,14 +28,15 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "records", "settings", "question", "result", "error"];
+const SCREENS = ["cover", "coop", "records", "settings", "question", "result", "error"];
 
 let coverTaps = 0;
-let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)
+let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"coop"(みんなで)
+let coopPlayers = 2; // みんなで遊ぶ人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
-  if (name === "question") return mode === "oni" ? "oni" : mode === "hard" ? "hard" : "question";
+  if (name === "question") return { oni: "oni", hard: "hard", coop: "coop" }[mode] ?? "question";
   if (name === "result") return "result";
   return name === "error" ? null : "cover";
 }
@@ -98,6 +104,7 @@ const renderers = {
   },
 };
 
+let normalQuestions = [];
 let hardQuestions = [];
 let oniQuestions = [];
 const hardUsed = new Set(); // 難しいモードで、もう出した問題(回をまたいで使う)
@@ -119,6 +126,7 @@ function startPlay(nextMode) {
   mode = nextMode;
   if (mode === "oni") play = new OniRound(oniQuestions);
   else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
+  else if (mode === "coop") play = new CoopRound(normalQuestions, coopPlayers);
   else play = session;
   showQuestion();
 }
@@ -128,24 +136,31 @@ function showQuestion() {
   current = question;
   answered = false;
 
-  const prefix = { normal: "", hard: "むずかしい ", oni: "オニ " }[mode];
-  $("q-progress").textContent = `${prefix}だい ${play.asked + 1} もん / ${QUESTIONS_PER_ROUND}もん`;
+  const prefix = { normal: "", hard: "むずかしい ", oni: "オニ ", coop: "みんなで " }[mode];
+  const total = mode === "coop" ? COOP_QUESTIONS : QUESTIONS_PER_ROUND;
+  $("q-progress").textContent = `${prefix}だい ${play.asked + 1} もん / ${total}もん`;
+  const turn = $("q-player");
+  turn.hidden = mode !== "coop";
+  if (mode === "coop") turn.textContent = `プレイヤー${play.player + 1}の ばんだヨ! みんなで そうだん してもOK!`;
   $("q-level").textContent =
     mode === "oni"
       ? "むずかしさ オニ"
       : mode === "hard"
         ? "むずかしさ ★★★★"
-        : `むずかしさ ${"★".repeat(question.level)}${"☆".repeat(MAX_LEVEL - question.level)}`;
+        : mode === "coop"
+          ? `${coopPlayers}人で チーム`
+          : `むずかしさ ${"★".repeat(question.level)}${"☆".repeat(MAX_LEVEL - question.level)}`;
   $("q-text").textContent = question.text;
   $("q-feedback").hidden = true;
 
   const message = $("q-message");
-  if (leveledUp || (mode !== "normal" && play.asked === 0)) {
+  if (leveledUp || ((mode === "hard" || mode === "oni") && play.asked === 0)) {
     setFlori(IMG.surprised, "おどろくフロリ");
     message.textContent = {
       normal: "おっ! むずかしく なったヨ!",
       hard: "むずかしいモードだヨ! じっくり かんがえてネ!",
       oni: "オニもんだいだヨ! がんばれ!",
+      coop: "おっ! むずかしく なったヨ!",
     }[mode];
     message.hidden = false;
   } else {
@@ -193,7 +208,9 @@ function showResult() {
   const result = play.finishRound();
   $("r-correct").textContent = `${result.correct} / ${result.total}もん`;
   $("r-score").textContent = `${result.score}点 (${MAX_SCORE}点まんてん)`;
-  $("r-comment").textContent = mode === "oni" ? oniComment(result.correct) : comment(result.correct);
+  $("r-comment").textContent =
+    mode === "oni" ? oniComment(result.correct) : mode === "coop" ? coopComment(result) : comment(result.correct);
+  $("r-score-row").hidden = mode === "coop"; // みんなで あそぶときは、点数は出さない
 
   const setNote = $("r-set");
   const before = currentTotal();
@@ -202,7 +219,17 @@ function showResult() {
     const gained = currentTotal() - before;
     return gained > 0 ? `はじめての せいかいで、総合得点が ${gained}点 ふえたヨ!` : "総合得点は、はじめて せいかいした ときだけ ふえるヨ。";
   };
-  if (mode === "oni") {
+  if (mode === "coop") {
+    // みんなで遊ぶ結果は、ひとりで遊ぶ記録(遊んだ回数、正解率、総合得点など)には入れない。
+    recordCoop(result);
+    $("r-title").textContent = "みんなの けっか!";
+    $("r-best-row").hidden = true;
+    $("r-record").hidden = true;
+    setNote.textContent = result.cleared
+      ? `もくひょう(${COOP_GOAL}もん)たっせい! みんなで よく がんばったネ!`
+      : `もくひょうまで あと ${COOP_GOAL - result.correct}もん! また みんなで ちょうせんしよう!`;
+    $("btn-again").textContent = "もういちど みんなで あそぶ";
+  } else if (mode === "oni") {
     // オニ問題は、成績の「遊んだ回数」や「正解率」には入れない。総合得点にだけ入る。
     recordOni(result.answers);
     $("r-title").textContent = "オニもんだい けっか!";
@@ -244,6 +271,12 @@ function comment(correct) {
   return "だいじょうぶ! かんがえるのが たのしいんだヨ!";
 }
 
+function coopComment(result) {
+  if (result.correct === result.total) return "ぜんぶ せいかい! みんな さいこうのチームだヨ!";
+  if (result.cleared) return "すごい! みんなの ちからで たっせいだヨ!";
+  return "おしい! そうだんしながら、もう1回 やってみよう!";
+}
+
 function oniComment(correct) {
   if (correct === QUESTIONS_PER_ROUND) return "ええっ、ぜんぶ せいかい! てんさいだヨ!";
   if (correct >= 3) return "オニを あいてに すごいヨ!";
@@ -262,6 +295,7 @@ function showRecords() {
   $("s-best").textContent = `${s.best}点 / ${MAX_SCORE}点`;
   $("s-best-hard").textContent = `${s.bestHard}点 / ${MAX_SCORE}点`;
   $("s-plays").textContent = `${s.plays}回`;
+  $("s-coop").textContent = `${s.coopPlays}回(もくひょう たっせい ${s.coopClears}回)`;
   $("s-seen").textContent = `${seen} / ${playable.size}問`;
   $("s-right").textContent = `${right} / ${playable.size}問`;
   $("s-answered").textContent = `${s.answered}問(正解 ${s.correct}問)`;
@@ -322,6 +356,14 @@ $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
 $("btn-start").addEventListener("click", () => startPlay("normal"));
 $("btn-hard").addEventListener("click", () => startPlay("hard"));
+$("btn-coop").addEventListener("click", () => show("coop"));
+$("btn-coop-back").addEventListener("click", () => show("cover"));
+for (const button of document.querySelectorAll("[data-players]")) {
+  button.addEventListener("click", () => {
+    coopPlayers = Math.min(COOP_MAX_PLAYERS, Math.max(COOP_MIN_PLAYERS, Number(button.dataset.players)));
+    startPlay("coop");
+  });
+}
 $("btn-records").addEventListener("click", showRecords);
 $("btn-records-back").addEventListener("click", () => show("cover"));
 $("btn-settings").addEventListener("click", () => show("settings"));
@@ -364,6 +406,7 @@ async function init() {
     if (!response.ok) throw new Error(response.status);
     const { questions } = await response.json();
     const normal = questions.filter((q) => q.level <= MAX_LEVEL);
+    normalQuestions = normal;
     hardQuestions = questions.filter((q) => q.level === HARD_LEVEL);
     oniQuestions = questions.filter((q) => q.level > HARD_LEVEL);
     normalIds = new Set(normal.map((q) => q.id));

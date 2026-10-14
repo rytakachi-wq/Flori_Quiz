@@ -10,6 +10,12 @@ const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上�
 
 export const MAX_SCORE = QUESTIONS_PER_ROUND * POINTS_PER_CORRECT;
 
+// みんなであそぶ(協力型)。全員で10問を、順番に答えて、7問以上の正解を目指す。
+export const COOP_QUESTIONS = 10;
+export const COOP_GOAL = 7;
+export const COOP_MIN_PLAYERS = 2;
+export const COOP_MAX_PLAYERS = 4;
+
 // 総合得点(100点満点)。ふつうの問題が60点、難しい問題が35点、オニ問題が5点。
 // それぞれ、一度でも正解した問題の数の割合で、点が入る(何度正解しても、同じ問題は1回ぶん)。
 // 問題の数が増えても、満点は100点のままになる。
@@ -226,6 +232,58 @@ export class HardRound {
 
   finishRound() {
     const result = roundResult(this);
+    this.startRound();
+    return result;
+  }
+}
+
+// みんなであそぶ(協力型)。1台の画面を、2〜4人で囲む。相談しながら、順番に答える係を交代して、チームで正解数をためる。
+// 難しさの調整は、ふつうモードと同じ(ただし、ひとりで遊ぶ記録とは、別に数える)。
+export class CoopRound {
+  constructor(questions, players, rng = Math.random) {
+    this.session = new Session(questions, rng);
+    this.players = players;
+    this.startRound();
+  }
+
+  startRound() {
+    this.asked = 0;
+    this.correct = 0;
+    this.session.resetSet();
+  }
+
+  // 次に答える人(0から数える)。人数で、順番に交代する。
+  get player() {
+    return this.asked % this.players;
+  }
+
+  nextQuestion() {
+    return this.session.nextQuestion();
+  }
+
+  answer(question, response) {
+    const correct = this.session.answer(question, response);
+    this.asked += 1;
+    if (correct) this.correct += 1;
+    return correct;
+  }
+
+  get roundFinished() {
+    return this.asked >= COOP_QUESTIONS;
+  }
+
+  abandonRound() {
+    this.startRound();
+  }
+
+  finishRound() {
+    const result = {
+      correct: this.correct,
+      total: COOP_QUESTIONS,
+      players: this.players,
+      cleared: this.correct >= COOP_GOAL,
+      answers: [],
+    };
     this.startRound();
     return result;
   }
