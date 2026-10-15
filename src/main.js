@@ -431,8 +431,9 @@ function speak(text) {
   voice.lang = "ja-JP";
   if (japaneseVoice) voice.voice = japaneseVoice;
   voice.rate = 1.6;
-  voice.onend = () => setSpeaking(false);
-  voice.onerror = () => setSpeaking(false);
+  // 読み直したとき、前の声が止まった知らせ(onend・onerror)が、あとから来る。いまの声のときだけ、時間を動かす
+  voice.onend = () => nowSpeaking === voice && setSpeaking(false);
+  voice.onerror = () => nowSpeaking === voice && setSpeaking(false);
   nowSpeaking = voice;
   setSpeaking(true);
   // cancel の直後に話させると、声が出ないブラウザがあるので、少し待つ
