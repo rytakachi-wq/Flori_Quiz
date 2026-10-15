@@ -28,8 +28,8 @@ const ART = {
   u056ac32e: row(e("📅", "ia-bob"), box("30"), e("➡️", "ia-slide-r"), e("❓", "ia-pop")),
   // q08 サイコロ
   uff6b6f4d: row(e("⚂", "ia-roll"), e("↕️", "ia-bob"), e("🎲", "ia-roll", 0.3), e("❓", "ia-pop")),
-  // q09 新しい問題
-  u139012d8: row(e("🏞️", "ia-bob"), e("🌊", "ia-sway"), e("🚣", "ia-boat"), e("❓", "ia-pop", 0.4)),
+  // q09 北海道の道庁
+  u77365bf3: row(e("🗾", "ia-bob"), e("🏙️", "ia-bob", 0.3), e("⛄", "ia-sway"), e("❄️", "ia-fall"), e("❓", "ia-pop", 0.5)),
   // q10 面積
   uf82373b2: row(e("🗾", "ia-bob"), e("📏", "ia-sway"), e("📐", "ia-sway", 0.3)),
   // q11 国旗の赤い丸
