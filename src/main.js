@@ -616,11 +616,11 @@ function showRecords() {
   // 毎日1問:きのうか今日やっていれば、続けた日数。それより前なら、0日(とぎれた)
   const today = dateKey();
   const running = s.dailyLast === today || s.dailyLast === previousDateKey(today) ? s.dailyStreak : 0;
-  $("s-daily").textContent = `${running}日連続(ぜんぶで${s.dailyDays}日)`;
+  $("s-daily").textContent = `${running}日連続・計${s.dailyDays}日`;
   $("s-wrong").textContent = `${s.wrong.filter((id) => playable.has(id)).length}問`;
   $("s-seen").textContent = `${seen} / ${playable.size}問`;
   $("s-right").textContent = `${right} / ${playable.size}問`;
-  $("s-answered").textContent = `${s.answered}問(正解 ${s.correct}問)`;
+  $("s-answered").textContent = `${s.answered}問・正解${s.correct}問`;
   $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : "まだないよ";
   markSeen("records");
   show("records");
