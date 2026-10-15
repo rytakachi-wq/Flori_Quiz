@@ -214,7 +214,7 @@ body {
   flex: none;
   display: grid;
   place-items: center;
-  width: clamp(96px, 20vh, 172px);
+  width: clamp(108px, 21.5vh, 188px);
   aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(circle, #fff 0 62%, #cfe9f5 63% 80%, transparent 81%);
@@ -1066,3 +1066,6 @@ body { overflow-x: hidden; }
 #screen-dress .dress-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); justify-content: stretch; }
 #screen-dress .dress-item { width: 100%; min-width: 0; box-sizing: border-box; }
 #dress-now { height: 2.9em; min-height: 0; overflow: hidden; }
+
+/* かざりを、少し小さく */
+.hero-hat, .hero-small .hero-hat { top: -11cqw; font-size: 34cqw; }

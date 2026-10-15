@@ -53,6 +53,11 @@ try {
   // 読めなければ、はじめの大きさにする。
 }
 
+// 開発中(自分のパソコンで動かしているとき)は、音を出さない。音を聞きたいときは、アドレスの最後に「?sound」をつける。
+if (["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) && !location.search.includes("sound")) {
+  for (const kind of Object.keys(DEFAULTS)) volumes[kind] = 0;
+}
+
 let scene = null;
 let unlocked = false;
 let context = null;

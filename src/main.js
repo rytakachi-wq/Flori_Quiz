@@ -84,8 +84,8 @@ function startCoverIdle() {
   idleReturnTimer = setTimeout(returnToOpening, IDLE_RETURN_MS);
 }
 
-// 表紙で30秒間なにもしなかったら、オープニング画面にもどって、フロリが遊ぶ。さわると、表紙にもどる。
-const IDLE_RETURN_MS = 30000;
+// 表紙で20秒間なにもしなかったら、オープニング画面にもどって、フロリが遊ぶ。さわると、表紙にもどる。
+const IDLE_RETURN_MS = 20000;
 let idleReturnTimer = 0;
 function returnToOpening() {
   if ($("screen-cover").hidden || !$("opening").hidden || announcing || document.querySelector("dialog[open]")) return;
@@ -100,6 +100,7 @@ function returnToOpening() {
   void flori.offsetWidth; // フロリの登場を、はじめから動かす
   flori.style.animation = "";
   opening.hidden = false;
+  setScene("cover"); // もどったあいだも、表紙のBGM
 }
 
 // 表紙で、画面にさわる・動かす・キーをおすと、動きを止めて、また3秒数えなおす
@@ -923,6 +924,7 @@ function closeOpening() {
     setTimeout(() => {
       opening.hidden = true;
       opening.classList.remove("is-idle", "is-leaving");
+      setScene("cover"); // 表紙にもどったら、表紙のBGM
       startCoverIdle();
     }, 600);
     return;
