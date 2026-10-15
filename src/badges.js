@@ -81,14 +81,14 @@ export const HATS = [
 ];
 
 export const THEMES = [
-  { id: "sky", name: "あおぞら", tint: "#7ec3e0", unlock: null },
-  { id: "sakura", name: "さくら", tint: "#f0a8bd", unlock: "garden" },
-  { id: "forest", name: "もり", tint: "#9fd49a", unlock: "right20" },
-  { id: "sunset", name: "ゆうやけ", tint: "#f4b072", unlock: "streak3" },
-  { id: "night", name: "よぞら", tint: "#8c9bd4", unlock: "oni1" },
-  { id: "rainbow", name: "にじ", tint: "#c9a8f0", unlock: "total100" },
-  { id: "starry", name: "ほしぞら", tint: "#9aa6e8", unlock: { stars: 20 } },
-  { id: "comet", name: "ながれぼし", tint: "#b48cf0", unlock: { stars: 50 } },
+  { id: "sky", name: "あおぞら", tint: "#7ec3e0", preview: "linear-gradient(160deg, #eef8fd, #7ec3e0)", unlock: null },
+  { id: "sakura", name: "さくら", tint: "#f0a8bd", preview: "linear-gradient(160deg, #fff4f7, #f0a8bd)", unlock: "garden" },
+  { id: "forest", name: "もり", tint: "#9fd49a", preview: "linear-gradient(160deg, #f0faee, #8fcf8a)", unlock: "right20" },
+  { id: "sunset", name: "ゆうやけ", tint: "#f4b072", preview: "linear-gradient(160deg, #fff3e0, #f08a4a)", unlock: "streak3" },
+  { id: "night", name: "よぞら", tint: "#8c9bd4", preview: "linear-gradient(160deg, #3a4573, #1c2240)", unlock: "oni1" },
+  { id: "rainbow", name: "にじ", tint: "#c9a8f0", preview: "linear-gradient(135deg, #ffd9d9, #fff3c4, #d9f7d9, #d9ecff, #ead9ff)", unlock: "total100" },
+  { id: "starry", name: "ほしぞら", tint: "#9aa6e8", preview: "linear-gradient(160deg, #3a4aa8, #1a2052)", unlock: { stars: 20 } },
+  { id: "comet", name: "ながれぼし", tint: "#b48cf0", preview: "linear-gradient(160deg, #6a4fc0, #1b2350)", unlock: { stars: 50 } },
 ];
 
 // きせかえが使えるか(unlock:バッジの id、または { stars: 必要な星の数 }、または null)

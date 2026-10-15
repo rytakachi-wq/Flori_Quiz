@@ -38,6 +38,7 @@ import {
   recordRound,
   recordVersus,
 } from "./storage.js";
+import { illustrationFor } from "./illustrations.js";
 import { BADGES, COLORS, HATS, THEMES, TITLES, badgeName, earnedBadges, isOpen, loadDress, lockText, saveDress, starTitleFor, STAR_TITLES, titleFor } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { applyFloriSrc, setFloriColor, setWarmList } from "./flori-color.js";
@@ -302,6 +303,10 @@ function showQuestion() {
       ? "難しさ オニ"
       : versus
           ? `${play.round}回戦 ${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} ${VERSUS_LEVEL_WORDS[play.round]}・正解で${play.round}点(${versusPlayers}人)` : `難しさ ${stars(question.level)}`;
+  // 問題に合わせた、イラスト(絵と動きで、場面が分かるように)
+  const art = illustrationFor(question);
+  $("q-art").innerHTML = art;
+  $("q-art").hidden = art === "";
   $("q-text").textContent = question.text;
   $("q-text").classList.toggle("long", question.text.length > 70); // 長い問題は、文字を少し小さくして、画面に収める
   $("screen-question").classList.toggle("is-long", question.text.length > 100); // とても長い問題は、もっとぎゅっと
@@ -332,7 +337,9 @@ function showQuestion() {
   show("question");
   if (timeLimit) startTimer();
   else $("q-timer").hidden = true;
-  if (readAloud()) setTimeout(() => speak(readableQuestion(question)), 400); // 自動の読み上げ
+  stopSpeaking();
+  // 自動の読み上げ(400ミリ秒のあいだに、先へ進んだり、ほかの画面にいったときは、読まない)
+  if (readAloud()) setTimeout(() => current === question && !answered && !$("screen-question").hidden && speak(readableQuestion(question)), 400);
 }
 
 // 対戦の難しさ(回戦ごと):画面にも出す
@@ -673,6 +680,7 @@ function showRecords() {
 }
 
 function next() {
+  stopSpeaking(); // 先へ進んだら、読み上げは止める
   if (play.roundFinished) announce("結果発表〜!", "result", showResult, "../assets/flori/wave_surprised.png");
   else showQuestion();
 }
@@ -1184,7 +1192,7 @@ function showBadges() {
 
 // ================= 問題図鑑 =================
 // ================= 問題図鑑(カードを集める) =================
-const CATEGORY_ICON = { ひらめき: "💡", 社会: "🌏", 理科: "🔬", 科学: "⚗️", 日常: "🏠", 規則: "🔢", 国語: "📖", 論理: "🧩", 数: "➗", オニ: "👹" };
+const CATEGORY_ICON = { ひらめき: "💡", 社会: "🌏", 理科: "🔬", 科学: "⚗️", 日常: "🏠", 規則: "🔢", 国語: "📖", 論理: "🧩", 算数: "➗", オニ: "👹" };
 const RARITY = { 1: "★", 2: "★★", 3: "★★★", 4: "💎", 5: "👹" };
 const DEX_VIEWED_KEY = "floriQuiz.dexViewed"; // 図鑑を開いて、もう見たカード(NEW! を一度だけ出すため)
 
@@ -1329,23 +1337,32 @@ function showDress() {
       button.type = "button";
       button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}${open ? "" : " is-locked"}`;
       button.style.borderColor = choice.tint; // 縁を、その色に
-      if (kind === "color") {
-        // 色の見本(まる)
-        const swatch = document.createElement("span");
-        swatch.className = "swatch";
-        swatch.style.background = choice.original ? "linear-gradient(135deg, #dfe8ee, #7ec3e0)" : choice.tint;
-        button.append(swatch);
+      // 絵だけを見せる(名前や、もらいかたは、マウスをのせたときに出す)
+      const art = document.createElement("span");
+      art.className = `dress-art is-${kind}`;
+      if (kind === "color") art.style.background = choice.original ? "linear-gradient(135deg, #dfe8ee, #7ec3e0)" : choice.tint;
+      else if (kind === "theme") art.style.background = choice.preview ?? choice.tint;
+      else art.textContent = choice.icon || "🚫";
+      button.append(art);
+      if (dress[kind] === choice.id) {
+        const check = document.createElement("span");
+        check.className = "dress-check";
+        check.textContent = "✔";
+        check.setAttribute("aria-hidden", "true");
+        button.append(check);
       }
-      const label = document.createElement("span");
-      label.className = "dress-label";
-      label.textContent = `${choice.icon ?? ""} ${choice.name}${dress[kind] === choice.id ? " ✓" : ""}`.trim();
-      button.append(label);
       if (!open) {
-        const lock = document.createElement("small");
+        const lock = document.createElement("span");
         lock.className = "dress-lock";
-        lock.textContent = typeof choice.unlock === "string" ? `🔒 ${badgeName(choice.unlock)}` : `🔒 ⭐${choice.unlock.stars}こ`;
+        lock.textContent = "🔒";
+        lock.setAttribute("aria-hidden", "true");
         button.append(lock);
       }
+      const tip = document.createElement("span");
+      tip.className = "dress-tip";
+      tip.textContent = open ? choice.name : `🔒 ${choice.name}:${lockText(choice)}でもらえます`;
+      button.append(tip);
+      button.setAttribute("aria-label", open ? choice.name : `${choice.name}(${lockText(choice)}でもらえます)`);
       if (dress[kind] === choice.id) button.style.backgroundColor = `color-mix(in srgb, ${choice.tint} 35%, white)`;
       button.addEventListener("click", () => {
         if (!open) {

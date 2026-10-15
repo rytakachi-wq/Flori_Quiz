@@ -97,9 +97,22 @@ export function recolor(src, color) {
       const skip = parts.map((part) => part.count > 150 && part.sumL / part.count < 0.84);
       for (let i = 0; i < total; i += 1) {
         const id = label[i];
-        if (!id || skip[id - 1]) continue;
+        if (!id) continue;
         const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
+        // 足もとの影(こい水色)は、そのまま。足のうすい水色は、影とつながっていても、色をつける
+        if (skip[id - 1] && l < 0.86) continue;
         const target = color.gray ? 0 : Math.min(0.9, Math.max(s * color.gain, color.minSat)) * STRENGTH;
+        const [r, g, b] = hslToRgb(color.gray ? h : color.hue, color.gray ? 0 : Math.max(target, s * 0.5), l);
+        px[i * 4] = Math.round(r * 255);
+        px[i * 4 + 1] = Math.round(g * 255);
+        px[i * 4 + 2] = Math.round(b * 255);
+      }
+      // 足(くつ)の、灰色がかった部分も、同じ色あいにする(足もとの影・線・目は、そのまま)
+      for (let i = 0; i < total; i += 1) {
+        if (mask[i] || px[i * 4 + 3] < 128 || Math.floor(i / width) < height * 0.8) continue;
+        const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
+        if (s < 0.02 || s > 0.22 || l < 0.45 || l > 0.8) continue;
+        const target = color.gray ? 0 : Math.min(0.9, Math.max(0.3 * color.gain, color.minSat)) * STRENGTH;
         const [r, g, b] = hslToRgb(color.gray ? h : color.hue, color.gray ? 0 : Math.max(target, s * 0.5), l);
         px[i * 4] = Math.round(r * 255);
         px[i * 4 + 1] = Math.round(g * 255);
