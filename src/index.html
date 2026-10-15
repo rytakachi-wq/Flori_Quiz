@@ -44,7 +44,6 @@
       </div>
       <div class="menu">
         <button id="btn-continue" class="tile t-continue" type="button"><span class="tile-icon" aria-hidden="true">💡</span><span class="tile-text"><span class="tile-label">つづきから</span><span id="continue-sub" class="tile-sub"></span></span></button>
-        <button id="btn-start" class="tile t-start" type="button"><span class="tile-icon" aria-hidden="true">🔄</span><span class="tile-text"><span class="tile-label">最初から</span></span></button>
         <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-text"><span class="tile-label">毎日1問</span></span></button>
         <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">おさらい</span></span></button>
         <button id="btn-hard" class="tile t-hard" type="button"><span class="tile-icon" aria-hidden="true">🔥</span><span class="tile-text"><span class="tile-label">難しいモード</span><span id="hard-sub" class="tile-sub"></span></span></button>
@@ -58,11 +57,14 @@
       <p id="sound-hint" class="note">♪ 画面をクリックすると音楽が流れるよ。</p>
     </section>
     <!-- 問題図鑑 -->
-    <section id="screen-dex" class="screen" aria-label="問題図鑑" hidden>
-      <h2 class="title">問題図鑑</h2>
-      <p id="dex-count" class="bubble"></p>
-      <p class="note">答えとヒントはのっていないヨ。問題を解いてたしかめよう。</p>
-      <ul id="dex-list" class="dex-list"></ul>
+    <section id="screen-dex" class="screen dex-screen" aria-label="問題図鑑" hidden>
+      <h2 class="title">📚 問題図鑑</h2>
+      <div class="dex-head-box">
+        <p id="dex-count" class="dex-count"></p>
+        <div class="dex-meter"><span id="dex-meter-bar"></span></div>
+        <p id="dex-comment" class="note" role="status"></p>
+      </div>
+      <div id="dex-grid" class="dex-grid"></div>
       <button id="btn-dex-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
@@ -91,6 +93,7 @@
       </div>
       <p class="note">バッジや星を集めると使えるものが増えるヨ。  ⭐ <span id="dress-stars">0</span>こ</p>
       <p id="dress-message" class="note" role="status"></p>
+      <p id="dress-now" class="dress-now"></p>
       <div class="dress-tabs" role="tablist">
         <button class="dress-tab is-on" type="button" data-dress-tab="color">フロリの色</button>
         <button class="dress-tab" type="button" data-dress-tab="hat">かざり</button>
@@ -153,22 +156,23 @@
 
     <!-- せいせき -->
     <section id="screen-records" class="screen" aria-label="成績" hidden>
-      <h2 class="title">成績</h2>
+      <h2 class="title">🏆 成績</h2>
       <dl class="scores total">
         <div><dt>総合得点</dt><dd id="s-total"></dd></div>
       </dl>
+      <div class="total-bar" aria-hidden="true"><span id="s-total-bar"></span></div>
       <dl class="scores">
-        <div><dt>称号</dt><dd id="s-title"></dd></div>
-        <div><dt>バッジ</dt><dd id="s-badges"></dd></div>
-        <div><dt>ごほうびの星</dt><dd id="s-stars"></dd></div>
-        <div><dt>遊んだ回数</dt><dd id="s-plays"></dd></div>
-        <div><dt>みんなで対戦した回数</dt><dd id="s-versus"></dd></div>
-        <div><dt>毎日1問</dt><dd id="s-daily"></dd></div>
-        <div><dt>おさらい待ちの問題</dt><dd id="s-wrong"></dd></div>
-        <div><dt>解いた問題</dt><dd id="s-answered"></dd></div>
-        <div><dt>出会った問題</dt><dd id="s-seen"></dd></div>
-        <div><dt>正解した問題</dt><dd id="s-right"></dd></div>
-        <div><dt>正解率</dt><dd id="s-rate"></dd></div>
+        <div><dt>🎖 称号</dt><dd id="s-title"></dd></div>
+        <div><dt>🏅 バッジ</dt><dd id="s-badges"></dd></div>
+        <div><dt>⭐ ごほうびの星</dt><dd id="s-stars"></dd></div>
+        <div><dt>🎮 遊んだ回数</dt><dd id="s-plays"></dd></div>
+        <div><dt>👥 対戦した回数</dt><dd id="s-versus"></dd></div>
+        <div><dt>📅 毎日1問</dt><dd id="s-daily"></dd></div>
+        <div><dt>📖 おさらい待ち</dt><dd id="s-wrong"></dd></div>
+        <div><dt>✏️ 解いた問題</dt><dd id="s-answered"></dd></div>
+        <div><dt>👀 出会った問題</dt><dd id="s-seen"></dd></div>
+        <div><dt>✅ 正解した問題</dt><dd id="s-right"></dd></div>
+        <div><dt>🎯 正解率</dt><dd id="s-rate"></dd></div>
       </dl>
       <p class="note">記録はこのパソコンの中にだけ残るよ。</p>
       <button id="btn-records-back" class="btn btn-sub" type="button">戻る</button>
@@ -220,6 +224,7 @@
       <p class="note">音は0にすると出なくなるよ。</p>
       <div class="buttons">
         <button id="btn-settings-reset" class="btn btn-sub" type="button">初期設定に戻す</button>
+        <button id="btn-erase" class="btn btn-plain btn-small" type="button">セーブデータを消す</button>
         <button id="btn-settings-back" class="btn btn-main" type="button">戻る</button>
       </div>
       <p id="settings-message" class="note" role="status"></p>
@@ -296,26 +301,24 @@
   </dialog>
 
   <dialog id="dlg-time" class="dialog" aria-labelledby="dlg-time-text">
-    <p id="dlg-time-text">制限時間をつける?<br>つけると1問20秒で答えるヨ。<br>星のごほうびがもらえるヨ。</p>
+    <p id="dlg-time-text">制限時間をつける?<br>つけると1問30秒で答えるヨ。<br>星のごほうびがもらえるヨ。</p>
     <div class="buttons buttons-choice">
-      <button id="btn-time-no" class="btn btn-main btn-mid-big" type="button">つけない</button>
-      <button id="btn-time-yes" class="btn btn-plain btn-mid" type="button">つける<small>(ごほうびあり)</small></button>
+      <button id="btn-time-yes" class="btn btn-main btn-mid-big" type="button">つける<small>(ごほうびあり)</small></button>
+      <button id="btn-time-no" class="btn btn-plain btn-mid" type="button">つけない</button>
       <button id="btn-time-cancel" class="btn btn-plain btn-small" type="button">やめる</button>
     </div>
   </dialog>
   <dialog id="dlg-restart" class="dialog" aria-labelledby="dlg-restart-text">
-    <p id="dlg-restart-text">最初からにするとデータが消えるけど、本当にいいですか?</p>
+    <p id="dlg-restart-text">セーブデータを消します。<br>成績・バッジ・図鑑・きせかえ・つづきが全部消えるけど、本当にいいですか?</p>
     <div class="buttons buttons-choice">
       <button id="btn-restart-no" class="btn btn-main btn-big" type="button">やめる</button>
-      <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">はい、最初から</button>
+      <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">はい、消す</button>
     </div>
   </dialog>
-  <dialog id="dlg-hard" class="dialog" aria-labelledby="dlg-hard-text">
-    <p id="dlg-hard-text">難しいモード<br><span id="dlg-hard-progress"></span></p>
-    <div class="buttons buttons-choice">
-      <button id="btn-hard-continue" class="btn btn-main btn-big" type="button">つづきから</button>
-      <button id="btn-hard-new" class="btn btn-plain btn-small" type="button">最初から</button>
-      <button id="btn-hard-cancel" class="btn btn-plain btn-small" type="button">やめる</button>
+  <dialog id="dlg-dex" class="dialog dex-dialog" aria-labelledby="dex-big">
+    <div id="dex-big" class="dex-big"></div>
+    <div class="buttons">
+      <button id="btn-dex-close" class="btn btn-main" type="button">とじる</button>
     </div>
   </dialog>
   <dialog id="dlg-info" class="dialog" aria-labelledby="dlg-info-text">

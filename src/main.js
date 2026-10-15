@@ -30,8 +30,6 @@ import {
   recordDaily,
   recordDex,
   recordGarden,
-  resetCourse,
-  resetHardCourse,
   saveCourse,
   saveHardCourse,
   recordOni,
@@ -222,12 +220,12 @@ function refreshCover() {
   const left = stats.wrong.filter((id) => playableIds().has(id)).length;
   $("btn-review").querySelector(".tile-label").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(なし)";
   $("btn-review").disabled = left === 0;
-  // つづきから:いまの回数と難しさ。記録がなければ、押せない
+  // 記録があれば「つづきから」、なければ「始める」(どちらも、押せる)
   const saved = hasCourse(stats);
-  $("btn-continue").disabled = !saved;
+  $("btn-continue").querySelector(".tile-label").textContent = saved ? "つづきから" : "始める";
   const level = Math.min(MAX_LEVEL, 1 + Math.floor(stats.courseCounter / 3));
   $("hard-sub").textContent = hardUsed.size > 0 ? `つづき ${hardUsed.size}/${hardQuestions.length}問` : "";
-  $("continue-sub").textContent = saved ? `${stats.setRounds.length + 1}回目 ・ ${"★".repeat(level)}${"☆".repeat(MAX_LEVEL - level)}` : "まだないヨ";
+  $("continue-sub").textContent = saved ? `${stats.setRounds.length + 1}回目 ・ ${"★".repeat(level)}${"☆".repeat(MAX_LEVEL - level)}` : "";
 }
 
 function playableIds() {
@@ -278,6 +276,9 @@ function showQuestion() {
         : versus
           ? `${play.round}回戦 ${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} ${VERSUS_LEVEL_WORDS[play.round]}・正解で${play.round}点(${versusPlayers}人)` : `難しさ ${"★".repeat(question.level)}${"☆".repeat(Math.max(0, MAX_LEVEL - question.level))}`;
   $("q-text").textContent = question.text;
+  $("q-text").classList.toggle("long", question.text.length > 70); // 長い問題は、文字を少し小さくして、画面に収める
+  $("screen-question").classList.toggle("is-long", question.text.length > 100); // とても長い問題は、もっとぎゅっと
+  $("screen-question").classList.remove("is-answered");
   clearTimeout(detailTimer);
   $("q-feedback").hidden = true;
 
@@ -455,6 +456,7 @@ function answer(response) {
   const rightText = renderers[current.type].correctText(current);
   $("q-explanation").textContent = `正解は「${rightText}」\n${current.explanation}`;
   $("btn-next").textContent = play.roundFinished ? "結果を見る" : "次へ";
+  $("screen-question").classList.add("is-answered"); // 答えたあとは、上のフロリや、ヒントを、かくして、場所をあける
   // まず、全身のフロリを見せる(大きくはしない)。そのあとで、解説と「次へ」の所まで、画面を動かす。
   $("q-react-flori").src = correct ? IMG.correct : IMG.wrong;
   $("q-react-flori").alt = correct ? "笑うフロリ" : "目をつぶるフロリ";
@@ -613,6 +615,7 @@ function showRecords() {
   const right = s.right.filter((id) => playable.has(id)).length;
   // 総合得点は、いつでも100点満点で見せる(ふつうと難しい問題だけでは95点まで)
   $("s-total").textContent = `${currentTotal(s)}点 / ${TOTAL_POINTS}点`;
+  $("s-total-bar").style.width = `${(currentTotal(s) / TOTAL_POINTS) * 100}%`;
   $("s-plays").textContent = `${s.plays}回`;
   $("s-title").textContent = titleFor(currentTotal(s));
   $("s-badges").textContent = `${s.badges.length} / ${BADGES.length}個`;
@@ -731,24 +734,24 @@ function persistCourse() {
   saveCourse({ counter: session.counter, used: [...session.used].map((id) => idToUid.get(id)).filter(Boolean) });
 }
 $("btn-continue").addEventListener("click", () => chooseTime("normal"));
-// 「最初から」:データが消えるので、本当にいいか、聞く
+// セーブデータを消す(設定から):データが消えるので、本当にいいか、聞く
 let restartAction = null;
 function askRestart(action) {
   restartAction = action;
   $("dlg-restart").showModal();
 }
-$("btn-start").addEventListener("click", () => {
-  if (!hasCourse()) {
-    chooseTime("normal");
-    return;
+// 消すのは、成績・バッジ・図鑑・きせかえ・つづき。音の大きさ・ふりがな・文字の大きさなどの設定は、のこす。
+function eraseSaveData() {
+  for (const key of ["floriQuiz.stats", "floriQuiz.dress", "floriQuiz.dexViewed", "floriQuiz.bestScore"]) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // 消せなくても、ページを開きなおせば、つづきから始まる。
+    }
   }
-  askRestart(() => {
-    resetCourse();
-    session = new Session(normalQuestions);
-    refreshCover();
-    chooseTime("normal");
-  });
-});
+  location.reload();
+}
+$("btn-erase").addEventListener("click", () => askRestart(eraseSaveData));
 $("btn-restart-no").addEventListener("click", () => $("dlg-restart").close());
 $("btn-restart-yes").addEventListener("click", () => {
   $("dlg-restart").close();
@@ -759,28 +762,7 @@ $("btn-restart-yes").addEventListener("click", () => {
 function persistHard() {
   saveHardCourse([...hardUsed].map((id) => idToUid.get(id)).filter(Boolean));
 }
-$("btn-hard").addEventListener("click", () => {
-  if (hardUsed.size === 0) {
-    chooseTime("hard");
-    return;
-  }
-  $("dlg-hard-progress").textContent = `いままでに${hardUsed.size} / ${hardQuestions.length}問を出したヨ。`;
-  $("dlg-hard").showModal();
-});
-$("btn-hard-continue").addEventListener("click", () => {
-  $("dlg-hard").close();
-  chooseTime("hard");
-});
-$("btn-hard-new").addEventListener("click", () => {
-  $("dlg-hard").close();
-  askRestart(() => {
-    hardUsed.clear();
-    resetHardCourse();
-    refreshCover();
-    chooseTime("hard");
-  });
-});
-$("btn-hard-cancel").addEventListener("click", () => $("dlg-hard").close());
+$("btn-hard").addEventListener("click", () => chooseTime("hard"));
 $("btn-daily").addEventListener("click", () => {
   if (loadStats().dailyLast === dateKey()) {
     // 今日の分は、もう終わっている
@@ -1035,55 +1017,121 @@ function showBadges() {
 }
 
 // ================= 問題図鑑 =================
+// ================= 問題図鑑(カードを集める) =================
+const CATEGORY_ICON = { ひらめき: "💡", 社会: "🌏", 理科: "🔬", 科学: "⚗️", 日常: "🏠", 規則: "🔢", 国語: "📖", 論理: "🧩", 数: "➗", オニ: "👹" };
+const RARITY = { 1: "★", 2: "★★", 3: "★★★", 4: "💎", 5: "👹" };
+const DEX_VIEWED_KEY = "floriQuiz.dexViewed"; // 図鑑を開いて、もう見たカード(NEW! を一度だけ出すため)
+
+function dexViewed() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(DEX_VIEWED_KEY) ?? "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+function openDexCard(question, label, owned) {
+  const big = $("dex-big");
+  big.className = `dex-big lv${question.level}`;
+  const head = document.createElement("div");
+  head.className = "dex-big-head";
+  head.textContent = `${CATEGORY_ICON[question.category] ?? "❓"} ${label}  ${question.category}  ${RARITY[question.level] ?? ""}`;
+  const text = document.createElement("p");
+  text.className = "dex-q";
+  text.textContent = question.text;
+  big.replaceChildren(head, text);
+  if (question.type === "choice") {
+    const list = document.createElement("ol");
+    list.className = "dex-choices";
+    list.type = "A";
+    for (const choice of question.choices) {
+      const item = document.createElement("li");
+      item.textContent = choice;
+      list.append(item); // 答えと解説とヒントは、のせない(問題を解いて、たしかめる)
+    }
+    big.append(list);
+  }
+  if (owned) {
+    const mark = document.createElement("p");
+    mark.className = "dex-owned";
+    mark.textContent = "✔ 正解したことがあるヨ!";
+    big.append(mark);
+  }
+  $("dlg-dex").showModal();
+}
+
 function showDex() {
   const stats = loadStats();
   const met = new Set([...stats.dex, ...stats.seen, ...stats.right, ...stats.oniRight]);
   const rightSet = new Set([...stats.right, ...stats.oniRight]);
+  const viewed = dexViewed();
   const sorted = [...allQuestions].sort((a, b) => a.id.localeCompare(b.id));
   const playableList = sorted.filter((q) => q.level <= HARD_LEVEL);
   const oniList = sorted.filter((q) => q.level > HARD_LEVEL);
-  const entry = (question, label) => {
+  const card = (question, label) => {
     const uid = question.uid ?? question.id;
-    const item = document.createElement("li");
-    if (!met.has(uid)) {
-      item.className = "locked";
-      item.textContent = `${label}  ???(まだ出会っていないヨ)`;
-      return item;
+    const owned = met.has(uid);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `dex-card lv${question.level}${owned ? "" : " locked"}`;
+    button.dataset.noSe = owned ? "" : "1";
+    const no = document.createElement("span");
+    no.className = "dex-no";
+    no.textContent = label;
+    const rarity = document.createElement("span");
+    rarity.className = "dex-rarity";
+    rarity.textContent = owned ? RARITY[question.level] : "";
+    const icon = document.createElement("span");
+    icon.className = "dex-icon";
+    icon.textContent = owned ? (CATEGORY_ICON[question.category] ?? "❓") : "？";
+    const cat = document.createElement("span");
+    cat.className = "dex-cat";
+    cat.textContent = owned ? question.category : "???";
+    button.append(no, rarity, icon, cat);
+    if (owned && !viewed.has(uid)) {
+      const fresh = document.createElement("span");
+      fresh.className = "dex-new";
+      fresh.textContent = "NEW!";
+      button.append(fresh);
     }
-    const head = document.createElement("p");
-    head.className = "dex-head";
-    head.textContent = `${label}  ${question.category}`;
-    const mark = document.createElement("span");
-    mark.className = "dex-mark";
-    mark.textContent = rightSet.has(uid) ? "✔ 正解したことがある" : "";
-    head.append(mark);
-    const q = document.createElement("p");
-    q.className = "dex-q";
-    q.textContent = question.text;
-    item.append(head, q);
-    if (question.type === "choice") {
-      const list = document.createElement("ol");
-      list.className = "dex-choices";
-      list.type = "A";
-      for (const text of question.choices) {
-        const choice = document.createElement("li");
-        choice.textContent = text;
-        list.append(choice);
-      }
-      item.append(list); // 答えと解説とヒントは、のせない(問題を解いて、たしかめる)
+    if (owned && rightSet.has(uid)) {
+      const star = document.createElement("span");
+      star.className = "dex-star";
+      star.textContent = "✔";
+      button.append(star);
     }
-    return item;
+    button.addEventListener("click", () => {
+      if (owned) openDexCard(question, label, rightSet.has(uid));
+      else $("dex-comment").textContent = "まだ出会っていないヨ。問題を解くと、カードがもらえるヨ!";
+    });
+    return button;
   };
-  const items = playableList.map((q, i) => entry(q, `No.${i + 1}`));
+  const cards = playableList.map((q, i) => card(q, `No.${i + 1}`));
   // オニ問題は、出会ったものだけを、のせる(あることは、先にばらさない)
   oniList.forEach((q, i) => {
-    if (met.has(q.uid ?? q.id)) items.push(entry(q, `オニ${i + 1}`));
+    if (met.has(q.uid ?? q.id)) cards.push(card(q, `オニ${i + 1}`));
   });
-  const metPlayable = playableList.filter((q) => met.has(q.uid ?? q.id)).length;
-  $("dex-count").textContent = `出会った問題 ${metPlayable} / ${playableList.length}問`;
-  $("dex-list").replaceChildren(...items);
+  const have = playableList.filter((q) => met.has(q.uid ?? q.id)).length;
+  const percent = Math.round((have / playableList.length) * 100);
+  $("dex-count").textContent = `カード ${have} / ${playableList.length}まい(${percent}%)`;
+  $("dex-meter-bar").style.width = `${percent}%`;
+  $("dex-comment").textContent =
+    have === playableList.length
+      ? "🎉 コンプリート! 全部のカードがそろったヨ!"
+      : have === 0
+        ? "問題を解くと、カードが集まるヨ!"
+        : "カードをおすと、問題がもう一度見られるヨ。";
+  $("screen-dex").classList.toggle("is-complete", have === playableList.length);
+  $("dex-grid").replaceChildren(...cards);
+  // NEW! は、一度見たら、つぎからは出さない
+  try {
+    localStorage.setItem(DEX_VIEWED_KEY, JSON.stringify([...met]));
+  } catch {
+    // 保存できなくても、遊びは続けられる。
+  }
   show("dex");
 }
+$("btn-dex-close").addEventListener("click", () => $("dlg-dex").close());
 
 // ================= きせかえ・背景 =================
 let dress = loadDress();
@@ -1105,6 +1153,8 @@ function showDress() {
   const ctx = { have: new Set(stats.badges), stars: stats.stars };
   $("dress-stars").textContent = stats.stars;
   for (const tab of document.querySelectorAll("[data-dress-tab]")) tab.classList.toggle("is-on", tab.dataset.dressTab === dressTab);
+  const nameOf = (list, id) => list.find((item) => item.id === id)?.name ?? "";
+  $("dress-now").textContent = `いま:${nameOf(COLORS, dress.color)} ・ ${nameOf(HATS, dress.hat)} ・ ${nameOf(THEMES, dress.theme)}`;
   const kind = dressTab;
   $("dress-list").replaceChildren(
     ...DRESS_LISTS[kind].map((choice) => {
@@ -1112,8 +1162,24 @@ function showDress() {
       const button = document.createElement("button");
       button.type = "button";
       button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}${open ? "" : " is-locked"}`;
-      button.textContent = `${choice.icon ?? ""} ${choice.name}`.trim();
       button.style.borderColor = choice.tint; // 縁を、その色に
+      if (kind === "color") {
+        // 色の見本(まる)
+        const swatch = document.createElement("span");
+        swatch.className = "swatch";
+        swatch.style.background = choice.original ? "linear-gradient(135deg, #dfe8ee, #7ec3e0)" : choice.tint;
+        button.append(swatch);
+      }
+      const label = document.createElement("span");
+      label.className = "dress-label";
+      label.textContent = `${choice.icon ?? ""} ${choice.name}${dress[kind] === choice.id ? " ✓" : ""}`.trim();
+      button.append(label);
+      if (!open) {
+        const lock = document.createElement("small");
+        lock.className = "dress-lock";
+        lock.textContent = typeof choice.unlock === "string" ? `🔒 ${badgeName(choice.unlock)}` : `🔒 ⭐${choice.unlock.stars}こ`;
+        button.append(lock);
+      }
       if (dress[kind] === choice.id) button.style.backgroundColor = `color-mix(in srgb, ${choice.tint} 35%, white)`;
       button.addEventListener("click", () => {
         if (!open) {
