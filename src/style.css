@@ -542,11 +542,12 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 @keyframes letter-bounce { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-12px) rotate(-4deg); } }
 .announce-text {
   color: #e0869a;
-  /* ふちどりは、文字の線ではなく、かげを重ねて作る(線だと、中の色がつぶれて、読みにくい) */
+  /* ふちどりは、文字の線ではなく、かげを重ねて作る(線だと、中の色がつぶれて、読みにくい)。中の色は、こい色 */
+  color: #e0527a;
   text-shadow:
-    -3px 0 0 #fff, 3px 0 0 #fff, 0 -3px 0 #fff, 0 3px 0 #fff,
-    -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff,
-    0 7px 0 rgba(70, 85, 94, 0.28);
+    -2px 0 0 #46555e, 2px 0 0 #46555e, 0 -2px 0 #46555e, 0 2px 0 #46555e,
+    -2px -2px 0 #46555e, 2px -2px 0 #46555e, -2px 2px 0 #46555e, 2px 2px 0 #46555e,
+    0 7px 0 rgba(70, 85, 94, 0.3);
 }
 .confetti { position: absolute; inset: 0; pointer-events: none; }
 .confetti span {
