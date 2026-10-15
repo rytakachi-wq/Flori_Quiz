@@ -28,8 +28,8 @@ const ART = {
   u056ac32e: row(e("📅", "ia-bob"), box("30"), e("➡️", "ia-slide-r"), e("❓", "ia-pop")),
   // q08 サイコロ
   uff6b6f4d: row(e("⚂", "ia-roll"), e("↕️", "ia-bob"), e("🎲", "ia-roll", 0.3), e("❓", "ia-pop")),
-  // q09 人口が一番多い都道府県
-  u0bdd75bf: row(e("🗼", "ia-bob"), e("👥", "ia-pop"), e("🏙️", "ia-bob", 0.3), e("❓", "ia-pop", 0.5)),
+  // q09 新しい問題
+  u139012d8: row(e("🏞️", "ia-bob"), e("🌊", "ia-sway"), e("🚣", "ia-boat"), e("❓", "ia-pop", 0.4)),
   // q10 面積
   uf82373b2: row(e("🗾", "ia-bob"), e("📏", "ia-sway"), e("📐", "ia-sway", 0.3)),
   // q11 国旗の赤い丸
@@ -70,8 +70,8 @@ const ART = {
   u912c1e6d: row(e("📜", "ia-bob"), e("🔁", "ia-spin-slow"), e("📜", "ia-bob", 0.3)),
   // q29 カレンダーの縦3つ
   uf2aa49c1: `<span class="icalendar">${box("")}${box("?", "is-q")}${box("")}</span>${e("🗓️", "ia-bob")}${t("＝42")}`,
-  // q30 情けは人のためならず
-  u6726478f: row(e("🤝", "ia-pop"), e("➡️", "ia-slide-r"), e("🔄", "ia-spin-slow"), e("😊", "ia-bob"), e("❓", "ia-pop", 0.5)),
+  // q30 新しい問題
+  u8052ff1c: row(e("🍲", "ia-bob"), e("♨️", "ia-fall-up"), e("💬", "ia-pop"), e("🤔", "ia-sway"), e("❓", "ia-pop", 0.5)),
   // q31 ふくろの札
   uef8770f5: `<span class="ibags">${[["🍎"], ["🍊"], ["🍎", "🍊"]].map((f, i) => `<span class="ibag ia-bob" style="--d:${i * 0.25}s"><span class="ibag-tag">${f.join("")}</span>🛍️</span>`).join("")}</span>`,
   // q32 鏡の時計
