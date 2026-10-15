@@ -1058,3 +1058,11 @@ body { overflow-x: hidden; }
 
 /* きせかえの、ロックのお知らせは、出ても消えても、場所が変わらないように、いつも高さをとっておく */
 #dress-message { min-height: 3.2em; margin: 0; line-height: 1.6; text-align: center; }
+
+/* きせかえの「いま:…」の行も、中身が変わっても、高さを変えない */
+#dress-now { min-height: 2.8em; display: flex; align-items: center; justify-content: center; line-height: 1.4; }
+
+/* きせかえの選択肢は、同じ大きさの升目に並べる(選んでも、もようが変わっても、ほかのボタンが動かない) */
+#screen-dress .dress-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); justify-content: stretch; }
+#screen-dress .dress-item { width: 100%; min-width: 0; box-sizing: border-box; }
+#dress-now { height: 2.9em; min-height: 0; overflow: hidden; }
