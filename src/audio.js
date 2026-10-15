@@ -3,7 +3,7 @@
 //
 // BGMは、このゲームのために作ったオリジナルの曲を、ブラウザの中で演奏する(music.js)。曲のファイルはない。
 
-import { MusicPlayer } from "./music.js";
+import { MusicPlayer, jingleSeconds } from "./music.js";
 
 const BASE = "../assets/audio/";
 const SETTINGS_KEY = "floriQuiz.settings.v2";
@@ -74,10 +74,14 @@ function applyBgm() {
 
 // 短い曲(オープニング、スタート、結果発表の前)を鳴らす。鳴り終わるまで、BGMは止める。長さ(ミリ秒)を返す。
 export function playJingle(name) {
-  if (!music || context?.state !== "running") return 0;
+  if (!music || !context) return 0;
+  const seconds = jingleSeconds(name);
+  if (seconds === 0) return 0;
   holding = true;
   applyBgm();
-  const seconds = music.jingle(name);
+  // 音を出す準備が、まだ終わっていないとき(「止まっている」状態)は、動きだしてから鳴らす(鳴らずにおわるのを、防ぐ)
+  if (context.state === "running") music.jingle(name);
+  else context.resume().then(() => music.jingle(name)).catch(() => {});
   setTimeout(() => {
     holding = false;
     applyBgm();

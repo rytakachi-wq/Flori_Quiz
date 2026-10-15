@@ -451,6 +451,12 @@ export function scheduleBar(ctx, out, name, bar, time) {
   }
 }
 
+// 短い曲の長さ(秒)。鳴らさずに、長さだけ知りたいとき
+export function jingleSeconds(name) {
+  const jingle = JINGLES[name];
+  return jingle ? (60 / jingle.bpm / 4) * jingle.steps : 0;
+}
+
 // 短い曲を、予約する。長さ(秒)を返す。
 export function scheduleJingle(ctx, out, name, time) {
   const jingle = JINGLES[name];

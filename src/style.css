@@ -1068,3 +1068,30 @@ body { overflow-x: hidden; }
 
 /* かざりを、少し小さく */
 .hero-hat, .hero-small .hero-hat { top: -11cqw; font-size: 34cqw; }
+
+.btn-read { align-self: flex-end; padding: 4px 16px; min-height: 40px; font-size: 15px; }
+.btn-read[hidden] { display: none; }
+.dlg-review { margin: 0 0 10px; padding: 8px 12px; text-align: left; line-height: 1.6; background: #f1eafb; border: 2px solid #b9a3dd; border-radius: 12px; font-size: 16px; }
+.dlg-review[hidden] { display: none; }
+/* 設定のフロリを、大きく */
+.flori-tiny { height: clamp(96px, 20vh, 150px); }
+.settings-head .bubble { font-size: 17px; }
+
+/* みんなで対戦のルール:絵と色で、ぱっと分かるように */
+.vs-rules { display: grid; gap: 10px; width: min(560px, 100%); padding: 12px; background: #fff; border: 3px solid var(--blue); border-radius: 18px; }
+.vs-lead { margin: 0; font-size: 17px; line-height: 1.6; text-align: center; }
+.vs-rounds { list-style: none; margin: 0; padding: 0; display: flex; align-items: stretch; justify-content: center; gap: 4px; }
+.vs-rounds li:not(.vs-arrow) { flex: 1; display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border: 3px solid var(--line); border-radius: 14px; text-align: center; }
+.vs-r1 { background: #dff3e6; }
+.vs-r2 { background: #fff3c4; }
+.vs-r3 { background: #fbd9dc; }
+.vs-name { font-size: 18px; font-weight: bold; }
+.vs-stars { font-size: 20px; color: #d19a1d; letter-spacing: 2px; }
+.vs-level { font-size: 15px; }
+.vs-point { font-size: 16px; }
+.vs-point b { font-size: 24px; color: #c0394f; }
+.vs-arrow { align-self: center; font-size: 18px; color: var(--blue-dark); }
+.vs-points { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.vs-points li { display: grid; grid-template-columns: 1.6em auto 1fr; align-items: baseline; gap: 6px; font-size: 16px; line-height: 1.5; }
+.vs-points b { color: #c0587a; }
+@media (max-width: 480px) { .vs-rounds { flex-direction: column; } .vs-arrow { transform: rotate(90deg); } }

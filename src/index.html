@@ -106,16 +106,20 @@
     <!-- みんなで対戦 -->
     <section id="screen-versus" class="screen" aria-label="みんなで対戦" hidden>
       <h2 class="title">みんなで対戦</h2>
-      <div class="rules-box">
-        <h3>ルール</h3>
-        <ol>
-          <li><b>みんなで1台</b>2〜4人で1台の画面を使うヨ。順番に答えよう。</li>
-          <li><b>3回戦</b>1回戦はやさしい問題、2回戦はふつう、3回戦はむずかしめ。</li>
-          <li><b>問題</b>1回戦ごとに1人1問ずつ(1人で全部3問)。人によって問題はちがうヨ。</li>
-          <li><b>点数</b>正解すると1回戦は1点、2回戦は2点、3回戦は3点。</li>
-          <li><b>勝ち</b>合計点が一番高い人の勝ち。同じ点なら引き分け。</li>
-          <li><b>そのほか</b>ヒントはないヨ。制限時間はつけられるヨ。</li>
+      <div class="vs-rules">
+        <p class="vs-lead">👥 <b>1台の画面を、みんなで使います。</b>順番に、1人1問ずつ答えます。</p>
+        <ol class="vs-rounds" aria-label="3回戦">
+          <li class="vs-r1"><span class="vs-name">1回戦</span><span class="vs-stars" aria-hidden="true">★☆☆</span><span class="vs-level">やさしい問題</span><span class="vs-point">正解で <b>1点</b></span></li>
+          <li class="vs-arrow" aria-hidden="true">▶</li>
+          <li class="vs-r2"><span class="vs-name">2回戦</span><span class="vs-stars" aria-hidden="true">★★☆</span><span class="vs-level">ふつうの問題</span><span class="vs-point">正解で <b>2点</b></span></li>
+          <li class="vs-arrow" aria-hidden="true">▶</li>
+          <li class="vs-r3"><span class="vs-name">3回戦</span><span class="vs-stars" aria-hidden="true">★★★</span><span class="vs-level">むずかしめ</span><span class="vs-point">正解で <b>3点</b></span></li>
         </ol>
+        <ul class="vs-points">
+          <li><span aria-hidden="true">🏆</span><b>勝ち</b> 合計点がいちばん高い人。同じ点なら引き分けです。</li>
+          <li><span aria-hidden="true">🎲</span><b>問題</b> 人によって、ちがう問題が出ます。</li>
+          <li><span aria-hidden="true">⏱</span><b>そのほか</b> ヒントはありません。制限時間は、つけられます。</li>
+        </ul>
       </div>
       <p class="note">何人で遊ぶ?</p>
       <div class="buttons">
@@ -248,6 +252,7 @@
         </div>
         <p id="q-text" class="question"></p>
       </div>
+      <button id="btn-read" class="btn btn-sub btn-read" type="button" data-no-se="1" hidden><span aria-hidden="true">🔊</span> 読み上げ</button>
       <div id="q-hint-area" class="hint-area" hidden>
         <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る(−1点)</button>
         <p id="q-hint" class="hint" hidden></p>
@@ -302,6 +307,7 @@
   </dialog>
 
   <dialog id="dlg-time" class="dialog" aria-labelledby="dlg-time-text">
+    <p id="dlg-time-review" class="dlg-review" hidden>📖 <b>おさらい</b>では、<b>まちがえた問題</b>と、<b>ヒントを見て解いた問題</b>が出ます。ヒントを見ないで正解すると、おさらいから消えます。</p>
     <p id="dlg-time-text">制限時間をつける?<br>つけると1問30秒で答えるヨ。<br>星のごほうびがもらえるヨ。</p>
     <div class="buttons buttons-choice">
       <button id="btn-time-yes" class="btn btn-main btn-mid-big" type="button">つける<small>(ごほうびあり)</small></button>

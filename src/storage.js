@@ -139,11 +139,12 @@ function save(stats) {
   }
 }
 
-// まちがえた問題を、おぼえておく(正解したら、わすれる)。
+// まちがえた問題と、ヒントを見て解いた問題を、おぼえておく(ヒントなしで正解したら、わすれる)。
 function updateWrong(stats, answers) {
   const wrong = new Set(stats.wrong);
   for (const answer of answers) {
-    if (answer.correct) wrong.delete(answer.id);
+    // まちがえた問題と、ヒントを見て解いた問題が、おさらいに入る(ヒントなしで正解すると、おさらいから消える)
+    if (answer.correct && !answer.hinted) wrong.delete(answer.id);
     else wrong.add(answer.id);
   }
   stats.wrong = [...wrong];

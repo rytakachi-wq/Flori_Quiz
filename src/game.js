@@ -88,9 +88,15 @@ export class Session {
     this.startRound();
   }
 
+  // カウンターは、0から「いちばん上の段階に上がる3 + 1」までにする。(上の段階にいるときは、多くても2問まちがえると、下の段階にもどる)
+  clampCounter(counter) {
+    const top = (this.maxLevel - this.minLevel) * COUNTER_PER_LEVEL;
+    return Math.min(top + 1, Math.max(0, counter));
+  }
+
   // 「つづきから」:保存した、難しさのカウンターと、出した問題を、もどす。
   restore(counter, usedIds) {
-    this.counter = counter;
+    this.counter = this.clampCounter(counter);
     this.used = new Set(usedIds);
     this.startRound();
   }
@@ -138,10 +144,10 @@ export class Session {
     this.points += questionPoints(correct, hinted);
     this.used.add(question.id);
     this.roundUsed.push(question.id);
-    this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: questionPoints(correct, hinted) }); // 成績には、番号がかわっても変わらない uid で、記録する
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct, hinted: correct && hinted, points: questionPoints(correct, hinted) }); // 成績には、番号がかわっても変わらない uid で、記録する
     this.asked += 1;
     if (correct) this.correct += 1;
-    this.counter = Math.max(0, this.counter + (correct ? 1 : -1));
+    this.counter = this.clampCounter(this.counter + (correct ? 1 : -1));
     return correct;
   }
 
@@ -228,7 +234,7 @@ export class PracticeRound {
   answer(question, response, hinted = false) {
     const correct = judge(question, response);
     this.points += questionPoints(correct, hinted);
-    this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: questionPoints(correct, hinted) });
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct, hinted: correct && hinted, points: questionPoints(correct, hinted) });
     this.asked += 1;
     if (correct) this.correct += 1;
     return correct;

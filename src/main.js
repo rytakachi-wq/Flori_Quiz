@@ -83,8 +83,8 @@ function startCoverIdle() {
   idleReturnTimer = setTimeout(returnToOpening, IDLE_RETURN_MS);
 }
 
-// 表紙で20秒間なにもしなかったら、オープニング画面にもどって、フロリが遊ぶ。さわると、表紙にもどる。
-const IDLE_RETURN_MS = 20000;
+// 表紙で30秒間なにもしなかったら、オープニング画面にもどって、フロリが遊ぶ。さわると、表紙にもどる。
+const IDLE_RETURN_MS = 30000;
 let idleReturnTimer = 0;
 function returnToOpening() {
   if ($("screen-cover").hidden || !$("opening").hidden || announcing || document.querySelector("dialog[open]")) return;
@@ -405,20 +405,44 @@ function setSpeaking(on) {
   if (timerId) renderTimer();
 }
 function stopSpeaking() {
+  clearTimeout(speakTimer);
   if (canSpeak) speechSynthesis.cancel();
   setSpeaking(false);
 }
-function speak(text) {
+// 声の一覧は、ブラウザが、あとから用意することがある(それまで待つ)
+let japaneseVoice = null;
+function pickVoice() {
   if (!canSpeak) return;
+  const voices = speechSynthesis.getVoices();
+  japaneseVoice = voices.find((v) => v.lang === "ja-JP") ?? voices.find((v) => v.lang.startsWith("ja")) ?? null;
+}
+if (canSpeak) {
+  pickVoice();
+  speechSynthesis.addEventListener?.("voiceschanged", pickVoice);
+}
+let nowSpeaking = null; // 読み上げ中の声を持っておく(途中で、とぎれないように)
+let speakTimer = 0;
+function speak(text) {
+  if (!canSpeak || !readableText(text)) return;
+  clearTimeout(speakTimer);
   speechSynthesis.cancel();
   // 漢字は、ふりがな(辞書の読み)に置きかえて、読みまちがいを減らす
   const voice = new SpeechSynthesisUtterance(readingOf(text).replace(/□/g, "なにか").replace(/\n/g, "。"));
   voice.lang = "ja-JP";
+  if (japaneseVoice) voice.voice = japaneseVoice;
   voice.rate = 1.6;
   voice.onend = () => setSpeaking(false);
   voice.onerror = () => setSpeaking(false);
+  nowSpeaking = voice;
   setSpeaking(true);
-  speechSynthesis.speak(voice);
+  // cancel の直後に話させると、声が出ないブラウザがあるので、少し待つ
+  speakTimer = setTimeout(() => {
+    speechSynthesis.resume();
+    speechSynthesis.speak(voice);
+  }, 120);
+}
+function readableText(text) {
+  return typeof text === "string" && text.trim() !== "";
 }
 function readableQuestion(question) {
   const choices = question.type === "choice" ? question.choices.map((text, i) => `${i + 1}番、${text}`).join("。") : "";
@@ -491,6 +515,12 @@ function answer(response) {
   $("q-feedback").hidden = false;
   $("btn-next").focus({ preventScroll: true });
   $("q-feedback").scrollIntoView({ block: "nearest", behavior: "instant" });
+  if (readAloud()) speak(answerReading()); // 正解と解説も読み上げる
+}
+
+// 答えたあとに読む文(正解かどうか・正解・解説)
+function answerReading() {
+  return `${$("q-verdict").textContent}。正解は、${renderers[current.type].correctText(current)}。${current.explanation}`;
 }
 
 // 総合得点(100点満点)を、保存した記録から数える。いまあるふつう・難しい問題の、問題ごとの最高の点を足す(1問2点・ヒントを見たら1点)。
@@ -722,6 +752,8 @@ $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 let pendingMode = null;
 function chooseTime(nextMode) {
   pendingMode = nextMode;
+  // おさらいのときだけ、どんな問題が出るかを、さきに説明する
+  $("dlg-time-review").hidden = nextMode !== "review";
   $("dlg-time").showModal();
 }
 function closeTimeDialog(limit) {
@@ -790,6 +822,7 @@ $("btn-hint").addEventListener("click", () => {
   $("q-hint").textContent = `ヒント:${current.hint}`;
   $("q-hint").hidden = false;
   $("btn-hint").disabled = true;
+  if (readAloud()) speak(`ヒント。${current.hint}`); // ヒントも読み上げる
 });
 $("btn-versus").addEventListener("click", () => show("versus"));
 $("btn-versus-back").addEventListener("click", () => show("cover"));
@@ -828,10 +861,10 @@ $("btn-relax").addEventListener("click", () => startGarden());
 $("btn-relax-back").addEventListener("click", () => show("cover"));
 $("btn-garden-hint").addEventListener("click", () => {
   // ヒントは、おすたびに、出す・かくすが入れかわる
+  // (説明を閉じても、光った木は、そのまま)
   const show = $("garden-hint").hidden;
   $("garden-hint").hidden = !show;
   if (show) garden?.hint();
-  else garden?.clearHint();
 });
 $("btn-garden-again").addEventListener("click", () => startGarden());
 for (const button of document.querySelectorAll("[data-garden]")) {
@@ -1351,6 +1384,7 @@ $("btn-dress-back").addEventListener("click", () => show("cover"));
 function syncReadSettings() {
   $("set-read").checked = readAloud();
   $("set-read-dlg").checked = readAloud();
+  $("btn-read").hidden = !(canSpeak && readAloud()); // 設定でチェックを入れたときだけ、「読み上げ」ボタンを出す
 }
 syncReadSettings();
 for (const box of [$("set-read"), $("set-read-dlg")]) {
@@ -1360,6 +1394,11 @@ for (const box of [$("set-read"), $("set-read-dlg")]) {
     if (!box.checked) stopSpeaking();
   });
 }
+
+$("btn-read").addEventListener("click", () => {
+  if (answered) speak(answerReading());
+  else speak(`${readableQuestion(current)}${hinted ? `。ヒント。${current.hint}` : ""}`);
+});
 
 // ================= 文字の大きさ =================
 const SIZE_KEY = "floriQuiz.textSize";
