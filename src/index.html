@@ -43,16 +43,16 @@
         </div>
       </div>
       <div class="menu">
-        <button id="btn-continue" class="tile t-continue" type="button"><span class="tile-icon" aria-hidden="true">💡</span><span class="tile-text"><span class="tile-label">つづきから</span><span id="continue-sub" class="tile-sub"></span></span></button>
-        <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-text"><span class="tile-label">毎日1問</span></span></button>
-        <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">おさらい</span></span></button>
-        <button id="btn-hard" class="tile t-hard" type="button"><span class="tile-icon" aria-hidden="true">🔥</span><span class="tile-text"><span class="tile-label">難しいモード</span><span id="hard-sub" class="tile-sub"></span></span></button>
-        <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-text"><span class="tile-label">みんなで対戦</span></span></button>
-        <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-text"><span class="tile-label">リラックス</span></span></button>
-        <button id="btn-dex" class="tile t-small t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-text"><span class="tile-label">図鑑</span></span></button>
-        <button id="btn-badges" class="tile t-small t-badges" type="button"><span class="tile-icon" aria-hidden="true">🏅</span><span class="tile-text"><span class="tile-label">バッジ・称号</span></span></button>
-        <button id="btn-dress" class="tile t-small t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">きせかえ</span></span></button>
-        <button id="btn-records" class="tile t-small t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span></button>
+        <button id="btn-continue" class="tile t-continue" type="button"><span class="tile-icon" aria-hidden="true">💡</span><span class="tile-text"><span class="tile-label">始める</span><span id="continue-sub" class="tile-sub"></span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-text"><span class="tile-label">毎日1問</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">おさらい</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-hard" class="tile t-hard" type="button"><span class="tile-icon" aria-hidden="true">🔥</span><span class="tile-text"><span class="tile-label">難しいモード</span><span id="hard-sub" class="tile-sub"></span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-text"><span class="tile-label">みんなで対戦</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-text"><span class="tile-label">リラックス</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-dex" class="tile t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-text"><span class="tile-label">問題図鑑</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-badges" class="tile t-third t-badges" type="button"><span class="tile-icon" aria-hidden="true">🏅</span><span class="tile-text"><span class="tile-label">バッジ・称号</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-dress" class="tile t-third t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">きせかえ</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-records" class="tile t-third t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span><span class="tile-dot" hidden></span></button>
       </div>
       <p id="sound-hint" class="note">♪ 画面をクリックすると音楽が流れるよ。</p>
     </section>
@@ -95,9 +95,9 @@
       <p id="dress-message" class="note" role="status"></p>
       <p id="dress-now" class="dress-now"></p>
       <div class="dress-tabs" role="tablist">
-        <button class="dress-tab is-on" type="button" data-dress-tab="color">フロリの色</button>
-        <button class="dress-tab" type="button" data-dress-tab="hat">かざり</button>
-        <button class="dress-tab" type="button" data-dress-tab="theme">背景</button>
+        <button class="dress-tab is-on" type="button" data-dress-tab="color">🎨 フロリの色</button>
+        <button class="dress-tab" type="button" data-dress-tab="hat">🎀 かざり</button>
+        <button class="dress-tab" type="button" data-dress-tab="theme">🖼️ 背景</button>
       </div>
       <div id="dress-list" class="dress-list"></div>
       <button id="btn-dress-back" class="btn btn-sub" type="button">戻る</button>
@@ -240,12 +240,15 @@
       </header>
       <ol id="q-board" class="board" hidden></ol>
       <p id="q-player" class="turn" hidden></p>
-      <div class="stage">
-        <img id="q-flori" class="flori flori-small" src="" alt="">
-        <p id="q-message" class="bubble" hidden></p>
-      </div>
+
       <div id="q-timer" class="timer" hidden><div class="timer-track"><span id="q-timer-bar" class="timer-bar"></span></div><span id="q-timer-text" class="timer-text"></span></div>
-      <p id="q-text" class="question"></p>
+      <div class="q-row">
+        <div class="stage">
+          <img id="q-flori" class="flori flori-small" src="" alt="">
+          <p id="q-message" class="bubble" hidden></p>
+        </div>
+        <p id="q-text" class="question"></p>
+      </div>
       <button id="btn-read" class="btn btn-sub btn-read" type="button" data-no-se="1"><span aria-hidden="true">🔊</span> 読み上げ</button>
       <div id="q-hint-area" class="hint-area" hidden>
         <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る(−2点)</button>
@@ -278,7 +281,7 @@
       <p id="r-record" class="record" hidden>新記録!</p>
       <p id="r-set" class="note" hidden></p>
       <p id="r-reward" class="reward-news" hidden></p>
-      <p id="r-badge" class="badge-news" hidden></p>
+      <ul id="r-news" class="news-list" hidden></ul>
       <div class="buttons">
         <button id="btn-again" class="btn btn-main" type="button">続けて遊ぶ</button>
         <button id="btn-cover" class="btn btn-sub" type="button">表紙へ</button>
@@ -309,7 +312,7 @@
     </div>
   </dialog>
   <dialog id="dlg-restart" class="dialog" aria-labelledby="dlg-restart-text">
-    <p id="dlg-restart-text">セーブデータを消します。<br>成績・バッジ・図鑑・きせかえ・つづきが全部消えるけど、本当にいいですか?</p>
+    <p id="dlg-restart-text">セーブデータを消します。<br>成績・バッジ・問題図鑑・きせかえ・つづきが全部消えるけど、本当にいいですか?</p>
     <div class="buttons buttons-choice">
       <button id="btn-restart-no" class="btn btn-main btn-big" type="button">やめる</button>
       <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">はい、消す</button>

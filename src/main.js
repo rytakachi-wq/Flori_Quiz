@@ -39,7 +39,7 @@ import {
 } from "./storage.js";
 import { BADGES, COLORS, HATS, THEMES, TITLES, badgeName, earnedBadges, isOpen, loadDress, lockText, saveDress, starTitleFor, STAR_TITLES, titleFor } from "./badges.js";
 import { GardenUI } from "./garden.js";
-import { setFloriColor } from "./flori-color.js";
+import { applyFloriSrc, setFloriColor, setWarmList } from "./flori-color.js";
 import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, readingOf, setFuriganaMode, startFurigana } from "./furigana.js";
 
@@ -102,7 +102,6 @@ function show(name) {
   if (name !== "question") {
     stopTimer();
     stopSpeaking();
-    clearTimeout(detailTimer);
   }
   setScene(sceneOf(name));
   window.scrollTo(0, 0);
@@ -181,7 +180,7 @@ let answered = false;
 
 function setFlori(src, alt) {
   const img = $("q-flori");
-  img.src = src;
+  applyFloriSrc(img, src);
   img.alt = alt;
 }
 
@@ -192,7 +191,7 @@ function announce(text, jingle, then, image) {
   announcing = true;
   $("announce-text").textContent = text;
   const flori = $("announce-flori");
-  flori.src = image;
+  applyFloriSrc(flori, image);
   flori.hidden = false;
   flori.style.animation = "none";
   void flori.offsetWidth; // フロリの登場を、はじめから動かす
@@ -223,6 +222,7 @@ function refreshCover() {
   // 記録があれば「つづきから」、なければ「始める」(どちらも、押せる)
   const saved = hasCourse(stats);
   $("btn-continue").querySelector(".tile-label").textContent = saved ? "つづきから" : "始める";
+  refreshNoticeDots();
   const level = Math.min(MAX_LEVEL, 1 + Math.floor(stats.courseCounter / 3));
   $("hard-sub").textContent = hardUsed.size > 0 ? `つづき ${hardUsed.size}/${hardQuestions.length}問` : "";
   $("continue-sub").textContent = saved ? `${stats.setRounds.length + 1}回目 ・ ${"★".repeat(level)}${"☆".repeat(MAX_LEVEL - level)}` : "";
@@ -246,7 +246,8 @@ function startPlay(nextMode) {
   } else if (mode === "daily") {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
   } else play = session;
-  announce("それでは、スタート!", "start", showQuestion, "../assets/flori/src/body_wave.webp");
+  const resume = mode === "normal" && hasCourse(); // つづきから遊ぶときは、そう知らせる
+  announce(resume ? "つづきから、スタート!" : "それでは、スタート!", "start", showQuestion, "../assets/flori/src/body_wave.webp");
 }
 
 function showQuestion() {
@@ -279,7 +280,6 @@ function showQuestion() {
   $("q-text").classList.toggle("long", question.text.length > 70); // 長い問題は、文字を少し小さくして、画面に収める
   $("screen-question").classList.toggle("is-long", question.text.length > 100); // とても長い問題は、もっとぎゅっと
   $("screen-question").classList.remove("is-answered");
-  clearTimeout(detailTimer);
   $("q-feedback").hidden = true;
 
   const message = $("q-message");
@@ -458,22 +458,13 @@ function answer(response) {
   $("btn-next").textContent = play.roundFinished ? "結果を見る" : "次へ";
   $("screen-question").classList.add("is-answered"); // 答えたあとは、上のフロリや、ヒントを、かくして、場所をあける
   // まず、全身のフロリを見せる(大きくはしない)。そのあとで、解説と「次へ」の所まで、画面を動かす。
-  $("q-react-flori").src = correct ? IMG.correct : IMG.wrong;
+  applyFloriSrc($("q-react-flori"), correct ? IMG.correct : IMG.wrong);
   $("q-react-flori").alt = correct ? "笑うフロリ" : "目をつぶるフロリ";
-  $("q-detail").hidden = true;
-  $("q-feedback").hidden = false;
-  $("q-react").scrollIntoView({ block: "center", behavior: "smooth" });
-  clearTimeout(detailTimer);
-  detailTimer = setTimeout(revealDetail, REVEAL_MS);
-}
-
-const REVEAL_MS = 1800; // 全身のフロリを見せる時間
-let detailTimer = 0;
-function revealDetail() {
-  clearTimeout(detailTimer);
+  // 全身のフロリと、解説と、「次へ」を、一度に(時間をあけずに)見せる。画面に収まるので、動かす必要はない。
   $("q-detail").hidden = false;
+  $("q-feedback").hidden = false;
   $("btn-next").focus({ preventScroll: true });
-  $("btn-next").scrollIntoView({ block: "end", behavior: "smooth" }); // 「次へ」のボタンまで動かす
+  $("q-feedback").scrollIntoView({ block: "nearest", behavior: "instant" });
 }
 
 // 総合得点(100点満点)を、保存した記録から数える。いまある問題だけを数える(問題が増えても、満点は100点のまま)。
@@ -582,7 +573,8 @@ function showResult() {
     reward.textContent = `制限時間のごほうび! ⭐ +${earned}(ぜんぶで ${stars}こ)`;
     reward.hidden = false;
   }
-  announceBadges($("r-badge"));
+  awardBadges();
+  renderNews();
   show("result");
 }
 
@@ -630,6 +622,7 @@ function showRecords() {
   $("s-right").textContent = `${right} / ${playable.size}問`;
   $("s-answered").textContent = `${s.answered}問(正解 ${s.correct}問)`;
   $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : "まだないよ";
+  markSeen("records");
   show("records");
 }
 
@@ -742,7 +735,7 @@ function askRestart(action) {
 }
 // 消すのは、成績・バッジ・図鑑・きせかえ・つづき。音の大きさ・ふりがな・文字の大きさなどの設定は、のこす。
 function eraseSaveData() {
-  for (const key of ["floriQuiz.stats", "floriQuiz.dress", "floriQuiz.dexViewed", "floriQuiz.bestScore"]) {
+  for (const key of ["floriQuiz.stats", "floriQuiz.dress", "floriQuiz.dexViewed", "floriQuiz.notice", "floriQuiz.bestScore"]) {
     try {
       localStorage.removeItem(key);
     } catch {
@@ -878,6 +871,10 @@ async function init() {
     playableQuestions = [...normal, ...hardQuestions];
     allQuestions = questions;
     renderBadgeBackground();
+    // 答えたあと・結果で出す、フロリの絵を先に読みこんでおく(すぐ出せるように)
+    const preload = [...Object.values(IMG), "../assets/flori/wave_nikkori.png", "../assets/flori/src/body_wave.webp"];
+    for (const src of preload) new Image().src = src;
+    setWarmList(preload);
     pruneStats(new Set([...normalIds, ...hardIds, ...oniIds])); // 古い番号の記録を、取りのぞく
     for (const q of normal) idToUid.set(q.id, q.uid ?? q.id);
     for (const q of hardQuestions) idToUid.set(q.id, q.uid ?? q.id);
@@ -955,6 +952,102 @@ function renderBadgeBackground() {
   );
 }
 
+// ===== お知らせ:図鑑・バッジ・称号・きせかえ・成績で、あたらしく手に入れたものを知らせる =====
+const NOTICE_KEY = "floriQuiz.notice"; // どこまで見たか(カードは、図鑑のほうで)
+function loadNotice() {
+  try {
+    return JSON.parse(localStorage.getItem(NOTICE_KEY) ?? "null");
+  } catch {
+    return null;
+  }
+}
+function saveNotice(notice) {
+  try {
+    localStorage.setItem(NOTICE_KEY, JSON.stringify(notice));
+  } catch {
+    // 保存できなくても、遊びは続けられる。
+  }
+}
+function openDressKeys(stats) {
+  const ctx = { have: new Set(stats.badges), stars: stats.stars };
+  return Object.entries(DRESS_LISTS).flatMap(([kind, list]) => list.filter((item) => isOpen(item, ctx)).map((item) => `${kind}:${item.id}`));
+}
+function dressName(key) {
+  const [kind, id] = key.split(":");
+  return DRESS_LISTS[kind].find((item) => item.id === id)?.name ?? "";
+}
+function noticeNow(stats) {
+  const total = currentTotal(stats);
+  return { badges: [...stats.badges], dress: openDressKeys(stats), title: titleFor(total), starTitle: starTitleFor(stats.stars), total };
+}
+// 見たところまでの記録。はじめて(この機能を使うのが、はじめて)のときは、いまの状態を、見たことにする。
+function noticeBase() {
+  let base = loadNotice();
+  if (!base) {
+    base = noticeNow(loadStats());
+    saveNotice(base);
+  }
+  return base;
+}
+function computeNews() {
+  const stats = loadStats();
+  const base = noticeBase();
+  const now = noticeNow(stats);
+  const valid = new Set(allQuestions.map((q) => q.uid ?? q.id));
+  const viewed = dexViewed();
+  const met = [...new Set([...stats.dex, ...stats.seen, ...stats.right, ...stats.oniRight])].filter((id) => valid.has(id));
+  return {
+    cards: met.filter((id) => !viewed.has(id)).length,
+    badges: now.badges.filter((id) => !base.badges.includes(id)),
+    titles: [now.title !== base.title ? now.title : "", now.starTitle && now.starTitle !== base.starTitle ? `☆${now.starTitle}` : ""].filter(Boolean),
+    dress: now.dress.filter((key) => !base.dress.includes(key)),
+    gain: Math.max(0, now.total - base.total),
+    now,
+  };
+}
+// その画面を開いたら、「見た」ことにする
+function markSeen(kind) {
+  const base = noticeBase();
+  const now = noticeNow(loadStats());
+  if (kind === "badges") Object.assign(base, { badges: now.badges, title: now.title, starTitle: now.starTitle });
+  if (kind === "dress") base.dress = now.dress;
+  if (kind === "records") base.total = now.total;
+  saveNotice(base);
+}
+// 表紙のボタンに、赤いしるし
+function refreshNoticeDots() {
+  if (allQuestions.length === 0) return;
+  const news = computeNews();
+  const set = (id, text) => {
+    const dot = $(id).querySelector(".tile-dot");
+    dot.hidden = !text;
+    dot.textContent = text;
+  };
+  set("btn-dex", news.cards > 0 ? `NEW ${news.cards}` : "");
+  set("btn-badges", news.badges.length + news.titles.length > 0 ? "NEW" : "");
+  set("btn-dress", news.dress.length > 0 ? "NEW" : "");
+  set("btn-records", news.gain > 0 ? "UP" : "");
+}
+// 結果の画面に、あたらしく手に入れたものを、まとめて出す
+function renderNews() {
+  const news = computeNews();
+  const lines = [];
+  if (news.cards > 0) lines.push(`📚 問題図鑑:新しいカードが ${news.cards}まい!`);
+  if (news.badges.length) lines.push(`🏅 新しいバッジ:${news.badges.map((id) => `${BADGES.find((badge) => badge.id === id)?.icon ?? ""}${badgeName(id)}`).join("  ")}`);
+  if (news.titles.length) lines.push(`🎖 新しい称号:${news.titles.join("・")}`);
+  if (news.dress.length) lines.push(`👑 きせかえが ふえたヨ:${news.dress.map(dressName).join("・")}`);
+  if (news.gain > 0) lines.push(`🏆 総合得点が ${news.gain}点 アップ!(いま ${news.now.total}点)`);
+  const list = $("r-news");
+  list.hidden = lines.length === 0;
+  list.replaceChildren(
+    ...lines.map((text) => {
+      const item = document.createElement("li");
+      item.textContent = text;
+      return item;
+    }),
+  );
+}
+
 function announceBadges(element) {
   const fresh = awardBadges();
   element.hidden = fresh.length === 0;
@@ -1013,6 +1106,7 @@ function showBadges() {
       return item;
     }),
   );
+  markSeen("badges");
   show("badges");
 }
 
@@ -1196,6 +1290,7 @@ function showDress() {
       return button;
     }),
   );
+  markSeen("dress");
   show("dress");
 }
 for (const tab of document.querySelectorAll("[data-dress-tab]")) {

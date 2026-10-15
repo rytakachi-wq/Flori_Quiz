@@ -2,6 +2,7 @@
 // 絵を描き直すのではなく、画面に出すときに、画素の色あいをずらす。もとのファイルは、変えない。
 
 const cache = new Map(); // "もとの絵の場所|色" → 色をかえた絵(データのURL)
+const resolved = new Map(); // できあがった絵(すぐに出せる)
 const MAX_WIDTH = 640; // 大きすぎる絵は、画面に出る大きさに小さくする
 
 function rgbToHsl(r, g, b) {
@@ -105,7 +106,9 @@ export function recolor(src, color) {
         px[i * 4 + 2] = Math.round(b * 255);
       }
       ctx.putImageData(data, 0, 0);
-      resolve(canvas.toDataURL("image/png"));
+      const url = canvas.toDataURL("image/png");
+      resolved.set(key, url);
+      resolve(url);
     };
     image.onerror = reject;
     image.src = src;
@@ -156,6 +159,7 @@ export function setFloriColor(color) {
       }
     } else paint(img, original);
   }
+  warm();
 }
 
 new MutationObserver((records) => {
@@ -171,3 +175,25 @@ new MutationObserver((records) => {
     }
   }
 }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["src"] });
+
+// いまの色で、すぐ出せる絵があれば、その場所を返す(なければ、もとの場所)。色をつける準備を、先にしておくために使う。
+export function colorizedSrc(src) {
+  return current ? (resolved.get(`${src}|${current.id}`) ?? src) : src;
+}
+
+// 絵を入れかえる。色がついていれば、はじめから、色のついた絵を出す(一瞬、もとの色が見えないように)。
+export function applyFloriSrc(img, src) {
+  img.dataset.orig = src;
+  img.src = colorizedSrc(src);
+}
+
+// よく使う絵を、先に、色づけしておく(答えたあとの、フロリの表示を、すぐにするため)
+let warmList = [];
+export function setWarmList(list) {
+  warmList = list;
+  warm();
+}
+function warm() {
+  if (!current) return;
+  for (const src of warmList) recolor(src, current).catch(() => {});
+}
