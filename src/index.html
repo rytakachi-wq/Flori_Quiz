@@ -46,7 +46,7 @@
             <span class="spark s1" aria-hidden="true">✨</span><span class="spark s2" aria-hidden="true">⭐</span><span class="spark s3" aria-hidden="true">✨</span>
             <div class="hero-fig">
               <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-              <span id="hero-hat" class="hero-hat" aria-hidden="true"></span>
+              <img id="hero-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
             </div>
           </div>
         </div>
@@ -97,7 +97,7 @@
       <div class="hero hero-small">
         <div class="hero-fig">
           <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-          <span id="dress-hat" class="hero-hat" aria-hidden="true"></span>
+          <img id="dress-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
         </div>
       </div>
       <p class="note">バッジや星を集めると使えるものが増えるヨ。  ⭐ <span id="dress-stars">0</span>こ</p>
@@ -264,7 +264,10 @@
       </div>
       <button id="btn-read" class="btn btn-sub btn-read" type="button" data-no-se="1" hidden><span aria-hidden="true">🔊</span> 読み上げ</button>
       <div id="q-hint-area" class="hint-area" hidden>
-        <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る(−1点)</button>
+        <div class="hint-buttons">
+          <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る(−1点)</button>
+          <button id="btn-giveup" class="btn btn-plain" type="button">わからない</button>
+        </div>
         <p id="q-hint" class="hint" hidden></p>
       </div>
       <ol id="q-choices" class="choices"></ol>
@@ -313,6 +316,14 @@
     <div class="buttons">
       <button id="btn-quit-yes" class="btn btn-sub" type="button">やめる</button>
       <button id="btn-quit-no" class="btn btn-main" type="button">続ける</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-giveup" class="dialog" aria-labelledby="dlg-giveup-text">
+    <p id="dlg-giveup-text">答えを見ますか?<br>この問題は、<b>不正解</b>になります。</p>
+    <div class="buttons">
+      <button id="btn-giveup-yes" class="btn btn-sub" type="button">答えを見る</button>
+      <button id="btn-giveup-no" class="btn btn-main" type="button">もう少し考える</button>
     </div>
   </dialog>
 

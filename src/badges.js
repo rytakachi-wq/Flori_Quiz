@@ -67,17 +67,16 @@ export function earnedBadges(ctx) {
 
 // きせかえ(かざり)と背景。unlock は、必要なバッジの id(null なら、はじめから使える)
 export const HATS = [
-  { id: "none", icon: "", name: "なし", tint: "#46555e", unlock: null },
-  { id: "ribbon", icon: "🎀", name: "リボン", tint: "#d8455c", unlock: "first" },
-  { id: "cap", icon: "🧢", name: "ぼうし", tint: "#4a78d8", unlock: "play10" },
-  { id: "sakura", icon: "🌸", name: "さくら", tint: "#f0809e", unlock: "garden" },
-  { id: "grad", icon: "🎓", name: "はかせぼうし", tint: "#3a3a5c", unlock: "perfect" },
-  { id: "crown", icon: "👑", name: "おうかん", tint: "#e0a020", unlock: "total50" },
-  { id: "devil", icon: "😈", name: "オニのつの", tint: "#8a4fc7", unlock: "oni1" },
-  { id: "starpin", icon: "⭐", name: "スターバッジ", tint: "#f0c030", unlock: { stars: 5 } },
-  { id: "star", icon: "🌟", name: "ほしのかざり", tint: "#f2b61e", unlock: { stars: 10 } },
-  { id: "gem", icon: "💎", name: "ほうせき", tint: "#3fb5d8", unlock: { stars: 30 } },
-  { id: "comet", icon: "☄️", name: "ながれぼし", tint: "#7a8ef0", unlock: { stars: 50 } },
+  { id: "none", img: "", name: "なし", tint: "#46555e", unlock: null },
+  { id: "ribbon", img: "../assets/dress/ribbon.png", name: "リボン", tint: "#d8455c", unlock: "first" },
+  { id: "headphones", img: "../assets/dress/headphones.png", name: "ヘッドホン", tint: "#4a9ad8", unlock: "play10" },
+  { id: "flowers", img: "../assets/dress/flowers.png", name: "おはな", tint: "#6fb86a", unlock: "garden" },
+  { id: "glasses", img: "../assets/dress/glasses.png", name: "まるメガネ", tint: "#4a78d8", unlock: "perfect" },
+  { id: "crown", img: "../assets/dress/crown.png", name: "おうかん", tint: "#e0a020", unlock: "total50" },
+  { id: "horns", img: "../assets/dress/horns.png", name: "オニのつの", tint: "#e8603a", unlock: "oni1" },
+  { id: "starclip", img: "../assets/dress/starclip.png", name: "ほしのヘアピン", tint: "#f0c030", unlock: { stars: 5 } },
+  { id: "sparkle", img: "../assets/dress/sparkle.png", name: "きらきら", tint: "#f2b61e", unlock: { stars: 10 } },
+  { id: "scarf", img: "../assets/dress/scarf.png", name: "マフラー", tint: "#4aa0d8", unlock: { stars: 30 } },
 ];
 
 export const THEMES = [

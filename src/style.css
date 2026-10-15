@@ -1191,7 +1191,7 @@ body { overflow-x: hidden; }
 #screen-cover .home-speech::after { border-width: 13px 9px 0 9px; border-top-color: var(--green); margin-top: -4px; }
 #screen-cover .home-hero { position: relative; width: clamp(150px, min(44vh, 100%), 330px); background: radial-gradient(circle, #fff 0 45%, #d7edf8 62%, transparent 72%); }
 #screen-cover .home-hero .hero-fig { width: 92%; transform-origin: 50% 92%; animation: homeBob 3.2s ease-in-out infinite; }
-#screen-cover .home-hero .hero-hat { top: -9cqw; font-size: 26cqw; }
+#screen-cover .home-hero .hero-hat { font-size: 0; }
 @keyframes homeBob { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 25% { transform: translateY(-6px) rotate(1.5deg); } 50% { transform: translateY(0) rotate(-1.5deg); } 75% { transform: translateY(-4px) rotate(2.5deg); } }
 #screen-cover.is-lively .home-hero .hero-fig { animation: homeHop 2.4s ease-in-out infinite; }
 @keyframes homeHop { 0%, 100% { transform: translateY(0) rotate(0); } 15% { transform: translateY(-16px) rotate(-4deg) scale(1.02); } 30% { transform: translateY(0) rotate(0); } 45% { transform: translateY(-10px) rotate(4deg); } 60% { transform: translateY(0) rotate(0); } }
@@ -1353,3 +1353,23 @@ body { overflow-x: hidden; }
 .q-art .qa-in { display: flex; align-items: center; justify-content: center; gap: clamp(4px, 1.4cqw, 12px); width: 100%; font-size: clamp(22px, min(6.6vh, 10.5cqw), 54px); line-height: 1; }
 @media (max-width: 480px) { .q-art .qa-in { font-size: clamp(22px, min(5.6vh, 10cqw), 42px); } }
 @media (max-width: 480px) { .q-art .qa-in { font-size: clamp(24px, min(6.2vh, 11.5cqw), 46px); } .q-art { min-height: 64px; } }
+
+/* ===== フロリのかざり(画像)。フロリの絵に重ねる。場所・大きさは、かざりごと(% はフロリの絵に対して) ===== */
+img.hero-hat { position: absolute; display: block; height: auto; pointer-events: none; transform: none; font-size: 0; filter: drop-shadow(0 2px 2px rgba(70, 85, 94, 0.25)); z-index: 2; }
+img.hero-hat[hidden] { display: none; }
+img.hero-hat[data-hat="ribbon"] { left: 52%; top: -3%; width: 34%; transform: rotate(10deg); }
+img.hero-hat[data-hat="headphones"] { left: 4%; top: -12%; width: 92%; }
+img.hero-hat[data-hat="flowers"] { left: 6%; top: 3%; width: 27%; transform: rotate(-8deg); }
+img.hero-hat[data-hat="glasses"] { left: 17%; top: 17%; width: 72%; }
+img.hero-hat[data-hat="crown"] { left: 30%; top: -9%; width: 40%; transform: rotate(-5deg); }
+img.hero-hat[data-hat="horns"] { left: 23%; top: -4%; width: 54%; }
+img.hero-hat[data-hat="starclip"] { left: 60%; top: 5%; width: 26%; transform: rotate(8deg); }
+img.hero-hat[data-hat="sparkle"] { left: 64%; top: -2%; width: 32%; animation: twinkle 2.2s ease-in-out infinite; }
+img.hero-hat[data-hat="scarf"] { left: 22%; top: 54%; width: 56%; }
+#screen-dress .dress-art.is-hat { display: grid; place-items: center; width: 100%; height: 100%; }
+#screen-dress .dress-art.is-hat img { width: 66%; height: 66%; object-fit: contain; }
+.hint-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.hint-buttons .btn[hidden] { display: none; }
+#dlg-giveup b { color: #c0394f; }
+#screen-cover .home-stage { gap: 14px; }
+#screen-cover .home-hero { width: clamp(124px, min(31vh, 100%), 270px); }

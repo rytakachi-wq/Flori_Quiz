@@ -331,7 +331,11 @@ function showQuestion() {
   hinted = false;
   $("q-hint").hidden = true;
   $("btn-hint").disabled = false;
-  $("q-hint-area").hidden = !(question.hint && mode !== "oni" && mode !== "versus");
+  const hintable = Boolean(question.hint) && mode !== "oni" && mode !== "versus";
+  $("q-hint-area").hidden = !(hintable || mode === "oni"); // オニ問題は、ヒントなし。「わからない」だけ
+  $("btn-hint").hidden = !hintable;
+  $("btn-giveup").hidden = mode === "versus";
+  $("btn-giveup").disabled = false;
 
   renderers[question.type].render(question, answer);
   show("question");
@@ -368,7 +372,7 @@ function startTimer() {
   $("q-timer").hidden = false;
   renderTimer();
   timerId = setInterval(() => {
-    if ($("dlg-quit").open || $("dlg-volume").open) return; // 設定やめるの確認を開いている間は、とめる
+    if ($("dlg-quit").open || $("dlg-giveup").open || $("dlg-volume").open) return; // 設定やめるの確認を開いている間は、とめる
     if (speaking) {
       // 読み上げが終わるまで、とめる(終わりの知らせが来ないときの、ほけんつき)
       if (Date.now() - speakingSince > 1500 && !speechSynthesis.speaking && !speechSynthesis.pending) setSpeaking(false);
@@ -386,6 +390,7 @@ function startTimer() {
   }, 100);
 }
 let timedOut = false;
+let gaveUp = false; // 「わからない」で、答えを見たか
 
 // ---- 読み上げ(ブラウザの機能。ひらがなの読みは、機械まかせ)----
 const READ_KEY = "floriQuiz.readAloud";
@@ -490,9 +495,12 @@ function answer(response) {
   const answeringRound = mode === "versus" ? play.round : 0;
   stopTimer();
   const wasTimedOut = timedOut;
+  const wasGivenUp = gaveUp;
   timedOut = false;
+  gaveUp = false;
   const correct = play.answer(current, response, hinted);
   $("btn-hint").disabled = true;
+  $("btn-giveup").disabled = true;
   if (mode === "versus") renderBoard($("q-board"), play.scores, answeringPlayer);
   renderers[current.type].mark(current, response, correct);
   playSe(correct ? "correct" : "wrong");
@@ -509,7 +517,9 @@ function answer(response) {
           : "正解!"
         : wasTimedOut
           ? "時間切れ…"
-          : "残念…";
+          : wasGivenUp
+            ? "答えを見ました…"
+            : "残念…";
   verdict.className = `verdict ${correct ? "is-right" : "is-wrong"}`;
   const rightText = renderers[current.type].correctText(current);
   $("q-explanation").textContent = `正解は「${rightText}」\n${current.explanation}`;
@@ -687,7 +697,7 @@ function next() {
 
 document.addEventListener("keydown", (event) => {
   if ($("screen-question").hidden || answered || event.ctrlKey || event.metaKey || event.altKey) return;
-  if ($("dlg-quit").open || $("dlg-oni").open || $("dlg-volume").open || current.type !== "choice") return;
+  if ($("dlg-quit").open || $("dlg-giveup").open || $("dlg-oni").open || $("dlg-volume").open || current.type !== "choice") return;
   const index = Number(event.key) - 1;
   if (Number.isInteger(index) && index >= 0 && index < current.choices.length) answer(index);
 });
@@ -892,6 +902,18 @@ $("btn-again").addEventListener("click", () => startPlay(mode));
 $("btn-cover").addEventListener("click", () => show("cover"));
 
 // やめる:確認してから、この回をなかったことにして表紙へ戻る。
+// 「わからない」:答えを見ると、不正解になる。まちがえて押さないように、先に聞く
+$("btn-giveup").addEventListener("click", () => {
+  if (answered) return;
+  $("dlg-giveup").showModal();
+});
+$("btn-giveup-no").addEventListener("click", () => $("dlg-giveup").close());
+$("btn-giveup-yes").addEventListener("click", () => {
+  $("dlg-giveup").close();
+  if (answered) return;
+  gaveUp = true;
+  answer(current.type === "choice" ? -1 : ""); // 答えを見た=まちがい
+});
 $("btn-quit").addEventListener("click", () => $("dlg-quit").showModal());
 $("btn-quit-no").addEventListener("click", () => $("dlg-quit").close());
 $("btn-quit-yes").addEventListener("click", () => {
@@ -1313,9 +1335,14 @@ let dress = loadDress();
 function applyDress() {
   document.documentElement.dataset.theme = dress.theme;
   setFloriColor(COLORS.find((color) => color.id === dress.color) ?? null);
-  const icon = HATS.find((hat) => hat.id === dress.hat)?.icon ?? "";
-  $("hero-hat").textContent = icon;
-  $("dress-hat").textContent = icon;
+  // フロリのかざり(画像)。かざりごとに、場所と大きさが、ちがう(style.css の data-hat)
+  const hat = HATS.find((item) => item.id === dress.hat);
+  for (const id of ["hero-hat", "dress-hat"]) {
+    const img = $(id);
+    img.hidden = !hat?.img;
+    if (hat?.img) img.src = hat.img;
+    img.dataset.hat = hat?.id ?? "";
+  }
 }
 
 let dressTab = "color"; // きせかえで、いま見ている種類(color / hat / theme)
@@ -1342,7 +1369,12 @@ function showDress() {
       art.className = `dress-art is-${kind}`;
       if (kind === "color") art.style.background = choice.original ? "linear-gradient(135deg, #dfe8ee, #7ec3e0)" : choice.tint;
       else if (kind === "theme") art.style.background = choice.preview ?? choice.tint;
-      else art.textContent = choice.icon || "🚫";
+      else if (choice.img) {
+        const pic = document.createElement("img");
+        pic.src = choice.img;
+        pic.alt = "";
+        art.append(pic);
+      } else art.textContent = "🚫";
       button.append(art);
       if (dress[kind] === choice.id) {
         const check = document.createElement("span");
