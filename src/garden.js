@@ -80,6 +80,11 @@ export class GardenUI {
     this.render();
   }
 
+  clearHint() {
+    this.hinted = -1;
+    this.render();
+  }
+
   render() {
     const { container, garden } = this;
     container.className = "garden";

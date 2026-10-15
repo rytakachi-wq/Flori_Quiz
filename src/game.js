@@ -2,7 +2,8 @@
 
 export const QUESTIONS_PER_ROUND = 5; // 1回の問題数
 export const ROUNDS_PER_SET = 4; // 4回で20問
-export const POINTS_PER_CORRECT = 5; // 1問5点(5問で25点満点)
+export const POINTS_PER_CORRECT = 2; // 1問2点(5問で10点満点)
+export const ONI_POINTS_PER_CORRECT = 5; // オニ問題は、いままでどおり1問5点(5問で25点満点)
 export const MAX_LEVEL = 3; // ふつうモードの段階(1〜3)
 export const HARD_LEVEL = 4; // 難しいモードの問題の段階
 export const ONI_LEVEL = 5; // オニ問題の段階
@@ -10,26 +11,21 @@ const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上�
 
 export const MAX_SCORE = QUESTIONS_PER_ROUND * POINTS_PER_CORRECT;
 export const TIMED_SECONDS = 30; // 制限時間をつけたときの、1問の制限時間(秒)
-export const HINT_COST = 2; // ヒントを見ると、その問題の点が2点へる(正解したとき、5点→3点)
+export const HINT_COST = 1; // ヒントを見ると、その問題の点が1点へる(正解したとき、2点→1点)
 
 // みんなで対戦。2〜4人が、1台の画面で、順番に答えて点数を競う。3回戦(段階1・2・3)で、1回戦は1点、2回戦は2点、3回戦は3点。
 export const VERSUS_MIN_PLAYERS = 2;
 export const VERSUS_MAX_PLAYERS = 4;
 export const VERSUS_ROUNDS = 3;
 
-// 総合得点(100点満点)。ふつうの問題が60点、難しい問題が35点、オニ問題が5点。
-// それぞれ、一度でも正解した問題の数の割合で、点が入る(何度正解しても、同じ問題は1回ぶん)。
-// 問題の数が増えても、満点は100点のままになる。
-export const POOL_POINTS = { normal: 60, hard: 35, oni: 5 };
-export const TOTAL_POINTS = POOL_POINTS.normal + POOL_POINTS.hard + POOL_POINTS.oni;
+// 総合得点(100点満点)。ふつうの問題と難しい問題が、1問2点で、合わせて100点(50問)。
+// 問題ごとに、これまでの最高の点(ヒントなしで正解=2点、ヒントを見て正解=1点)を足す。何度正解しても、同じ問題は1回ぶん。
+// 問題が増えても、100点をこえないようにする。オニ問題は、総合得点には入れない(オニの記録は、別に数える)。
+export const TOTAL_POINTS = 100;
 
-export function totalScore({ normalRight, normalCount, hardRight, hardCount, oniRight, oniCount }) {
-  const part = (points, right, count) => (count > 0 ? (points * right) / count : 0);
-  return Math.round(
-    part(POOL_POINTS.normal, normalRight, normalCount) +
-      part(POOL_POINTS.hard, hardRight, hardCount) +
-      part(POOL_POINTS.oni, oniRight, oniCount),
-  );
+export function totalScore(questionPoints) {
+  const sum = questionPoints.reduce((total, points) => total + points, 0);
+  return Math.min(TOTAL_POINTS, sum);
 }
 
 export function levelFromCounter(counter) {
@@ -60,7 +56,7 @@ export function judge(question, response) {
   return fn(question, response);
 }
 
-// 1問の点。正解で5点。ヒントを見たときは、HINT_COST 点へる。
+// 1問の点。正解で2点。ヒントを見たときは、HINT_COST 点へる。
 export function questionPoints(correct, hinted) {
   return correct ? POINTS_PER_CORRECT - (hinted ? HINT_COST : 0) : 0;
 }
@@ -139,7 +135,7 @@ export class Session {
     this.points += questionPoints(correct, hinted);
     this.used.add(question.id);
     this.roundUsed.push(question.id);
-    this.roundAnswers.push({ id: question.uid ?? question.id, correct }); // 成績には、番号がかわっても変わらない uid で、記録する
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: questionPoints(correct, hinted) }); // 成績には、番号がかわっても変わらない uid で、記録する
     this.asked += 1;
     if (correct) this.correct += 1;
     this.counter = Math.max(0, this.counter + (correct ? 1 : -1));
@@ -169,6 +165,7 @@ export class OniRound {
     this.asked = 0;
     this.correct = 0;
     this.roundAnswers = [];
+    this.points = 0;
   }
 
   abandonRound() {
@@ -181,7 +178,8 @@ export class OniRound {
 
   answer(question, response) {
     const correct = judge(question, response);
-    this.roundAnswers.push({ id: question.uid ?? question.id, correct }); // 成績には、番号がかわっても変わらない uid で、記録する
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: correct ? ONI_POINTS_PER_CORRECT : 0 }); // 成績には、番号がかわっても変わらない uid で、記録する
+    if (correct) this.points += ONI_POINTS_PER_CORRECT;
     this.asked += 1;
     if (correct) this.correct += 1;
     return correct;
@@ -237,7 +235,7 @@ export class HardRound {
   answer(question, response, hinted = false) {
     const correct = judge(question, response);
     this.points += questionPoints(correct, hinted);
-    this.roundAnswers.push({ id: question.uid ?? question.id, correct }); // 成績には、番号がかわっても変わらない uid で、記録する
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: questionPoints(correct, hinted) }); // 成績には、番号がかわっても変わらない uid で、記録する
     this.asked += 1;
     if (correct) this.correct += 1;
     return correct;
@@ -283,7 +281,7 @@ export class PracticeRound {
   answer(question, response, hinted = false) {
     const correct = judge(question, response);
     this.points += questionPoints(correct, hinted);
-    this.roundAnswers.push({ id: question.uid ?? question.id, correct });
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: questionPoints(correct, hinted) });
     this.asked += 1;
     if (correct) this.correct += 1;
     return correct;
@@ -372,7 +370,7 @@ export class VersusRound {
 
   answer(question, response) {
     const correct = judge(question, response);
-    this.roundAnswers.push({ id: question.uid ?? question.id, correct });
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: 0 });
     if (correct) this.scores[this.current.player] += this.current.round;
     this.asked += 1;
     return correct;

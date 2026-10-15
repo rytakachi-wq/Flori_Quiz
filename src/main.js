@@ -4,6 +4,7 @@ import {
   HardRound,
   MAX_LEVEL,
   MAX_SCORE,
+  ONI_POINTS_PER_CORRECT,
   OniRound,
   POINTS_PER_CORRECT,
   PracticeRound,
@@ -77,8 +78,28 @@ let idleTimer = 0;
 function startCoverIdle() {
   clearTimeout(idleTimer);
   $("screen-cover").classList.remove("is-lively");
+  clearTimeout(idleReturnTimer);
   if (!$("opening").hidden) return; // オープニングの間は、まだ
   idleTimer = setTimeout(() => $("screen-cover").classList.add("is-lively"), 3000);
+  idleReturnTimer = setTimeout(returnToOpening, IDLE_RETURN_MS);
+}
+
+// 表紙で1分間なにもしなかったら、オープニング画面にもどって、フロリが遊ぶ。さわると、表紙にもどる。
+const IDLE_RETURN_MS = 60000;
+let idleReturnTimer = 0;
+function returnToOpening() {
+  if ($("screen-cover").hidden || !$("opening").hidden || announcing || document.querySelector("dialog[open]")) return;
+  clearTimeout(idleTimer);
+  $("screen-cover").classList.remove("is-lively");
+  const opening = $("opening");
+  opening.classList.remove("is-leaving", "is-playing");
+  opening.classList.add("is-idle");
+  const flori = opening.querySelector(".opening-flori");
+  flori.hidden = false;
+  flori.style.animation = "none";
+  void flori.offsetWidth; // フロリの登場を、はじめから動かす
+  flori.style.animation = "";
+  opening.hidden = false;
 }
 
 // 表紙で、画面にさわる・動かす・キーをおすと、動きを止めて、また3秒数えなおす
@@ -97,6 +118,7 @@ function show(name) {
     startCoverIdle();
   } else {
     clearTimeout(idleTimer);
+    clearTimeout(idleReturnTimer);
     $("screen-cover").classList.remove("is-lively");
   }
   if (name !== "question") {
@@ -467,17 +489,10 @@ function answer(response) {
   $("q-feedback").scrollIntoView({ block: "nearest", behavior: "instant" });
 }
 
-// 総合得点(100点満点)を、保存した記録から数える。いまある問題だけを数える(問題が増えても、満点は100点のまま)。
+// 総合得点(100点満点)を、保存した記録から数える。いまあるふつう・難しい問題の、問題ごとの最高の点を足す(1問2点・ヒントを見たら1点)。
 function currentTotal(stats = loadStats()) {
-  const count = (list, ids) => list.filter((id) => ids.has(id)).length;
-  return totalScore({
-    normalRight: count(stats.right, normalIds),
-    normalCount: normalIds.size,
-    hardRight: count(stats.right, hardIds),
-    hardCount: hardIds.size,
-    oniRight: count(stats.oniRight, oniIds),
-    oniCount: oniIds.size,
-  });
+  const valid = playableIds();
+  return totalScore(stats.right.filter((id) => valid.has(id)).map((id) => stats.qpts[id] ?? POINTS_PER_CORRECT));
 }
 
 function showResult() {
@@ -489,7 +504,7 @@ function showResult() {
   $("r-board").hidden = true;
   if (!versus) {
     $("r-correct").textContent = `${result.correct} / ${result.total}問`;
-    $("r-score").textContent = `${result.score}点(${result.total * POINTS_PER_CORRECT}点満点)`;
+    $("r-score").textContent = `${result.score}点(${result.total * (mode === "oni" ? ONI_POINTS_PER_CORRECT : POINTS_PER_CORRECT)}点満点)`;
   }
   $("r-score-row").hidden = versus; // 対戦のときは、ひとりの得点は出さない
   $("r-comment").textContent =
@@ -500,7 +515,7 @@ function showResult() {
   // 総合得点は、はじめて正解した問題の分だけ、ふえる。
   const gainText = () => {
     const gained = currentTotal() - before;
-    return gained > 0 ? `初めての正解で総合得点が${gained}点増えたヨ!` : "総合得点は初めて正解したときだけ増えるヨ。";
+    return gained > 0 ? `総合得点が${gained}点増えたヨ!` : "総合得点は、新しく正解したり、ヒントなしで正解しなおしたときだけ増えるヨ。";
   };
   if (versus) {
     // みんなで対戦した結果は、ひとりで遊ぶ記録(遊んだ回数、正解率、総合得点など)には入れない。
@@ -531,12 +546,13 @@ function showResult() {
     setNote.textContent = `${saved.streak}日連続!(ぜんぶで${saved.days}日)また明日も挑戦してネ!`;
     $("btn-again").hidden = true;
   } else if (mode === "oni") {
-    // オニ問題は、成績の「遊んだ回数」や「正解率」には入れない。総合得点にだけ入る。
+    // オニ問題は、成績の「遊んだ回数」「正解率」「総合得点」には入れない(オニ問題の正解数だけ数える)。
     recordOni(result.answers);
+    const oniDone = loadStats().oniRight.filter((id) => oniIds.has(id)).length;
     $("r-title").textContent = "オニ問題の結果!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
-    setNote.textContent = gainText();
+    setNote.textContent = `オニ問題に正解したことがあるのは、${oniDone} / ${oniIds.size}問だヨ。`;
     $("btn-again").textContent = "もう一度挑戦";
   } else if (mode === "hard") {
     const saved = recordRound({ ...result, mode: "hard", timed: timeLimit });
@@ -605,7 +621,7 @@ function showRecords() {
   const playable = new Set([...normalIds, ...hardIds]);
   const seen = s.seen.filter((id) => playable.has(id)).length;
   const right = s.right.filter((id) => playable.has(id)).length;
-  // 総合得点は、いつでも100点満点で見せる(ふつうと難しい問題だけでは95点まで)
+  // 総合得点は、100点満点(ふつう+難しい問題、1問2点)
   $("s-total").textContent = `${currentTotal(s)}点 / ${TOTAL_POINTS}点`;
   $("s-total-bar").style.width = `${(currentTotal(s) / TOTAL_POINTS) * 100}%`;
   $("s-plays").textContent = `${s.plays}回`;
@@ -765,7 +781,7 @@ $("btn-daily").addEventListener("click", () => {
 });
 $("btn-info-close").addEventListener("click", () => $("dlg-info").close());
 $("btn-review").addEventListener("click", () => chooseTime("review"));
-// ヒント:1問に1回。見ると、その問題の点が2点へる。
+// ヒント:1問に1回。見ると、その問題の点が1点へる。
 $("btn-hint").addEventListener("click", () => {
   if (answered || hinted || !current?.hint) return;
   hinted = true;
@@ -809,8 +825,11 @@ function startGarden(size = gardenSize) {
 $("btn-relax").addEventListener("click", () => startGarden());
 $("btn-relax-back").addEventListener("click", () => show("cover"));
 $("btn-garden-hint").addEventListener("click", () => {
-  $("garden-hint").hidden = false;
-  garden?.hint();
+  // ヒントは、おすたびに、出す・かくすが入れかわる
+  const show = $("garden-hint").hidden;
+  $("garden-hint").hidden = !show;
+  if (show) garden?.hint();
+  else garden?.clearHint();
 });
 $("btn-garden-again").addEventListener("click", () => startGarden());
 for (const button of document.querySelectorAll("[data-garden]")) {
@@ -898,6 +917,16 @@ function closeOpening() {
   const opening = $("opening");
   if (opening.hidden || opening.classList.contains("is-playing")) return;
   unlock();
+  if (opening.classList.contains("is-idle")) {
+    // 1分何もしなくて、もどってきたオープニング:さわると、すぐ表紙にもどる
+    opening.classList.add("is-leaving");
+    setTimeout(() => {
+      opening.hidden = true;
+      opening.classList.remove("is-idle", "is-leaving");
+      startCoverIdle();
+    }, 600);
+    return;
+  }
   opening.classList.add("is-playing"); // フロリが、動いて登場する
   opening.querySelector(".opening-flori").hidden = false;
   const length = Math.max(2600, playJingle("opening") + 400);

@@ -1044,3 +1044,17 @@ rt { font-size: max(0.55em, 9.5px); }
 /* 成績:名前を上に、数字を下に(長い数字も、折り返さない) */
 #screen-records .scores:not(.total) div { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 0; padding: 6px 14px; }
 #screen-records .scores dd { text-align: left; font-size: 23px; }
+
+/* バッジの名前が、枠からはみ出さないように(長い名前は、折り返す) */
+.badge-chip { min-width: 0; overflow: hidden; }
+.badge-chip .badge-name { max-width: 100%; overflow-wrap: anywhere; }
+/* 難しいモード・みんなで対戦は、少し縦に大きく */
+.t-hard, .t-versus { min-height: clamp(66px, 11vh, 96px); }
+
+/* ボタンをなでたとき、画面のはしで、スクロールバーが出たり消えたりして、ボタンの並びがずれないように */
+html { scrollbar-gutter: stable; overflow-x: hidden; }
+body { overflow-x: hidden; }
+.screen { overflow-x: clip; }
+
+/* きせかえの、ロックのお知らせは、出ても消えても、場所が変わらないように、いつも高さをとっておく */
+#dress-message { min-height: 3.2em; margin: 0; line-height: 1.6; text-align: center; }

@@ -34,6 +34,8 @@ const EMPTY = {
   courseCounter: 0, // 「つづきから」:ふつうモードの、難しさのカウンター
   courseUsed: [], // 「つづきから」:もう出した問題の番号
   hardUsed: [], // 難しいモードの「つづきから」:もう出した問題の番号
+  qpts: {}, // 問題ごとの、これまでの最高の点(ヒントなしで正解=2、ヒントを見て正解=1)。総合得点に使う
+  scoreVer: 2, // 点数のつけかた(2=1問2点。ないものは、1問5点だったころの記録)
 };
 
 let cache = null;
@@ -50,11 +52,24 @@ function text(value) {
   return typeof value === "string" ? value : "";
 }
 
+// 1問5点だったころの得点(25点満点)を、1問2点(10点満点)に直す。
+function oldToNew(points) {
+  return Math.round(number(points) * 0.4);
+}
+
 function clean(raw) {
-  const rounds = Array.isArray(raw?.setRounds) ? raw.setRounds.map(number).slice(0, ROUNDS_PER_SET - 1) : [];
+  const old = raw?.scoreVer !== 2 && raw !== EMPTY; // 点数のつけかたが変わる前の記録
+  const convert = old ? oldToNew : number;
+  const rounds = Array.isArray(raw?.setRounds) ? raw.setRounds.map(convert).slice(0, ROUNDS_PER_SET - 1) : [];
+  const qpts = {};
+  for (const [id, points] of Object.entries(raw?.qpts && typeof raw.qpts === "object" ? raw.qpts : {})) {
+    if (points === 1 || points === 2) qpts[id] = points;
+  }
   return {
-    best: number(raw?.best),
-    bestHard: number(raw?.bestHard),
+    scoreVer: 2,
+    qpts,
+    best: convert(raw?.best),
+    bestHard: convert(raw?.bestHard),
     plays: number(raw?.plays),
     answered: number(raw?.answered),
     correct: number(raw?.correct),
@@ -95,13 +110,15 @@ export function reconcile(stats) {
   next.plays = rounds;
   next.answered = rounds * QUESTIONS_PER_ROUND;
   next.correct = Math.min(next.answered, Math.max(next.correct, next.right.length));
+  next.qpts = { ...next.qpts };
+  for (const id of next.right) if (!next.qpts[id]) next.qpts[id] = 2; // 点が分からない昔の正解は、2点とみなす
   next.best = Math.min(next.best, MAX_SCORE);
   next.bestHard = Math.min(next.bestHard, MAX_SCORE);
   return next;
 }
 
 export function loadStats() {
-  if (cache) return { ...cache, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges], courseUsed: [...cache.courseUsed], hardUsed: [...cache.hardUsed] };
+  if (cache) return { ...cache, qpts: { ...cache.qpts }, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges], courseUsed: [...cache.courseUsed], hardUsed: [...cache.hardUsed] };
   let stats = clean(EMPTY);
   try {
     const saved = localStorage.getItem(KEY);
@@ -155,6 +172,9 @@ export function recordRound({ correct, total, score, answers = [], mode = "norma
   updateWrong(stats, answers);
   stats.seen = ids([...stats.seen, ...answers.map((answer) => answer.id)]);
   stats.right = ids([...stats.right, ...answers.filter((answer) => answer.correct).map((answer) => answer.id)]);
+  for (const answer of answers) {
+    if (answer.correct) stats.qpts[answer.id] = Math.max(stats.qpts[answer.id] ?? 0, answer.points ?? 2); // 問題ごとの最高の点
+  }
 
   const result = { isRecord, setCompleted: false };
   if (normal && stats.setRounds.length >= ROUNDS_PER_SET) {
@@ -269,6 +289,6 @@ export function recordGarden() {
 export function pruneStats(validIds) {
   const stats = loadStats();
   const keep = (list) => list.filter((id) => validIds.has(id));
-  const next = reconcile({ ...stats, seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight), wrong: keep(stats.wrong), dex: keep(stats.dex), courseUsed: keep(stats.courseUsed), hardUsed: keep(stats.hardUsed) });
+  const next = reconcile({ ...stats, qpts: Object.fromEntries(Object.entries(stats.qpts).filter(([id]) => validIds.has(id))), seen: keep(stats.seen), right: keep(stats.right), oniRight: keep(stats.oniRight), wrong: keep(stats.wrong), dex: keep(stats.dex), courseUsed: keep(stats.courseUsed), hardUsed: keep(stats.hardUsed) });
   if (JSON.stringify(next) !== JSON.stringify(stats)) save(next);
 }
