@@ -1,8 +1,9 @@
 import {
   HARD_LEVEL,
+  HARD_MIN_LEVEL,
   HINT_COST,
-  HardRound,
   MAX_LEVEL,
+  levelFromCounter,
   MAX_SCORE,
   ONI_POINTS_PER_CORRECT,
   OniRound,
@@ -10,7 +11,6 @@ import {
   PracticeRound,
   TIMED_SECONDS,
   QUESTIONS_PER_ROUND,
-  ROUNDS_PER_SET,
   Session,
   TOTAL_POINTS,
   VERSUS_MAX_PLAYERS,
@@ -191,12 +191,13 @@ let oniQuestions = [];
 const idToUid = new Map(); // 問題の番号 → uid(「つづきから」の保存に使う)
 let allQuestions = []; // 全部の問題(オニもふくむ。図鑑とバッジで使う)
 let playableQuestions = []; // ふつう+難しい問題(おさらい・毎日1問で使う)
-const hardUsed = new Set(); // 難しいモードで、もう出した問題(回をまたいで使う)
 let normalIds = new Set(); // ふつうの問題の uid(成績の記録に使う。番号がつけなおされても、変わらない)
 let hardIds = new Set(); // 難しい問題の uid
 let oniIds = new Set(); // オニ問題の uid
-let session; // ふつうの遊び(難しさのカウンターを引き継ぐ)
-let play; // いま遊んでいるもの(session かオニ問題)
+let session; // ふつうモードの遊び(難しさのカウンターを引き継ぐ)
+let hardSession; // 難しいモードの遊び(こちらも、引き継ぐ)
+let versusQuestions = []; // 対戦で使う問題(段階1〜3)
+let play; // いま遊んでいるもの(session・hardSession・オニ問題など)
 let current = null; // 今出している問題
 let answered = false;
 
@@ -245,9 +246,14 @@ function refreshCover() {
   const saved = hasCourse(stats);
   $("btn-continue").querySelector(".tile-label").textContent = saved ? "つづきから" : "始める";
   refreshNoticeDots();
-  const level = Math.min(MAX_LEVEL, 1 + Math.floor(stats.courseCounter / 3));
-  $("hard-sub").textContent = hardUsed.size > 0 ? `つづき ${hardUsed.size}/${hardQuestions.length}問` : "";
-  $("continue-sub").textContent = saved ? `${stats.setRounds.length + 1}回目 ・ ${"★".repeat(level)}${"☆".repeat(MAX_LEVEL - level)}` : "";
+  const level = levelFromCounter(stats.courseCounter, 1, MAX_LEVEL);
+  $("hard-sub").textContent = hasHardCourse(stats) ? `つづきから ・ ${stars(levelFromCounter(stats.hardCounter, HARD_MIN_LEVEL, HARD_LEVEL))}` : "";
+  $("continue-sub").textContent = saved ? `難しさ ${stars(level)}` : "";
+}
+
+// 難しさの星(全部で4段階)
+function stars(level) {
+  return `${"★".repeat(level)}${"☆".repeat(HARD_LEVEL - level)}`;
 }
 
 function playableIds() {
@@ -258,8 +264,8 @@ function startPlay(nextMode) {
   mode = nextMode;
   if (mode === "oni") timeLimit = false; // オニ問題には、制限時間はない
   if (mode === "oni") play = new OniRound(oniQuestions);
-  else if (mode === "hard") play = new HardRound(hardQuestions, hardUsed);
-  else if (mode === "versus") play = new VersusRound(normalQuestions, versusPlayers);
+  else if (mode === "hard") play = hardSession;
+  else if (mode === "versus") play = new VersusRound(versusQuestions, versusPlayers);
   else if (mode === "review") {
     const wrong = new Set(loadStats().wrong);
     const pool = playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
@@ -268,7 +274,7 @@ function startPlay(nextMode) {
   } else if (mode === "daily") {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
   } else play = session;
-  const resume = mode === "normal" && hasCourse(); // つづきから遊ぶときは、そう知らせる
+  const resume = (mode === "normal" && hasCourse()) || (mode === "hard" && hasHardCourse()); // つづきから遊ぶときは、そう知らせる
   announce(resume ? "つづきから、スタート!" : "それでは、スタート!", "start", showQuestion, "../assets/flori/src/body_wave.webp");
 }
 
@@ -294,10 +300,8 @@ function showQuestion() {
   $("q-level").textContent =
     mode === "oni"
       ? "難しさ オニ"
-      : mode === "hard"
-        ? "難しさ ★★★★"
-        : versus
-          ? `${play.round}回戦 ${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} ${VERSUS_LEVEL_WORDS[play.round]}・正解で${play.round}点(${versusPlayers}人)` : `難しさ ${"★".repeat(question.level)}${"☆".repeat(Math.max(0, MAX_LEVEL - question.level))}`;
+      : versus
+          ? `${play.round}回戦 ${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} ${VERSUS_LEVEL_WORDS[play.round]}・正解で${play.round}点(${versusPlayers}人)` : `難しさ ${stars(question.level)}`;
   $("q-text").textContent = question.text;
   $("q-text").classList.toggle("long", question.text.length > 70); // 長い問題は、文字を少し小さくして、画面に収める
   $("screen-question").classList.toggle("is-long", question.text.length > 100); // とても長い問題は、もっとぎゅっと
@@ -571,12 +575,7 @@ function showResult() {
     $("r-best").textContent = `${stats.best}点`;
     $("r-record").hidden = !saved.isRecord;
     $("btn-again").textContent = "続けて遊ぶ";
-    if (saved.setCompleted) {
-      setNote.textContent = `${ROUNDS_PER_SET}回遊んだヨ! 難しさはまた最初から!`;
-      session.resetSet();
-    } else {
-      setNote.textContent = `${ROUNDS_PER_SET}回のうち${stats.setRounds.length}回目が終わったヨ(続けて遊ぶと難しさも続くヨ)`;
-    }
+    setNote.textContent = "続けて遊ぶと、難しさも続きます。正解が続くと難しく、まちがえるとやさしくなります。";
     persistCourse(); // 「つづきから」の記録
   }
   setNote.hidden = false;
@@ -737,7 +736,10 @@ $("btn-time-cancel").addEventListener("click", () => closeTimeDialog(null));
 
 // 「つづきから」と「最初から」(ふつうモードの、難しさと、何回目かを、つづける)
 function hasCourse(stats = loadStats()) {
-  return stats.courseUsed.length > 0 || stats.courseCounter > 0 || stats.setRounds.length > 0;
+  return stats.courseUsed.length > 0 || stats.courseCounter > 0;
+}
+function hasHardCourse(stats = loadStats()) {
+  return stats.hardUsed.length > 0 || stats.hardCounter > 0;
 }
 function persistCourse() {
   saveCourse({ counter: session.counter, used: [...session.used].map((id) => idToUid.get(id)).filter(Boolean) });
@@ -769,7 +771,7 @@ $("btn-restart-yes").addEventListener("click", () => {
 });
 // 難しいモードの「つづきから」と「最初から」(もう出した問題を、おぼえておく)
 function persistHard() {
-  saveHardCourse([...hardUsed].map((id) => idToUid.get(id)).filter(Boolean));
+  saveHardCourse({ counter: hardSession.counter, used: [...hardSession.used].map((id) => idToUid.get(id)).filter(Boolean) });
 }
 $("btn-hard").addEventListener("click", () => chooseTime("hard"));
 $("btn-daily").addEventListener("click", () => {
@@ -882,7 +884,8 @@ async function init() {
     const { questions } = await response.json();
     const normal = questions.filter((q) => q.level <= MAX_LEVEL);
     normalQuestions = normal;
-    hardQuestions = questions.filter((q) => q.level === HARD_LEVEL);
+    hardQuestions = questions.filter((q) => q.level >= HARD_MIN_LEVEL && q.level <= HARD_LEVEL);
+    versusQuestions = questions.filter((q) => q.level <= VERSUS_ROUNDS);
     oniQuestions = questions.filter((q) => q.level > HARD_LEVEL);
     normalIds = new Set(normal.map((q) => q.uid ?? q.id));
     hardIds = new Set(hardQuestions.map((q) => q.uid ?? q.id));
@@ -897,11 +900,16 @@ async function init() {
     pruneStats(new Set([...normalIds, ...hardIds, ...oniIds])); // 古い番号の記録を、取りのぞく
     for (const q of normal) idToUid.set(q.id, q.uid ?? q.id);
     for (const q of hardQuestions) idToUid.set(q.id, q.uid ?? q.id);
-    session = new Session(normal);
+    session = new Session(normal, Math.random, 1, MAX_LEVEL);
+    hardSession = new Session(hardQuestions, Math.random, HARD_MIN_LEVEL, HARD_LEVEL);
     const saved = loadStats();
     const uidToId = new Map([...idToUid].map(([id, uid]) => [uid, id]));
-    session.restore(saved.courseCounter, saved.courseUsed.map((uid) => uidToId.get(uid)).filter(Boolean)); // つづきから
-    for (const uid of saved.hardUsed) if (uidToId.has(uid)) hardUsed.add(uidToId.get(uid)); // 難しいモードの、つづきから
+    const idsOf = (uids, list) => {
+      const valid = new Set(list.map((q) => q.id));
+      return uids.map((uid) => uidToId.get(uid)).filter((id) => valid.has(id));
+    };
+    session.restore(saved.courseCounter, idsOf(saved.courseUsed, normal)); // つづきから
+    hardSession.restore(saved.hardCounter, idsOf(saved.hardUsed, hardQuestions)); // 難しいモードの、つづきから
     show("cover");
   } catch (error) {
     console.error(error);

@@ -1,11 +1,11 @@
 // ゲームの決まり(画面に依存しない部分)。decisions.md の決定事項に対応。
 
 export const QUESTIONS_PER_ROUND = 5; // 1回の問題数
-export const ROUNDS_PER_SET = 4; // 4回で20問
 export const POINTS_PER_CORRECT = 2; // 1問2点(5問で10点満点)
 export const ONI_POINTS_PER_CORRECT = 5; // オニ問題は、いままでどおり1問5点(5問で25点満点)
-export const MAX_LEVEL = 3; // ふつうモードの段階(1〜3)
-export const HARD_LEVEL = 4; // 難しいモードの問題の段階
+export const MAX_LEVEL = 2; // ふつうモードの段階(1〜2)。正解が続くと2、まちがえると1にもどる
+export const HARD_MIN_LEVEL = 3; // 難しいモードの段階(3〜4)。正解が続くと4、まちがえると3にもどる
+export const HARD_LEVEL = 4;
 export const ONI_LEVEL = 5; // オニ問題の段階
 const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上がる
 
@@ -28,8 +28,8 @@ export function totalScore(questionPoints) {
   return Math.min(TOTAL_POINTS, sum);
 }
 
-export function levelFromCounter(counter) {
-  return Math.min(MAX_LEVEL, 1 + Math.floor(counter / COUNTER_PER_LEVEL));
+export function levelFromCounter(counter, minLevel = 1, maxLevel = MAX_LEVEL) {
+  return Math.min(maxLevel, minLevel + Math.floor(counter / COUNTER_PER_LEVEL));
 }
 
 // 記述式の答えをくらべやすくする。全角・半角、大文字・小文字、カタカナ・ひらがな、空白や記号のちがいを無視する。
@@ -70,16 +70,19 @@ function roundResult(round) {
   };
 }
 
-// ふつうの問題の遊び。難しさのカウンターは、ページを開いている間だけ続く(保存しない)。
+// ふつうモード(段階1〜2)・難しいモード(段階3〜4)の遊び。正解が続くと上の段階、まちがえると下の段階になる。
+// 難しさのカウンターと、出した問題の記録は、回をまたいで続く(「つづきから」で、保存して、もどす)。
 export class Session {
-  constructor(questions, rng = Math.random) {
+  constructor(questions, rng = Math.random, minLevel = 1, maxLevel = MAX_LEVEL) {
     this.questions = questions;
     this.rng = rng;
-    this.resetSet();
+    this.minLevel = minLevel;
+    this.maxLevel = maxLevel;
+    this.resetCourse();
   }
 
-  // 20問(4回分)が終わったとき。カウンターも、出した問題の記録も、最初に戻す。
-  resetSet() {
+  // カウンターも、出した問題の記録も、最初に戻す。
+  resetCourse() {
     this.counter = 0;
     this.used = new Set();
     this.startRound();
@@ -110,7 +113,7 @@ export class Session {
   }
 
   get level() {
-    return levelFromCounter(this.counter);
+    return levelFromCounter(this.counter, this.minLevel, this.maxLevel);
   }
 
   // 今の段階の未使用問題から選ぶ。なければいちばん近い段階(同じ近さなら下の段階)で補う。
@@ -180,62 +183,6 @@ export class OniRound {
     const correct = judge(question, response);
     this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: correct ? ONI_POINTS_PER_CORRECT : 0 }); // 成績には、番号がかわっても変わらない uid で、記録する
     if (correct) this.points += ONI_POINTS_PER_CORRECT;
-    this.asked += 1;
-    if (correct) this.correct += 1;
-    return correct;
-  }
-
-  get roundFinished() {
-    return this.asked >= QUESTIONS_PER_ROUND;
-  }
-
-  finishRound() {
-    const result = roundResult(this);
-    this.startRound();
-    return result;
-  }
-}
-
-// 難しいモードの遊び。難しい問題から、まだ出していない5問を、ランダムに選ぶ(難しさの調整はない)。
-// used は、ページを開いている間、回をまたいで使う(全部出したら、また最初から)。
-export class HardRound {
-  constructor(questions, used = new Set(), rng = Math.random) {
-    this.used = used;
-    let pool = questions.filter((q) => !used.has(q.id));
-    if (pool.length < QUESTIONS_PER_ROUND) {
-      used.clear();
-      pool = [...questions];
-    }
-    const picked = [];
-    while (picked.length < QUESTIONS_PER_ROUND && pool.length > 0) {
-      picked.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
-    }
-    this.questions = picked;
-    for (const q of picked) used.add(q.id);
-    this.startRound();
-  }
-
-  startRound() {
-    this.asked = 0;
-    this.correct = 0;
-    this.roundAnswers = [];
-    this.points = 0;
-  }
-
-  // 途中でやめたとき。この回で選んだ問題を、また出せるようにもどす。
-  abandonRound() {
-    for (const q of this.questions) this.used.delete(q.id);
-    this.startRound();
-  }
-
-  nextQuestion() {
-    return { question: this.questions[this.asked], leveledUp: false };
-  }
-
-  answer(question, response, hinted = false) {
-    const correct = judge(question, response);
-    this.points += questionPoints(correct, hinted);
-    this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: questionPoints(correct, hinted) }); // 成績には、番号がかわっても変わらない uid で、記録する
     this.asked += 1;
     if (correct) this.correct += 1;
     return correct;

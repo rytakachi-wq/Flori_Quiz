@@ -1,7 +1,7 @@
 // 端末内に保存する成績。名前や個人情報は入れない。
 // 保存できない環境でも遊べるように、失敗しても、そのページを開いている間は覚えておく。
 
-import { MAX_SCORE, QUESTIONS_PER_ROUND, ROUNDS_PER_SET } from "./game.js";
+import { MAX_SCORE, QUESTIONS_PER_ROUND } from "./game.js";
 
 const KEY = "floriQuiz.stats";
 const OLD_BEST_KEY = "floriQuiz.bestScore"; // 最高得点だけだったころの保存
@@ -12,7 +12,6 @@ const EMPTY = {
   plays: 0, // 遊んだ回数(5問を1回と数える)
   answered: 0, // 答えた問題の数
   correct: 0, // 正解した問題の数
-  setRounds: [], // いまの20問(4回分)で終わった回の得点
   seen: [], // 出会ったことのある問題の番号
   right: [], // 正解したことのある問題の番号
   oniRight: [], // 正解したことのあるオニ問題の番号(総合得点にだけ使う)
@@ -34,6 +33,7 @@ const EMPTY = {
   courseCounter: 0, // 「つづきから」:ふつうモードの、難しさのカウンター
   courseUsed: [], // 「つづきから」:もう出した問題の番号
   hardUsed: [], // 難しいモードの「つづきから」:もう出した問題の番号
+  hardCounter: 0, // 難しいモードの「つづきから」:難しさのカウンター
   qpts: {}, // 問題ごとの、これまでの最高の点(ヒントなしで正解=2、ヒントを見て正解=1)。総合得点に使う
   scoreVer: 2, // 点数のつけかた(2=1問2点。ないものは、1問5点だったころの記録)
 };
@@ -60,7 +60,6 @@ function oldToNew(points) {
 function clean(raw) {
   const old = raw?.scoreVer !== 2 && raw !== EMPTY; // 点数のつけかたが変わる前の記録
   const convert = old ? oldToNew : number;
-  const rounds = Array.isArray(raw?.setRounds) ? raw.setRounds.map(convert).slice(0, ROUNDS_PER_SET - 1) : [];
   const qpts = {};
   for (const [id, points] of Object.entries(raw?.qpts && typeof raw.qpts === "object" ? raw.qpts : {})) {
     if (points === 1 || points === 2) qpts[id] = points;
@@ -73,7 +72,6 @@ function clean(raw) {
     plays: number(raw?.plays),
     answered: number(raw?.answered),
     correct: number(raw?.correct),
-    setRounds: rounds,
     seen: ids(raw?.seen),
     right: ids(raw?.right),
     oniRight: ids(raw?.oniRight),
@@ -95,6 +93,7 @@ function clean(raw) {
     courseCounter: number(raw?.courseCounter),
     courseUsed: ids(raw?.courseUsed),
     hardUsed: ids(raw?.hardUsed),
+    hardCounter: number(raw?.hardCounter),
   };
 }
 
@@ -118,7 +117,7 @@ export function reconcile(stats) {
 }
 
 export function loadStats() {
-  if (cache) return { ...cache, qpts: { ...cache.qpts }, setRounds: [...cache.setRounds], seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges], courseUsed: [...cache.courseUsed], hardUsed: [...cache.hardUsed] };
+  if (cache) return { ...cache, qpts: { ...cache.qpts }, seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges], courseUsed: [...cache.courseUsed], hardUsed: [...cache.hardUsed] };
   let stats = clean(EMPTY);
   try {
     const saved = localStorage.getItem(KEY);
@@ -150,12 +149,11 @@ function updateWrong(stats, answers) {
   stats.wrong = [...wrong];
 }
 
-// 5問の結果を記録する。ふつうモードで4回分そろったら、setCompleted を true にして、数えなおす。
+// 5問の結果を記録する。
 // mode:"normal"(ふつう)、"hard"(難しい)  timed:制限時間をつけて遊んだか(バッジに使う)
 export function recordRound({ correct, total, score, answers = [], mode = "normal", timed = false }) {
   const stats = loadStats();
   const hard = mode === "hard";
-  const normal = mode === "normal";
   const isRecord = score > (hard ? stats.bestHard : stats.best);
   stats.plays += 1;
   stats.answered += total;
@@ -168,7 +166,6 @@ export function recordRound({ correct, total, score, answers = [], mode = "norma
     if (hard) stats.perfectHard += 1;
     if (timed) stats.timedPerfect += 1;
   }
-  if (normal) stats.setRounds.push(score); // 難しさのカウンターを最初にもどす目安は、ふつうモードだけ
   updateWrong(stats, answers);
   stats.seen = ids([...stats.seen, ...answers.map((answer) => answer.id)]);
   stats.right = ids([...stats.right, ...answers.filter((answer) => answer.correct).map((answer) => answer.id)]);
@@ -176,11 +173,7 @@ export function recordRound({ correct, total, score, answers = [], mode = "norma
     if (answer.correct) stats.qpts[answer.id] = Math.max(stats.qpts[answer.id] ?? 0, answer.points ?? 2); // 問題ごとの最高の点
   }
 
-  const result = { isRecord, setCompleted: false };
-  if (normal && stats.setRounds.length >= ROUNDS_PER_SET) {
-    result.setCompleted = true;
-    stats.setRounds = [];
-  }
+  const result = { isRecord };
   save(stats);
   return result;
 }
@@ -248,8 +241,9 @@ export function saveCourse({ counter, used }) {
 }
 
 // 難しいモードの「つづきから」:もう出した問題を、保存する
-export function saveHardCourse(used) {
+export function saveHardCourse({ counter, used }) {
   const stats = loadStats();
+  stats.hardCounter = counter;
   stats.hardUsed = ids(used);
   save(stats);
 }
@@ -258,6 +252,7 @@ export function saveHardCourse(used) {
 export function resetHardCourse() {
   const stats = loadStats();
   stats.hardUsed = [];
+  stats.hardCounter = 0;
   save(stats);
 }
 
@@ -266,7 +261,6 @@ export function resetCourse() {
   const stats = loadStats();
   stats.courseCounter = 0;
   stats.courseUsed = [];
-  stats.setRounds = [];
   save(stats);
 }
 
