@@ -84,8 +84,8 @@ function startCoverIdle() {
   idleReturnTimer = setTimeout(returnToOpening, IDLE_RETURN_MS);
 }
 
-// 表紙で1分間なにもしなかったら、オープニング画面にもどって、フロリが遊ぶ。さわると、表紙にもどる。
-const IDLE_RETURN_MS = 60000;
+// 表紙で30秒間なにもしなかったら、オープニング画面にもどって、フロリが遊ぶ。さわると、表紙にもどる。
+const IDLE_RETURN_MS = 30000;
 let idleReturnTimer = 0;
 function returnToOpening() {
   if ($("screen-cover").hidden || !$("opening").hidden || announcing || document.querySelector("dialog[open]")) return;
@@ -310,8 +310,8 @@ function showQuestion() {
     setFlori(IMG.surprised, "驚くフロリ");
     message.textContent =
       mode === "versus"
-        ? `第${play.round}回戦だヨ! 正解で${play.round}点!`
-        : { normal: "おっ! 難しくなったヨ!", hard: "難しいモードだヨ! じっくり考えてネ!", oni: "オニ問題だヨ! がんばれ!" }[mode];
+        ? `第${play.round}回戦です。正解で${play.round}点!`
+        : { normal: "難しくなりました!", hard: "難しいモードです。じっくり考えましょう。", oni: "オニ問題です。がんばれ!" }[mode];
     message.hidden = false;
   } else {
     setFlori(IMG.think, "本とペンを持つフロリ");
@@ -443,7 +443,7 @@ function renderTurn(versus) {
   board.hidden = !versus;
   if (!versus) return;
   turn.className = `turn p${play.player + 1}`;
-  turn.textContent = `${PLAYER_NAMES[play.player]}の番だヨ!(正解で${play.round}点)`;
+  turn.textContent = `${PLAYER_NAMES[play.player]}の番です。(正解で${play.round}点)`;
   renderBoard(board, play.scores, play.player);
 }
 
