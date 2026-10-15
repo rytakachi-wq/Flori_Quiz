@@ -1353,11 +1353,6 @@ for (const box of [$("set-read"), $("set-read-dlg")]) {
     if (!box.checked) stopSpeaking();
   });
 }
-$("btn-read").hidden = !canSpeak;
-$("btn-read").addEventListener("click", () => {
-  if (answered) speak(`${$("q-verdict").textContent}。正解は、${renderers[current.type].correctText(current)}。${current.explanation}`);
-  else speak(readableQuestion(current));
-});
 
 // ================= 文字の大きさ =================
 const SIZE_KEY = "floriQuiz.textSize";
