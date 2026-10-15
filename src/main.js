@@ -39,9 +39,9 @@ import {
   recordVersus,
 } from "./storage.js";
 import { illustrationFor } from "./illustrations.js";
-import { BADGES, COLORS, HATS, THEMES, TITLES, badgeName, earnedBadges, isOpen, loadDress, lockText, saveDress, starTitleFor, STAR_TITLES, titleFor } from "./badges.js";
+import { COLORS, HATS, THEMES, earnedBadges, isOpen, loadDress, progressOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
-import { applyFloriSrc, setFloriColor, setWarmList } from "./flori-color.js";
+import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
 import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, readingOf, setFuriganaMode, startFurigana } from "./furigana.js";
 
@@ -55,7 +55,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "versus", "relax", "records", "settings", "dex", "badges", "dress", "question", "result", "error"];
+const SCREENS = ["cover", "versus", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"review"(おさらい)、"daily"(毎日1問)
@@ -190,7 +190,7 @@ let normalQuestions = [];
 let hardQuestions = [];
 let oniQuestions = [];
 const idToUid = new Map(); // 問題の番号 → uid(「つづきから」の保存に使う)
-let allQuestions = []; // 全部の問題(オニもふくむ。図鑑とバッジで使う)
+let allQuestions = []; // 全部の問題(オニもふくむ。図鑑できせかえの条件で使う)
 let playableQuestions = []; // ふつう+難しい問題(おさらい・毎日1問で使う)
 let normalIds = new Set(); // ふつうの問題の uid(成績の記録に使う。番号がつけなおされても、変わらない)
 let hardIds = new Set(); // 難しい問題の uid
@@ -233,8 +233,7 @@ function announce(text, jingle, then, image) {
 function refreshCover() {
   if (playableQuestions.length === 0) return;
   const stats = loadStats();
-  const starTitle = starTitleFor(stats.stars);
-  $("cover-title").textContent = `称号:${titleFor(currentTotal(stats))}${starTitle ? `  ☆${starTitle}` : ""}`;
+  $("cover-title").textContent = `総合得点 ${currentTotal(stats)}点`;
   const today = dateKey();
   const dailyDone = stats.dailyLast === today;
   $("btn-daily").querySelector(".tile-label").textContent = "毎日1問";
@@ -639,6 +638,7 @@ function showResult() {
   awardBadges();
   renderNews();
   show("result");
+  setTimeout(celebrateUnlocks, 1400); // きせかえが、ふえていたら、お祝いの画面
 }
 
 function comment(correct, total = QUESTIONS_PER_ROUND) {
@@ -672,8 +672,7 @@ function showRecords() {
   $("s-total").textContent = `${currentTotal(s)}点 / ${TOTAL_POINTS}点`;
   $("s-total-bar").style.width = `${(currentTotal(s) / TOTAL_POINTS) * 100}%`;
   $("s-plays").textContent = `${s.plays}回`;
-  $("s-title").textContent = titleFor(currentTotal(s));
-  $("s-badges").textContent = `${s.badges.length} / ${BADGES.length}個`;
+  $("s-dress").textContent = `${dressOwned(s)} / ${dressTotal()}こ`;
   $("s-stars").textContent = `⭐ ${s.stars}こ`;
   $("s-versus").textContent = `${s.versusPlays}回`;
   // 毎日1問:きのうか今日やっていれば、続けた日数。それより前なら、0日(とぎれた)
@@ -802,7 +801,7 @@ function askRestart(action) {
   restartAction = action;
   $("dlg-restart").showModal();
 }
-// 消すのは、成績・バッジ・図鑑・きせかえ・つづき。音の大きさ・ふりがな・文字の大きさなどの設定は、のこす。
+// 消すのは、成績・図鑑・きせかえ・つづき。音の大きさ・ふりがな・文字の大きさなどの設定は、のこす。
 function eraseSaveData() {
   for (const key of ["floriQuiz.stats", "floriQuiz.dress", "floriQuiz.dexViewed", "floriQuiz.notice", "floriQuiz.bestScore"]) {
     try {
@@ -869,8 +868,8 @@ function startGarden(size = gardenSize) {
       $("garden-message").textContent = `全部桜の木になったヨ!${moves}回で完成。すごいネ!`;
       playSe("correct");
       recordGarden();
-      const fresh = awardBadges();
-      if (fresh.length) $("garden-message").textContent += `  新しいバッジ:${fresh.map(badgeName).join("、")}`;
+      awardBadges();
+      setTimeout(celebrateUnlocks, 1400); // きせかえが、ふえていたら、お祝いの画面
     },
   });
   show("relax");
@@ -1014,47 +1013,42 @@ $("opening").addEventListener("keydown", (event) => {
   if (event.key === "Enter" || event.key === " ") closeOpening();
 });
 
-// ================= バッジ・称号 =================
+// ================= きせかえの解放(条件は badges.js) =================
+// 条件を数えるための材料
 function badgeContext(stats = loadStats()) {
   return { stats, total: currentTotal(stats), playable: playableQuestions.length, all: allQuestions.length, oni: oniQuestions.length };
 }
 
-// もらえるバッジを数えなおして、はじめてのものを、おぼえる。新しいバッジの id を返す。
+// 条件を満たしたものを、数えなおして、はじめてのものを、おぼえる(画面には、出さない。きせかえの解放に使う)
 function awardBadges() {
   const stats = loadStats();
   const earned = earnedBadges(badgeContext(stats));
   const fresh = earned.filter((id) => !stats.badges.includes(id));
-  if (fresh.length) {
-    recordBadges([...stats.badges, ...fresh]);
-    renderBadgeBackground();
-  }
+  if (fresh.length) recordBadges([...stats.badges, ...fresh]);
   return fresh;
 }
 
-// もらったバッジを、背景に、うっすらとちらす(ふんわり動く)
+// 背景に、うっすらと、ふんわり動く絵をちらす(きまった絵)
+const DECOR = ["⭐", "🌸", "💡", "🎈", "✨", "🍀", "🌈", "🎀", "🌟", "🍎", "🎵", "🦋"];
 function renderBadgeBackground() {
-  const have = loadStats().badges;
-  const layer = $("badge-bg");
-  layer.replaceChildren(
-    ...have.flatMap((id, index) => {
-      const badge = BADGES.find((item) => item.id === id);
-      if (!badge) return [];
-      return [0, 1].map((copy) => {
+  $("badge-bg").replaceChildren(
+    ...DECOR.flatMap((icon, index) =>
+      [0, 1].map((copy) => {
         const span = document.createElement("span");
         const n = index * 2 + copy;
-        span.textContent = badge.icon;
+        span.textContent = icon;
         span.style.left = `${(n * 61.8 + 7) % 96}%`;
         span.style.top = `${(n * 38.2 + (copy ? 41 : 9)) % 92}%`;
         span.style.fontSize = `${30 + ((n * 7) % 22)}px`;
         span.style.setProperty("--rot", `${((n * 29) % 50) - 25}deg`);
         span.style.animationDelay = `${(n % 7) * -0.9}s`;
         return span;
-      });
-    }),
+      }),
+    ),
   );
 }
 
-// ===== お知らせ:図鑑・バッジ・称号・きせかえ・成績で、あたらしく手に入れたものを知らせる =====
+// ===== お知らせ:図鑑・きせかえ・成績で、あたらしく手に入れたものを知らせる =====
 const NOTICE_KEY = "floriQuiz.notice"; // どこまで見たか(カードは、図鑑のほうで)
 function loadNotice() {
   try {
@@ -1072,21 +1066,33 @@ function saveNotice(notice) {
 }
 function openDressKeys(stats) {
   const ctx = { have: new Set(stats.badges), stars: stats.stars };
-  return Object.entries(DRESS_LISTS).flatMap(([kind, list]) => list.filter((item) => isOpen(item, ctx)).map((item) => `${kind}:${item.id}`));
+  return Object.entries(DRESS_LISTS).flatMap(([kind, list]) => list.filter((item) => item.unlock && isOpen(item, ctx)).map((item) => `${kind}:${item.id}`));
+}
+function dressOwned(stats) {
+  const ctx = { have: new Set(stats.badges), stars: stats.stars };
+  return Object.values(DRESS_LISTS).reduce((sum, list) => sum + list.filter((item) => isOpen(item, ctx)).length, 0);
+}
+function dressTotal() {
+  return Object.values(DRESS_LISTS).reduce((sum, list) => sum + list.length, 0);
 }
 function dressName(key) {
   const [kind, id] = key.split(":");
   return DRESS_LISTS[kind].find((item) => item.id === id)?.name ?? "";
 }
 function noticeNow(stats) {
-  const total = currentTotal(stats);
-  return { badges: [...stats.badges], dress: openDressKeys(stats), title: titleFor(total), starTitle: starTitleFor(stats.stars), total };
+  return { dress: openDressKeys(stats), total: currentTotal(stats) };
 }
 // 見たところまでの記録。はじめて(この機能を使うのが、はじめて)のときは、いまの状態を、見たことにする。
+// celebrated:お祝いの画面を出した、きせかえ。
 function noticeBase() {
   let base = loadNotice();
   if (!base) {
     base = noticeNow(loadStats());
+    base.celebrated = [...base.dress];
+    saveNotice(base);
+  } else if (!Array.isArray(base.celebrated) || !Array.isArray(base.dress)) {
+    base.dress = Array.isArray(base.dress) ? base.dress : openDressKeys(loadStats());
+    base.celebrated = [...base.dress];
     saveNotice(base);
   }
   return base;
@@ -1100,10 +1106,8 @@ function computeNews() {
   const met = [...new Set([...stats.dex, ...stats.seen, ...stats.right, ...stats.oniRight])].filter((id) => valid.has(id));
   return {
     cards: met.filter((id) => !viewed.has(id)).length,
-    badges: now.badges.filter((id) => !base.badges.includes(id)),
-    titles: [now.title !== base.title ? now.title : "", now.starTitle && now.starTitle !== base.starTitle ? `☆${now.starTitle}` : ""].filter(Boolean),
     dress: now.dress.filter((key) => !base.dress.includes(key)),
-    gain: Math.max(0, now.total - base.total),
+    gain: Math.max(0, now.total - (base.total ?? 0)),
     now,
   };
 }
@@ -1111,7 +1115,6 @@ function computeNews() {
 function markSeen(kind) {
   const base = noticeBase();
   const now = noticeNow(loadStats());
-  if (kind === "badges") Object.assign(base, { badges: now.badges, title: now.title, starTitle: now.starTitle });
   if (kind === "dress") base.dress = now.dress;
   if (kind === "records") base.total = now.total;
   saveNotice(base);
@@ -1126,7 +1129,6 @@ function refreshNoticeDots() {
     dot.textContent = text;
   };
   set("btn-dex", news.cards > 0 ? `NEW ${news.cards}` : "");
-  set("btn-badges", news.badges.length + news.titles.length > 0 ? "NEW" : "");
   set("btn-dress", news.dress.length > 0 ? "NEW" : "");
   set("btn-records", news.gain > 0 ? "UP" : "");
 }
@@ -1135,9 +1137,7 @@ function renderNews() {
   const news = computeNews();
   const lines = [];
   if (news.cards > 0) lines.push(`📚 問題図鑑:新しいカードが ${news.cards}まい!`);
-  if (news.badges.length) lines.push(`🏅 新しいバッジ:${news.badges.map((id) => `${BADGES.find((badge) => badge.id === id)?.icon ?? ""}${badgeName(id)}`).join("  ")}`);
-  if (news.titles.length) lines.push(`🎖 新しい称号:${news.titles.join("・")}`);
-  if (news.dress.length) lines.push(`👑 きせかえが ふえたヨ:${news.dress.map(dressName).join("・")}`);
+  if (news.dress.length) lines.push(`🎁 きせかえが ふえたヨ:${news.dress.map(dressName).join("・")}`);
   if (news.gain > 0) lines.push(`🏆 総合得点が ${news.gain}点 アップ!(いま ${news.now.total}点)`);
   const list = $("r-news");
   list.hidden = lines.length === 0;
@@ -1150,67 +1150,75 @@ function renderNews() {
   );
 }
 
-function announceBadges(element) {
-  const fresh = awardBadges();
-  element.hidden = fresh.length === 0;
-  if (fresh.length) {
-    const icons = fresh.map((id) => `${BADGES.find((badge) => badge.id === id).icon}${badgeName(id)}`);
-    element.textContent = `新しいバッジ!  ${icons.join("  ")}`;
+// ===== きせかえを手に入れたときの、お祝いの画面 =====
+let unlockQueue = [];
+let unlockIndex = 0;
+function celebrateUnlocks() {
+  if ($("dlg-unlock").open || announcing) return;
+  const base = noticeBase();
+  const pending = openDressKeys(loadStats()).filter((key) => !base.celebrated.includes(key));
+  if (pending.length === 0) return;
+  base.celebrated = [...base.celebrated, ...pending];
+  saveNotice(base);
+  unlockQueue = pending;
+  unlockIndex = 0;
+  showUnlock();
+  $("dlg-unlock").showModal();
+  playSe("correct");
+}
+const KIND_WORD = { color: "フロリの色", hat: "かざり", theme: "背景" };
+async function showUnlock() {
+  const [kind, id] = unlockQueue[unlockIndex].split(":");
+  const item = DRESS_LISTS[kind].find((entry) => entry.id === id);
+  const dialog = $("dlg-unlock");
+  dialog.style.setProperty("--tint", item.tint);
+  $("unlock-kicker").textContent = `🎁 あたらしい${KIND_WORD[kind]}を ゲット!`;
+  $("unlock-name").textContent = item.name;
+  $("unlock-why").textContent = `${todoText(item)}と、もらえるよ!`;
+  $("unlock-count").textContent = unlockQueue.length > 1 ? `${unlockIndex + 1} / ${unlockQueue.length}` : "";
+  $("unlock-count").hidden = unlockQueue.length < 2;
+  // フロリに、つけたところを見せる
+  const hat = $("unlock-hat");
+  const flori = $("unlock-flori");
+  const stage = $("unlock-stage");
+  stage.style.background = kind === "theme" ? (item.preview ?? item.tint) : "";
+  const hatItem = kind === "hat" ? item : HATS.find((entry) => entry.id === dress.hat);
+  hat.hidden = !hatItem?.img;
+  if (hatItem?.img) hat.src = hatItem.img;
+  hat.dataset.hat = hatItem?.id ?? "";
+  flori.dataset.sample = "1";
+  if (kind === "color") {
+    try {
+      flori.src = await recolor("../assets/flori/src/body_wave.webp", item);
+    } catch {
+      flori.src = "../assets/flori/src/body_wave.webp";
+    }
+  } else {
+    applyFloriSrc(flori, "../assets/flori/src/body_wave.webp");
   }
+  const wear = $("btn-unlock-wear");
+  wear.disabled = false;
+  wear.textContent = "つけてみる";
+  wear.onclick = () => {
+    dress = { ...dress, [kind]: id };
+    saveDress(dress);
+    applyDress();
+    wear.textContent = "✔ つけたよ!";
+    wear.disabled = true;
+    playSe("correct");
+  };
+  $("btn-unlock-next").textContent = unlockIndex + 1 < unlockQueue.length ? "つぎへ" : "とじる";
 }
-
-function showBadges() {
-  awardBadges(); // これまでの記録で、もらえるものを、先にそろえる
-  const stats = loadStats();
-  const have = new Set(stats.badges);
-  $("badge-title").textContent = `いまの称号:${titleFor(currentTotal(stats))}  ・  バッジ ${have.size} / ${BADGES.length}個`;
-  $("badge-detail").textContent = "バッジをおすと、もらいかたが見られるヨ。";
-  $("badge-list").replaceChildren(
-    ...BADGES.map((badge) => {
-      const owned = have.has(badge.id);
-      const item = document.createElement("li");
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = `badge-chip${owned ? "" : " locked"}`;
-      button.dataset.noSe = "1";
-      const icon = document.createElement("span");
-      icon.className = "badge-icon";
-      icon.textContent = owned ? badge.icon : "🔒";
-      const name = document.createElement("span");
-      name.className = "badge-name";
-      name.textContent = owned ? badge.name : "???";
-      button.append(icon, name);
-      button.addEventListener("click", () => {
-        $("badge-detail").textContent = `${owned ? `${badge.icon} ${badge.name}` : "🔒 まだ"}:${badge.text}`;
-      });
-      item.append(button);
-      return item;
-    }),
-  );
-  // 称号一覧:総合得点で決まる
-  const total = currentTotal(stats);
-  const now = titleFor(total);
-  $("title-list").replaceChildren(
-    ...[...TITLES].reverse().map((title) => {
-      const item = document.createElement("li");
-      item.className = title.name === now ? "is-now" : total >= title.min ? "" : "locked";
-      item.textContent = `${title.min}点〜  ${title.name}`;
-      return item;
-    }),
-  );
-  // ☆の称号:ごほうびの星の数で、きまる
-  const starNow = starTitleFor(stats.stars);
-  $("star-title-list").replaceChildren(
-    ...[...STAR_TITLES].reverse().map((title) => {
-      const item = document.createElement("li");
-      item.className = title.name === starNow ? "is-now" : stats.stars >= title.min ? "" : "locked";
-      item.textContent = `☆ ${title.min}こ〜  ${title.name}`;
-      return item;
-    }),
-  );
-  markSeen("badges");
-  show("badges");
-}
+$("btn-unlock-next").addEventListener("click", () => {
+  if (unlockIndex + 1 < unlockQueue.length) {
+    unlockIndex += 1;
+    showUnlock();
+  } else {
+    $("dlg-unlock").close();
+    if (!$("screen-dress").hidden) renderDress(); // きせかえの画面にいたら、見た目を更新
+    refreshCover();
+  }
+});
 
 // ================= 問題図鑑 =================
 // ================= 問題図鑑(カードを集める) =================
@@ -1332,38 +1340,110 @@ $("btn-dex-close").addEventListener("click", () => $("dlg-dex").close());
 // ================= きせかえ・背景 =================
 let dress = loadDress();
 
+function setHat(imgId, hat) {
+  const img = $(imgId);
+  img.hidden = !hat?.img;
+  if (hat?.img) img.src = hat.img;
+  img.dataset.hat = hat?.id ?? "";
+}
+
 function applyDress() {
   document.documentElement.dataset.theme = dress.theme;
   setFloriColor(COLORS.find((color) => color.id === dress.color) ?? null);
   // フロリのかざり(画像)。かざりごとに、場所と大きさが、ちがう(style.css の data-hat)
   const hat = HATS.find((item) => item.id === dress.hat);
-  for (const id of ["hero-hat", "dress-hat"]) {
-    const img = $(id);
-    img.hidden = !hat?.img;
-    if (hat?.img) img.src = hat.img;
-    img.dataset.hat = hat?.id ?? "";
-  }
+  setHat("hero-hat", hat);
+  setHat("dress-hat", hat);
 }
 
 let dressTab = "color"; // きせかえで、いま見ている種類(color / hat / theme)
 const DRESS_LISTS = { color: COLORS, hat: HATS, theme: THEMES };
+const DRESS_TAB_LABEL = { color: "🎨 フロリの色", hat: "🎀 かざり", theme: "🖼️ 背景" };
+let freshKeys = new Set(); // この画面を、あたらしく開いて、はじめて見るもの(NEW のしるし)
 
-function showDress() {
+// 表紙から開く:あたらしく増えたものに NEW をつける
+function openDress() {
   awardBadges();
+  const base = noticeBase();
+  freshKeys = new Set(noticeNow(loadStats()).dress.filter((key) => !base.dress.includes(key)));
+  if (freshKeys.size > 0) {
+    // NEW があるのは、そのしゅるいのタブから
+    const first = [...freshKeys][0].split(":")[0];
+    dressTab = first;
+  }
+  renderDress();
+  markSeen("dress");
+  show("dress");
+}
+
+function dressCaption(hover = null) {
+  const nameOf = (list, id) => list.find((item) => item.id === id)?.name ?? "";
+  $("dress-caption").textContent = hover
+    ? `${KIND_WORD[hover.kind]}:${hover.item.name}`
+    : `${nameOf(COLORS, dress.color)} ・ ${nameOf(HATS, dress.hat)} ・ ${nameOf(THEMES, dress.theme)}`;
+}
+
+// マウスをのせたとき、つける前に、見ためを、ためせる(かざり・背景)
+function previewDress(kind, item) {
+  if (kind === "hat") setHat("dress-hat", item);
+  if (kind === "theme") $("dress-stage").style.background = item.preview ?? item.tint;
+  dressCaption({ kind, item });
+}
+function endPreview() {
+  setHat("dress-hat", HATS.find((item) => item.id === dress.hat));
+  $("dress-stage").style.background = THEMES.find((item) => item.id === dress.theme)?.preview ?? "";
+  dressCaption();
+}
+
+function showLockMessage(choice, stats) {
+  const message = $("dress-message");
+  const progress = progressOf(choice, badgeContext(stats));
+  const text = document.createElement("span");
+  text.textContent = `🔒 「${choice.name}」は、${todoText(choice)}と、もらえるよ。`;
+  message.replaceChildren(text);
+  if (progress && progress.goal > 1) {
+    const bar = document.createElement("span");
+    bar.className = "dress-progress";
+    const fill = document.createElement("i");
+    fill.style.width = `${(progress.now / progress.goal) * 100}%`;
+    bar.append(fill);
+    const label = document.createElement("b");
+    label.textContent = `${progress.now} / ${progress.goal}`;
+    message.append(bar, label);
+  }
+  message.classList.add("is-on");
+}
+
+function renderDress() {
   const stats = loadStats();
+  const bctx = badgeContext(stats);
   const ctx = { have: new Set(stats.badges), stars: stats.stars };
   $("dress-stars").textContent = stats.stars;
-  for (const tab of document.querySelectorAll("[data-dress-tab]")) tab.classList.toggle("is-on", tab.dataset.dressTab === dressTab);
-  const nameOf = (list, id) => list.find((item) => item.id === id)?.name ?? "";
-  $("dress-now").textContent = `いま:${nameOf(COLORS, dress.color)} ・ ${nameOf(HATS, dress.hat)} ・ ${nameOf(THEMES, dress.theme)}`;
+  $("dress-stage").style.background = THEMES.find((item) => item.id === dress.theme)?.preview ?? "";
+  setHat("dress-hat", HATS.find((item) => item.id === dress.hat));
+  dressCaption();
+  $("dress-message").replaceChildren();
+  $("dress-message").classList.remove("is-on");
+  for (const tab of document.querySelectorAll("[data-dress-tab]")) {
+    const kind = tab.dataset.dressTab;
+    const list = DRESS_LISTS[kind];
+    const owned = list.filter((item) => isOpen(item, ctx)).length;
+    tab.classList.toggle("is-on", kind === dressTab);
+    tab.replaceChildren(document.createTextNode(DRESS_TAB_LABEL[kind]));
+    const count = document.createElement("small");
+    count.textContent = `${owned}/${list.length}`;
+    tab.append(count);
+    tab.classList.toggle("has-new", [...freshKeys].some((key) => key.startsWith(`${kind}:`)));
+  }
   const kind = dressTab;
   $("dress-list").replaceChildren(
     ...DRESS_LISTS[kind].map((choice) => {
       const open = isOpen(choice, ctx);
+      const isNew = freshKeys.has(`${kind}:${choice.id}`);
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}${open ? "" : " is-locked"}`;
-      button.style.borderColor = choice.tint; // 縁を、その色に
+      button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}${open ? "" : " is-locked"}${isNew ? " is-new" : ""}`;
+      button.style.setProperty("--tint", choice.tint);
       // 絵だけを見せる(名前や、もらいかたは、マウスをのせたときに出す)
       const art = document.createElement("span");
       art.className = `dress-art is-${kind}`;
@@ -1383,6 +1463,13 @@ function showDress() {
         check.setAttribute("aria-hidden", "true");
         button.append(check);
       }
+      if (isNew) {
+        const ribbon = document.createElement("span");
+        ribbon.className = "dress-new";
+        ribbon.textContent = "NEW";
+        ribbon.setAttribute("aria-hidden", "true");
+        button.append(ribbon);
+      }
       if (!open) {
         const lock = document.createElement("span");
         lock.className = "dress-lock";
@@ -1390,44 +1477,51 @@ function showDress() {
         lock.setAttribute("aria-hidden", "true");
         button.append(lock);
       }
+      const progress = open ? null : progressOf(choice, bctx);
       const tip = document.createElement("span");
       tip.className = "dress-tip";
-      tip.textContent = open ? choice.name : `🔒 ${choice.name}:${lockText(choice)}でもらえます`;
+      tip.textContent = open ? choice.name : `🔒 ${todoText(choice)}${progress && progress.goal > 1 ? `(${progress.now}/${progress.goal})` : ""}`;
       button.append(tip);
-      button.setAttribute("aria-label", open ? choice.name : `${choice.name}(${lockText(choice)}でもらえます)`);
-      if (dress[kind] === choice.id) button.style.backgroundColor = `color-mix(in srgb, ${choice.tint} 35%, white)`;
+      button.setAttribute("aria-label", open ? choice.name : `${choice.name}(${todoText(choice)}と、もらえます)`);
+      if (open) {
+        button.addEventListener("mouseenter", () => previewDress(kind, choice));
+        button.addEventListener("focus", () => previewDress(kind, choice));
+        button.addEventListener("mouseleave", endPreview);
+        button.addEventListener("blur", endPreview);
+      }
       button.addEventListener("click", () => {
         if (!open) {
-          // まだ使えないもの:もらいかたを、知らせる
-          $("dress-message").textContent = `「${choice.name}」は${lockText(choice)}でもらえるヨ。`;
+          // まだ使えないもの:もらいかたと、あとどれくらいかを、知らせる
+          showLockMessage(choice, stats);
           return;
         }
-        $("dress-message").textContent = "";
         dress = { ...dress, [kind]: choice.id };
         saveDress(dress);
         applyDress();
-        showDress();
+        freshKeys.delete(`${kind}:${choice.id}`);
+        renderDress();
+        // つけた! の、きらきら
+        const stage = $("dress-stage");
+        stage.classList.remove("is-flash");
+        void stage.offsetWidth;
+        stage.classList.add("is-flash");
+        playSe("button");
       });
       return button;
     }),
   );
-  markSeen("dress");
-  show("dress");
 }
 for (const tab of document.querySelectorAll("[data-dress-tab]")) {
   tab.addEventListener("click", () => {
     dressTab = tab.dataset.dressTab;
-    $("dress-message").textContent = "";
-    showDress();
+    renderDress();
   });
 }
 applyDress();
 
 $("btn-dex").addEventListener("click", showDex);
 $("btn-dex-back").addEventListener("click", () => show("cover"));
-$("btn-badges").addEventListener("click", showBadges);
-$("btn-badges-back").addEventListener("click", () => show("cover"));
-$("btn-dress").addEventListener("click", showDress);
+$("btn-dress").addEventListener("click", openDress);
 $("btn-dress-back").addEventListener("click", () => show("cover"));
 
 // 読み上げ

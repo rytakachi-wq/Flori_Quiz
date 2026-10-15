@@ -1,71 +1,46 @@
-// バッジ・称号・きせかえ・背景。成績(storage.js)から、もらえるバッジを数える。
+// きせかえ(フロリの色・かざり・背景)と、その解放の条件。成績(storage.js)から、条件を数える。
 // 名前や個人情報は入れない。きせかえの選びかただけ、端末内に保存する。
+// (むかしの「バッジ・称号」は、画面からなくした。条件を数えるしくみだけを、解放のために残している)
 
 const DRESS_KEY = "floriQuiz.dress";
 
-// バッジ:id、絵文字、名前、もらえる条件の説明、条件(ctx を受けとって true/false)
-// ctx = { stats, total(総合得点), playable(ふつう+難しい問題の数), all(オニもふくむ全部の数), oni(オニの数) }
-export const BADGES = [
-  { id: "first", icon: "🌱", name: "はじめの一歩", text: "はじめて問題に正解した", test: (c) => c.stats.right.length >= 1 },
-  { id: "right10", icon: "🌿", name: "ひらめきの芽", text: "10問に正解した(問題の種類で数える)", test: (c) => c.stats.right.length >= 10 },
-  { id: "right20", icon: "🌳", name: "ひらめきの木", text: "20問に正解した", test: (c) => c.stats.right.length >= 20 },
-  { id: "rightAll", icon: "🌸", name: "ぜんぶ解いた!", text: "ふつうと難しいの問題に全部正解した", test: (c) => c.stats.right.length >= c.playable },
-  { id: "perfect", icon: "💯", name: "全問正解!", text: "5問で全問正解した", test: (c) => c.stats.perfect >= 1 },
-  { id: "perfect5", icon: "🏅", name: "全問正解の達人", text: "全問正解を5回した", test: (c) => c.stats.perfect >= 5 },
-  { id: "hardPerfect", icon: "🔥", name: "難しいモード制覇", text: "難しいモードで全問正解した", test: (c) => c.stats.perfectHard >= 1 },
-  { id: "oni1", icon: "👹", name: "オニを解いた", text: "オニ問題に1問正解した", test: (c) => c.stats.oniRight.length >= 1 },
-  { id: "oniAll", icon: "🏆", name: "オニたおし", text: "オニ問題に全部正解した", test: (c) => c.oni > 0 && c.stats.oniRight.length >= c.oni },
-  { id: "streak3", icon: "📅", name: "3日連続", text: "毎日1問を3日続けた", test: (c) => c.stats.dailyBest >= 3 },
-  { id: "streak7", icon: "🗓️", name: "7日連続", text: "毎日1問を7日続けた", test: (c) => c.stats.dailyBest >= 7 },
-  { id: "play10", icon: "🎈", name: "10回あそんだ", text: "5問を10回遊んだ", test: (c) => c.stats.plays >= 10 },
-  { id: "play50", icon: "🎉", name: "50回あそんだ", text: "5問を50回遊んだ", test: (c) => c.stats.plays >= 50 },
-  { id: "versus1", icon: "👥", name: "対戦デビュー", text: "みんなで対戦を1回した", test: (c) => c.stats.versusPlays >= 1 },
-  { id: "versus10", icon: "⚔️", name: "対戦の達人", text: "みんなで対戦を10回した", test: (c) => c.stats.versusPlays >= 10 },
-  { id: "review", icon: "📖", name: "おさらいクリア", text: "おさらいを全部クリアした", test: (c) => c.stats.reviewClears >= 1 },
-  { id: "dex10", icon: "📚", name: "問題図鑑​コレクター", text: "問題図鑑に10問のせた", test: (c) => c.stats.dex.length >= 10 },
-  { id: "dexAll", icon: "📕", name: "問題図鑑​コンプリート", text: "問題図鑑を全部うめた", test: (c) => c.stats.dex.length >= c.all },
-  { id: "timed1", icon: "⏱️", name: "スピードチャレンジ", text: "制限時間をつけて1回遊んだ", test: (c) => c.stats.timedPlays >= 1 },
-  { id: "timedPerfect", icon: "⚡", name: "はやわざ名人", text: "制限時間をつけて全問正解した", test: (c) => c.stats.timedPerfect >= 1 },
-  { id: "garden", icon: "🌸", name: "お花畑のたつじん", text: "お花畑を完成させた", test: (c) => c.stats.gardenClears >= 1 },
-  { id: "stars10", icon: "☆", name: "ほしひろい", text: "ごほうびの星を10こ集めた", test: (c) => c.stats.stars >= 10 },
-  { id: "stars30", icon: "⭐", name: "ほしあつめ", text: "ごほうびの星を30こ集めた", test: (c) => c.stats.stars >= 30 },
-  { id: "stars100", icon: "🌟", name: "ほしの王様", text: "ごほうびの星を100こ集めた", test: (c) => c.stats.stars >= 100 },
-  { id: "total50", icon: "⭐", name: "総合得点50点", text: "総合得点が50点になった", test: (c) => c.total >= 50 },
-  { id: "total100", icon: "🌟", name: "総合得点100点", text: "総合得点が100点になった", test: (c) => c.total >= 100 },
+// 解放の条件:id、してほしいこと(todo)、いまの数(now)、目標(goal)。ctx = { stats, total, playable, all, oni }
+export const CONDITIONS = [
+  { id: "first", todo: "はじめて問題に正解する", now: (c) => c.stats.right.length, goal: 1 },
+  { id: "right10", todo: "10問に正解する(問題の種類で数えます)", now: (c) => c.stats.right.length, goal: 10 },
+  { id: "right20", todo: "20問に正解する", now: (c) => c.stats.right.length, goal: 20 },
+  { id: "rightAll", todo: "ふつうと難しいの問題に、全部正解する", now: (c) => c.stats.right.length, goal: (c) => c.playable },
+  { id: "perfect", todo: "5問で全問正解する", now: (c) => c.stats.perfect, goal: 1 },
+  { id: "perfect5", todo: "全問正解を5回する", now: (c) => c.stats.perfect, goal: 5 },
+  { id: "hardPerfect", todo: "難しいモードで全問正解する", now: (c) => c.stats.perfectHard, goal: 1 },
+  { id: "oni1", todo: "オニ問題に1問正解する", now: (c) => c.stats.oniRight.length, goal: 1 },
+  { id: "oniAll", todo: "オニ問題に全部正解する", now: (c) => c.stats.oniRight.length, goal: (c) => c.oni },
+  { id: "streak3", todo: "毎日1問を3日続ける", now: (c) => c.stats.dailyBest, goal: 3 },
+  { id: "streak7", todo: "毎日1問を7日続ける", now: (c) => c.stats.dailyBest, goal: 7 },
+  { id: "play10", todo: "5問を10回遊ぶ", now: (c) => c.stats.plays, goal: 10 },
+  { id: "play50", todo: "5問を50回遊ぶ", now: (c) => c.stats.plays, goal: 50 },
+  { id: "versus1", todo: "みんなで対戦を1回する", now: (c) => c.stats.versusPlays, goal: 1 },
+  { id: "versus10", todo: "みんなで対戦を10回する", now: (c) => c.stats.versusPlays, goal: 10 },
+  { id: "review", todo: "おさらいを全部クリアする", now: (c) => c.stats.reviewClears, goal: 1 },
+  { id: "dex10", todo: "問題図鑑に10問のせる", now: (c) => c.stats.dex.length, goal: 10 },
+  { id: "dexAll", todo: "問題図鑑を全部うめる", now: (c) => c.stats.dex.length, goal: (c) => c.all },
+  { id: "timed1", todo: "制限時間をつけて1回遊ぶ", now: (c) => c.stats.timedPlays, goal: 1 },
+  { id: "timedPerfect", todo: "制限時間をつけて全問正解する", now: (c) => c.stats.timedPerfect, goal: 1 },
+  { id: "garden", todo: "リラックスのお花畑を完成させる", now: (c) => c.stats.gardenClears, goal: 1 },
+  { id: "total50", todo: "総合得点を50点にする", now: (c) => c.total, goal: 50 },
+  { id: "total100", todo: "総合得点を100点にする", now: (c) => c.total, goal: 100 },
 ];
 
-// 称号:総合得点で、きまる(高いほうから)
-export const TITLES = [
-  { min: 100, name: "ひらめきの王様" },
-  { min: 80, name: "ひらめきマスター" },
-  { min: 60, name: "ひらめき博士" },
-  { min: 40, name: "ひらめき名人" },
-  { min: 20, name: "ひらめき見習い" },
-  { min: 0, name: "ひらめきのたまご" },
-];
+const goalOf = (condition, ctx) => (typeof condition.goal === "function" ? condition.goal(ctx) : condition.goal);
 
-// ☆の称号:ごほうびの星の数で、きまる(10こから)
-export const STAR_TITLES = [
-  { min: 100, name: "ほしの王様" },
-  { min: 60, name: "ほしのまほうつかい" },
-  { min: 30, name: "ほしあつめ名人" },
-  { min: 10, name: "ほしひろい" },
-];
-
-export function starTitleFor(stars) {
-  return STAR_TITLES.find((title) => stars >= title.min)?.name ?? "";
-}
-
-export function titleFor(total) {
-  return TITLES.find((title) => total >= title.min).name;
-}
-
-// いま、もらえているバッジの id の一覧
+// いま、条件を満たしている id の一覧
 export function earnedBadges(ctx) {
-  return BADGES.filter((badge) => badge.test(ctx)).map((badge) => badge.id);
+  return CONDITIONS.filter((condition) => {
+    const goal = goalOf(condition, ctx);
+    return goal > 0 && condition.now(ctx) >= goal;
+  }).map((condition) => condition.id);
 }
 
-// きせかえ(かざり)と背景。unlock は、必要なバッジの id(null なら、はじめから使える)
 export const HATS = [
   { id: "none", img: "", name: "なし", tint: "#46555e", unlock: null },
   { id: "ribbon", img: "../assets/dress/ribbon.png", name: "リボン", tint: "#d8455c", unlock: "first" },
@@ -90,21 +65,29 @@ export const THEMES = [
   { id: "comet", name: "ながれぼし", tint: "#b48cf0", preview: "linear-gradient(160deg, #6a4fc0, #1b2350)", unlock: { stars: 50 } },
 ];
 
-// きせかえが使えるか(unlock:バッジの id、または { stars: 必要な星の数 }、または null)
+// きせかえが使えるか(unlock:条件の id、または { stars: 必要な星の数 }、または null)
 export function isOpen(item, { have, stars }) {
   const u = item.unlock;
   if (!u) return true;
   return typeof u === "string" ? have.has(u) : stars >= u.stars;
 }
 
-// 使えないときの、もらいかたの説明
-export function lockText(item) {
+// 使えないときの、もらいかた(「〜する」の形)
+export function todoText(item) {
   const u = item.unlock;
-  return typeof u === "string" ? `バッジ「${badgeName(u)}」` : `制限時間のごほうびの星 ${u.stars}こ`;
+  if (!u) return "";
+  return typeof u === "string" ? (CONDITIONS.find((condition) => condition.id === u)?.todo ?? "") : `制限時間のごほうびの星を ${u.stars}こ 集める`;
 }
 
-export function badgeName(id) {
-  return BADGES.find((badge) => badge.id === id)?.name ?? "";
+// もらうまでの、いまの数と目標({ now, goal })。数えられない条件は、null
+export function progressOf(item, ctx) {
+  const u = item.unlock;
+  if (!u) return null;
+  if (typeof u !== "string") return { now: Math.min(ctx.stats.stars, u.stars), goal: u.stars };
+  const condition = CONDITIONS.find((item2) => item2.id === u);
+  if (!condition) return null;
+  const goal = goalOf(condition, ctx);
+  return { now: Math.min(condition.now(ctx), goal), goal };
 }
 
 // フロリの色(体の水色の部分だけ、色あいをかえる。目・ほお・口・線は、そのまま。flori-color.js)

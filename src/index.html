@@ -59,7 +59,6 @@
       <nav class="home-nav" aria-label="メニュー">
         <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-text"><span class="tile-label">リラックス</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-dex" class="tile t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-text"><span class="tile-label">問題図鑑</span></span><span class="tile-dot" hidden></span></button>
-        <button id="btn-badges" class="tile t-badges" type="button"><span class="tile-icon" aria-hidden="true">🏅</span><span class="tile-text"><span class="tile-label">バッジ・称号</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-dress" class="tile t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">きせかえ</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-records" class="tile t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span><span class="tile-dot" hidden></span></button>
       </nav>
@@ -77,38 +76,27 @@
       <button id="btn-dex-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
-    <!-- バッジ・称号 -->
-    <section id="screen-badges" class="screen" aria-label="バッジと称号" hidden>
-      <h2 class="title">バッジ・称号</h2>
-      <p id="badge-title" class="bubble"></p>
-      <p id="badge-count" class="note" hidden></p>
-      <ul id="badge-list" class="badge-list"></ul>
-      <p id="badge-detail" class="note badge-detail" role="status">バッジをおすと、もらいかたが見られるヨ。</p>
-      <h3 class="dress-title">称号一覧(総合得点で変わるヨ)</h3>
-      <ul id="title-list" class="title-list"></ul>
-      <h3 class="dress-title">☆の称号(ごほうびの星で変わるヨ)</h3>
-      <ul id="star-title-list" class="title-list"></ul>
-      <button id="btn-badges-back" class="btn btn-sub" type="button">戻る</button>
-    </section>
-
     <!-- きせかえ -->
-    <section id="screen-dress" class="screen" aria-label="きせかえ" hidden>
+    <section id="screen-dress" class="screen dress-screen" aria-label="きせかえ" hidden>
       <h2 class="title">きせかえ</h2>
-      <div class="hero hero-small">
-        <div class="hero-fig">
-          <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-          <img id="dress-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
+      <div id="dress-stage" class="dress-stage">
+        <span class="spark s1" aria-hidden="true">✨</span><span class="spark s2" aria-hidden="true">⭐</span><span class="spark s3" aria-hidden="true">✨</span>
+        <div class="hero hero-small dress-hero">
+          <div class="hero-fig">
+            <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
+            <img id="dress-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
+          </div>
         </div>
+        <p id="dress-caption" class="dress-caption"></p>
       </div>
-      <p class="note">バッジや星を集めると使えるものが増えるヨ。  ⭐ <span id="dress-stars">0</span>こ</p>
-      <p id="dress-message" class="note" role="status"></p>
-      <p id="dress-now" class="dress-now"></p>
       <div class="dress-tabs" role="tablist">
         <button class="dress-tab is-on" type="button" data-dress-tab="color">🎨 フロリの色</button>
         <button class="dress-tab" type="button" data-dress-tab="hat">🎀 かざり</button>
         <button class="dress-tab" type="button" data-dress-tab="theme">🖼️ 背景</button>
       </div>
+      <p id="dress-message" class="dress-message" role="status"></p>
       <div id="dress-list" class="dress-list"></div>
+      <p class="note dress-note">制限時間をつけて遊ぶと、ごほうびの星 ⭐ がもらえるヨ。いま ⭐ <span id="dress-stars">0</span>こ</p>
       <button id="btn-dress-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
@@ -175,8 +163,7 @@
       </dl>
       <div class="total-bar" aria-hidden="true"><span id="s-total-bar"></span></div>
       <dl class="scores">
-        <div><dt>🎖 称号</dt><dd id="s-title"></dd></div>
-        <div><dt>🏅 バッジ</dt><dd id="s-badges"></dd></div>
+        <div><dt>👑 きせかえ</dt><dd id="s-dress"></dd></div>
         <div><dt>⭐ ごほうびの星</dt><dd id="s-stars"></dd></div>
         <div><dt>🎮 遊んだ回数</dt><dd id="s-plays"></dd></div>
         <div><dt>👥 対戦した回数</dt><dd id="s-versus"></dd></div>
@@ -319,6 +306,29 @@
     </div>
   </dialog>
 
+  <dialog id="dlg-unlock" class="dialog unlock-dialog" aria-labelledby="unlock-name">
+    <div class="unlock-rays" aria-hidden="true"></div>
+    <div class="confetti" aria-hidden="true"><span>⭐</span><span>✨</span><span>🎈</span><span>🌸</span><span>💡</span><span>⭐</span><span>🎈</span><span>✨</span><span>🌸</span><span>💡</span></div>
+    <div class="unlock-body">
+      <p id="unlock-kicker" class="unlock-kicker"></p>
+      <div id="unlock-stage" class="unlock-stage">
+        <div class="hero hero-small unlock-hero">
+          <div class="hero-fig">
+            <img id="unlock-flori" class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="">
+            <img id="unlock-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
+          </div>
+        </div>
+      </div>
+      <h2 id="unlock-name" class="unlock-name"></h2>
+      <p id="unlock-why" class="unlock-why"></p>
+      <p id="unlock-count" class="unlock-count" hidden></p>
+      <div class="buttons">
+        <button id="btn-unlock-wear" class="btn btn-main" type="button">つけてみる</button>
+        <button id="btn-unlock-next" class="btn btn-sub" type="button">とじる</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="dlg-giveup" class="dialog" aria-labelledby="dlg-giveup-text">
     <p id="dlg-giveup-text">答えを見ますか?<br>この問題は、<b>不正解</b>になります。</p>
     <div class="buttons">
@@ -337,7 +347,7 @@
     </div>
   </dialog>
   <dialog id="dlg-restart" class="dialog" aria-labelledby="dlg-restart-text">
-    <p id="dlg-restart-text">セーブデータを消します。<br>成績・バッジ・問題図鑑・きせかえ・つづきが全部消えるけど、本当にいいですか?</p>
+    <p id="dlg-restart-text">セーブデータを消します。<br>成績・問題図鑑・きせかえ・つづきが全部消えるけど、本当にいいですか?</p>
     <div class="buttons buttons-choice">
       <button id="btn-restart-no" class="btn btn-main btn-big" type="button">やめる</button>
       <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">はい、消す</button>
