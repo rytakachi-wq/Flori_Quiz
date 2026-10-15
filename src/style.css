@@ -1095,3 +1095,62 @@ body { overflow-x: hidden; }
 .vs-points li { display: grid; grid-template-columns: 1.6em auto 1fr; align-items: baseline; gap: 6px; font-size: 16px; line-height: 1.5; }
 .vs-points b { color: #c0587a; }
 @media (max-width: 480px) { .vs-rounds { flex-direction: column; } .vs-arrow { transform: rotate(90deg); } }
+
+/* ===== スマホ(せまい画面)用。ここより上の、パソコン用の見た目は、変えない ===== */
+@media (max-width: 480px) {
+  /* 表紙:フロリとふきだしを、ならべたまま、ふきだしを広く */
+  .cover-stage { gap: 8px; }
+  .hero { width: clamp(88px, 28vw, 130px); }
+  .speech { font-size: 15px; padding: 6px 8px; line-height: 1.5; word-break: auto-phrase; overflow-wrap: anywhere; }
+  .speech::before { left: -18px; border-width: 9px 17px 9px 0; }
+  .speech::after { left: -12px; border-width: 6px 12px 6px 0; }
+  /* ボタンの文字は、はみ出さず、折り返す */
+  .tile { gap: 4px; padding: 4px 3px; min-width: 0; }
+  .tile-text { min-width: 0; }
+  .tile-label { font-size: 15px; white-space: normal; overflow-wrap: anywhere; line-height: 1.2; }
+  .tile-icon { font-size: 20px; flex: none; }
+  .t-continue .tile-label { font-size: 22px; }
+  .t-small { padding: 6px 2px; }
+  .t-small .tile-label { font-size: 12.5px; }
+  .tile-sub { font-size: 11px; }
+  .t-hard, .t-versus, .t-daily, .t-review, .t-relax { min-height: 58px; }
+  /* 一般:横にはみ出さない */
+  .screen { padding-left: 10px; padding-right: 10px; }
+  img, video { max-width: 100%; }
+  .dialog { padding: 16px 16px; max-width: 92vw; }
+  .buttons { flex-wrap: wrap; justify-content: center; }
+}
+@media (max-width: 480px) {
+  .t-third { flex-direction: column; gap: 0; }
+  .t-third .tile-label { font-size: 13px; white-space: nowrap; }
+  .t-third .tile-icon { font-size: 22px; }
+}
+@media (max-width: 480px) {
+  /* 対戦のルール:3回戦のカードを、1行ずつ(縦に長くならないように) */
+  .vs-rounds { gap: 4px; }
+  .vs-arrow { display: none; }
+  .vs-rounds li:not(.vs-arrow) { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 8px; text-align: left; }
+  .vs-name { font-size: 16px; }
+  .vs-stars { font-size: 16px; letter-spacing: 0; }
+  .vs-level { flex: 1; font-size: 14px; text-align: center; }
+  .vs-point { font-size: 14px; white-space: nowrap; }
+  .vs-point b { font-size: 20px; }
+  .vs-points li { font-size: 15px; }
+}
+@media (max-width: 480px) {
+  .vs-level { white-space: nowrap; font-size: 13px; }
+  .vs-stars { font-size: 14px; }
+  .vs-points li { display: block; }
+  .vs-points li > span { margin-right: 4px; }
+  .vs-points li > b { margin-right: 6px; }
+  [data-players] { min-width: 0; padding-left: 22px; padding-right: 22px; }
+}
+@media (max-width: 480px) {
+  #screen-dress .dress-tabs { gap: 5px; }
+  #screen-dress .dress-tab { font-size: 14px; padding: 6px 9px; white-space: nowrap; }
+  #s-total { font-size: 24px; white-space: nowrap; }
+}
+@media (max-width: 480px) {
+  #screen-result .scores dd { font-size: 17px; }
+  #screen-result .scores dd small { font-size: 11px; }
+}
