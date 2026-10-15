@@ -65,7 +65,6 @@ let versusPlayers = 2; // みんなで対戦する人数
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
   if (name === "question") {
-    if (timeLimit && (mode === "normal" || mode === "review" || mode === "daily")) return "timed"; // 制限時間つきは、はやい曲
     return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
   }
   if (name === "relax") return "relax";
