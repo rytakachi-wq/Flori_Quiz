@@ -620,11 +620,6 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 .dress-item small { display: block; font-weight: normal; font-size: 12px; }
 
 /* 背景のテーマ(きせかえ) */
-:root[data-theme="sakura"] { --bg: #fdeaf0; --blue: #f0a8bd; --blue-dark: #c0587a; }
-:root[data-theme="forest"] { --bg: #e4f3e1; --blue: #9fd49a; --blue-dark: #4a8a46; }
-:root[data-theme="sunset"] { --bg: #ffeed8; --blue: #f4b072; --blue-dark: #bf6a1e; }
-:root[data-theme="night"] { --bg: #262e4d; --blue: #8c9bd4; --blue-dark: #4a5a9e; }
-:root[data-theme="rainbow"] { --bg: linear-gradient(135deg, #ffd9d9, #fff3c4, #d9f7d9, #d9ecff, #ead9ff); --blue: #c9a8f0; --blue-dark: #7a50bd; }
 
 
 /* せまい画面(スマホ)で、表紙のボタンの文字が、折り返さないように */
@@ -670,7 +665,9 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 
 /* 文字の大きさ(設定):画面ぜんたいの大きさを、かえる */
 :root { --ui-zoom: 1; }
-.app, .dialog, .overlay { zoom: var(--ui-zoom); }
+:root { --tablet-zoom: 1; }
+@media (min-width: 601px) and (max-width: 900px) { :root { --tablet-zoom: 1.2; } }
+.app, .dialog, .overlay { zoom: calc(var(--ui-zoom) * var(--tablet-zoom)); }
 .size-row { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .size-row label { display: inline-flex !important; align-items: center; padding: 2px 0 !important; }
 
@@ -719,7 +716,6 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 #screen-badges .badge-list li { padding: 4px 10px; }
 #screen-badges .title-list { grid-template-columns: 1fr 1fr 1fr; gap: 4px; width: min(640px, 100%); }
 #screen-badges .title-list li { padding: 3px 8px; font-size: 14px; }
-:root[data-theme="starry"] { --bg: #232a5c; --blue: #9aa6e8; --blue-dark: #4655b8; }
 
 /* 対戦のルール説明 */
 .rules-box { width: min(560px, 100%); padding: 8px 16px 10px; background: var(--body); border: 3px solid var(--pink); border-radius: 16px; text-align: left; }
@@ -770,7 +766,6 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 .q-detail { display: grid; gap: 12px; justify-items: center; width: 100%; animation: pop-in 0.35s ease-out; }
 .timer.is-paused .timer-bar { background: repeating-linear-gradient(45deg, #b9c6cf, #b9c6cf 8px, #dfe8ee 8px, #dfe8ee 16px); }
 
-:root[data-theme="comet"] { --bg: linear-gradient(160deg, #1b2350, #3b2a6e); --blue: #b48cf0; --blue-dark: #6a4fc0; }
 .dress-item { border-width: 3px; }
 
 /* きせかえ:項目が多くても、1画面に収まるように */
@@ -1598,9 +1593,9 @@ body { padding-bottom: 56px; }
 .dress-banner { display: grid; gap: 4px; width: min(560px, 100%); padding: 8px 12px; text-align: center; background: linear-gradient(135deg, #fff6cf, #ffe7e0); border: 3px solid #e0b43a; border-radius: 18px; }
 .dress-banner-text { margin: 0; font-size: 15px; line-height: 1.5; }
 .dress-banner-text b { color: #c0394f; font-size: 17px; }
-.dress-meter { height: 16px; background: #fff; border: 3px solid var(--line); border-radius: 999px; overflow: hidden; }
+.dress-meter { position: relative; height: 22px; background: #fff; border: 3px solid var(--line); border-radius: 999px; overflow: hidden; }
 .dress-meter i { display: block; height: 100%; background: linear-gradient(90deg, #6ccf8a, #f0c030, #ec8a3a); border-radius: 999px; transition: width 0.8s; }
-.dress-meter-text { margin: 0; font-size: 15px; font-weight: bold; }
+.dress-meter-text { position: absolute; inset: 0; display: grid; place-items: center; font-size: 13px; font-weight: bold; line-height: 1; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
 
 /* ===== チュートリアル(あそびかたの ムービー) ===== */
 .tutorial { z-index: 1000; display: grid; place-items: center; padding: 12px; background: rgba(30, 38, 70, 0.8); }
@@ -1676,3 +1671,272 @@ body { padding-bottom: 56px; }
 .tm-vs { position: absolute; left: 50%; top: 22%; font-size: 52px; transform: translateX(-50%); animation: iaPop 1.6s ease-in-out infinite; }
 .tm-trophy { position: absolute; left: 50%; bottom: 8%; font-size: 52px; transform: translateX(-50%); animation: iaPop 1.8s ease-in-out 0.3s infinite; }
 @media (prefers-reduced-motion: reduce) { .tutorial * { animation: none !important; } .tm-hint, .tm-score, .tm-choice b, .tm-hat, .tm-star { opacity: 1 !important; } }
+
+/* =====================================================================
+   追加(その41):表紙は「クイズ」「その他」だけ / 流れの画面 / セリフのじんわり切りかえ /
+   チュートリアルの追加 / スマホで、全部の画面が1画面に収まるレイアウト
+   ===================================================================== */
+
+/* ---- 表紙の2つのボタン ---- */
+.cover-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+.cover-btn { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 104px; padding: 8px 6px; font: inherit; color: var(--text); background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 50%), var(--tile, #fff); border: 4px solid var(--line); border-radius: 28px; box-shadow: 0 6px 0 rgba(70, 85, 94, 0.35); cursor: pointer; touch-action: manipulation; transition: transform 0.15s, box-shadow 0.15s; }
+.cover-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(70, 85, 94, 0.35); }
+.cover-btn:focus-visible { outline: 4px solid var(--green); outline-offset: 2px; }
+.cover-btn .gi { font-size: 44px; line-height: 1; }
+.cover-btn .gt b { font-size: 26px; }
+.c-quiz { --tile: #ffe49a; }
+.c-more { --tile: #d8cdf6; }
+@media (min-width: 700px) { .cover-btn { min-height: 130px; } }
+
+/* ---- 流れの画面:ボタンの場所は、段が変わっても、高さを変えない ---- */
+.flow-buttons { min-height: 176px; align-content: center; grid-auto-rows: minmax(64px, 88px); }
+.flow-buttons.is-grid { grid-template-columns: 1fr 1fr; }
+.flow-btn.flow-group { flex-direction: row; gap: 8px; padding: 4px 8px; }
+.flow-group .flow-text { justify-items: start; }
+.flow-group .flow-label { font-size: 22px; }
+.flow-group .flow-sub { display: none; }
+.flow-group .flow-icon { font-size: 30px; }
+.flow-solo { --tile: #cdebd3; }
+.flow-vs { --tile: #ffd0d6; }
+.flow-chips { min-height: 36px; align-content: flex-start; }
+@media (min-width: 700px) { .flow-buttons.is-grid { grid-template-columns: repeat(4, 1fr); } .flow-buttons { grid-auto-rows: minmax(64px, 120px); } }
+
+/* ---- 表紙のセリフ:じんわり消えて、じんわり出る ---- */
+.cover-talk { transition: opacity 0.7s ease, transform 0.7s ease, filter 0.7s ease; }
+.cover-talk.talk-hide { opacity: 0; transform: translateY(6px); filter: blur(3px); }
+@media (prefers-reduced-motion: reduce) { .cover-talk { transition: none; } .cover-talk.talk-hide { transform: none; filter: none; } }
+
+/* ---- 着せ替え:つけたときの✨はなし。ロック中の吹き出しは、画面の上に出す ---- */
+#screen-dress .dress-stage.is-flash::after { content: none; }
+.dress-tipbox { position: fixed; z-index: 900; max-width: 240px; padding: 6px 10px; font-size: 14px; font-weight: bold; line-height: 1.6; color: #fff; text-align: center; background: #46555e; border-radius: 10px; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2); pointer-events: none; animation: pop-in 0.18s ease-out; }
+.dress-tipbox[hidden] { display: none; }
+.dress-tipbox rt { color: #cfe3f7; }
+#screen-dress .dress-tip { display: none; }
+
+/* ---- チュートリアルの追加の場面 ---- */
+.tm-row4 { grid-template-columns: repeat(4, 1fr); }
+.tm-btn.mini i { font-size: 22px; }
+.tm-btn.mini small { font-size: 12px; }
+.tm-menu { position: absolute; inset: 14px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 10px; }
+.tm-menu .tm-btn { animation: tmPopIn 6s ease-out infinite; animation-delay: calc(var(--n) * 0.3s); }
+@keyframes tmPopIn { 0% { transform: scale(0.3); opacity: 0; } 8% { transform: scale(1.12); opacity: 1; } 12%, 88% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .tm-menu .tm-btn { animation: none; } }
+
+/* ---- ページの下のしるしは、あるときだけ、場所をあける ---- */
+body { padding-bottom: 0; }
+body.has-pager { padding-bottom: 56px; }
+
+/* ---- 対戦:ヒントの説明などは、画面を押しのけない ---- */
+#screen-relax { position: relative; }
+
+/* =====================================================================
+   スマホ・タブレット・パソコン:すべての画面を、1画面に収める。
+   画面の高さは、いつも同じ。長い一覧(図鑑・着せ替え・設定など)だけ、その枠の中で動かす。
+   ===================================================================== */
+@media screen {
+  html { height: 100%; overflow: hidden; scrollbar-gutter: auto; }
+  body { height: 100dvh; min-height: 0; overflow: hidden; padding-bottom: 0; }
+  body.has-pager { padding-bottom: 0; }
+  .app { height: calc(100dvh / (var(--ui-zoom) * var(--tablet-zoom))); max-width: 760px; margin: 0 auto; padding: 6px; display: flex; flex-direction: column; }
+  .pager { bottom: 12px; }
+  body.has-pager :is(#screen-cover, #screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen:not([hidden]) { padding-bottom: 58px; }
+  :is(#screen-cover, #screen-flow, #screen-menu, #screen-dex, #screen-dress, #screen-versus, #screen-relax, #screen-records, #screen-settings, #screen-question, #screen-result, #screen-error).screen:not([hidden]) {
+    flex: 1 1 0; min-height: 0; height: auto; overflow: hidden; padding: 8px 8px 10px; gap: 6px; justify-content: flex-start; border-radius: 22px;
+  }
+  .title { font-size: clamp(20px, 3.6dvh, 28px); line-height: 1.3; }
+  .screen > * { flex-shrink: 0; }
+  #screen-dress .dress-item.is-locked { opacity: 0.85; }
+  #screen-dress .dress-item.is-locked .dress-art { filter: grayscale(0.25); }
+
+  /* 表紙 */
+  #screen-cover .home-top .logo-small, #screen-flow .home-top .logo-small { width: clamp(84px, 14dvh, 130px); }
+  #screen-cover .home-stage { flex: 1 1 0; min-height: 0; align-content: center; gap: 6px; }
+  #screen-cover .home-hero { width: min(66vw, 35dvh); }
+  #screen-cover .cover-buttons { flex: none; }
+  .cover-btn { min-height: 0; height: clamp(84px, 14dvh, 112px); }
+  .cover-btn .gi { font-size: 38px; }
+  .cover-btn .gt b { font-size: 24px; }
+  #screen-cover #sound-hint { font-size: 12px; line-height: 1.4; }
+
+  /* 流れの画面 */
+  #screen-flow .home-stage { flex: 1 1 0; min-height: 0; align-content: center; gap: 6px; }
+  #screen-flow .home-hero { width: min(54vw, 24dvh); }
+  #screen-flow .flow-chips { flex-wrap: nowrap; gap: 5px; overflow: hidden; min-height: 32px; }
+  #screen-flow .flow-chip { padding: 2px 9px; font-size: 14px; white-space: nowrap; border-width: 2px; }
+  #screen-flow .flow-chip rt { font-size: 9px; }
+  #screen-flow .flow-buttons { flex: none; min-height: 0; height: clamp(150px, 24dvh, 190px); gap: 8px; }
+  #screen-flow .flow-btn { min-height: 0; padding: 4px 12px; }
+  #screen-flow .reward-card { flex: none; }
+
+  /* その他 */
+  #screen-menu.menu-screen { gap: 8px; padding: 10px 10px; }
+  #screen-menu .menu-grid { flex: 1 1 0; min-height: 0; width: min(560px, 100%); grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  #screen-menu .menu-grid .tile { min-height: 0; }
+
+  /* 問題図鑑:カードの一覧だけ、枠の中で動かす */
+  #screen-dex.dex-screen { gap: 6px; }
+  #screen-dex .dex-head-box { gap: 2px; }
+  #screen-dex .dex-count { font-size: 18px; }
+  #screen-dex .dex-meter { height: 14px; }
+  #screen-dex .dex-grid { flex: 1 1 0; min-height: 0; overflow-y: auto; align-content: start; width: 100%; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; padding: 4px; overscroll-behavior: contain; }
+  #screen-dex .dex-card { min-height: 96px; }
+  #screen-dex .dex-icon { font-size: 34px; }
+  #btn-dex-back { flex: none; min-height: 40px; padding: 4px 28px; }
+
+  /* 着せ替え */
+  #screen-dress { gap: 5px; }
+  #screen-dress .dress-stage { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 4px 8px; border-radius: 16px; }
+  #screen-dress .hero-small { flex: none; width: clamp(78px, 12dvh, 110px); }
+  #screen-dress .dress-caption { margin: 0; font-size: 15px; line-height: 1.5; text-align: left; }
+  #screen-dress .dress-tabs { margin-bottom: 0; gap: 5px; }
+  #screen-dress .dress-tab { padding: 4px 8px; font-size: 14px; }
+  .dress-banner { gap: 2px; padding: 4px 10px; }
+  .dress-banner-text { font-size: 13px; line-height: 1.45; }
+  .dress-banner-text b { font-size: 15px; }
+  .dress-meter { height: 18px; border-width: 2px; }
+  .dress-meter-text { font-size: 12px; }
+  #screen-dress > .title { display: none; }
+  #screen-dress .hero-small { width: clamp(64px, 10dvh, 90px); }
+  #screen-dress .reward-note { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  #screen-dress .reward-info { gap: 1px; }
+  #screen-dress .reward-card { padding: 4px 10px; gap: 8px; }
+  #screen-dress .reward-icon { font-size: 22px; }
+  #screen-dress .reward-art { width: 38px; height: 38px; }
+  .reward-title { font-size: 14px; }
+  .reward-note { font-size: 12px; line-height: 1.3; }
+  #screen-dress .dress-list { flex: 1 1 0; min-height: 0; overflow-y: auto; align-content: start; width: 100%; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 6px 4px 4px; overscroll-behavior: contain; }
+  #screen-dress .dress-item { border-width: 3px; border-radius: 14px; }
+  #screen-dress .dress-art { font-size: 24px; }
+  #screen-dress .dress-art.is-color { width: 70%; height: 70%; border-width: 2px; }
+  #screen-dress .dress-art.is-theme { width: 74%; height: 74%; border-width: 2px; border-radius: 8px; }
+  #screen-dress .dress-check { top: -6px; right: -6px; width: 20px; height: 20px; font-size: 12px; }
+  #screen-dress .dress-lock { font-size: 13px; right: 1px; bottom: 0; }
+  #screen-dress .dress-note { display: none; }
+  #btn-dress-back { flex: none; min-height: 38px; padding: 3px 26px; }
+
+  /* 成績 */
+  #screen-records { gap: 6px; }
+  #screen-records .scores:not(.total) { grid-template-columns: 1fr 1fr; gap: 6px; }
+  #screen-records .scores:not(.total) div { padding: 2px 10px; }
+  #screen-records .scores dt { font-size: 13px; line-height: 1.3; }
+  #screen-records .scores dd { font-size: 18px; line-height: 1.25; }
+  #screen-records .scores.total dd { font-size: 26px; }
+  #screen-records .scores.total div { padding: 4px 16px; }
+  #btn-records-back { min-height: 40px; padding: 4px 28px; }
+
+  /* 設定 */
+  #screen-settings { gap: 6px; }
+  #screen-settings .settings-head { display: none; }
+  #screen-settings .settings-grid { flex: 1 1 0; min-height: 0; overflow-y: auto; width: 100%; align-content: start; gap: 6px; overscroll-behavior: contain; }
+  #screen-settings .setting-box { padding: 2px 10px 4px; font-size: 14.5px; }
+  #screen-settings .setting-box legend { font-size: 15px; padding: 0 4px; line-height: 1.2; }
+  #screen-settings .setting-box label { padding: 0; line-height: 1.55; }
+  #screen-settings .setting-box .volume { padding: 0 4px; }
+  #screen-settings .size-row { gap: 0 10px; }
+  #screen-settings > .note, #settings-message:empty { display: none; }
+  #screen-settings .buttons { gap: 6px; }
+  #screen-settings .btn { min-height: 38px; padding: 3px 14px; font-size: 14px; }
+  #screen-settings .note { font-size: 13px; line-height: 1.3; }
+
+  /* 皆で対戦 */
+  #screen-versus { gap: 6px; }
+  #screen-versus .vs-rules { flex: 1 1 0; min-height: 0; overflow-y: auto; width: 100%; padding: 8px; gap: 6px; overscroll-behavior: contain; }
+  #screen-versus .vs-lead { font-size: 15px; line-height: 1.5; }
+  #screen-versus .buttons { gap: 8px; }
+  #screen-versus .btn { min-height: 44px; }
+  #screen-versus .note { font-size: 14px; line-height: 1.3; }
+
+  /* リラックス:ヒントの説明は、お花畑の上に重ねて出す(画面の大きさを変えない) */
+  #screen-relax { gap: 6px; }
+  #screen-relax .garden-tips { flex: 1 1 0; min-height: 0; overflow-y: auto; width: 100%; padding: 6px 12px; font-size: 14px; line-height: 1.55; overscroll-behavior: contain; }
+  #screen-relax .buttons { gap: 6px; }
+  #screen-relax .btn { min-height: 38px; padding: 3px 12px; font-size: 14px; }
+  #screen-relax .garden { width: min(100%, 46dvh); flex: none; }
+
+  /* 問題 */
+  #screen-question { gap: 5px; padding: 6px 8px 8px; }
+  #screen-question .status { flex-wrap: wrap; gap: 3px 4px; }
+  #screen-question .board { gap: 4px; }
+  #screen-question .board li { flex: 1 1 40%; padding: 0 6px; font-size: 13px; line-height: 1.7; white-space: nowrap; border-radius: 10px; }
+  #screen-question .turn { padding: 1px 8px; font-size: 14px; line-height: 1.6; border-width: 2px; border-radius: 10px; }
+  #screen-question .chip { padding: 0 8px; font-size: 13px; line-height: 1.7; white-space: nowrap; }
+  #screen-question .q-row { flex-direction: row; align-items: center; gap: 8px; }
+  #screen-question .q-row .stage { flex: none; max-width: 32%; }
+  #screen-question .q-row .flori-small { height: clamp(66px, 11dvh, 96px); }
+  #screen-question .q-row .stage .bubble { font-size: 12px; }
+  #screen-question .hint-buttons { display: flex; justify-content: center; gap: 8px; }
+  #screen-question .hint-buttons .btn { min-height: 38px; padding: 2px 14px; font-size: 15px; }
+  #screen-question .hint { padding: 4px 10px; font-size: 14px; line-height: 1.55; }
+  #screen-question .hint-area { gap: 4px; }
+  #screen-question .choices { gap: 5px; }
+  #screen-question .choice { min-height: 44px; padding: 2px 10px; }
+  #screen-question .q-art { flex: 1 1 0; min-height: 0; max-height: 104px; }
+  #screen-question .q-row, #screen-question .choices, #screen-question .hint-area, #screen-question .timer, #screen-question .status { flex: none; }
+  #screen-question .feedback { flex: 1 1 0; min-height: 0; overflow-y: auto; }
+
+  /* 結果 */
+  #screen-result { gap: 5px; }
+  #screen-result .flori-cover { height: clamp(60px, 11dvh, 110px); }
+  #screen-result .buttons { gap: 6px; flex: none; }
+  #screen-result .btn { min-height: 40px; padding: 3px 22px; }
+  #screen-result .news-list { font-size: 13px; padding: 3px 10px; }
+  #screen-result .reward-card { padding: 4px 10px; }
+  #screen-result .reward-art { width: 38px; height: 38px; }
+
+  .dialog { max-height: 90dvh; overflow-y: auto; }
+  .tut-box { max-height: 96dvh; }
+}
+
+/* ---- とても小さいスマホ(高さ620px以下・はば340px以下):さらにぎゅっと ---- */
+@media (max-width: 600px) and (max-height: 620px) {
+  #screen-records .scores:not(.total) div { flex-direction: row; justify-content: space-between; align-items: baseline; padding: 1px 8px; }
+  #screen-records .scores dt { font-size: 12px; }
+  #screen-records .scores dd { font-size: 15px; }
+  #screen-records .scores.total div { padding: 2px 12px; }
+  #screen-records .scores.total dd { font-size: 22px; }
+  #screen-dress .reward-card { display: none; }
+  #screen-settings .setting-box { font-size: 13.5px; }
+  #screen-settings .setting-box label { line-height: 1.45; }
+  .cover-btn { height: 78px; }
+  #screen-versus .vs-points li { font-size: 13px; line-height: 1.35; }
+  :is(#screen-records, #screen-settings, #screen-dex, #screen-versus) > .title { font-size: 19px; }
+  #screen-records .total-bar { display: none; }
+  #screen-question .q-art { display: none; }
+  #screen-question .q-row .flori-small { height: 60px; }
+  #screen-question { gap: 3px; }
+  #screen-question .choice { min-height: 34px; padding-top: 0; padding-bottom: 0; }
+  #screen-question .timer-track { height: 12px; }
+  #screen-question .timer-text { line-height: 1.4; }
+  #screen-question .question { font-size: 15px; line-height: 1.5; padding: 4px 10px; }
+  #screen-question .hint { font-size: 13px; padding: 3px 8px; }
+  #screen-question .hint-buttons .btn { min-height: 34px; }
+  #screen-settings .setting-box legend { font-size: 14px; }
+  #screen-settings .setting-box { padding: 0 10px 2px; }
+}
+@media (max-width: 340px) {
+  #screen-flow .flow-chip { font-size: 12px; padding: 1px 6px; }
+  #screen-flow .flow-chips { gap: 3px; }
+}
+
+/* 万が一、問題や結果が画面より長くなっても、切れないように(その画面の中だけ、動かせる) */
+@media screen {
+  #screen-question.screen:not([hidden]), #screen-result.screen:not([hidden]) { overflow-y: auto; overscroll-behavior: contain; }
+}
+
+@media (min-width: 700px) {
+  #screen-dress .dress-list { grid-template-columns: repeat(8, 1fr); width: min(560px, 100%); align-self: center; }
+  #screen-dress .dress-item { aspect-ratio: auto; height: 64px; }
+}
+
+/* ---- GET!のお祝いの画面:背の低い画面でも、ボタンまで収まるように ---- */
+.unlock-stage { width: min(260px, 70%, 34dvh); }
+.unlock-body { gap: 6px; padding: 16px 16px 14px; }
+.unlock-dialog { max-height: 96dvh; }
+@media (max-height: 700px) {
+  .unlock-body { padding: 12px 14px 12px; }
+  .unlock-kicker { font-size: 16px; padding: 2px 12px; }
+  .unlock-name { font-size: 26px; }
+  .unlock-why { font-size: 14px; padding: 4px 10px; }
+  .unlock-dialog .btn { min-height: 44px; padding: 4px 22px; font-size: 18px; }
+  .unlock-dialog .buttons { gap: 8px; flex-wrap: nowrap; }
+}

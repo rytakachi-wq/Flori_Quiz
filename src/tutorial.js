@@ -1,35 +1,35 @@
-// あそびかたの、チュートリアルムービー。絵と動きで、6つの場面を、じゅんばんに見せる(動画ファイルではなく、画面の中で動かす)。
-// 自動で、つぎの場面へ進む。「つぎへ」「もどる」で、じぶんで進めてもよい。
+// 遊び方の、チュートリアルムービー。絵と動きで、6つの場面を見せる(動画ファイルではなく、画面の中で動かす)。
+// 場面は、「次へ」ボタンを押したときだけ進む(自動では進まない)。「戻る」「閉じる」も、ボタンで。
 
 const FLORI = "../assets/flori/src/body_wave.webp";
-const SCENE_MS = 5600;
 
 const SCENES = [
   {
-    title: "① えらぼう",
-    caption: "理系・文系・ひらめき・ランダムの、どれかを えらぶよ!",
+    title: "STEP 1 選ぼう",
+    caption: "「クイズ」を押して 「1人」か「皆で」を選んでから 理系・文系・ひらめき・ランダムを選ぶよ!",
     html: `
-      <div class="tm-grid">
-        <span class="tm-btn c1 is-hit"><i>🔬</i><small>理系</small></span>
-        <span class="tm-btn c2"><i>📖</i><small>文系</small></span>
-        <span class="tm-btn c3"><i>💡</i><small>ひらめき</small></span>
-        <span class="tm-btn c4"><i>🎲</i><small>ランダム</small></span>
+      <div class="tm-rows">
+        <div class="tm-row"><span class="tm-btn c1 is-hit"><i>🙂</i><small>1人</small></span><span class="tm-btn c2"><i>👥</i><small>皆で</small></span></div>
+        <div class="tm-row tm-row4">
+          <span class="tm-btn c3 mini"><i>🔬</i><small>理系</small></span><span class="tm-btn c4 mini"><i>📖</i><small>文系</small></span>
+          <span class="tm-btn c5 mini"><i>💡</i><small>ひらめき</small></span><span class="tm-btn c6 mini"><i>🎲</i><small>ランダム</small></span>
+        </div>
       </div>
       <span class="tm-finger tm-finger-1">👆</span>`,
   },
   {
-    title: "② むずかしさと 時間",
-    caption: "「ふつう」か「難しい」を えらんで、制限時間を つけるかも えらぶよ。",
+    title: "STEP 2 難しさと時間",
+    caption: "「普通」か「難しい」を選んで 制限時間を付けるかも選ぶよ。",
     html: `
       <div class="tm-rows">
-        <div class="tm-row"><span class="tm-btn c5"><i>🌱</i><small>ふつう</small></span><span class="tm-btn c6 is-hit"><i>🔥</i><small>難しい</small></span></div>
+        <div class="tm-row"><span class="tm-btn c5"><i>🌱</i><small>普通</small></span><span class="tm-btn c6 is-hit"><i>🔥</i><small>難しい</small></span></div>
         <div class="tm-row"><span class="tm-btn c7 is-hit2"><i>⏱</i><small>時間あり</small></span><span class="tm-btn c8"><i>🙂</i><small>時間なし</small></span></div>
       </div>
       <span class="tm-finger tm-finger-2">👆</span>`,
   },
   {
-    title: "③ こたえよう",
-    caption: "4つの こたえから、1つ えらぼう。せいかいすると 点が もらえるよ!",
+    title: "STEP 3 答えよう",
+    caption: "4つの答えから1つ選ぼう。正解すると点がもらえるよ!",
     html: `
       <div class="tm-q">
         <div class="tm-qbar"><i>❓</i></div>
@@ -37,24 +37,24 @@ const SCENES = [
           <span class="tm-choice">1</span><span class="tm-choice">2</span>
           <span class="tm-choice is-right">3<b>✔</b></span><span class="tm-choice">4</span>
         </div>
-        <div class="tm-score">＋2点</div>
+        <div class="tm-score">+2点</div>
       </div>
       <span class="tm-finger tm-finger-3">👆</span>`,
   },
   {
-    title: "④ こまったら",
-    caption: "「ヒント」を見ると 1点へるけど、ヒントが 出るよ。「わからない」を おすと 答えが 見られるけど、不正解に なるよ。",
+    title: "STEP 4 困ったら",
+    caption: "「ヒント」を見ると1点減るけど ヒントが出るよ。「分からない」を押すと答えが見られるけど 不正解になるよ。",
     html: `
       <div class="tm-help">
-        <span class="tm-btn c9 is-hit"><i>💬</i><small>ヒント</small><em>−1点</em></span>
-        <span class="tm-btn c10"><i>🤷</i><small>わからない</small><em>不正解</em></span>
+        <span class="tm-btn c9 is-hit"><i>💬</i><small>ヒント</small><em>-1点</em></span>
+        <span class="tm-btn c10"><i>🤷</i><small>分からない</small><em>不正解</em></span>
       </div>
       <div class="tm-hint">💡 ヒント:…</div>
       <span class="tm-finger tm-finger-4">👆</span>`,
   },
   {
-    title: "⑤ ごほうび",
-    caption: "せいかいを ふやして、いろいろ やると、フロリの きせかえが もらえるよ!",
+    title: "STEP 5 ご褒美",
+    caption: "正解を増やして 色々遊ぶと フロリの着せ替えがもらえるよ!",
     html: `
       <div class="tm-reward">
         <span class="tm-gift">🎁</span>
@@ -63,19 +63,21 @@ const SCENES = [
       </div>`,
   },
   {
-    title: "⑥ みんなで 対戦",
-    caption: "2〜4人で 1台の画面を つかって、じゅんばんに こたえて、点を きそえるよ!",
+    title: "STEP 6 他にも色々",
+    caption: "「その他」では 毎日1問・復習・リラックス・問題図鑑・着せ替え・成績が楽しめるよ!",
     html: `
-      <div class="tm-versus">
-        <span class="tm-face p1">😀</span><span class="tm-face p2">😎</span><span class="tm-face p3">🤗</span><span class="tm-face p4">🥳</span>
-        <span class="tm-vs">⚔️</span>
-        <span class="tm-trophy">🏆</span>
+      <div class="tm-menu">
+        <span class="tm-btn c1" style="--n:0"><i>📅</i><small>毎日1問</small></span>
+        <span class="tm-btn c2" style="--n:1"><i>📖</i><small>復習</small></span>
+        <span class="tm-btn c3" style="--n:2"><i>🌸</i><small>リラックス</small></span>
+        <span class="tm-btn c4" style="--n:3"><i>📚</i><small>問題図鑑</small></span>
+        <span class="tm-btn c5" style="--n:4"><i>👑</i><small>着せ替え</small></span>
+        <span class="tm-btn c6" style="--n:5"><i>🏆</i><small>成績</small></span>
       </div>`,
   },
 ];
 
 let index = 0;
-let timer = 0;
 let onClose = null;
 
 const $ = (id) => document.getElementById(id);
@@ -97,14 +99,7 @@ function render() {
     }),
   );
   $("tut-prev").disabled = index === 0;
-  const last = index === SCENES.length - 1;
-  $("tut-next").textContent = last ? "もういちど みる" : "つぎへ ▶";
-  restartTimer();
-}
-
-function restartTimer() {
-  clearTimeout(timer);
-  if (index < SCENES.length - 1) timer = setTimeout(() => go(index + 1), SCENE_MS);
+  $("tut-next").textContent = index === SCENES.length - 1 ? "もう1度 見る" : "次へ ▶";
 }
 
 function go(next) {
@@ -117,11 +112,10 @@ export function openTutorial(closed) {
   index = 0;
   $("tutorial").hidden = false;
   render();
-  $("tut-skip").focus({ preventScroll: true });
+  $("tut-next").focus({ preventScroll: true });
 }
 
 export function closeTutorial() {
-  clearTimeout(timer);
   $("tutorial").hidden = true;
   const callback = onClose;
   onClose = null;
@@ -134,21 +128,5 @@ export function initTutorial() {
   $("tut-skip").addEventListener("click", closeTutorial);
   $("tutorial").addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeTutorial();
-    if (event.key === "ArrowRight") go(index + 1);
-    if (event.key === "ArrowLeft") go(index - 1);
   });
-  // 画面を、横になぞっても、場面が、うごく
-  let startX = null;
-  $("tutorial").addEventListener("touchstart", (event) => (startX = event.touches[0].clientX), { passive: true });
-  $("tutorial").addEventListener(
-    "touchend",
-    (event) => {
-      if (startX === null) return;
-      const dx = event.changedTouches[0].clientX - startX;
-      startX = null;
-      if (dx < -60) go(index + 1);
-      else if (dx > 60) go(index - 1);
-    },
-    { passive: true },
-  );
 }

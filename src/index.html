@@ -8,24 +8,24 @@
 </head>
 <body>
   <div id="badge-bg" class="badge-bg" aria-hidden="true"></div>
-  <div id="opening" class="overlay opening" role="button" tabindex="0" aria-label="画面をマウスでクリックして、スタート">
+  <div id="opening" class="overlay opening" role="button" tabindex="0" aria-label="画面をマウスでクリックして スタート">
     <div class="confetti" aria-hidden="true"><span>⭐</span><span>✨</span><span>🎈</span><span>🌸</span><span>💡</span><span>⭐</span><span>🎈</span><span>✨</span><span>🌸</span><span>💡</span></div>
     <img class="logo" src="../assets/flori/src/logo.png" alt="フロリ">
     <p class="opening-title" aria-label="ひらめきクイズ"><span style="--i:0">ひ</span><span style="--i:1">ら</span><span style="--i:2">め</span><span style="--i:3">き</span><span style="--i:4">ク</span><span style="--i:5">イ</span><span style="--i:6">ズ</span></p>
     <p class="opening-hint">画面をタッチして スタート!</p>
-    <button id="btn-tutorial" class="btn btn-sub opening-tutorial" type="button"><span aria-hidden="true">▶</span> あそびかたを みる</button>
+    <button id="btn-tutorial" class="btn btn-sub opening-tutorial" type="button"><span aria-hidden="true">▶</span> 遊び方を 見る</button>
     <img class="opening-flori" src="../assets/flori/src/body_wave.webp" alt="" hidden>
   </div>
-  <div id="tutorial" class="overlay tutorial" role="dialog" aria-label="あそびかた" hidden>
+  <div id="tutorial" class="overlay tutorial" role="dialog" aria-label="遊び方" hidden>
     <div class="tut-box">
       <h2 id="tut-title" class="tut-title"></h2>
       <div id="tut-stage" class="tut-stage"></div>
       <div class="tut-flori-row"><img class="tut-side-flori" src="../assets/flori/src/body_wave.webp" alt=""><p id="tut-caption" class="tut-caption"></p></div>
       <div id="tut-dots" class="tut-dots" aria-hidden="true"></div>
       <div class="tut-buttons">
-        <button id="tut-prev" class="btn btn-plain btn-small" type="button">◀ もどる</button>
-        <button id="tut-next" class="btn btn-main btn-small" type="button">つぎへ ▶</button>
-        <button id="tut-skip" class="btn btn-sub btn-small" type="button">とじる</button>
+        <button id="tut-prev" class="btn btn-plain btn-small" type="button">◀ 戻る</button>
+        <button id="tut-next" class="btn btn-main btn-small" type="button">次へ ▶</button>
+        <button id="tut-skip" class="btn btn-sub btn-small" type="button">閉じる</button>
       </div>
     </div>
   </div>
@@ -37,7 +37,7 @@
   </div>
   <main class="app">
 
-    <!-- 表紙(モードえらび) -->
+    <!-- 表紙(モード選び) -->
     <section id="screen-cover" class="screen cover-home" aria-label="表紙">
       <header class="home-top">
         <button id="corner-flori" class="corner-flori" type="button" aria-label="フロリ">
@@ -59,22 +59,17 @@
           </div>
         </div>
       </div>
-      <p class="pick-lead">どれに ちょうせんする?</p>
-      <div class="group-buttons">
-        <button class="group-btn g-sci" type="button" data-group="理系"><span class="gi" aria-hidden="true">🔬</span><span class="gt"><b>理系</b><span class="picto" aria-hidden="true"><i>🧪</i><i>🔢</i><i>🧲</i></span></span></button>
-        <button class="group-btn g-lit" type="button" data-group="文系"><span class="gi" aria-hidden="true">📖</span><span class="gt"><b>文系</b><span class="picto" aria-hidden="true"><i>🗾</i><i>📜</i><i>🔤</i></span></span></button>
-        <button class="group-btn g-idea" type="button" data-group="ひらめき"><span class="gi" aria-hidden="true">💡</span><span class="gt"><b>ひらめき</b><span class="picto" aria-hidden="true"><i>🧩</i><i>🎲</i><i>🪄</i></span></span></button>
-        <button class="group-btn g-rand" type="button" data-group="ランダム"><span class="gi" aria-hidden="true">🎲</span><span class="gt"><b>ランダム</b><span class="picto" aria-hidden="true"><i>🔬</i><i>📖</i><i>💡</i></span></span></button>
+      <div class="cover-buttons">
+        <button id="btn-quiz" class="cover-btn c-quiz" type="button"><span class="gi" aria-hidden="true">🎯</span><span class="gt"><b>クイズ</b></span></button>
+        <button id="btn-more" class="cover-btn c-more" type="button"><span class="gi" aria-hidden="true">📋</span><span class="gt"><b>その他</b></span><span class="tile-dot" hidden></span></button>
       </div>
-      <button id="btn-versus-cover" class="group-btn g-versus" type="button"><span class="gi" aria-hidden="true">👥</span><span class="gt"><b>みんなで 対戦</b><span class="picto" aria-hidden="true"><i>😀</i><i>⚔️</i><i>😎</i><i>🏆</i></span></span></button>
-      <button id="btn-more" class="more-btn" type="button">▼ ほかのメニュー<span class="tile-dot" hidden></span></button>
       <p id="sound-hint" class="note">♪ 画面をタッチすると音楽が流れるよ。</p>
     </section>
 
-    <!-- 表紙からの流れ:むずかしさ → 制限時間 → スタート -->
-    <section id="screen-flow" class="screen flow-screen" aria-label="じゅんび" hidden>
+    <!-- 表紙からの流れ:1人/皆で → 分類 → 難しさ → 制限時間 → スタート -->
+    <section id="screen-flow" class="screen flow-screen" aria-label="準備" hidden>
       <header class="home-top">
-        <button id="btn-flow-back" class="cover-gear" type="button"><span aria-hidden="true">◀</span> もどる</button>
+        <button id="btn-flow-back" class="cover-gear" type="button"><span aria-hidden="true">◀</span> 戻る</button>
         <img class="logo logo-small" src="../assets/flori/src/logo.png" alt="フロリ">
         <span class="home-top-space" aria-hidden="true"></span>
       </header>
@@ -93,20 +88,19 @@
       <div id="flow-reward" class="reward-card" hidden></div>
     </section>
 
-    <!-- ほかのメニュー(2ページ目) -->
-    <section id="screen-menu" class="screen menu-screen" aria-label="ほかのメニュー" hidden>
-      <h2 class="title">ほかのメニュー</h2>
+    <!-- その他(2ページ目) -->
+    <section id="screen-menu" class="screen menu-screen" aria-label="その他" hidden>
+      <h2 class="title">その他</h2>
       <div class="menu-grid">
         <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-text"><span class="tile-label">毎日1問</span></span><span class="tile-dot" hidden></span></button>
-        <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">おさらい</span></span><span class="tile-dot" hidden></span></button>
-        <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-text"><span class="tile-label">みんなで対戦</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">復習</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-text"><span class="tile-label">皆で対戦</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-text"><span class="tile-label">リラックス</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-dex" class="tile t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-text"><span class="tile-label">問題図鑑</span></span><span class="tile-dot" hidden></span></button>
-        <button id="btn-dress" class="tile t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">きせかえ</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-dress" class="tile t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">着せ替え</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-records" class="tile t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span><span class="tile-dot" hidden></span></button>
-        <button id="btn-tutorial-menu" class="tile t-tutorial" type="button"><span class="tile-icon" aria-hidden="true">▶</span><span class="tile-text"><span class="tile-label">あそびかた</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-tutorial-menu" class="tile t-tutorial" type="button"><span class="tile-icon" aria-hidden="true">🎬</span><span class="tile-text"><span class="tile-label">遊び方</span></span><span class="tile-dot" hidden></span></button>
       </div>
-      <button id="btn-menu-back" class="btn btn-sub" type="button">▲ 表紙へ</button>
     </section>
     <!-- 問題図鑑 -->
     <section id="screen-dex" class="screen dex-screen" aria-label="問題図鑑" hidden>
@@ -120,11 +114,10 @@
       <button id="btn-dex-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
-    <!-- きせかえ -->
-    <section id="screen-dress" class="screen dress-screen" aria-label="きせかえ" hidden>
-      <h2 class="title">きせかえ</h2>
+    <!-- 着せ替え -->
+    <section id="screen-dress" class="screen dress-screen" aria-label="着せ替え" hidden>
+      <h2 class="title">着せ替え</h2>
       <div id="dress-stage" class="dress-stage">
-        <span class="spark s1" aria-hidden="true">✨</span><span class="spark s2" aria-hidden="true">⭐</span><span class="spark s3" aria-hidden="true">✨</span>
         <div class="hero hero-small dress-hero">
           <div class="hero-fig">
             <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
@@ -135,37 +128,35 @@
       </div>
       <div class="dress-tabs" role="tablist">
         <button class="dress-tab is-on" type="button" data-dress-tab="color">🎨 フロリの色</button>
-        <button class="dress-tab" type="button" data-dress-tab="hat">🎀 かざり</button>
+        <button class="dress-tab" type="button" data-dress-tab="hat">🎀 飾り</button>
         <button class="dress-tab" type="button" data-dress-tab="theme">🖼️ 背景</button>
       </div>
       <div class="dress-banner">
-        <p class="dress-banner-text"><span aria-hidden="true">🎁</span> きせかえは、がんばった<b>ごほうび</b>だヨ! 問題に こたえて ゲットしよう!</p>
-        <div class="dress-meter" aria-hidden="true"><i id="dress-meter-bar"></i></div>
-        <p id="dress-meter-text" class="dress-meter-text"></p>
+        <p class="dress-banner-text"><span aria-hidden="true">🎁</span> 着せ替えは 頑張った<b>ご褒美</b>だヨ! 問題に 答えて GETしよう!</p>
+        <div class="dress-meter"><i id="dress-meter-bar"></i><span id="dress-meter-text" class="dress-meter-text"></span></div>
       </div>
       <div id="dress-reward" class="reward-card" hidden></div>
-      <p id="dress-message" class="dress-message" role="status"></p>
       <div id="dress-list" class="dress-list"></div>
-      <p class="note dress-note">制限時間をつけて遊ぶと、ごほうびの星 ⭐ がもらえるヨ。いま ⭐ <span id="dress-stars">0</span>こ</p>
+      <p class="note dress-note">制限時間を付けて遊ぶと ご褒美の星 ⭐ がもらえるヨ。いま ⭐ <span id="dress-stars">0</span>個</p>
       <button id="btn-dress-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
-    <!-- みんなで対戦 -->
-    <section id="screen-versus" class="screen" aria-label="みんなで対戦" hidden>
-      <h2 class="title">みんなで対戦</h2>
+    <!-- 皆で対戦 -->
+    <section id="screen-versus" class="screen" aria-label="皆で対戦" hidden>
+      <h2 id="vs-title" class="title">皆で対戦</h2>
       <div class="vs-rules">
-        <p class="vs-lead">👥 <b>1台の画面を、みんなで使います。</b>順番に、1人1問ずつ答えます。</p>
+        <p class="vs-lead">👥 <b>1台の画面を 皆で使います。</b>順番に 1人1問ずつ答えます。</p>
         <ol class="vs-rounds" aria-label="3回戦">
-          <li class="vs-r1"><span class="vs-name">1回戦</span><span class="vs-stars" aria-hidden="true">★☆☆</span><span class="vs-level">やさしい問題</span><span class="vs-point">正解で <b>1点</b></span></li>
+          <li class="vs-r1"><span class="vs-name">1回戦</span><span class="vs-stars" aria-hidden="true">★☆☆</span><span class="vs-level">易しい問題</span><span class="vs-point">正解で <b>1点</b></span></li>
           <li class="vs-arrow" aria-hidden="true">▶</li>
-          <li class="vs-r2"><span class="vs-name">2回戦</span><span class="vs-stars" aria-hidden="true">★★☆</span><span class="vs-level">ふつうの問題</span><span class="vs-point">正解で <b>2点</b></span></li>
+          <li class="vs-r2"><span class="vs-name">2回戦</span><span class="vs-stars" aria-hidden="true">★★☆</span><span class="vs-level">普通の問題</span><span class="vs-point">正解で <b>2点</b></span></li>
           <li class="vs-arrow" aria-hidden="true">▶</li>
-          <li class="vs-r3"><span class="vs-name">3回戦</span><span class="vs-stars" aria-hidden="true">★★★</span><span class="vs-level">むずかしめ</span><span class="vs-point">正解で <b>3点</b></span></li>
+          <li class="vs-r3"><span class="vs-name">3回戦</span><span class="vs-stars" aria-hidden="true">★★★</span><span class="vs-level">難しめ</span><span class="vs-point">正解で <b>3点</b></span></li>
         </ol>
         <ul class="vs-points">
-          <li><span aria-hidden="true">🏆</span><b>勝ち</b> 合計点がいちばん高い人。同じ点なら引き分けです。</li>
-          <li><span aria-hidden="true">🎲</span><b>問題</b> 人によって、ちがう問題が出ます。</li>
-          <li><span aria-hidden="true">⏱</span><b>そのほか</b> ヒントはありません。制限時間は、つけられます。</li>
+          <li><span aria-hidden="true">🏆</span><b>勝ち</b> 合計点が1番高い人。同じ点なら引き分けです。</li>
+          <li><span aria-hidden="true">🎲</span><b>問題</b> 人によって ちがう問題が出ます。</li>
+          <li><span aria-hidden="true">⏱</span><b>その他</b> ヒントはありません。制限時間は 付けられます。</li>
         </ul>
       </div>
       <p class="note">何人で遊ぶ?</p>
@@ -184,28 +175,28 @@
       <div id="garden"></div>
       <div id="garden-hint" class="garden-tips" hidden>
         <h3>ルール</h3>
-        <p>木をおすと、その木と上下左右の木が1つずつ育つヨ。</p>
+        <p>木を押すと その木と上下左右の木が1つずつ育つヨ。</p>
         <p class="stage-line">🌱芽 → 🌿枝 → 🌳木 → 🌸桜の木</p>
-        <p>桜の木の次は芽にもどるヨ。</p>
+        <p>桜の木の次は芽に戻るヨ。</p>
         <p>全部を<b>🌸桜の木</b>にしたらクリア!</p>
         <h3>解くコツ</h3>
         <ol>
-          <li><b>上の段から順にそろえる。</b>上の木を育てたいときは、その「すぐ下」の木をおす。</li>
-          <li><b>同じ木は3回までで十分。</b>4回おすと、もとにもどるヨ。</li>
-          <li><b>下の段にそろわない木が残ったら。</b>上の段の木を何個かおして、もう一度上から順にやり直す。</li>
-          <li><b>行きづまったら「ヒント」。</b>光る木をおしてみよう。</li>
+          <li><b>上の段から順に揃える。</b>上の木を育てたいときは その「すぐ下」の木を押す。</li>
+          <li><b>同じ木は3回までで十分。</b>4回押すと 元に戻るヨ。</li>
+          <li><b>下の段にそろわない木が残ったら。</b>上の段の木を何個か押して、もう1度上から順にやり直す。</li>
+          <li><b>行きづまったら「ヒント」。</b>光る木を押してみよう。</li>
         </ol>
       </div>
       <div class="buttons">
-        <button class="btn btn-main" type="button" data-garden="3">やさしい(3×3)</button>
+        <button class="btn btn-main" type="button" data-garden="3">易しい(3×3)</button>
         <button class="btn btn-main" type="button" data-garden="4">普通(4×4)</button>
         <button id="btn-garden-hint" class="btn btn-sub" type="button">ヒント</button>
-        <button id="btn-garden-again" class="btn btn-sub" type="button">もう一度</button>
+        <button id="btn-garden-again" class="btn btn-sub" type="button">もう1度</button>
         <button id="btn-relax-back" class="btn btn-sub" type="button">戻る</button>
       </div>
     </section>
 
-    <!-- せいせき -->
+    <!-- 成績 -->
     <section id="screen-records" class="screen" aria-label="成績" hidden>
       <h2 class="title">🏆 成績</h2>
       <dl class="scores total">
@@ -213,12 +204,12 @@
       </dl>
       <div class="total-bar" aria-hidden="true"><span id="s-total-bar"></span></div>
       <dl class="scores">
-        <div><dt>👑 きせかえ</dt><dd id="s-dress"></dd></div>
-        <div><dt>⭐ ごほうびの星</dt><dd id="s-stars"></dd></div>
+        <div><dt>👑 着せ替え</dt><dd id="s-dress"></dd></div>
+        <div><dt>⭐ ご褒美の星</dt><dd id="s-stars"></dd></div>
         <div><dt>🎮 遊んだ回数</dt><dd id="s-plays"></dd></div>
         <div><dt>👥 対戦した回数</dt><dd id="s-versus"></dd></div>
         <div><dt>📅 毎日1問</dt><dd id="s-daily"></dd></div>
-        <div><dt>📖 おさらい待ち</dt><dd id="s-wrong"></dd></div>
+        <div><dt>📖 復習待ち</dt><dd id="s-wrong"></dd></div>
         <div><dt>✏️ 解いた問題</dt><dd id="s-answered"></dd></div>
         <div><dt>👀 出会った問題</dt><dd id="s-seen"></dd></div>
         <div><dt>✅ 正解した問題</dt><dd id="s-right"></dd></div>
@@ -227,7 +218,7 @@
       <button id="btn-records-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
-    <!-- せってい -->
+    <!-- 設定 -->
     <section id="screen-settings" class="screen" aria-label="設定" hidden>
       <h2 class="title">設定</h2>
       <div class="settings-head">
@@ -252,7 +243,7 @@
         </fieldset>
         <fieldset class="setting-box furigana" aria-label="ふりがな">
           <legend>ふりがな</legend>
-          <label><input type="radio" name="furigana-screen" value="all"> すべての漢字にふりがな</label>
+          <label><input type="radio" name="furigana-screen" value="all"> 全ての漢字にふりがな</label>
           <label><input type="radio" name="furigana-screen" value="chu"> 中学以降に習う漢字だけ</label>
           <label><input type="radio" name="furigana-screen" value="none"> ふりがななし</label>
         </fieldset>
@@ -260,7 +251,7 @@
           <legend>文字の大きさ</legend>
           <div class="size-row">
             <label><input type="radio" name="size-screen" value="small"> 小さい</label>
-            <label><input type="radio" name="size-screen" value="normal"> ふつう</label>
+            <label><input type="radio" name="size-screen" value="normal"> 普通</label>
             <label><input type="radio" name="size-screen" value="large"> 大きい</label>
             <label><input type="radio" name="size-screen" value="xlarge"> とても大きい</label>
           </div>
@@ -303,7 +294,7 @@
       <div id="q-hint-area" class="hint-area" hidden>
         <div class="hint-buttons">
           <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る(−1点)</button>
-          <button id="btn-giveup" class="btn btn-plain" type="button">わからない</button>
+          <button id="btn-giveup" class="btn btn-plain" type="button">分からない</button>
         </div>
         <p id="q-hint" class="hint" hidden></p>
       </div>
@@ -374,14 +365,14 @@
       <p id="unlock-why" class="unlock-why"></p>
       <p id="unlock-count" class="unlock-count" hidden></p>
       <div class="buttons">
-        <button id="btn-unlock-wear" class="btn btn-main" type="button">つけてみる</button>
-        <button id="btn-unlock-next" class="btn btn-sub" type="button">とじる</button>
+        <button id="btn-unlock-wear" class="btn btn-main" type="button">付けてみる</button>
+        <button id="btn-unlock-next" class="btn btn-sub" type="button">閉じる</button>
       </div>
     </div>
   </dialog>
 
   <dialog id="dlg-giveup" class="dialog" aria-labelledby="dlg-giveup-text">
-    <p id="dlg-giveup-text">答えを見ますか?<br>この問題は、<b>不正解</b>になります。</p>
+    <p id="dlg-giveup-text">答えを見ますか?<br>この問題は <b>不正解</b>になります。</p>
     <div class="buttons">
       <button id="btn-giveup-yes" class="btn btn-sub" type="button">答えを見る</button>
       <button id="btn-giveup-no" class="btn btn-main" type="button">もう少し考える</button>
@@ -389,31 +380,31 @@
   </dialog>
 
   <dialog id="dlg-time" class="dialog" aria-labelledby="dlg-time-text">
-    <p id="dlg-time-review" class="dlg-review" hidden>📖 <b>おさらい</b>では、<b>まちがえた問題</b>と、<b>ヒントを見て解いた問題</b>が出ます。ヒントを見ないで正解すると、おさらいから消えます。</p>
-    <p id="dlg-time-text">制限時間をつける?<br>つけると1問30秒で答えるヨ。<br>星のごほうびがもらえるヨ。</p>
+    <p id="dlg-time-review" class="dlg-review" hidden>📖 <b>復習</b>では <b>間違えた問題</b>と <b>ヒントを見て解いた問題</b>が出ます。ヒントを見ないで正解すると 復習から消えます。</p>
+    <p id="dlg-time-text">制限時間を付ける?<br>付けると1問30秒で答えるヨ。<br>星のご褒美がもらえるヨ。</p>
     <div class="buttons buttons-choice">
-      <button id="btn-time-yes" class="btn btn-main btn-mid-big" type="button">つける<small>(ごほうびあり)</small></button>
-      <button id="btn-time-no" class="btn btn-plain btn-mid" type="button">つけない</button>
+      <button id="btn-time-yes" class="btn btn-main btn-mid-big" type="button">付ける<small>(ご褒美あり)</small></button>
+      <button id="btn-time-no" class="btn btn-plain btn-mid" type="button">付けない</button>
       <button id="btn-time-cancel" class="btn btn-plain btn-small" type="button">やめる</button>
     </div>
   </dialog>
   <dialog id="dlg-restart" class="dialog" aria-labelledby="dlg-restart-text">
-    <p id="dlg-restart-text">セーブデータを消します。<br>成績・問題図鑑・きせかえ・つづきが全部消えるけど、本当にいいですか?</p>
+    <p id="dlg-restart-text">セーブデータを消します。<br>成績・問題図鑑・着せ替え・続きが全部消えるけど 本当にいいですか?</p>
     <div class="buttons buttons-choice">
       <button id="btn-restart-no" class="btn btn-main btn-big" type="button">やめる</button>
-      <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">はい、消す</button>
+      <button id="btn-restart-yes" class="btn btn-plain btn-small" type="button">はい 消す</button>
     </div>
   </dialog>
   <dialog id="dlg-dex" class="dialog dex-dialog" aria-labelledby="dex-big">
     <div id="dex-big" class="dex-big"></div>
     <div class="buttons">
-      <button id="btn-dex-close" class="btn btn-main" type="button">とじる</button>
+      <button id="btn-dex-close" class="btn btn-main" type="button">閉じる</button>
     </div>
   </dialog>
   <dialog id="dlg-info" class="dialog" aria-labelledby="dlg-info-text">
     <p id="dlg-info-text"></p>
     <div class="buttons">
-      <button id="btn-info-close" class="btn btn-main" type="button">わかった</button>
+      <button id="btn-info-close" class="btn btn-main" type="button">分かった</button>
     </div>
   </dialog>
   <dialog id="dlg-volume" class="dialog" aria-labelledby="dlg-volume-title">
@@ -432,7 +423,7 @@
     </div>
     <fieldset class="furigana" aria-label="ふりがな">
       <legend>ふりがな</legend>
-      <label><input type="radio" name="furigana-dialog" value="all"> すべての漢字にふりがな</label>
+      <label><input type="radio" name="furigana-dialog" value="all"> 全ての漢字にふりがな</label>
       <label><input type="radio" name="furigana-dialog" value="chu"> 中学以降に習う漢字だけ</label>
       <label><input type="radio" name="furigana-dialog" value="none"> ふりがななし</label>
     </fieldset>
@@ -440,7 +431,7 @@
       <legend>文字の大きさ</legend>
       <div class="size-row">
         <label><input type="radio" name="size-dialog" value="small"> 小さい</label>
-        <label><input type="radio" name="size-dialog" value="normal"> ふつう</label>
+        <label><input type="radio" name="size-dialog" value="normal"> 普通</label>
         <label><input type="radio" name="size-dialog" value="large"> 大きい</label>
         <label><input type="radio" name="size-dialog" value="xlarge"> とても大きい</label>
       </div>
@@ -456,7 +447,7 @@
 
   <dialog id="dlg-oni" class="dialog" aria-labelledby="dlg-oni-text">
     <img class="flori flori-small" src="../assets/flori/wave_surprised.png" alt="驚くフロリ">
-    <p id="dlg-oni-text">わあ、すごいね! よく見つけたネ!<br>特別なオニ問題が5問あるヨ。<br>挑戦する?</p>
+    <p id="dlg-oni-text">わあ すごいね! よく見つけたネ!<br>特別なオニ問題が5問あるヨ。<br>挑戦する?</p>
     <div class="buttons">
       <button id="btn-oni-no" class="btn btn-sub" type="button">やめておく</button>
       <button id="btn-oni-yes" class="btn btn-main" type="button">挑戦する!</button>

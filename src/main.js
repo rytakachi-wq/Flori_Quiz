@@ -40,14 +40,14 @@ import {
 import { illustrationFor } from "./illustrations.js";
 import { createTalker } from "./talk.js";
 import { initTutorial, openTutorial } from "./tutorial.js";
-import { COLORS, HATS, THEMES, earnedBadges, isOpen, loadDress, progressOf, saveDress, todoText } from "./badges.js";
+import { COLORS, HATS, THEMES, earnedBadges, getText, isOpen, loadDress, progressOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
 import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
 import { getFuriganaMode, readingOf, setFuriganaMode, startFurigana } from "./furigana.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
-const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数おすと、オニ問題が出る
+const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数押すと、オニ問題が出る
 const IMG = {
   think: "../assets/flori/src/book_pen.png",
   correct: "../assets/flori/wave_smile.png",
@@ -59,10 +59,10 @@ const $ = (id) => document.getElementById(id);
 const SCREENS = ["cover", "flow", "menu", "versus", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
 
 let coverTaps = 0;
-let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"review"(おさらい)、"daily"(毎日1問)
-let timeLimit = false; // この回に、制限時間をつけるか(ふつう・難しい・おさらい・毎日1問で、はじめに聞く)
-let hinted = false; // いまの問題で、ヒントを見たか
-let versusPlayers = 2; // みんなで対戦する人数
+let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問)
+let timeLimit = false; // この回に、制限時間を付けるか(普通・難しい・復習・毎日1問で、はじめに聞く)
+let hinted = false; // 今の問題で、ヒントを見たか
+let versusPlayers = 2; // 皆で対戦する人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
@@ -83,7 +83,7 @@ function startCoverIdle() {
   idleTimer = setTimeout(() => $("screen-cover").classList.add("is-lively"), 3000);
 }
 
-// 表紙で、画面にさわる・動かす・キーをおすと、動きを止めて、また3秒数えなおす
+// 表紙で、画面にさわる・動かす・キーを押すと、動きを止めて、また3秒数えなおす
 function noteActivity() {
   if (!$("screen-cover").hidden) startCoverIdle();
 }
@@ -91,13 +91,13 @@ for (const type of ["pointerdown", "pointermove", "keydown", "wheel", "touchstar
   document.addEventListener(type, noteActivity, { passive: true });
 }
 
-// 表紙のフロリのセリフ:10秒に1回、豆知識や、ひとりごとに、かわる
-const talker = createTalker({ textEl: $("cover-talk"), bubbleEl: document.querySelector("#screen-cover .home-speech"), extra: talkExtras });
+// 表紙のフロリのセリフ:表紙を出して30秒はあいさつ。そのあとは、10秒に1回、豆知識に変わる
+const talker = createTalker({ textEl: $("cover-talk") });
 
 // 横にスワイプ(なぞる)して、行き来できる画面
 const PAGER = ["cover", "menu", "dex", "dress", "records", "settings"];
 const PAGER_ICON = { cover: "🏠", menu: "📋", dex: "📚", dress: "👑", records: "🏆", settings: "⚙️" };
-const PAGER_NAME = { cover: "表紙", menu: "メニュー", dex: "問題図鑑", dress: "きせかえ", records: "成績", settings: "設定" };
+const PAGER_NAME = { cover: "表紙", menu: "メニュー", dex: "問題図鑑", dress: "着せ替え", records: "成績", settings: "設定" };
 let currentScreen = "cover";
 
 function renderPager(name) {
@@ -115,7 +115,8 @@ function renderPager(name) {
   );
 }
 
-// 動きは、transform と opacity だけ(カクつかないように)
+// 画面が変わるときの、横に流れる短い動き(動きは、transform と opacity だけ。カクつかないように)
+// direction:1=右から入ってくる(先へ進む)、-1=左から入ってくる(戻る)
 function slideIn(name, direction) {
   const el = $(`screen-${name}`);
   el.classList.remove("slide-r", "slide-l");
@@ -124,7 +125,8 @@ function slideIn(name, direction) {
   el.addEventListener("animationend", () => el.classList.remove("slide-r", "slide-l"), { once: true });
 }
 
-function show(name) {
+// direction を書かないときは、ならびの順(PAGER)か、先へ進む向き
+function show(name, direction = 0) {
   const previous = currentScreen;
   for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
   if (name !== "cover") coverTaps = 0;
@@ -145,7 +147,11 @@ function show(name) {
   const pager = $("pager");
   pager.hidden = !PAGER.includes(name);
   if (!pager.hidden) renderPager(name);
-  if (PAGER.includes(name) && PAGER.includes(previous) && previous !== name) slideIn(name, PAGER.indexOf(name) > PAGER.indexOf(previous) ? 1 : -1);
+  if (previous !== name) {
+    const ordered = PAGER.includes(name) && PAGER.includes(previous);
+    slideIn(name, direction || (ordered ? (PAGER.indexOf(name) > PAGER.indexOf(previous) ? 1 : -1) : 1));
+  }
+  document.body.classList.toggle("has-pager", PAGER.includes(name));
   setScene(sceneOf(name));
   window.scrollTo(0, 0);
 }
@@ -209,17 +215,17 @@ const renderers = {
 let normalQuestions = [];
 let hardQuestions = [];
 let oniQuestions = [];
-const idToUid = new Map(); // 問題の番号 → uid(「つづきから」の保存に使う)
-let allQuestions = []; // 全部の問題(オニもふくむ。図鑑できせかえの条件で使う)
-let playableQuestions = []; // ふつう+難しい問題(おさらい・毎日1問で使う)
-let normalIds = new Set(); // ふつうの問題の uid(成績の記録に使う。番号がつけなおされても、変わらない)
+const idToUid = new Map(); // 問題の番号 → uid(「続きから」の保存に使う)
+let allQuestions = []; // 全部の問題(オニもふくむ。図鑑で着せ替えの条件で使う)
+let playableQuestions = []; // 普通+難しい問題(復習・毎日1問で使う)
+let normalIds = new Set(); // 普通の問題の uid(成績の記録に使う。番号が付けなおされても、変わらない)
 let hardIds = new Set(); // 難しい問題の uid
 let oniIds = new Set(); // オニ問題の uid
-const sessions = new Map(); // 「理系-normal」のような名前 → ふつう・難しいモードの遊び(難しさのカウンターを引き継ぐ)
+const sessions = new Map(); // 「理系-normal」のような名前 → 普通・難しいモードの遊び(難しさのカウンターを引き継ぐ)
 let activeKey = null; // いま遊んでいる、sessions の名前
-const pick = { group: "理系", level: "normal", time: false }; // 表紙で選んだ、分類・むずかしさ・制限時間
+const pick = { group: "理系", level: "normal", time: false }; // 表紙で選んだ、分類・難しさ・制限時間
 const GROUPS = ["理系", "文系", "ひらめき"];
-const MIN_POOL = 10; // 1つの組み合わせで、最低これだけの問題がないと、ほかの分類から足す
+const MIN_POOL = 10; // 1つの組み合わせで、最低これだけの問題がないと、他の分類から足す
 let versusQuestions = []; // 対戦で使う問題(段階1〜3)
 let play; // いま遊んでいるもの(session・hardSession・オニ問題など)
 let current = null; // 今出している問題
@@ -231,8 +237,8 @@ function setFlori(src, alt) {
   img.alt = alt;
 }
 
-// 画面いっぱいに、ひとことを出して、短い曲を鳴らしてから、つぎへ進む(「それでは、スタート!」など)。
-let announcing = false; // 大きな表示を出している間は、ほかの操作(キーボードの連打など)を受けつけない
+// 画面いっぱいに、ひとことを出して、短い曲を鳴らしてから、次へ進む(「それでは、スタート!」など)。
+let announcing = false; // 大きな表示を出している間は、他の操作(キーボードの連打など)を受け付けない
 function announce(text, jingle, then, image) {
   if (announcing) return;
   announcing = true;
@@ -252,7 +258,7 @@ function announce(text, jingle, then, image) {
   }, length);
 }
 
-// 表紙のボタンの文字(今日の毎日1問をやったか、おさらいが何問あるか)を、いまの記録に合わせる。
+// 表紙のボタンの文字(今日の毎日1問をやったか、復習が何問あるか)を、今の記録に合わせる。
 function refreshCover() {
   if (playableQuestions.length === 0) return;
   const stats = loadStats();
@@ -263,7 +269,7 @@ function refreshCover() {
   $("btn-daily").querySelector(".tile-icon").textContent = dailyDone ? "✅" : "📅"; // 今日の分をやったら、チェック
   $("btn-daily").classList.toggle("is-done", dailyDone);
   const left = stats.wrong.filter((id) => playableIds().has(id)).length;
-  $("btn-review").querySelector(".tile-label").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(なし)";
+  $("btn-review").querySelector(".tile-label").textContent = left > 0 ? `復習(${left}問)` : "復習(なし)";
   $("btn-review").disabled = left === 0;
   refreshNoticeDots();
 }
@@ -282,17 +288,32 @@ function startPlay(nextMode) {
   if (mode === "oni") timeLimit = false; // オニ問題には、制限時間はない
   if (mode === "oni") play = new OniRound(oniQuestions);
   else if (mode === "hard") play = getSession(pick.group, "hard");
-  else if (mode === "versus") play = new VersusRound(versusQuestions, versusPlayers);
+  else if (mode === "versus") play = new VersusRound(versusPool(), versusPlayers);
   else if (mode === "review") {
     const wrong = new Set(loadStats().wrong);
     const pool = playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
     if (pool.length === 0) return show("cover");
-    play = new PracticeRound(pool); // まちがえた問題を、ぜんぶ(正解すると、おさらいから消える)
+    play = new PracticeRound(pool); // 間違えた問題を、全部(正解すると、復習から消える)
   } else if (mode === "daily") {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
   } else play = getSession(pick.group, "normal");
-  const resume = (mode === "normal" || mode === "hard") && hasCourseKey(activeKey); // つづきから遊ぶときは、そう知らせる
-  announce(resume ? "つづきから、スタート!" : "それでは、スタート!", "start", showQuestion, "../assets/flori/src/body_wave.webp");
+  const resume = (mode === "normal" || mode === "hard") && hasCourseKey(activeKey); // 続きから遊ぶときは、そう知らせる
+  announce(resume ? "続きから スタート!" : "それでは スタート!", "start", showQuestion, "../assets/flori/src/body_wave.webp");
+}
+
+// 対戦の問題:選んだ分類の問題。回戦ごとに、人数ぶんの問題がないときは、他の分類から足す
+function versusPool() {
+  const all = allQuestions.filter((q) => q.level <= VERSUS_ROUNDS);
+  if (pick.group === "ランダム") return all;
+  const inGroup = all.filter((q) => groupOf(q) === pick.group);
+  const pool = [...inGroup];
+  for (let level = 1; level <= VERSUS_ROUNDS; level += 1) {
+    const need = versusPlayers - inGroup.filter((q) => q.level === level).length;
+    if (need <= 0) continue;
+    const others = all.filter((q) => q.level === level && groupOf(q) !== pick.group).sort(() => Math.random() - 0.5);
+    pool.push(...others.slice(0, need));
+  }
+  return pool;
 }
 
 function showQuestion() {
@@ -307,18 +328,18 @@ function showQuestion() {
     hard: "難しい ",
     oni: "オニ ",
     versus: "",
-    review: "おさらい ",
+    review: "復習 ",
     daily: "毎日1問 ",
   }[mode];
   $("q-progress").textContent = versus
-    ? `第${play.round}回戦 / ${VERSUS_ROUNDS}回戦`
+    ? `${play.round} / ${VERSUS_ROUNDS}回戦`
     : `${timeLimit ? "⏱ " : ""}${prefix}第${play.asked + 1}問 / ${total}問`;
   renderTurn(versus);
   $("q-level").textContent =
     mode === "oni"
       ? "難しさ オニ"
       : versus
-          ? `${play.round}回戦 ${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} ${VERSUS_LEVEL_WORDS[play.round]}・正解で${play.round}点(${versusPlayers}人)` : `難しさ ${stars(question.level)}`;
+          ? `${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} 正解で${play.round}点` : `難しさ ${stars(question.level)}`;
   // 問題に合わせた、イラスト(絵と動きで、場面が分かるように)
   const art = illustrationFor(question);
   $("q-art").innerHTML = art;
@@ -336,19 +357,19 @@ function showQuestion() {
     message.textContent =
       mode === "versus"
         ? `第${play.round}回戦です。正解で${play.round}点!`
-        : { normal: "難しくなりました!", hard: "難しいモードです。じっくり考えましょう。", oni: "オニ問題です。がんばれ!" }[mode];
+        : { normal: "難しくなりました!", hard: "難しいモードです。じっくり考えましょう。", oni: "オニ問題です。頑張れ!" }[mode];
     message.hidden = false;
   } else {
     setFlori(IMG.think, "本とペンを持つフロリ");
     message.hidden = true;
   }
 
-  // ヒント:ふつう・難しい・おさらい・毎日1問で、1問に1回だけ。オニと対戦では、出さない。
+  // ヒント:普通・難しい・復習・毎日1問で、1問に1回だけ。オニと対戦では、出さない。
   hinted = false;
   $("q-hint").hidden = true;
   $("btn-hint").disabled = false;
   const hintable = Boolean(question.hint) && mode !== "oni" && mode !== "versus";
-  $("q-hint-area").hidden = !(hintable || mode === "oni"); // オニ問題は、ヒントなし。「わからない」だけ
+  $("q-hint-area").hidden = !(hintable || mode === "oni"); // オニ問題は、ヒントなし。「分からない」だけ
   $("btn-hint").hidden = !hintable;
   $("btn-giveup").hidden = mode === "versus";
   $("btn-giveup").disabled = false;
@@ -358,12 +379,10 @@ function showQuestion() {
   if (timeLimit) startTimer();
   else $("q-timer").hidden = true;
   stopSpeaking();
-  // 自動の読み上げ(400ミリ秒のあいだに、先へ進んだり、ほかの画面にいったときは、読まない)
+  // 自動の読み上げ(400ミリ秒のあいだに、先へ進んだり、他の画面にいったときは、読まない)
   if (readAloud()) setTimeout(() => current === question && !answered && !$("screen-question").hidden && speak(readableQuestion(question)), 400);
 }
 
-// 対戦の難しさ(回戦ごと):画面にも出す
-const VERSUS_LEVEL_WORDS = { 1: "やさしい", 2: "ふつう", 3: "むずかしめ" };
 
 // ---- 制限時間モード ----
 let timerId = 0;
@@ -406,7 +425,7 @@ function startTimer() {
   }, 100);
 }
 let timedOut = false;
-let gaveUp = false; // 「わからない」で、答えを見たか
+let gaveUp = false; // 「分からない」で、答えを見たか
 
 // ---- 読み上げ(ブラウザの機能。ひらがなの読みは、機械まかせ)----
 const READ_KEY = "floriQuiz.readAloud";
@@ -459,7 +478,7 @@ function speak(text) {
   voice.lang = "ja-JP";
   if (japaneseVoice) voice.voice = japaneseVoice;
   voice.rate = 1.6;
-  // 読み直したとき、前の声が止まった知らせ(onend・onerror)が、あとから来る。いまの声のときだけ、時間を動かす
+  // 読み直したとき、前の声が止まった知らせ(onend・onerror)が、あとから来る。今の声のときだけ、時間を動かす
   voice.onend = () => nowSpeaking === voice && setSpeaking(false);
   voice.onerror = () => nowSpeaking === voice && setSpeaking(false);
   nowSpeaking = voice;
@@ -478,7 +497,7 @@ function readableQuestion(question) {
   return `${question.text}。${choices}`;
 }
 
-// 対戦のとき:だれの番かを、プレイヤーの色で知らせる案内板と、みんなの点数の表
+// 対戦のとき:だれの番かを、プレイヤーの色で知らせる案内板と、皆の点数の表
 const PLAYER_NAMES = ["プレイヤー1", "プレイヤー2", "プレイヤー3", "プレイヤー4"];
 
 function renderBoard(list, scores, active) {
@@ -557,7 +576,7 @@ function answerReading() {
   return `${$("q-verdict").textContent}。正解は、${renderers[current.type].correctText(current)}。${current.explanation}`;
 }
 
-// 総合得点(100点満点)を、保存した記録から数える。いまあるふつう・難しい問題の、問題ごとの最高の点を足す(1問2点・ヒントを見たら1点)。
+// 総合得点(100点満点)を、保存した記録から数える。いまある普通・難しい問題の、問題ごとの最高の点を足す(1問2点・ヒントを見たら1点)。
 function currentTotal(stats = loadStats()) {
   const valid = playableIds();
   return totalScore(stats.right.filter((id) => valid.has(id)).map((id) => stats.qpts[id] ?? POINTS_PER_CORRECT), valid.size);
@@ -574,19 +593,19 @@ function showResult() {
     $("r-correct").textContent = `${result.correct} / ${result.total}問`;
     $("r-score").textContent = `${result.score}点(${result.total * (mode === "oni" ? ONI_POINTS_PER_CORRECT : POINTS_PER_CORRECT)}点満点)`;
   }
-  $("r-score-row").hidden = versus; // 対戦のときは、ひとりの得点は出さない
+  $("r-score-row").hidden = versus; // 対戦のときは、1人の得点は出さない
   $("r-comment").textContent =
     mode === "oni" ? oniComment(result.correct) : versus ? versusComment(result) : comment(result.correct, result.total);
 
   const setNote = $("r-set");
   const before = currentTotal();
-  // 総合得点は、はじめて正解した問題の分だけ、ふえる。
+  // 総合得点は、初めて正解した問題の分だけ、ふえる。
   const gainText = () => {
     const gained = currentTotal() - before;
-    return gained > 0 ? `総合得点が${gained}点増えたヨ!` : "総合得点は、新しく正解したり、ヒントなしで正解しなおしたときだけ増えるヨ。";
+    return gained > 0 ? `総合得点が${gained}点増えたヨ!` : "総合得点は 新しく正解したり ヒントなしで正解しなおしたときだけ増えるヨ。";
   };
   if (versus) {
-    // みんなで対戦した結果は、ひとりで遊ぶ記録(遊んだ回数、正解率、総合得点など)には入れない。
+    // 皆で対戦した結果は、1人で遊ぶ記録(遊んだ回数、正解率、総合得点など)には入れない。
     recordVersus();
     $("r-title").textContent = "対戦の結果!";
     $("r-best-row").hidden = true;
@@ -594,15 +613,15 @@ function showResult() {
     renderBoard($("r-board"), result.scores, -1);
     result.winners.forEach((index) => $("r-board").children[index].classList.add("is-winner"));
     setNote.textContent = "";
-    $("btn-again").textContent = "もう一度対戦";
+    $("btn-again").textContent = "もう1度対戦";
   } else if (mode === "review") {
-    // おさらい:まちがえた問題の一覧だけが変わる。成績の回数や、総合得点には入れない。
+    // 復習:間違えた問題の一覧だけが変わる。成績の回数や、総合得点には入れない。
     const left = recordReview(result.answers);
-    $("r-title").textContent = "おさらいの結果!";
+    $("r-title").textContent = "復習の結果!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
-    setNote.textContent = left > 0 ? `おさらいが必要な問題はあと${left}問だヨ。` : "おさらい完了! まちがえた問題はもうないヨ!";
-    $("btn-again").textContent = "もう一度おさらい";
+    setNote.textContent = left > 0 ? `復習が必要な問題はあと${left}問だヨ。` : "復習完了! 間違えた問題はもうないヨ!";
+    $("btn-again").textContent = "もう1度復習";
     $("btn-again").hidden = left === 0;
   } else if (mode === "daily") {
     // 毎日1問:1日1回だけ記録する。続けた日数を数える。
@@ -611,7 +630,7 @@ function showResult() {
     $("r-title").textContent = "毎日1問の結果!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
-    setNote.textContent = `${saved.streak}日連続!(ぜんぶで${saved.days}日)また明日も挑戦してネ!`;
+    setNote.textContent = `${saved.streak}日連続!(全部で${saved.days}日)また明日も挑戦してネ!`;
     $("btn-again").hidden = true;
   } else if (mode === "oni") {
     // オニ問題は、成績の「遊んだ回数」「正解率」「総合得点」には入れない(オニ問題の正解数だけ数える)。
@@ -621,16 +640,16 @@ function showResult() {
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
     setNote.textContent = `オニ問題に正解したことがあるのは、${oniDone} / ${oniIds.size}問だヨ。`;
-    $("btn-again").textContent = "もう一度挑戦";
+    $("btn-again").textContent = "もう1度挑戦";
   } else if (mode === "hard") {
     const saved = recordRound({ ...result, mode: "hard", timed: timeLimit });
-    persistHard(); // 「つづきから」の記録
+    persistHard(); // 「続きから」の記録
     $("r-title").textContent = "難しいモードの結果!";
     $("r-best-row").hidden = false;
     $("r-best").textContent = `${loadStats().bestHard}点`;
     $("r-record").hidden = !saved.isRecord;
     setNote.textContent = gainText();
-    $("btn-again").textContent = "もう一度挑戦";
+    $("btn-again").textContent = "もう1度挑戦";
   } else {
     const saved = recordRound({ ...result, timed: timeLimit });
     const stats = loadStats();
@@ -639,24 +658,24 @@ function showResult() {
     $("r-best").textContent = `${stats.best}点`;
     $("r-record").hidden = !saved.isRecord;
     $("btn-again").textContent = "続けて遊ぶ";
-    setNote.textContent = "続けて遊ぶと、難しさも続きます。正解が続くと難しく、まちがえるとやさしくなります。";
-    persistCourse(); // 「つづきから」の記録
+    setNote.textContent = "続けて遊ぶと 難しさも続きます。正解が続くと難しく 間違えると易しくなります。";
+    persistCourse(); // 「続きから」の記録
   }
   setNote.hidden = false;
-  // 制限時間をつけたごほうび:正解した数ぶんの星。全問正解なら、さらに3つ(オニと対戦は、なし)
+  // 制限時間を付けたご褒美:正解した数ぶんの星。全問正解なら、さらに3つ(オニと対戦は、なし)
   const reward = $("r-reward");
   reward.hidden = true;
   if (timeLimit && !versus && mode !== "oni") {
     const earned = result.correct + (result.correct === result.total ? 3 : 0);
     const stars = addStars(earned);
-    reward.textContent = `制限時間のごほうび! ⭐ +${earned}(ぜんぶで ${stars}こ)`;
+    reward.textContent = `制限時間のご褒美! ⭐ +${earned}(全部で ${stars}個)`;
     reward.hidden = false;
   }
   awardBadges();
   renderNews();
   renderRewardCard($("r-next-reward"));
   show("result");
-  setTimeout(celebrateUnlocks, 1400); // きせかえが、ふえていたら、お祝いの画面
+  setTimeout(celebrateUnlocks, 1400); // 着せ替えが、ふえていたら、お祝いの画面
 }
 
 function comment(correct, total = QUESTIONS_PER_ROUND) {
@@ -669,7 +688,7 @@ function comment(correct, total = QUESTIONS_PER_ROUND) {
 function versusComment(result) {
   const names = result.winners.map((index) => PLAYER_NAMES[index]);
   if (result.winners.length === result.players) return "全員同点! 引き分けだヨ!";
-  if (result.winners.length > 1) return `${names.join("と")}の同点トップ! みんなよく頑張ったネ!`;
+  if (result.winners.length > 1) return `${names.join("と")}の同点トップ! 皆よく頑張ったネ!`;
   return `${names[0]}の勝ち! おめでとう!`;
 }
 
@@ -682,16 +701,16 @@ function oniComment(correct) {
 
 function showRecords() {
   const s = loadStats();
-  // 「出会った問題」「正解した問題」は、いまある問題(ふつう+難しい)のうち、何問か。問題が増えても、全体の数を合わせる。
+  // 「出会った問題」「正解した問題」は、いまある問題(普通+難しい)のうち、何問か。問題が増えても、全体の数を合わせる。
   const playable = new Set([...normalIds, ...hardIds]);
   const seen = s.seen.filter((id) => playable.has(id)).length;
   const right = s.right.filter((id) => playable.has(id)).length;
-  // 総合得点は、100点満点(ふつう+難しい問題、1問2点)
+  // 総合得点は、100点満点(普通+難しい問題、1問2点)
   $("s-total").textContent = `${currentTotal(s)}点 / ${TOTAL_POINTS}点`;
   $("s-total-bar").style.width = `${(currentTotal(s) / TOTAL_POINTS) * 100}%`;
   $("s-plays").textContent = `${s.plays}回`;
-  $("s-dress").textContent = `${dressOwned(s)} / ${dressTotal()}こ`;
-  $("s-stars").textContent = `⭐ ${s.stars}こ`;
+  $("s-dress").textContent = `${dressOwned(s)} / ${dressTotal()}個`;
+  $("s-stars").textContent = `⭐ ${s.stars}個`;
   $("s-versus").textContent = `${s.versusPlays}回`;
   // 毎日1問:きのうか今日やっていれば、続けた日数。それより前なら、0日(とぎれた)
   const today = dateKey();
@@ -719,7 +738,7 @@ document.addEventListener("keydown", (event) => {
   if (Number.isInteger(index) && index >= 0 && index < current.choices.length) answer(index);
 });
 
-// 音:画面をはじめてさわったら音を出せるようにして、ボタンをおすと効果音をならす。
+// 音:画面を初めてさわったら音を出せるようにして、ボタンを押すと効果音をならす。
 for (const type of ["pointerdown", "keydown"]) {
   document.addEventListener(type, () => {
     unlock();
@@ -731,7 +750,7 @@ document.addEventListener("click", (event) => {
   if (button && !button.dataset.noSe) playSe("button");
 });
 
-// せってい:BGMと効果音の大きさ(0〜100)。表紙の「せってい」と、問題を解いているときの「せってい」で、同じ大きさを使う。
+// 設定:BGMと効果音の大きさ(0〜100)。表紙の「設定」と、問題を解いているときの「設定」で、同じ大きさを使う。
 function showVolumes() {
   for (const slider of document.querySelectorAll("[data-volume]")) {
     slider.value = Math.round(getVolume(slider.dataset.volume) * 100);
@@ -751,7 +770,7 @@ for (const slider of document.querySelectorAll("[data-volume]")) {
   if (kind === "se") slider.addEventListener("change", () => playSe("correct"));
 }
 
-// ふりがな:3つから選ぶ(すべての漢字 / 中学以降に習う漢字だけ / なし)。設定の画面と、問題を解いているときの設定で、同じ設定を使う。
+// ふりがな:3つから選ぶ(全ての漢字 / 中学以降に習う漢字だけ / なし)。設定の画面と、問題を解いているときの設定で、同じ設定を使う。
 function showFurigana() {
   for (const radio of document.querySelectorAll('input[type="radio"][name^="furigana"]')) {
     radio.checked = radio.value === getFuriganaMode();
@@ -777,7 +796,7 @@ $("btn-settings-reset").addEventListener("click", () => {
   $("settings-message").textContent = "初期設定に戻したヨ。";
 });
 
-// 問題を解いているときの「せってい」
+// 問題を解いているときの「設定」
 $("btn-q-settings").addEventListener("click", () => {
   showVolumes();
   $("dlg-volume").showModal();
@@ -785,8 +804,19 @@ $("btn-q-settings").addEventListener("click", () => {
 $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
 
-// ================= 表紙からの流れ:分類 → むずかしさ → 制限時間 → スタート =================
-let flowStep = "level"; // いま出している段(level / time / start)
+// ================= 表紙からの流れ:クイズ → 1人/皆で → 分類 → 難しさ → 制限時間 → スタート =================
+const FLOW_ORDER = { solo: ["mode", "group", "level", "time", "start"], versus: ["mode", "group"] };
+let flowStep = "mode"; // いま出している段(mode / group / level / time / start)
+let flowKind = "solo"; // "solo"(1人) か "versus"(皆で)
+const GROUP_ICON = { 理系: "🔬", 文系: "📖", ひらめき: "💡", ランダム: "🎲" };
+const GROUP_CLASS = { 理系: "g-sci", 文系: "g-lit", ひらめき: "g-idea", ランダム: "g-rand" };
+const GROUP_SUB = { 理系: "算数・理科", 文系: "社会・国語", ひらめき: "論理・パズル", ランダム: "ごちゃ混ぜ" };
+
+function setFlowStep(step, direction = 1) {
+  flowStep = step;
+  renderFlow();
+  slideIn("flow", direction);
+}
 
 function renderFlow() {
   const buttons = $("flow-buttons");
@@ -798,9 +828,11 @@ function renderFlow() {
     chip.textContent = text;
     chips.append(chip);
   };
-  addChip(`${GROUP_ICON[pick.group]} ${pick.group}`);
-  if (flowStep !== "level") addChip(pick.level === "hard" ? "🔥 難しい" : "🌱 ふつう");
-  if (flowStep === "start") addChip(pick.time ? "⏱ 制限時間あり" : "⏱ 制限時間なし");
+  const at = FLOW_ORDER[flowKind].indexOf(flowStep);
+  if (at >= 1) addChip(flowKind === "solo" ? "🙂 1人" : "👥 皆で");
+  if (flowStep === "level" || flowStep === "time" || flowStep === "start") addChip(`${GROUP_ICON[pick.group]} ${pick.group}`);
+  if (flowStep === "time" || flowStep === "start") addChip(pick.level === "hard" ? "🔥 難しい" : "🌱 普通");
+  if (flowStep === "start") addChip(pick.time ? "⏱ 時間あり" : "⏱ 時間なし");
   const make = (cls, icon, label, sub, handler) => {
     const b = document.createElement("button");
     b.type = "button";
@@ -811,45 +843,68 @@ function renderFlow() {
     b.addEventListener("click", handler);
     return b;
   };
-  if (flowStep === "level") {
-    $("flow-title").textContent = "むずかしさを えらぼう";
-    $("flow-bubble").textContent = pick.group === "ランダム" ? "いろんな 問題が ごちゃまぜ! どっちにする?" : `${pick.group}の問題に、ちょうせん! どっちにする?`;
+  buttons.classList.toggle("is-grid", flowStep === "group");
+  buttons.dataset.step = flowStep;
+  if (flowStep === "mode") {
+    $("flow-title").textContent = "誰と 遊ぶ?";
+    $("flow-bubble").textContent = "1人で じっくり? 皆で 対戦?";
+    buttons.replaceChildren(
+      make("flow-solo", "🙂", "1人", "自分の ペースで", () => {
+        flowKind = "solo";
+        setFlowStep("group");
+      }),
+      make("flow-vs", "👥", "皆で", "順番に 対戦!", () => {
+        flowKind = "versus";
+        setFlowStep("group");
+      }),
+    );
+  } else if (flowStep === "group") {
+    $("flow-title").textContent = "どれに 挑戦する?";
+    $("flow-bubble").textContent = flowKind === "solo" ? "好きな ジャンルを 選んでね!" : "皆で 戦う ジャンルを 選んでね!";
+    buttons.replaceChildren(
+      ...GROUPS.concat("ランダム").map((group) =>
+        make(`flow-group ${GROUP_CLASS[group]}`, GROUP_ICON[group], group, GROUP_SUB[group], () => {
+          pick.group = group;
+          if (flowKind === "versus") openVersus();
+          else setFlowStep("level");
+        }),
+      ),
+    );
+  } else if (flowStep === "level") {
+    $("flow-title").textContent = "難しさを 選ぼう";
+    $("flow-bubble").textContent = pick.group === "ランダム" ? "色んな 問題が ごちゃ混ぜ! どっちにする?" : `${pick.group}の問題に 挑戦! どっちにする?`;
     const normalKey = `${pick.group}-normal`;
     const hardKey = `${pick.group}-hard`;
     buttons.replaceChildren(
-      make("flow-normal", "🌱", "ふつう", hasCourseKey(normalKey) ? "つづきから あそべるよ" : "やさしめ ★☆☆☆〜★★☆☆", () => {
+      make("flow-normal", "🌱", "普通", hasCourseKey(normalKey) ? "続きから 遊べるよ" : "易しめ ★☆☆☆〜★★☆☆", () => {
         pick.level = "normal";
-        flowStep = "time";
-        renderFlow();
+        setFlowStep("time");
       }),
-      make("flow-hard", "🔥", "難しい", hasCourseKey(hardKey) ? "つづきから あそべるよ" : "ぐっと難しい ★★★☆〜★★★★", () => {
+      make("flow-hard", "🔥", "難しい", hasCourseKey(hardKey) ? "続きから 遊べるよ" : "ぐっと難しい ★★★☆〜★★★★", () => {
         pick.level = "hard";
-        flowStep = "time";
-        renderFlow();
+        setFlowStep("time");
       }),
     );
   } else if (flowStep === "time") {
-    $("flow-title").textContent = "制限時間は つける?";
-    $("flow-bubble").textContent = "つけると 1問30秒。星の ごほうびが もらえるよ!";
+    $("flow-title").textContent = "制限時間は 付ける?";
+    $("flow-bubble").textContent = "付けると 1問30秒。星の ご褒美が もらえるよ!";
     buttons.replaceChildren(
-      make("flow-yes", "⏱", "つける", "ごほうびの星が もらえる", () => {
+      make("flow-yes", "⏱", "付ける", "ご褒美の星が もらえる", () => {
         pick.time = true;
-        flowStep = "start";
-        renderFlow();
+        setFlowStep("start");
       }),
-      make("flow-no", "🙂", "つけない", "ゆっくり じっくり", () => {
+      make("flow-no", "🙂", "付けない", "ゆっくり じっくり", () => {
         pick.time = false;
-        flowStep = "start";
-        renderFlow();
+        setFlowStep("start");
       }),
     );
   } else {
     const key = `${pick.group}-${pick.level}`;
     const resume = hasCourseKey(key);
-    $("flow-title").textContent = "じゅんび OK!";
-    $("flow-bubble").textContent = resume ? "前のつづきから はじめよう!" : "さあ、はじめよう! がんばってね!";
+    $("flow-title").textContent = "準備 OK!";
+    $("flow-bubble").textContent = resume ? "前の続きから 始めよう!" : "さあ 始めよう! 頑張ってね!";
     buttons.replaceChildren(
-      make("flow-start", "▶️", resume ? "つづきから スタート!" : "スタート!", "", () => {
+      make("flow-start", "▶️", resume ? "続きから スタート!" : "スタート!", "", () => {
         timeLimit = pick.time;
         startPlay(pick.level);
       }),
@@ -857,43 +912,36 @@ function renderFlow() {
   }
 }
 
-const GROUP_ICON = { 理系: "🔬", 文系: "📖", ひらめき: "💡", ランダム: "🎲" };
-function openFlow(group) {
-  pick.group = group;
-  flowStep = "level";
+// 「クイズ」から:1人/皆で を選ぶ段から。その他の「皆で対戦」から:ジャンルを選ぶ段から
+function openFlow(step = "mode", kind = "solo") {
+  flowKind = kind;
+  flowStep = step;
   renderFlow();
   renderRewardCard($("flow-reward"));
   show("flow");
 }
-$("btn-versus-cover").addEventListener("click", () => show("versus"));
-for (const button of document.querySelectorAll("[data-group]")) {
-  button.addEventListener("click", () => openFlow(button.dataset.group));
+function openVersus() {
+  $("vs-title").textContent = `皆で対戦 ${GROUP_ICON[pick.group]} ${pick.group}`;
+  show("versus");
 }
+$("btn-quiz").addEventListener("click", () => openFlow());
 $("btn-flow-back").addEventListener("click", () => {
-  if (flowStep === "start") flowStep = "time";
-  else if (flowStep === "time") flowStep = "level";
-  else return show("cover");
-  renderFlow();
+  const order = FLOW_ORDER[flowKind];
+  const at = order.indexOf(flowStep);
+  if (at <= 0) return show("cover", -1);
+  setFlowStep(order[at - 1], -1);
 });
 
-// ほかのメニュー(2ページ目):「▼ ほかのメニュー」を押す・画面のあいているところを押す・下へスクロール(上へスワイプ)で、出る
+// その他(2ページ目):「その他」ボタン・画面のあいているところを押す・横スワイプで出る(縦にスクロールしても、画面は変わらない)
 function openMenu() {
   refreshCover();
   show("menu");
 }
 $("btn-more").addEventListener("click", openMenu);
-$("btn-menu-back").addEventListener("click", () => show("cover"));
 $("screen-cover").addEventListener("click", (event) => {
   if (event.target.closest("button, a, input")) return;
   openMenu();
 });
-$("screen-cover").addEventListener(
-  "wheel",
-  (event) => {
-    if (event.deltaY > 30) openMenu();
-  },
-  { passive: true },
-);
 const PAGE_OPEN = {
   cover: () => show("cover"),
   menu: () => openMenu(),
@@ -924,28 +972,19 @@ document.addEventListener(
     const dx = touch.clientX - start.x;
     const dy = touch.clientY - start.y;
     if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) {
-      // 横にスワイプ:左へなぞると、つぎの画面。右へなぞると、まえの画面
+      // 横にスワイプ:左へなぞると、次の画面。右へなぞると、前の画面
       const next = PAGER.indexOf(currentScreen) + (dx < 0 ? 1 : -1);
       if (next >= 0 && next < PAGER.length) PAGE_OPEN[PAGER[next]]();
-    } else if (currentScreen === "cover" && -dy > 60 && Math.abs(dy) > Math.abs(dx) * 1.5) {
-      openMenu(); // 上へスワイプ:ほかのメニュー
     }
   },
   { passive: true },
 );
-$("screen-menu").addEventListener(
-  "wheel",
-  (event) => {
-    if (event.deltaY < -30 && window.scrollY <= 0) show("cover");
-  },
-  { passive: true },
-);
 
-// 問題を解く前に、制限時間をつけるかを聞く(ふつう・難しい・おさらい・毎日1問)
+// 問題を解く前に、制限時間を付けるかを聞く(普通・難しい・復習・毎日1問)
 let pendingMode = null;
 function chooseTime(nextMode) {
   pendingMode = nextMode;
-  // おさらいのときだけ、どんな問題が出るかを、さきに説明する
+  // 復習のときだけ、どんな問題が出るかを、さきに説明する
   $("dlg-time-review").hidden = nextMode !== "review";
   $("dlg-time").showModal();
 }
@@ -959,7 +998,7 @@ $("btn-time-yes").addEventListener("click", () => closeTimeDialog(true));
 $("btn-time-no").addEventListener("click", () => closeTimeDialog(false));
 $("btn-time-cancel").addEventListener("click", () => closeTimeDialog(null));
 
-// ふつう・難しいモードの遊び。分類(理系・文系・ひらめき)×むずかしさごとに、ひとつずつ作って、「つづきから」を保存する。
+// 普通・難しいモードの遊び。分類(理系・文系・ひらめき)×難しさごとに、ひとつずつ作って、「続きから」を保存する。
 const groupOf = (q) => q.group ?? "ひらめき";
 let uidToIdMap = new Map();
 function getSession(group, kind) {
@@ -970,7 +1009,7 @@ function getSession(group, kind) {
   const inBand = playableQuestions.filter((q) => q.level >= min && q.level <= max);
   let pool = group === "ランダム" ? inBand : inBand.filter((q) => groupOf(q) === group);
   if (pool.length < MIN_POOL) {
-    // 問題が少ない組み合わせは、ほかの分類の同じ段階の問題を足して、同じ問題がすぐにもどってこないようにする
+    // 問題が少ない組み合わせは、他の分類の同じ段階の問題を足して、同じ問題がすぐに戻ってこないようにする
     const others = inBand.filter((q) => groupOf(q) !== group);
     pool = [...pool, ...others.slice(0, MIN_POOL - pool.length)];
   }
@@ -1000,13 +1039,13 @@ function askRestart(action) {
   restartAction = action;
   $("dlg-restart").showModal();
 }
-// 消すのは、成績・図鑑・きせかえ・つづき。音の大きさ・ふりがな・文字の大きさなどの設定は、のこす。
+// 消すのは、成績・図鑑・着せ替え・続き。音の大きさ・ふりがな・文字の大きさなどの設定は、のこす。
 function eraseSaveData() {
   for (const key of ["floriQuiz.stats", "floriQuiz.dress", "floriQuiz.dexViewed", "floriQuiz.notice", "floriQuiz.bestScore"]) {
     try {
       localStorage.removeItem(key);
     } catch {
-      // 消せなくても、ページを開きなおせば、つづきから始まる。
+      // 消せなくても、ページを開きなおせば、続きから始まる。
     }
   }
   location.reload();
@@ -1036,12 +1075,12 @@ $("btn-hint").addEventListener("click", () => {
   $("btn-hint").disabled = true;
   if (readAloud()) speak(`ヒント。${current.hint}`); // ヒントも読み上げる
 });
-$("btn-versus").addEventListener("click", () => show("versus"));
-$("btn-versus-back").addEventListener("click", () => show("cover"));
+$("btn-versus").addEventListener("click", () => openFlow("group", "versus"));
+$("btn-versus-back").addEventListener("click", () => show("flow", -1));
 for (const button of document.querySelectorAll("[data-players]")) {
   button.addEventListener("click", () => {
     versusPlayers = Math.min(VERSUS_MAX_PLAYERS, Math.max(VERSUS_MIN_PLAYERS, Number(button.dataset.players)));
-    chooseTime("versus"); // 対戦でも、制限時間をつけられる
+    chooseTime("versus"); // 対戦でも、制限時間を付けられる
   });
 }
 
@@ -1051,7 +1090,7 @@ let gardenSize = 3;
 
 function startGarden(size = gardenSize) {
   gardenSize = size;
-  $("garden-message").textContent = "木をおして全部を桜の木にしよう。";
+  $("garden-message").textContent = "木を押して全部を桜の木にしよう。";
   $("garden-hint").hidden = true;
   garden = new GardenUI($("garden"), {
     size,
@@ -1063,14 +1102,14 @@ function startGarden(size = gardenSize) {
       playSe("correct");
       recordGarden();
       awardBadges();
-      setTimeout(celebrateUnlocks, 1400); // きせかえが、ふえていたら、お祝いの画面
+      setTimeout(celebrateUnlocks, 1400); // 着せ替えが、ふえていたら、お祝いの画面
     },
   });
   show("relax");
 }
 
 $("btn-relax").addEventListener("click", () => startGarden());
-$("btn-relax-back").addEventListener("click", () => show("cover"));
+$("btn-relax-back").addEventListener("click", () => show("cover", -1));
 $("btn-garden-hint").addEventListener("click", () => {
   // ヒントは、おすたびに、出す・かくすが入れかわる
   // (説明を閉じても、光った木は、そのまま)
@@ -1084,15 +1123,15 @@ for (const button of document.querySelectorAll("[data-garden]")) {
 }
 
 $("btn-records").addEventListener("click", showRecords);
-$("btn-records-back").addEventListener("click", () => show("cover"));
+$("btn-records-back").addEventListener("click", () => show("cover", -1));
 $("btn-settings").addEventListener("click", () => PAGE_OPEN.settings());
-$("btn-settings-back").addEventListener("click", () => show("cover"));
+$("btn-settings-back").addEventListener("click", () => show("cover", -1));
 $("btn-next").addEventListener("click", next);
 $("btn-again").addEventListener("click", () => startPlay(mode));
-$("btn-cover").addEventListener("click", () => show("cover"));
+$("btn-cover").addEventListener("click", () => show("cover", -1));
 
 // やめる:確認してから、この回をなかったことにして表紙へ戻る。
-// 「わからない」:答えを見ると、不正解になる。まちがえて押さないように、先に聞く
+// 「分からない」:答えを見ると、不正解になる。まちがえて押さないように、先に聞く
 $("btn-giveup").addEventListener("click", () => {
   if (answered) return;
   $("dlg-giveup").showModal();
@@ -1109,19 +1148,19 @@ $("btn-quit-no").addEventListener("click", () => $("dlg-quit").close());
 $("btn-quit-yes").addEventListener("click", () => {
   $("dlg-quit").close();
   play.abandonRound();
-  show("cover");
+  show("cover", -1);
 });
 
-// 表紙のすみのフロリ:何回かおすと、オニ問題が出る。
+// 表紙のすみのフロリ:何回か押すと、オニ問題が出る。
 $("corner-flori").addEventListener("click", (event) => {
   const button = event.currentTarget;
   button.classList.remove("is-tapped");
-  void button.offsetWidth; // アニメーションをもう一度動かす
+  void button.offsetWidth; // アニメーションをもう1度動かす
   button.classList.add("is-tapped");
   coverTaps += 1;
   if (coverTaps >= ONI_TAPS) {
     coverTaps = 0;
-    window.getSelection()?.removeAllRanges(); // 連打で選ばれた部分を、ぜんぶ外す
+    window.getSelection()?.removeAllRanges(); // 連打で選ばれた部分を、全部外す
     $("dlg-oni").showModal();
   }
 });
@@ -1171,7 +1210,7 @@ function closeOpening() {
   if (opening.hidden || opening.classList.contains("is-playing")) return;
   unlock();
   if (opening.classList.contains("is-idle")) {
-    // 1分何もしなくて、もどってきたオープニング:さわると、すぐ表紙にもどる
+    // 1分何もしなくて、戻ってきたオープニング:さわると、すぐ表紙に戻る
     opening.classList.add("is-leaving");
     setTimeout(() => {
       opening.hidden = true;
@@ -1194,21 +1233,25 @@ $("opening").addEventListener("click", closeOpening);
 $("opening").addEventListener("keydown", (event) => {
   if (event.target === $("opening") && (event.key === "Enter" || event.key === " ")) closeOpening();
 });
-// あそびかた(チュートリアルムービー):オープニングからも、ほかのメニューからも、見られる
+// 遊び方(チュートリアルムービー):オープニングからも、その他からも、見られる
 initTutorial();
+function playTutorial() {
+  setScene("tutorial");
+  openTutorial(() => setScene(sceneOf(currentScreen))); // 閉じたら、もとの画面のBGMに戻る
+}
 $("btn-tutorial").addEventListener("click", (event) => {
-  event.stopPropagation(); // オープニングを、とじてしまわないように
-  openTutorial();
+  event.stopPropagation(); // オープニングを、閉じてしまわないように
+  playTutorial();
 });
-$("btn-tutorial-menu").addEventListener("click", () => openTutorial());
+$("btn-tutorial-menu").addEventListener("click", playTutorial);
 
-// ================= きせかえの解放(条件は badges.js) =================
+// ================= 着せ替えの解放(条件は badges.js) =================
 // 条件を数えるための材料
 function badgeContext(stats = loadStats()) {
   return { stats, total: currentTotal(stats), playable: playableQuestions.length, all: allQuestions.length, oni: oniQuestions.length };
 }
 
-// 条件を満たしたものを、数えなおして、はじめてのものを、おぼえる(画面には、出さない。きせかえの解放に使う)
+// 条件を満たしたものを、数えな押して、初めてのものを、おぼえる(画面には、出さない。着せ替えの解放に使う)
 function awardBadges() {
   const stats = loadStats();
   const earned = earnedBadges(badgeContext(stats));
@@ -1237,7 +1280,7 @@ function renderBadgeBackground() {
   );
 }
 
-// ===== お知らせ:図鑑・きせかえ・成績で、あたらしく手に入れたものを知らせる =====
+// ===== お知らせ:図鑑・着せ替え・成績で、あたらしく手に入れたものを知らせる =====
 const NOTICE_KEY = "floriQuiz.notice"; // どこまで見たか(カードは、図鑑のほうで)
 function loadNotice() {
   try {
@@ -1271,8 +1314,8 @@ function dressName(key) {
 function noticeNow(stats) {
   return { dress: openDressKeys(stats), total: currentTotal(stats) };
 }
-// 見たところまでの記録。はじめて(この機能を使うのが、はじめて)のときは、いまの状態を、見たことにする。
-// celebrated:お祝いの画面を出した、きせかえ。
+// 見たところまでの記録。初めて(この機能を使うのが、初めて)のときは、今の状態を、見たことにする。
+// celebrated:お祝いの画面を出した、着せ替え。
 function noticeBase() {
   let base = loadNotice();
   if (!base) {
@@ -1326,8 +1369,8 @@ function refreshNoticeDots() {
 function renderNews() {
   const news = computeNews();
   const lines = [];
-  if (news.cards > 0) lines.push(`📚 問題図鑑:新しいカードが ${news.cards}まい!`);
-  if (news.dress.length) lines.push(`🎁 きせかえが ふえたヨ:${news.dress.map(dressName).join("・")}`);
+  if (news.cards > 0) lines.push(`📚 問題図鑑:新しいカードが ${news.cards}枚!`);
+  if (news.dress.length) lines.push(`🎁 着せ替えが 増えたヨ:${news.dress.map(dressName).join("・")}`);
   if (news.gain > 0) lines.push(`🏆 総合得点が ${news.gain}点 アップ!(いま ${news.now.total}点)`);
   const list = $("r-news");
   list.hidden = lines.length === 0;
@@ -1340,8 +1383,8 @@ function renderNews() {
   );
 }
 
-// ===== つぎの、ごほうび(きせかえ)の案内 =====
-// まだ手に入れていないものの中で、もらえるまでが、いちばん近いものを、さがす
+// ===== 次の、ご褒美(着せ替え)の案内 =====
+// まだ手に入れていないものの中で、もらえるまでが、1番近いものを、さがす
 function nextRewards(count = 1) {
   const stats = loadStats();
   const ctx = badgeContext(stats);
@@ -1360,7 +1403,7 @@ function nextRewards(count = 1) {
 function rewardArt(kind, item) {
   const art = document.createElement("span");
   art.className = `reward-art is-${kind}`;
-  if (kind === "color") art.style.background = item.original ? "linear-gradient(135deg, #dfe8ee, #7ec3e0)" : item.tint;
+  if (kind === "color") art.style.background = item.swatch ?? item.tint;
   else if (kind === "theme") art.style.background = item.preview ?? item.tint;
   else if (item.img) {
     const pic = document.createElement("img");
@@ -1370,7 +1413,7 @@ function rewardArt(kind, item) {
   }
   return art;
 }
-// 「🎁 つぎの ごほうび」カード:絵・もらうまでの進み具合の棒・あと、どれくらいか
+// 「🎁 次の ご褒美」カード:絵・もらうまでの進み具合の棒・あと、どれくらいか
 function renderRewardCard(el) {
   const next = nextRewards(1)[0];
   if (!next) {
@@ -1386,7 +1429,7 @@ function renderRewardCard(el) {
   info.className = "reward-info";
   const title = document.createElement("b");
   title.className = "reward-title";
-  title.textContent = `ごほうび:${item.name}`;
+  title.textContent = `ご褒美:${item.name}`;
   const bar = document.createElement("span");
   bar.className = "reward-bar";
   const fill = document.createElement("i");
@@ -1394,24 +1437,12 @@ function renderRewardCard(el) {
   bar.append(fill);
   const note = document.createElement("small");
   note.className = "reward-note";
-  note.textContent = p.goal > 1 ? `${todoText(item)}  あと ${p.goal - p.now}!` : `${todoText(item)}と、もらえるヨ!`;
+  note.textContent = p.goal > 1 ? `${getText(item)}(あと ${p.goal - p.now})` : getText(item);
   info.append(title, bar, note);
   el.replaceChildren(icon, rewardArt(kind, item), info);
   el.hidden = false;
 }
-// フロリの、ひとこと:ごほうびまで、あと少しのとき
-function talkExtras() {
-  const next = nextRewards(1)[0];
-  if (!next) return ["独り言:きせかえは、ぜんぶ ゲットしたヨ! すごいネ!"];
-  const { item, p } = next;
-  const left = p.goal - p.now;
-  return [
-    `ごほうび:「${item.name}」まで、あと ${left}! きせかえは、がんばった ごほうびだヨ!`,
-    `独り言:「${item.name}」を ゲットしたいナ。${todoText(item)}と、もらえるんだヨ。`,
-  ];
-}
-
-// ===== きせかえを手に入れたときの、お祝いの画面 =====
+// ===== 着せ替えを手に入れたときの、お祝いの画面 =====
 let unlockQueue = [];
 let unlockIndex = 0;
 function celebrateUnlocks() {
@@ -1427,18 +1458,18 @@ function celebrateUnlocks() {
   $("dlg-unlock").showModal();
   playSe("correct");
 }
-const KIND_WORD = { color: "フロリの色", hat: "かざり", theme: "背景" };
+const KIND_WORD = { color: "フロリの色", hat: "飾り", theme: "背景" };
 async function showUnlock() {
   const [kind, id] = unlockQueue[unlockIndex].split(":");
   const item = DRESS_LISTS[kind].find((entry) => entry.id === id);
   const dialog = $("dlg-unlock");
   dialog.style.setProperty("--tint", item.tint);
-  $("unlock-kicker").textContent = `🎁 あたらしい${KIND_WORD[kind]}を ゲット!`;
+  $("unlock-kicker").textContent = `🎁 新しい${KIND_WORD[kind]}を GET!`;
   $("unlock-name").textContent = item.name;
-  $("unlock-why").textContent = `${todoText(item)}と、もらえるよ!`;
+  $("unlock-why").textContent = getText(item);
   $("unlock-count").textContent = unlockQueue.length > 1 ? `${unlockIndex + 1} / ${unlockQueue.length}` : "";
   $("unlock-count").hidden = unlockQueue.length < 2;
-  // フロリに、つけたところを見せる
+  // フロリに、付けたところを見せる
   const hat = $("unlock-hat");
   const flori = $("unlock-flori");
   const stage = $("unlock-stage");
@@ -1459,16 +1490,16 @@ async function showUnlock() {
   }
   const wear = $("btn-unlock-wear");
   wear.disabled = false;
-  wear.textContent = "つけてみる";
+  wear.textContent = "付けてみる";
   wear.onclick = () => {
     dress = { ...dress, [kind]: id };
     saveDress(dress);
     applyDress();
-    wear.textContent = "✔ つけたよ!";
+    wear.textContent = "✔ 付けたよ!";
     wear.disabled = true;
     playSe("correct");
   };
-  $("btn-unlock-next").textContent = unlockIndex + 1 < unlockQueue.length ? "つぎへ" : "とじる";
+  $("btn-unlock-next").textContent = unlockIndex + 1 < unlockQueue.length ? "次へ" : "閉じる";
 }
 $("btn-unlock-next").addEventListener("click", () => {
   if (unlockIndex + 1 < unlockQueue.length) {
@@ -1476,7 +1507,7 @@ $("btn-unlock-next").addEventListener("click", () => {
     showUnlock();
   } else {
     $("dlg-unlock").close();
-    if (!$("screen-dress").hidden) renderDress(); // きせかえの画面にいたら、見た目を更新
+    if (!$("screen-dress").hidden) renderDress(); // 着せ替えの画面にいたら、見た目を更新
     refreshCover();
   }
 });
@@ -1567,7 +1598,7 @@ function showDex() {
     }
     button.addEventListener("click", () => {
       if (owned) openDexCard(question, label, rightSet.has(uid));
-      else $("dex-comment").textContent = "まだ出会っていないヨ。問題を解くと、カードがもらえるヨ!";
+      else $("dex-comment").textContent = "まだ出会っていないヨ。問題を解くと カードがもらえるヨ!";
     });
     return button;
   };
@@ -1578,14 +1609,14 @@ function showDex() {
   });
   const have = playableList.filter((q) => met.has(q.uid ?? q.id)).length;
   const percent = Math.round((have / playableList.length) * 100);
-  $("dex-count").textContent = `カード ${have} / ${playableList.length}まい(${percent}%)`;
+  $("dex-count").textContent = `カード ${have} / ${playableList.length}枚(${percent}%)`;
   $("dex-meter-bar").style.width = `${percent}%`;
   $("dex-comment").textContent =
     have === playableList.length
-      ? "🎉 コンプリート! 全部のカードがそろったヨ!"
+      ? "🎉 コンプリート! 全部のカードが揃ったヨ!"
       : have === 0
-        ? "問題を解くと、カードが集まるヨ!"
-        : "カードをおすと、問題がもう一度見られるヨ。";
+        ? "問題を解くと カードが集まるヨ!"
+        : "カードを押すと 問題がもう1度見られるヨ。";
   $("screen-dex").classList.toggle("is-complete", have === playableList.length);
   $("dex-grid").replaceChildren(...cards);
   // NEW! は、一度見たら、つぎからは出さない
@@ -1598,7 +1629,7 @@ function showDex() {
 }
 $("btn-dex-close").addEventListener("click", () => $("dlg-dex").close());
 
-// ================= きせかえ・背景 =================
+// ================= 着せ替え・背景 =================
 let dress = loadDress();
 
 function setHat(imgId, hat) {
@@ -1610,20 +1641,26 @@ function setHat(imgId, hat) {
 
 function applyDress() {
   document.documentElement.dataset.theme = dress.theme;
+  const theme = THEMES.find((item) => item.id === dress.theme);
+  const root = document.documentElement.style;
+  for (const [name, key] of [["--bg", "bg"], ["--blue", "blue"], ["--blue-dark", "dark"]]) {
+    if (theme?.[key]) root.setProperty(name, theme[key]);
+    else root.removeProperty(name);
+  }
   setFloriColor(COLORS.find((color) => color.id === dress.color) ?? null);
-  // フロリのかざり(画像)。かざりごとに、場所と大きさが、ちがう(style.css の data-hat)
+  // フロリの飾り(画像)。飾りごとに、場所と大きさが、ちがう(style.css の data-hat)
   const hat = HATS.find((item) => item.id === dress.hat);
   setHat("hero-hat", hat);
   setHat("dress-hat", hat);
   setHat("flow-hat", hat);
 }
 
-let dressTab = "color"; // きせかえで、いま見ている種類(color / hat / theme)
+let dressTab = "color"; // 着せ替えで、いま見ている種類(color / hat / theme)
 const DRESS_LISTS = { color: COLORS, hat: HATS, theme: THEMES };
-const DRESS_TAB_LABEL = { color: "🎨 フロリの色", hat: "🎀 かざり", theme: "🖼️ 背景" };
-let freshKeys = new Set(); // この画面を、あたらしく開いて、はじめて見るもの(NEW のしるし)
+const DRESS_TAB_LABEL = { color: "🎨 フロリの色", hat: "🎀 飾り", theme: "🖼️ 背景" };
+let freshKeys = new Set(); // この画面を、あたらしく開いて、初めて見るもの(NEW のしるし)
 
-// 表紙から開く:あたらしく増えたものに NEW をつける
+// 表紙から開く:あたらしく増えたものに NEW を付ける
 function openDress() {
   awardBadges();
   const base = noticeBase();
@@ -1645,7 +1682,7 @@ function dressCaption(hover = null) {
     : `${nameOf(COLORS, dress.color)} ・ ${nameOf(HATS, dress.hat)} ・ ${nameOf(THEMES, dress.theme)}`;
 }
 
-// マウスをのせたとき、つける前に、見ためを、ためせる(かざり・背景)
+// マウスをのせたとき、付ける前に、見ためを、ためせる(飾り・背景)
 function previewDress(kind, item) {
   if (kind === "hat") setHat("dress-hat", item);
   if (kind === "theme") $("dress-stage").style.background = item.preview ?? item.tint;
@@ -1657,41 +1694,43 @@ function endPreview() {
   dressCaption();
 }
 
-function showLockMessage(choice, stats) {
-  const message = $("dress-message");
-  const progress = progressOf(choice, badgeContext(stats));
-  const text = document.createElement("span");
-  text.textContent = `🔒 「${choice.name}」は、${todoText(choice)}と、もらえるよ。`;
-  message.replaceChildren(text);
-  if (progress && progress.goal > 1) {
-    const bar = document.createElement("span");
-    bar.className = "dress-progress";
-    const fill = document.createElement("i");
-    fill.style.width = `${(progress.now / progress.goal) * 100}%`;
-    bar.append(fill);
-    const label = document.createElement("b");
-    label.textContent = `${progress.now} / ${progress.goal}`;
-    message.append(bar, label);
-  }
-  message.classList.add("is-on");
+// ロック中のきせかえの、もらい方の吹き出し。画面の上に1つだけ出す(一覧が動いても、切れないように)
+const tipBox = document.createElement("div");
+tipBox.className = "dress-tipbox";
+tipBox.hidden = true;
+document.body.append(tipBox);
+function hideTip() {
+  tipBox.hidden = true;
 }
+function showTip(button, text) {
+  tipBox.textContent = text;
+  tipBox.hidden = false;
+  const rect = button.getBoundingClientRect();
+  const left = Math.min(Math.max(6, rect.left + rect.width / 2 - tipBox.offsetWidth / 2), innerWidth - tipBox.offsetWidth - 6);
+  const above = rect.top - tipBox.offsetHeight - 8;
+  tipBox.style.left = `${left}px`;
+  tipBox.style.top = `${above >= 6 ? above : rect.bottom + 8}px`;
+}
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".dress-item")) hideTip();
+});
+$("dress-list").addEventListener("scroll", hideTip, { passive: true });
 
 function renderDress() {
+  hideTip();
   const stats = loadStats();
   const bctx = badgeContext(stats);
   const ctx = { have: new Set(stats.badges), stars: stats.stars };
   $("dress-stars").textContent = stats.stars;
-  // ごほうびを、いくつ ゲットしたか(進み具合の棒)と、つぎの ごほうび
+  // ご褒美を、いくつ GETしたか(進み具合の棒)と、次の ご褒美
   const owned = dressOwned(stats);
   const total = dressTotal();
   $("dress-meter-bar").style.width = `${Math.round((owned / total) * 100)}%`;
-  $("dress-meter-text").textContent = `ごほうびゲット ${owned} / ${total}こ${owned >= total ? "  ぜんぶ コンプリート! 🎉" : ""}`;
+  $("dress-meter-text").textContent = `ご褒美 GET ${owned} / ${total}個${owned >= total ? "  全部 コンプリート! 🎉" : ""}`;
   renderRewardCard($("dress-reward"));
   $("dress-stage").style.background = THEMES.find((item) => item.id === dress.theme)?.preview ?? "";
   setHat("dress-hat", HATS.find((item) => item.id === dress.hat));
   dressCaption();
-  $("dress-message").replaceChildren();
-  $("dress-message").classList.remove("is-on");
   for (const tab of document.querySelectorAll("[data-dress-tab]")) {
     const kind = tab.dataset.dressTab;
     const list = DRESS_LISTS[kind];
@@ -1715,7 +1754,7 @@ function renderDress() {
       // 絵だけを見せる(名前や、もらいかたは、マウスをのせたときに出す)
       const art = document.createElement("span");
       art.className = `dress-art is-${kind}`;
-      if (kind === "color") art.style.background = choice.original ? "linear-gradient(135deg, #dfe8ee, #7ec3e0)" : choice.tint;
+      if (kind === "color") art.style.background = choice.swatch ?? choice.tint;
       else if (kind === "theme") art.style.background = choice.preview ?? choice.tint;
       else if (choice.img) {
         const pic = document.createElement("img");
@@ -1746,21 +1785,20 @@ function renderDress() {
         button.append(lock);
       }
       const progress = open ? null : progressOf(choice, bctx);
-      const tip = document.createElement("span");
-      tip.className = "dress-tip";
-      tip.textContent = open ? choice.name : `🔒 ${todoText(choice)}${progress && progress.goal > 1 ? `(${progress.now}/${progress.goal})` : ""}`;
-      button.append(tip);
-      button.setAttribute("aria-label", open ? choice.name : `${choice.name}(${todoText(choice)}と、もらえます)`);
+      const tipText = `🔒 ${getText(choice)}${progress && progress.goal > 1 ? `(${progress.now}/${progress.goal})` : ""}`;
+      button.setAttribute("aria-label", open ? choice.name : `${choice.name}(${getText(choice)})`);
       if (open) {
         button.addEventListener("mouseenter", () => previewDress(kind, choice));
         button.addEventListener("focus", () => previewDress(kind, choice));
         button.addEventListener("mouseleave", endPreview);
         button.addEventListener("blur", endPreview);
+      } else {
+        button.addEventListener("mouseenter", () => showTip(button, tipText));
+        button.addEventListener("mouseleave", hideTip);
       }
       button.addEventListener("click", () => {
         if (!open) {
-          // まだ使えないもの:もらいかたと、あとどれくらいかを、知らせる
-          showLockMessage(choice, stats);
+          showTip(button, tipText); // まだ使えないもの:もらい方を、吹き出しで知らせる(指で押したときにも見える)
           return;
         }
         dress = { ...dress, [kind]: choice.id };
@@ -1768,11 +1806,6 @@ function renderDress() {
         applyDress();
         freshKeys.delete(`${kind}:${choice.id}`);
         renderDress();
-        // つけた! の、きらきら
-        const stage = $("dress-stage");
-        stage.classList.remove("is-flash");
-        void stage.offsetWidth;
-        stage.classList.add("is-flash");
         playSe("button");
       });
       return button;
@@ -1788,9 +1821,9 @@ for (const tab of document.querySelectorAll("[data-dress-tab]")) {
 applyDress();
 
 $("btn-dex").addEventListener("click", showDex);
-$("btn-dex-back").addEventListener("click", () => show("cover"));
+$("btn-dex-back").addEventListener("click", () => show("cover", -1));
 $("btn-dress").addEventListener("click", openDress);
-$("btn-dress-back").addEventListener("click", () => show("cover"));
+$("btn-dress-back").addEventListener("click", () => show("cover", -1));
 
 // 読み上げ
 function syncReadSettings() {

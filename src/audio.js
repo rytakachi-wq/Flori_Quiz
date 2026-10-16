@@ -10,7 +10,7 @@ const SETTINGS_KEY = "floriQuiz.settings.v2";
 
 // 場面ごとのBGM(曲の名前は、music.js の TRACKS)。
 // 場面:cover(表紙・成績・設定)、question(ふつうの問題)、hard(難しいモード)、versus(みんなで対戦)、
-//      relax(リラックス)、oni(オニ問題)、result(結果)
+//      relax(リラックス)、oni(オニ問題)、result(結果)、tutorial(遊び方)
 const BGM = {
   cover: "study",
   question: "cover",
@@ -20,6 +20,7 @@ const BGM = {
   relax: "relax",
   oni: "oni",
   result: "result",
+  tutorial: "tutorial",
 };
 
 // 効果音(ファイル)。boost は、小さい音をもち上げる倍率(ピークが 0 dB をこえない範囲)。

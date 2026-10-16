@@ -41,8 +41,33 @@ function isBody(h, s, l) {
   return h >= 180 && h <= 235 && s >= 0.1 && s <= 0.4 && l >= 0.55;
 }
 
-// 色のつよさ(1 で、きまった色いっぱい。小さいほど、うすい)
-const STRENGTH = 0.62;
+// 色のこさ(1 で、いちばんこい)
+const VIVID = 0.95;
+
+const hexRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+const clamp01 = (v) => Math.min(1, Math.max(0, v));
+
+// 体の色の画素1つの、新しい色(r,g,b は 0〜1)。h,l:もとの色あい・明るさ  sTarget:色のこさの基準  sKeep:もとのこさ  (x,y):場所
+function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
+  if (color.gray) return hslToRgb(h, 0, l);
+  if (color.tone === "white") return hslToRgb(0, 0, Math.min(1, 0.9 + (l - 0.55) * 0.26));
+  if (color.tone === "black") return hslToRgb(0, 0, clamp01(0.1 + (l - 0.55) * 0.3));
+  if (color.tone === "navy") return hslToRgb(226, 0.55, clamp01(0.24 + (l - 0.55) * 0.42));
+  if (color.rainbow) return hslToRgb(((x / width) * 320 + (y / height) * 120) % 360, 0.62, Math.min(0.86, l * 0.95));
+  if (color.metal) {
+    // 金属の光沢:もとの明るさを、暗い色→明るい色の段階に当てはめ、斜めに走る光の帯(つや)を重ねる
+    const stops = color.metal.map(hexRgb);
+    const base = clamp01((l - 0.55) / 0.42);
+    const band = 0.5 + 0.5 * Math.sin(((x / width) * 1.3 + (y / height) * 1.1) * Math.PI * 2.2);
+    const v = clamp01(0.12 + base * 0.5 + band * 0.42) * (stops.length - 1);
+    const i = Math.min(stops.length - 2, Math.floor(v));
+    const f = v - i;
+    return stops[i].map((c, k) => c + (stops[i + 1][k] - c) * f);
+  }
+  // 色あいの色:はっきりした色になるように、明るさを少し下げて、こさを出す(影やつやは、のこす)
+  const sat = Math.min(0.9, Math.max(sTarget * color.gain, color.minSat, sKeep * 0.5)) * VIVID;
+  return hslToRgb(color.hue, sat, clamp01(0.3 + (l - 0.5) * 0.95));
+}
 
 // color = { hue, gain, minSat, gray }
 export function recolor(src, color) {
@@ -101,8 +126,7 @@ export function recolor(src, color) {
         const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
         // 足もとの影(こい水色)は、そのまま。足のうすい水色は、影とつながっていても、色をつける
         if (skip[id - 1] && l < 0.86) continue;
-        const target = color.gray ? 0 : Math.min(0.9, Math.max(s * color.gain, color.minSat)) * STRENGTH;
-        const [r, g, b] = hslToRgb(color.gray ? h : color.hue, color.gray ? 0 : Math.max(target, s * 0.5), l);
+        const [r, g, b] = shade(color, h, s, s, l, i % width, Math.floor(i / width), width, height);
         px[i * 4] = Math.round(r * 255);
         px[i * 4 + 1] = Math.round(g * 255);
         px[i * 4 + 2] = Math.round(b * 255);
@@ -112,8 +136,7 @@ export function recolor(src, color) {
         if (mask[i] || px[i * 4 + 3] < 128 || Math.floor(i / width) < height * 0.8) continue;
         const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
         if (s < 0.02 || s > 0.22 || l < 0.45 || l > 0.8) continue;
-        const target = color.gray ? 0 : Math.min(0.9, Math.max(0.3 * color.gain, color.minSat)) * STRENGTH;
-        const [r, g, b] = hslToRgb(color.gray ? h : color.hue, color.gray ? 0 : Math.max(target, s * 0.5), l);
+        const [r, g, b] = shade(color, h, 0.3, s, l, i % width, Math.floor(i / width), width, height);
         px[i * 4] = Math.round(r * 255);
         px[i * 4 + 1] = Math.round(g * 255);
         px[i * 4 + 2] = Math.round(b * 255);
