@@ -41,8 +41,8 @@ function isBody(h, s, l) {
   return h >= 180 && h <= 235 && s >= 0.1 && s <= 0.4 && l >= 0.55;
 }
 
-// 色のこさ(1 で、いちばんこい)
-const VIVID = 0.95;
+// 色のつよさ(1 で、きまった色いっぱい。小さいほど、うすい)。うすい色合いが、フロリらしいので、おさえめ
+const STRENGTH = 0.62;
 
 const hexRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
@@ -52,8 +52,8 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
   if (color.gray) return hslToRgb(h, 0, l);
   if (color.tone === "white") return hslToRgb(0, 0, Math.min(1, 0.9 + (l - 0.55) * 0.26));
   if (color.tone === "black") return hslToRgb(0, 0, clamp01(0.1 + (l - 0.55) * 0.3));
-  if (color.tone === "navy") return hslToRgb(226, 0.55, clamp01(0.24 + (l - 0.55) * 0.42));
-  if (color.rainbow) return hslToRgb(((x / width) * 320 + (y / height) * 120) % 360, 0.62, Math.min(0.86, l * 0.95));
+  if (color.tone === "navy") return hslToRgb(224, 0.3, clamp01(0.3 + (l - 0.55) * 0.5));
+  if (color.rainbow) return hslToRgb(((x / width) * 320 + (y / height) * 120) % 360, 0.34, Math.min(0.9, l * 0.98 + 0.02));
   if (color.metal) {
     // 金属の光沢:もとの明るさを、暗い色→明るい色の段階に当てはめ、斜めに走る光の帯(つや)を重ねる
     const stops = color.metal.map(hexRgb);
@@ -64,9 +64,8 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
     const f = v - i;
     return stops[i].map((c, k) => c + (stops[i + 1][k] - c) * f);
   }
-  // 色あいの色:はっきりした色になるように、明るさを少し下げて、こさを出す(影やつやは、のこす)
-  const sat = Math.min(0.9, Math.max(sTarget * color.gain, color.minSat, sKeep * 0.5)) * VIVID;
-  return hslToRgb(color.hue, sat, clamp01(0.3 + (l - 0.5) * 0.95));
+  const target = Math.min(0.9, Math.max(sTarget * color.gain, color.minSat)) * STRENGTH;
+  return hslToRgb(color.hue, Math.max(target, sKeep * 0.5), l);
 }
 
 // color = { hue, gain, minSat, gray }

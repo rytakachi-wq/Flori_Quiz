@@ -6,14 +6,13 @@ const FLORI = "../assets/flori/src/body_wave.webp";
 const SCENES = [
   {
     title: "STEP 1 選ぼう",
-    caption: "「クイズ」を押して 「1人」か「皆で」を選んでから 理系・文系・ひらめき・ランダムを選ぶよ!",
+    caption: "「クイズ」を押して ルールを見たら、1人か皆で・分類・難しさ・時間を 1つの画面で 選んで スタート!",
     html: `
-      <div class="tm-rows">
-        <div class="tm-row"><span class="tm-btn c1 is-hit"><i>🙂</i><small>1人</small></span><span class="tm-btn c2"><i>👥</i><small>皆で</small></span></div>
-        <div class="tm-row tm-row4">
-          <span class="tm-btn c3 mini"><i>🔬</i><small>理系</small></span><span class="tm-btn c4 mini"><i>📖</i><small>文系</small></span>
-          <span class="tm-btn c5 mini"><i>💡</i><small>ひらめき</small></span><span class="tm-btn c6 mini"><i>🎲</i><small>ランダム</small></span>
-        </div>
+      <div class="tm-set">
+        <div class="tm-srow"><span class="tm-btn mini c3 is-hit"><i>🙂</i><small>1人</small></span><span class="tm-btn mini c2"><i>👥</i><small>皆で</small></span></div>
+        <div class="tm-srow"><span class="tm-btn mini c1"><i>🔬</i><small>理系</small></span><span class="tm-btn mini c4"><i>📖</i><small>文系</small></span><span class="tm-btn mini c3"><i>💡</i><small>ひらめき</small></span><span class="tm-btn mini c6"><i>🎲</i><small>ランダム</small></span></div>
+        <div class="tm-srow"><span class="tm-btn mini c5"><i>🌱</i><small>普通</small></span><span class="tm-btn mini c6"><i>🔥</i><small>難しい</small></span></div>
+        <span class="tm-go">▶ スタート!</span>
       </div>
       <span class="tm-finger tm-finger-1">👆</span>`,
   },
@@ -58,7 +57,7 @@ const SCENES = [
     html: `
       <div class="tm-reward">
         <span class="tm-gift">🎁</span>
-        <span class="tm-flori-wrap"><img class="tm-flori" src="${FLORI}" alt=""><img class="tm-hat" src="../assets/dress/ribbon.png" alt=""></span>
+        <span class="tm-flori-wrap"><img class="tm-flori" src="${FLORI}" alt=""><img class="tm-hat" src="../assets/dress/head04.png" alt=""></span>
         <span class="tm-star s1">⭐</span><span class="tm-star s2">⭐</span><span class="tm-star s3">⭐</span>
       </div>`,
   },

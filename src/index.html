@@ -47,50 +47,85 @@
         <button id="btn-settings" class="cover-gear" type="button" aria-label="設定"><span aria-hidden="true">⚙️</span> 設定</button>
       </header>
       <h1 class="sr-only">Flori_Quiz</h1>
+      <div class="hud" aria-label="いまの記録">
+        <span class="hud-chip hud-rank"><span id="hud-rank-icon" aria-hidden="true">🥚</span> <b id="hud-rank">たまご</b></span>
+        <span class="hud-chip">🏆 <b id="hud-total">0</b>点</span>
+        <span class="hud-chip">⭐ <b id="hud-stars">0</b></span>
+        <span class="hud-chip">🎁 <b id="hud-dress">0</b>/<span id="hud-dress-all">90</span></span>
+      </div>
       <div class="home-stage">
         <div class="speech home-speech">
           <p id="cover-talk" class="cover-talk">ヤア! ボクはフロリだヨ!</p>
-          <p id="cover-title" class="cover-title"></p>
         </div>
         <div class="hero hero-cover home-hero">
           <div class="hero-fig">
             <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-            <img id="hero-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
+            <span id="hero-decor" class="decor" aria-hidden="true"></span>
           </div>
         </div>
       </div>
-      <div class="cover-buttons">
-        <button id="btn-quiz" class="cover-btn c-quiz" type="button"><span class="gi" aria-hidden="true">🎯</span><span class="gt"><b>クイズ</b></span></button>
-        <button id="btn-more" class="cover-btn c-more" type="button"><span class="gi" aria-hidden="true">📋</span><span class="gt"><b>その他</b></span><span class="tile-dot" hidden></span></button>
-      </div>
+      <button id="btn-quiz" class="play-btn" type="button"><span class="gi" aria-hidden="true">🎯</span><span class="pb-text"><b>クイズ</b><small>1人で 遊ぶ・皆で 対戦</small></span><span class="pb-go" aria-hidden="true">▶</span></button>
       <p id="sound-hint" class="note">♪ 画面をタッチすると音楽が流れるよ。</p>
     </section>
 
-    <!-- 表紙からの流れ:1人/皆で → 分類 → 難しさ → 制限時間 → スタート -->
-    <section id="screen-flow" class="screen flow-screen" aria-label="準備" hidden>
-      <header class="home-top">
-        <button id="btn-flow-back" class="cover-gear" type="button"><span aria-hidden="true">◀</span> 戻る</button>
-        <img class="logo logo-small" src="../assets/flori/src/logo.png" alt="フロリ">
-        <span class="home-top-space" aria-hidden="true"></span>
+    <!-- クイズのルール(クイズを押したとき、はじめに出る) -->
+    <section id="screen-rules" class="screen rules-screen" aria-label="クイズのルール" hidden>
+      <header class="screen-head">
+        <button id="btn-rules-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
+        <h2 class="title">クイズのルール</h2>
+        <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
       </header>
-      <h2 id="flow-title" class="title"></h2>
-      <div id="flow-chips" class="flow-chips"></div>
-      <div class="home-stage">
-        <p id="flow-bubble" class="speech home-speech"></p>
-        <div class="hero hero-cover home-hero">
-          <div class="hero-fig">
-            <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-            <img id="flow-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
-          </div>
-        </div>
+      <div class="rule-cards">
+        <article class="rule-card is-solo">
+          <h3><span aria-hidden="true">🙂</span> 1人で 遊ぶ</h3>
+          <ul>
+            <li><span aria-hidden="true">📝</span> 1回 <b>5問</b>。正解で <b>2点</b>(ヒントを見ると 1点)</li>
+            <li><span aria-hidden="true">🔥</span> 正解が続くと 問題が <b>難しく</b> なるよ</li>
+            <li><span aria-hidden="true">🏆</span> 全部の問題で <b>100点</b> 満点の 総合得点</li>
+            <li><span aria-hidden="true">⏱</span> 制限時間(30秒)を付けると <b>星</b> がもらえる</li>
+          </ul>
+        </article>
+        <article class="rule-card is-vs">
+          <h3><span aria-hidden="true">👥</span> 皆で 対戦</h3>
+          <p class="rule-lead">1台の画面を 皆で使って 順番に 1人1問ずつ 答えるよ。</p>
+          <ol class="vs-rounds" aria-label="3回戦">
+            <li class="vs-r1"><span class="vs-name">1回戦</span><span class="vs-stars" aria-hidden="true">★☆☆</span><span class="vs-point">正解で <b>1点</b></span></li>
+            <li class="vs-r2"><span class="vs-name">2回戦</span><span class="vs-stars" aria-hidden="true">★★☆</span><span class="vs-point">正解で <b>2点</b></span></li>
+            <li class="vs-r3"><span class="vs-name">3回戦</span><span class="vs-stars" aria-hidden="true">★★★</span><span class="vs-point">正解で <b>3点</b></span></li>
+          </ol>
+          <p class="rule-foot"><span aria-hidden="true">🏆</span> 合計点が 1番高い人の 勝ち。ヒントは ないよ。</p>
+        </article>
       </div>
-      <div id="flow-buttons" class="flow-buttons"></div>
+      <button id="btn-rules-next" class="go-btn" type="button">設定へ <span aria-hidden="true">▶</span></button>
+    </section>
+
+    <!-- クイズの設定(1つの画面で、ぜんぶ選ぶ) -->
+    <section id="screen-setup" class="screen setup-screen" aria-label="クイズの設定" hidden>
+      <header class="screen-head">
+        <button id="btn-flow-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
+        <h2 class="title">クイズの設定</h2>
+        <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
+      </header>
+      <div class="set-list">
+        <div class="set-row"><span class="set-label"><span aria-hidden="true">🎮</span> 遊ぶ人</span><div id="seg-kind" class="seg"></div></div>
+        <div class="set-row"><span class="set-label"><span aria-hidden="true">📚</span> 分類</span><div id="seg-group" class="seg seg-4"></div></div>
+        <div class="set-row"><span id="set-label-3" class="set-label"></span><div id="seg-third" class="seg"></div></div>
+        <div class="set-row"><span class="set-label"><span aria-hidden="true">⏱</span> 制限時間</span><div id="seg-time" class="seg"></div></div>
+      </div>
+      <p id="setup-note" class="setup-note" role="status"></p>
+      <button id="btn-start" class="go-btn is-start" type="button"><span aria-hidden="true">▶️</span> スタート!</button>
       <div id="flow-reward" class="reward-card" hidden></div>
     </section>
 
+
+
     <!-- その他(2ページ目) -->
     <section id="screen-menu" class="screen menu-screen" aria-label="その他" hidden>
-      <h2 class="title">その他</h2>
+      <header class="screen-head">
+        <button id="btn-menu-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
+        <h2 class="title">その他</h2>
+        <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
+      </header>
       <div class="menu-grid">
         <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-text"><span class="tile-label">毎日1問</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">復習</span></span><span class="tile-dot" hidden></span></button>
@@ -104,73 +139,60 @@
     </section>
     <!-- 問題図鑑 -->
     <section id="screen-dex" class="screen dex-screen" aria-label="問題図鑑" hidden>
-      <h2 class="title">📚 問題図鑑</h2>
+      <header class="screen-head">
+        <button id="btn-dex-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
+        <h2 class="title">📚 問題図鑑</h2>
+        <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
+      </header>
       <div class="dex-head-box">
         <p id="dex-count" class="dex-count"></p>
         <div class="dex-meter"><span id="dex-meter-bar"></span></div>
         <p id="dex-comment" class="note" role="status"></p>
       </div>
+      <div id="dex-filter" class="dex-filter" role="tablist" aria-label="分類"></div>
       <div id="dex-grid" class="dex-grid"></div>
-      <button id="btn-dex-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
     <!-- 着せ替え -->
     <section id="screen-dress" class="screen dress-screen" aria-label="着せ替え" hidden>
-      <h2 class="title">着せ替え</h2>
+      <header class="screen-head">
+        <button id="btn-dress-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
+        <h2 class="title">着せ替え</h2>
+        <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
+      </header>
       <div id="dress-stage" class="dress-stage">
         <div class="hero hero-small dress-hero">
           <div class="hero-fig">
             <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-            <img id="dress-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
+            <span id="dress-decor" class="decor" aria-hidden="true"></span>
           </div>
         </div>
-        <p id="dress-caption" class="dress-caption"></p>
       </div>
       <div class="dress-tabs" role="tablist">
-        <button class="dress-tab is-on" type="button" data-dress-tab="color">🎨 フロリの色</button>
-        <button class="dress-tab" type="button" data-dress-tab="hat">🎀 飾り</button>
-        <button class="dress-tab" type="button" data-dress-tab="theme">🖼️ 背景</button>
+        <button class="dress-tab is-on" type="button" data-dress-tab="color"><span aria-hidden="true">🎨</span><span class="tab-name">色</span></button>
+        <button class="dress-tab" type="button" data-dress-tab="head"><span aria-hidden="true">🎩</span><span class="tab-name">頭</span></button>
+        <button class="dress-tab" type="button" data-dress-tab="body"><span aria-hidden="true">🎒</span><span class="tab-name">体</span></button>
+        <button class="dress-tab" type="button" data-dress-tab="face"><span aria-hidden="true">😊</span><span class="tab-name">顔</span></button>
+        <button class="dress-tab" type="button" data-dress-tab="theme"><span aria-hidden="true">🖼️</span><span class="tab-name">背景</span></button>
       </div>
       <div class="dress-banner">
-        <p class="dress-banner-text"><span aria-hidden="true">🎁</span> 着せ替えは 頑張った<b>ご褒美</b>だヨ! 問題に 答えて GETしよう!</p>
-        <div class="dress-meter"><i id="dress-meter-bar"></i><span id="dress-meter-text" class="dress-meter-text"></span></div>
+        <p class="dress-banner-text"><span aria-hidden="true">🎁</span> 頑張った <b>ご褒美</b>が 着せ替えに なるヨ!</p>
+        <div class="dress-meter" aria-hidden="true"><i id="dress-meter-bar"></i></div>
+        <p id="dress-meter-text" class="dress-meter-text"></p>
       </div>
       <div id="dress-reward" class="reward-card" hidden></div>
       <div id="dress-list" class="dress-list"></div>
       <p class="note dress-note">制限時間を付けて遊ぶと ご褒美の星 ⭐ がもらえるヨ。いま ⭐ <span id="dress-stars">0</span>個</p>
-      <button id="btn-dress-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
-    <!-- 皆で対戦 -->
-    <section id="screen-versus" class="screen" aria-label="皆で対戦" hidden>
-      <h2 id="vs-title" class="title">皆で対戦</h2>
-      <div class="vs-rules">
-        <p class="vs-lead">👥 <b>1台の画面を 皆で使います。</b>順番に 1人1問ずつ答えます。</p>
-        <ol class="vs-rounds" aria-label="3回戦">
-          <li class="vs-r1"><span class="vs-name">1回戦</span><span class="vs-stars" aria-hidden="true">★☆☆</span><span class="vs-level">易しい問題</span><span class="vs-point">正解で <b>1点</b></span></li>
-          <li class="vs-arrow" aria-hidden="true">▶</li>
-          <li class="vs-r2"><span class="vs-name">2回戦</span><span class="vs-stars" aria-hidden="true">★★☆</span><span class="vs-level">普通の問題</span><span class="vs-point">正解で <b>2点</b></span></li>
-          <li class="vs-arrow" aria-hidden="true">▶</li>
-          <li class="vs-r3"><span class="vs-name">3回戦</span><span class="vs-stars" aria-hidden="true">★★★</span><span class="vs-level">難しめ</span><span class="vs-point">正解で <b>3点</b></span></li>
-        </ol>
-        <ul class="vs-points">
-          <li><span aria-hidden="true">🏆</span><b>勝ち</b> 合計点が1番高い人。同じ点なら引き分けです。</li>
-          <li><span aria-hidden="true">🎲</span><b>問題</b> 人によって ちがう問題が出ます。</li>
-          <li><span aria-hidden="true">⏱</span><b>その他</b> ヒントはありません。制限時間は 付けられます。</li>
-        </ul>
-      </div>
-      <p class="note">何人で遊ぶ?</p>
-      <div class="buttons">
-        <button class="btn btn-main" type="button" data-players="2">2人</button>
-        <button class="btn btn-main" type="button" data-players="3">3人</button>
-        <button class="btn btn-main" type="button" data-players="4">4人</button>
-      </div>
-      <button id="btn-versus-back" class="btn btn-sub" type="button">戻る</button>
-    </section>
 
     <!-- リラックス:お花畑 -->
     <section id="screen-relax" class="screen" aria-label="リラックス" hidden>
-      <h2 class="title">お花畑</h2>
+      <header class="screen-head">
+        <button id="btn-relax-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
+        <h2 class="title">お花畑</h2>
+        <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
+      </header>
       <p id="garden-message" class="bubble"></p>
       <div id="garden"></div>
       <div id="garden-hint" class="garden-tips" hidden>
@@ -192,16 +214,20 @@
         <button class="btn btn-main" type="button" data-garden="4">普通(4×4)</button>
         <button id="btn-garden-hint" class="btn btn-sub" type="button">ヒント</button>
         <button id="btn-garden-again" class="btn btn-sub" type="button">もう1度</button>
-        <button id="btn-relax-back" class="btn btn-sub" type="button">戻る</button>
       </div>
     </section>
 
     <!-- 成績 -->
     <section id="screen-records" class="screen" aria-label="成績" hidden>
-      <h2 class="title">🏆 成績</h2>
+      <header class="screen-head">
+        <button id="btn-records-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
+        <h2 class="title">🏆 成績</h2>
+        <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
+      </header>
       <dl class="scores total">
         <div><dt>総合得点</dt><dd id="s-total"></dd></div>
       </dl>
+      <p class="rank-line"><span id="s-rank-icon" aria-hidden="true">🥚</span> ランク <b id="s-rank">たまご</b><small id="s-rank-next"></small></p>
       <div class="total-bar" aria-hidden="true"><span id="s-total-bar"></span></div>
       <dl class="scores">
         <div><dt>👑 着せ替え</dt><dd id="s-dress"></dd></div>
@@ -211,20 +237,19 @@
         <div><dt>📅 毎日1問</dt><dd id="s-daily"></dd></div>
         <div><dt>📖 復習待ち</dt><dd id="s-wrong"></dd></div>
         <div><dt>✏️ 解いた問題</dt><dd id="s-answered"></dd></div>
-        <div><dt>👀 出会った問題</dt><dd id="s-seen"></dd></div>
         <div><dt>✅ 正解した問題</dt><dd id="s-right"></dd></div>
         <div><dt>🎯 正解率</dt><dd id="s-rate"></dd></div>
+        <div class="wide"><dt>🔬 理系 / 📖 文系 / 💡 ひらめき(正解した問題)</dt><dd id="s-groups"></dd></div>
       </dl>
-      <button id="btn-records-back" class="btn btn-sub" type="button">戻る</button>
     </section>
 
     <!-- 設定 -->
     <section id="screen-settings" class="screen" aria-label="設定" hidden>
-      <h2 class="title">設定</h2>
-      <div class="settings-head">
-        <img class="flori flori-tiny" src="../assets/flori/src/pc_form.png" alt="パソコンに変形したフロリ">
-        <p class="bubble">音や文字の大きさを変えられるヨ!</p>
-      </div>
+      <header class="screen-head">
+        <button id="btn-settings-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
+        <h2 class="title">設定</h2>
+        <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
+      </header>
       <div class="settings-grid">
         <fieldset class="setting-box">
           <legend>音の大きさ</legend>
@@ -265,7 +290,6 @@
       <div class="buttons">
         <button id="btn-settings-reset" class="btn btn-sub" type="button">初期設定に戻す</button>
         <button id="btn-erase" class="btn btn-plain btn-small" type="button">セーブデータを消す</button>
-        <button id="btn-settings-back" class="btn btn-main" type="button">戻る</button>
       </div>
       <p id="settings-message" class="note" role="status"></p>
     </section>
@@ -273,10 +297,10 @@
     <!-- 問題画面 -->
     <section id="screen-question" class="screen" aria-label="問題" hidden>
       <header class="status">
+        <button id="btn-quit" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
         <span id="q-progress" class="chip"></span>
         <span id="q-level" class="chip chip-level"></span>
         <button id="btn-q-settings" class="chip chip-button" type="button">設定</button>
-        <button id="btn-quit" class="chip chip-button" type="button">やめる</button>
       </header>
       <ol id="q-board" class="board" hidden></ol>
       <p id="q-player" class="turn" hidden></p>
@@ -313,7 +337,11 @@
 
     <!-- 結果画面 -->
     <section id="screen-result" class="screen" aria-label="結果" hidden>
-      <h2 id="r-title" class="title">結果発表!</h2>
+      <header class="screen-head">
+        <button id="btn-cover" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
+        <h2 id="r-title" class="title">結果発表!</h2>
+        <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
+      </header>
       <img class="flori flori-cover" src="../assets/flori/wave_nikkori.png" alt="にっこりするフロリ">
       <p id="r-comment" class="bubble"></p>
       <dl class="scores">
@@ -329,12 +357,12 @@
       <ul id="r-news" class="news-list" hidden></ul>
       <div class="buttons">
         <button id="btn-again" class="btn btn-main" type="button">続けて遊ぶ</button>
-        <button id="btn-cover" class="btn btn-sub" type="button">表紙へ</button>
       </div>
     </section>
 
     <!-- 読み込み失敗 -->
     <section id="screen-error" class="screen" aria-label="エラー" hidden>
+      <img class="flori flori-small" src="../assets/flori/wave_wrong.png" alt="困ったフロリ">
       <p class="bubble">問題を読み込めなかったよ。<br>ページを開き直してね。</p>
     </section>
 
@@ -357,7 +385,7 @@
         <div class="hero hero-small unlock-hero">
           <div class="hero-fig">
             <img id="unlock-flori" class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="">
-            <img id="unlock-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
+            <span id="unlock-decor" class="decor" aria-hidden="true"></span>
           </div>
         </div>
       </div>
@@ -447,7 +475,7 @@
 
   <dialog id="dlg-oni" class="dialog" aria-labelledby="dlg-oni-text">
     <img class="flori flori-small" src="../assets/flori/wave_surprised.png" alt="驚くフロリ">
-    <p id="dlg-oni-text">わあ すごいね! よく見つけたネ!<br>特別なオニ問題が5問あるヨ。<br>挑戦する?</p>
+    <p id="dlg-oni-text">わあ すごいね! よく見つけたネ!<br>特別なオニ問題が 10問 続けて 出るヨ。<br>全部 解けるかな? 挑戦する?</p>
     <div class="buttons">
       <button id="btn-oni-no" class="btn btn-sub" type="button">やめておく</button>
       <button id="btn-oni-yes" class="btn btn-main" type="button">挑戦する!</button>

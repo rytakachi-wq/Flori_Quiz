@@ -2,7 +2,7 @@
 
 export const QUESTIONS_PER_ROUND = 5; // 1回の問題数
 export const POINTS_PER_CORRECT = 2; // 1問2点(5問で10点満点)
-export const ONI_POINTS_PER_CORRECT = 5; // オニ問題は、いままでどおり1問5点(5問で25点満点)
+export const ONI_POINTS_PER_CORRECT = 5; // オニ問題は、1問5点(10問で50点満点)
 export const MAX_LEVEL = 2; // ふつうモードの段階(1〜2)。正解が続くと2、まちがえると1にもどる
 export const HARD_MIN_LEVEL = 3; // 難しいモードの段階(3〜4)。正解が続くと4、まちがえると3にもどる
 export const HARD_LEVEL = 4;
@@ -65,7 +65,7 @@ export function questionPoints(correct, hinted) {
 function roundResult(round) {
   return {
     correct: round.correct,
-    total: QUESTIONS_PER_ROUND,
+    total: round.total ?? QUESTIONS_PER_ROUND,
     score: round.points ?? round.correct * POINTS_PER_CORRECT,
     answers: [...(round.roundAnswers ?? [])], // 答えた問題と、正解したか(成績の「出会った問題」「正解した問題」に使う)
   };
@@ -164,11 +164,15 @@ export class Session {
   }
 }
 
-// オニ問題の遊び。決まった順に5問。難しさの調整はなく、記録にも入れない。
+// オニ問題の遊び。オニ問題を、決まった順に、続けて全部(10問)。難しさの調整はなく、記録にも入れない。
 export class OniRound {
   constructor(questions) {
-    this.questions = [...questions].sort((a, b) => a.id.localeCompare(b.id)).slice(0, QUESTIONS_PER_ROUND);
+    this.questions = [...questions].sort((a, b) => a.id.localeCompare(b.id));
     this.startRound();
+  }
+
+  get total() {
+    return this.questions.length;
   }
 
   startRound() {
@@ -196,7 +200,7 @@ export class OniRound {
   }
 
   get roundFinished() {
-    return this.asked >= QUESTIONS_PER_ROUND;
+    return this.asked >= this.questions.length;
   }
 
   finishRound() {

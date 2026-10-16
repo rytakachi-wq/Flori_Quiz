@@ -40,7 +40,7 @@ import {
 import { illustrationFor } from "./illustrations.js";
 import { createTalker } from "./talk.js";
 import { initTutorial, openTutorial } from "./tutorial.js";
-import { COLORS, HATS, THEMES, earnedBadges, getText, isOpen, loadDress, progressOf, saveDress, todoText } from "./badges.js";
+import { BODIES, COLORS, FACES, HEADS, RANKS, THEMES, earnedBadges, getText, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
 import { getVolume, playJingle, playSe, resetVolumes, setScene, setVolume, unlock } from "./audio.js";
@@ -56,7 +56,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "flow", "menu", "versus", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
+const SCREENS = ["cover", "rules", "setup", "menu", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問)
@@ -85,7 +85,10 @@ function startCoverIdle() {
 
 // 表紙で、画面にさわる・動かす・キーを押すと、動きを止めて、また3秒数えなおす
 function noteActivity() {
-  if (!$("screen-cover").hidden) startCoverIdle();
+  if (!$("screen-cover").hidden) {
+    startCoverIdle();
+    talker.poke();
+  }
 }
 for (const type of ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"]) {
   document.addEventListener(type, noteActivity, { passive: true });
@@ -97,7 +100,7 @@ const talker = createTalker({ textEl: $("cover-talk") });
 // 横にスワイプ(なぞる)して、行き来できる画面
 const PAGER = ["cover", "menu", "dex", "dress", "records", "settings"];
 const PAGER_ICON = { cover: "🏠", menu: "📋", dex: "📚", dress: "👑", records: "🏆", settings: "⚙️" };
-const PAGER_NAME = { cover: "表紙", menu: "メニュー", dex: "問題図鑑", dress: "着せ替え", records: "成績", settings: "設定" };
+const PAGER_NAME = { cover: "ホーム", menu: "その他", dex: "図鑑", dress: "着せ替え", records: "成績", settings: "設定" };
 let currentScreen = "cover";
 
 function renderPager(name) {
@@ -107,8 +110,11 @@ function renderPager(name) {
       const dot = document.createElement("button");
       dot.type = "button";
       dot.className = `pager-dot${key === name ? " is-on" : ""}`;
-      dot.textContent = PAGER_ICON[key];
+      dot.innerHTML = '<span class="pi" aria-hidden="true"></span><span class="pl"></span>';
+      dot.querySelector(".pi").textContent = PAGER_ICON[key];
+      dot.querySelector(".pl").textContent = PAGER_NAME[key];
       dot.setAttribute("aria-label", PAGER_NAME[key]);
+      if (key === "menu" || key === "dress" || key === "dex" || key === "records") dot.dataset.news = key;
       dot.addEventListener("click", () => PAGE_OPEN[key]());
       return dot;
     }),
@@ -223,7 +229,7 @@ let hardIds = new Set(); // 難しい問題の uid
 let oniIds = new Set(); // オニ問題の uid
 const sessions = new Map(); // 「理系-normal」のような名前 → 普通・難しいモードの遊び(難しさのカウンターを引き継ぐ)
 let activeKey = null; // いま遊んでいる、sessions の名前
-const pick = { group: "理系", level: "normal", time: false }; // 表紙で選んだ、分類・難しさ・制限時間
+const pick = { kind: "solo", group: "理系", level: "normal", time: false, players: 2 }; // 設定の画面で選んだ、遊ぶ人・分類・難しさ(人数)・制限時間
 const GROUPS = ["理系", "文系", "ひらめき"];
 const MIN_POOL = 10; // 1つの組み合わせで、最低これだけの問題がないと、他の分類から足す
 let versusQuestions = []; // 対戦で使う問題(段階1〜3)
@@ -262,7 +268,14 @@ function announce(text, jingle, then, image) {
 function refreshCover() {
   if (playableQuestions.length === 0) return;
   const stats = loadStats();
-  $("cover-title").textContent = `総合得点 ${currentTotal(stats)}点`;
+  const total = currentTotal(stats);
+  const rank = rankOf(total);
+  $("hud-total").textContent = total;
+  $("hud-rank").textContent = rank.name;
+  $("hud-rank-icon").textContent = rank.icon;
+  $("hud-stars").textContent = stats.stars;
+  $("hud-dress").textContent = dressOwned(stats);
+  $("hud-dress-all").textContent = dressTotal();
   const today = dateKey();
   const dailyDone = stats.dailyLast === today;
   $("btn-daily").querySelector(".tile-label").textContent = "毎日1問";
@@ -505,7 +518,7 @@ function renderBoard(list, scores, active) {
     ...scores.map((score, index) => {
       const item = document.createElement("li");
       item.className = `p${index + 1}${index === active ? " is-active" : ""}`;
-      item.textContent = `${PLAYER_NAMES[index]}  ${score}点`;
+      item.textContent = list.classList.contains("big") ? `${PLAYER_NAMES[index]}  ${score}点` : `P${index + 1}  ${score}点`; // 問題の画面は、せまいので、P1 のように短く
       return item;
     }),
   );
@@ -595,7 +608,7 @@ function showResult() {
   }
   $("r-score-row").hidden = versus; // 対戦のときは、1人の得点は出さない
   $("r-comment").textContent =
-    mode === "oni" ? oniComment(result.correct) : versus ? versusComment(result) : comment(result.correct, result.total);
+    mode === "oni" ? oniComment(result.correct, result.total) : versus ? versusComment(result) : comment(result.correct, result.total);
 
   const setNote = $("r-set");
   const before = currentTotal();
@@ -692,9 +705,9 @@ function versusComment(result) {
   return `${names[0]}の勝ち! おめでとう!`;
 }
 
-function oniComment(correct) {
-  if (correct === QUESTIONS_PER_ROUND) return "ええっ! 全部正解! 天才だヨ!";
-  if (correct >= 3) return "オニを相手にすごいヨ!";
+function oniComment(correct, total) {
+  if (correct === total) return "ええっ! 全部正解! 天才だヨ!";
+  if (correct >= total / 2) return "オニを相手にすごいヨ!";
   if (correct >= 1) return "オニ問題を解くなんてえらいヨ!";
   return "オニは難しいんだヨ。また挑戦してネ!";
 }
@@ -703,7 +716,6 @@ function showRecords() {
   const s = loadStats();
   // 「出会った問題」「正解した問題」は、いまある問題(普通+難しい)のうち、何問か。問題が増えても、全体の数を合わせる。
   const playable = new Set([...normalIds, ...hardIds]);
-  const seen = s.seen.filter((id) => playable.has(id)).length;
   const right = s.right.filter((id) => playable.has(id)).length;
   // 総合得点は、100点満点(普通+難しい問題、1問2点)
   $("s-total").textContent = `${currentTotal(s)}点 / ${TOTAL_POINTS}点`;
@@ -717,7 +729,16 @@ function showRecords() {
   const running = s.dailyLast === today || s.dailyLast === previousDateKey(today) ? s.dailyStreak : 0;
   $("s-daily").textContent = `${running}日連続・計${s.dailyDays}日`;
   $("s-wrong").textContent = `${s.wrong.filter((id) => playable.has(id)).length}問`;
-  $("s-seen").textContent = `${seen} / ${playable.size}問`;
+  const rank = rankOf(currentTotal(s));
+  const nextRank = RANKS.find((item) => item.min > currentTotal(s));
+  $("s-rank-icon").textContent = rank.icon;
+  $("s-rank").textContent = rank.name;
+  $("s-rank-next").textContent = nextRank ? ` あと${nextRank.min - currentTotal(s)}点で ${nextRank.icon}` : " 最高ランク!";
+  const rightIds = new Set(s.right);
+  $("s-groups").textContent = GROUPS.map((group) => {
+    const list = playableQuestions.filter((q) => groupOf(q) === group);
+    return `${list.filter((q) => rightIds.has(q.uid ?? q.id)).length}/${list.length}`;
+  }).join("  ");
   $("s-right").textContent = `${right} / ${playable.size}問`;
   $("s-answered").textContent = `${s.answered}問・正解${s.correct}問`;
   $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : "まだないよ";
@@ -804,144 +825,128 @@ $("btn-q-settings").addEventListener("click", () => {
 $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
 
-// ================= 表紙からの流れ:クイズ → 1人/皆で → 分類 → 難しさ → 制限時間 → スタート =================
-const FLOW_ORDER = { solo: ["mode", "group", "level", "time", "start"], versus: ["mode", "group"] };
-let flowStep = "mode"; // いま出している段(mode / group / level / time / start)
-let flowKind = "solo"; // "solo"(1人) か "versus"(皆で)
+// ================= クイズ:ルール → 設定(1つの画面で、ぜんぶ選ぶ)→ スタート =================
 const GROUP_ICON = { 理系: "🔬", 文系: "📖", ひらめき: "💡", ランダム: "🎲" };
-const GROUP_CLASS = { 理系: "g-sci", 文系: "g-lit", ひらめき: "g-idea", ランダム: "g-rand" };
-const GROUP_SUB = { 理系: "算数・理科", 文系: "社会・国語", ひらめき: "論理・パズル", ランダム: "ごちゃ混ぜ" };
 
-function setFlowStep(step, direction = 1) {
-  flowStep = step;
-  renderFlow();
-  slideIn("flow", direction);
+// ボタンのならび(絵文字の色に合わせた色は、style.css の .c-○○)
+function renderSeg(el, options, value, onPick) {
+  el.replaceChildren(
+    ...options.map((option) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `seg-btn ${option.color}${option.value === value ? " is-on" : ""}`;
+      button.setAttribute("aria-pressed", String(option.value === value));
+      button.innerHTML = '<span class="si" aria-hidden="true"></span><span class="st"></span>';
+      button.querySelector(".si").textContent = option.icon;
+      button.querySelector(".st").textContent = option.text;
+      button.addEventListener("click", () => onPick(option.value));
+      return button;
+    }),
+  );
 }
 
-function renderFlow() {
-  const buttons = $("flow-buttons");
-  const chips = $("flow-chips");
-  chips.replaceChildren();
-  const addChip = (text) => {
-    const chip = document.createElement("span");
-    chip.className = "flow-chip";
-    chip.textContent = text;
-    chips.append(chip);
-  };
-  const at = FLOW_ORDER[flowKind].indexOf(flowStep);
-  if (at >= 1) addChip(flowKind === "solo" ? "🙂 1人" : "👥 皆で");
-  if (flowStep === "level" || flowStep === "time" || flowStep === "start") addChip(`${GROUP_ICON[pick.group]} ${pick.group}`);
-  if (flowStep === "time" || flowStep === "start") addChip(pick.level === "hard" ? "🔥 難しい" : "🌱 普通");
-  if (flowStep === "start") addChip(pick.time ? "⏱ 時間あり" : "⏱ 時間なし");
-  const make = (cls, icon, label, sub, handler) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = `flow-btn ${cls}`;
-    b.innerHTML = `<span class="flow-icon" aria-hidden="true">${icon}</span><span class="flow-text"><span class="flow-label"></span><span class="flow-sub"></span></span>`;
-    b.querySelector(".flow-label").textContent = label;
-    b.querySelector(".flow-sub").textContent = sub;
-    b.addEventListener("click", handler);
-    return b;
-  };
-  buttons.classList.toggle("is-grid", flowStep === "group");
-  buttons.dataset.step = flowStep;
-  if (flowStep === "mode") {
-    $("flow-title").textContent = "誰と 遊ぶ?";
-    $("flow-bubble").textContent = "1人で じっくり? 皆で 対戦?";
-    buttons.replaceChildren(
-      make("flow-solo", "🙂", "1人", "自分の ペースで", () => {
-        flowKind = "solo";
-        setFlowStep("group");
-      }),
-      make("flow-vs", "👥", "皆で", "順番に 対戦!", () => {
-        flowKind = "versus";
-        setFlowStep("group");
-      }),
-    );
-  } else if (flowStep === "group") {
-    $("flow-title").textContent = "どれに 挑戦する?";
-    $("flow-bubble").textContent = flowKind === "solo" ? "好きな ジャンルを 選んでね!" : "皆で 戦う ジャンルを 選んでね!";
-    buttons.replaceChildren(
-      ...GROUPS.concat("ランダム").map((group) =>
-        make(`flow-group ${GROUP_CLASS[group]}`, GROUP_ICON[group], group, GROUP_SUB[group], () => {
-          pick.group = group;
-          if (flowKind === "versus") openVersus();
-          else setFlowStep("level");
-        }),
-      ),
-    );
-  } else if (flowStep === "level") {
-    $("flow-title").textContent = "難しさを 選ぼう";
-    $("flow-bubble").textContent = pick.group === "ランダム" ? "色んな 問題が ごちゃ混ぜ! どっちにする?" : `${pick.group}の問題に 挑戦! どっちにする?`;
-    const normalKey = `${pick.group}-normal`;
-    const hardKey = `${pick.group}-hard`;
-    buttons.replaceChildren(
-      make("flow-normal", "🌱", "普通", hasCourseKey(normalKey) ? "続きから 遊べるよ" : "易しめ ★☆☆☆〜★★☆☆", () => {
-        pick.level = "normal";
-        setFlowStep("time");
-      }),
-      make("flow-hard", "🔥", "難しい", hasCourseKey(hardKey) ? "続きから 遊べるよ" : "ぐっと難しい ★★★☆〜★★★★", () => {
-        pick.level = "hard";
-        setFlowStep("time");
-      }),
-    );
-  } else if (flowStep === "time") {
-    $("flow-title").textContent = "制限時間は 付ける?";
-    $("flow-bubble").textContent = "付けると 1問30秒。星の ご褒美が もらえるよ!";
-    buttons.replaceChildren(
-      make("flow-yes", "⏱", "付ける", "ご褒美の星が もらえる", () => {
-        pick.time = true;
-        setFlowStep("start");
-      }),
-      make("flow-no", "🙂", "付けない", "ゆっくり じっくり", () => {
-        pick.time = false;
-        setFlowStep("start");
-      }),
+function renderSetup() {
+  const versus = pick.kind === "versus";
+  renderSeg(
+    $("seg-kind"),
+    [
+      { value: "solo", icon: "🙂", text: "1人", color: "c-yellow" },
+      { value: "versus", icon: "👥", text: "皆で", color: "c-blue" },
+    ],
+    pick.kind,
+    (value) => {
+      pick.kind = value;
+      renderSetup();
+    },
+  );
+  renderSeg(
+    $("seg-group"),
+    [
+      { value: "理系", icon: "🔬", text: "理系", color: "c-sky" },
+      { value: "文系", icon: "📖", text: "文系", color: "c-tan" },
+      { value: "ひらめき", icon: "💡", text: "ひらめき", color: "c-yellow" },
+      { value: "ランダム", icon: "🎲", text: "ランダム", color: "c-red" },
+    ],
+    pick.group,
+    (value) => {
+      pick.group = value;
+      renderSetup();
+    },
+  );
+  // 3つめの行は、1人のときは「難しさ」、皆のときは「人数」(場所と高さは、同じ)
+  $("set-label-3").innerHTML = versus ? '<span aria-hidden="true">👥</span> 人数' : '<span aria-hidden="true">🔥</span> 難しさ';
+  if (versus) {
+    renderSeg(
+      $("seg-third"),
+      [2, 3, 4].map((n) => ({ value: n, icon: "👤", text: `${n}人`, color: "c-blue" })),
+      pick.players,
+      (value) => {
+        pick.players = value;
+        renderSetup();
+      },
     );
   } else {
-    const key = `${pick.group}-${pick.level}`;
-    const resume = hasCourseKey(key);
-    $("flow-title").textContent = "準備 OK!";
-    $("flow-bubble").textContent = resume ? "前の続きから 始めよう!" : "さあ 始めよう! 頑張ってね!";
-    buttons.replaceChildren(
-      make("flow-start", "▶️", resume ? "続きから スタート!" : "スタート!", "", () => {
-        timeLimit = pick.time;
-        startPlay(pick.level);
-      }),
+    renderSeg(
+      $("seg-third"),
+      [
+        { value: "normal", icon: "🌱", text: "普通", color: "c-green" },
+        { value: "hard", icon: "🔥", text: "難しい", color: "c-orange" },
+      ],
+      pick.level,
+      (value) => {
+        pick.level = value;
+        renderSetup();
+      },
     );
   }
+  renderSeg(
+    $("seg-time"),
+    [
+      { value: true, icon: "⏱", text: "あり", color: "c-gray" },
+      { value: false, icon: "🙂", text: "なし", color: "c-yellow" },
+    ],
+    pick.time,
+    (value) => {
+      pick.time = value;
+      renderSetup();
+    },
+  );
+  $("setup-note").textContent = versus
+    ? "1台の画面で 順番に 答えるよ。ヒントは ないよ。"
+    : hasCourseKey(`${pick.group}-${pick.level}`)
+      ? "前の続きから 始まるよ!"
+      : pick.time
+        ? "1問30秒。星の ご褒美が もらえるよ!"
+        : "ゆっくり じっくり 考えよう!";
+  renderRewardCard($("flow-reward"));
 }
 
-// 「クイズ」から:1人/皆で を選ぶ段から。その他の「皆で対戦」から:ジャンルを選ぶ段から
-function openFlow(step = "mode", kind = "solo") {
-  flowKind = kind;
-  flowStep = step;
-  renderFlow();
-  renderRewardCard($("flow-reward"));
-  show("flow");
+function openRules() {
+  show("rules");
 }
-function openVersus() {
-  $("vs-title").textContent = `皆で対戦 ${GROUP_ICON[pick.group]} ${pick.group}`;
-  show("versus");
-}
-$("btn-quiz").addEventListener("click", () => openFlow());
-$("btn-flow-back").addEventListener("click", () => {
-  const order = FLOW_ORDER[flowKind];
-  const at = order.indexOf(flowStep);
-  if (at <= 0) return show("cover", -1);
-  setFlowStep(order[at - 1], -1);
+$("btn-quiz").addEventListener("click", openRules);
+$("btn-rules-next").addEventListener("click", () => {
+  renderSetup();
+  show("setup");
+});
+$("btn-start").addEventListener("click", () => {
+  timeLimit = pick.time;
+  if (pick.kind === "versus") {
+    versusPlayers = Math.min(VERSUS_MAX_PLAYERS, Math.max(VERSUS_MIN_PLAYERS, pick.players));
+    startPlay("versus");
+  } else startPlay(pick.level);
 });
 
-// その他(2ページ目):「その他」ボタン・画面のあいているところを押す・横スワイプで出る(縦にスクロールしても、画面は変わらない)
+// 戻るボタンは、どの画面でも、左上の同じ場所。表紙から、ひとつずつ戻る
+$("btn-rules-back").addEventListener("click", () => show("cover", -1));
+$("btn-flow-back").addEventListener("click", () => show("rules", -1));
+$("btn-menu-back").addEventListener("click", () => show("cover", -1));
+
+// その他(2ページ目):下のページ点、または、横スワイプで出る(縦にスクロールしても、表紙をさわっても、画面は変わらない)
 function openMenu() {
   refreshCover();
   show("menu");
 }
-$("btn-more").addEventListener("click", openMenu);
-$("screen-cover").addEventListener("click", (event) => {
-  if (event.target.closest("button, a, input")) return;
-  openMenu();
-});
 const PAGE_OPEN = {
   cover: () => show("cover"),
   menu: () => openMenu(),
@@ -1075,14 +1080,10 @@ $("btn-hint").addEventListener("click", () => {
   $("btn-hint").disabled = true;
   if (readAloud()) speak(`ヒント。${current.hint}`); // ヒントも読み上げる
 });
-$("btn-versus").addEventListener("click", () => openFlow("group", "versus"));
-$("btn-versus-back").addEventListener("click", () => show("flow", -1));
-for (const button of document.querySelectorAll("[data-players]")) {
-  button.addEventListener("click", () => {
-    versusPlayers = Math.min(VERSUS_MAX_PLAYERS, Math.max(VERSUS_MIN_PLAYERS, Number(button.dataset.players)));
-    chooseTime("versus"); // 対戦でも、制限時間を付けられる
-  });
-}
+$("btn-versus").addEventListener("click", () => {
+  pick.kind = "versus";
+  show("rules");
+});
 
 // リラックス:お花畑(点数も時間もない)
 let garden = null;
@@ -1217,6 +1218,7 @@ function closeOpening() {
       opening.classList.remove("is-idle", "is-leaving");
       setScene("cover"); // 表紙にもどったら、表紙のBGM
       startCoverIdle();
+      talker.start();
     }, 600);
     return;
   }
@@ -1227,6 +1229,7 @@ function closeOpening() {
   setTimeout(() => {
     opening.hidden = true;
     startCoverIdle();
+    talker.start(); // オープニングから表紙に来たときは、ふきだしを、ぱっと出す
   }, length + 600);
 }
 $("opening").addEventListener("click", closeOpening);
@@ -1302,10 +1305,10 @@ function openDressKeys(stats) {
 }
 function dressOwned(stats) {
   const ctx = { have: new Set(stats.badges), stars: stats.stars };
-  return Object.values(DRESS_LISTS).reduce((sum, list) => sum + list.filter((item) => isOpen(item, ctx)).length, 0);
+  return Object.values(DRESS_LISTS).reduce((sum, list) => sum + list.filter((item) => item.unlock && isOpen(item, ctx)).length, 0);
 }
 function dressTotal() {
-  return Object.values(DRESS_LISTS).reduce((sum, list) => sum + list.length, 0);
+  return Object.values(DRESS_LISTS).reduce((sum, list) => sum + list.filter((item) => item.unlock).length, 0);
 }
 function dressName(key) {
   const [kind, id] = key.split(":");
@@ -1363,7 +1366,9 @@ function refreshNoticeDots() {
   set("btn-dex", news.cards > 0 ? `NEW ${news.cards}` : "");
   set("btn-dress", news.dress.length > 0 ? "NEW" : "");
   set("btn-records", news.gain > 0 ? "UP" : "");
-  set("btn-more", news.cards > 0 || news.dress.length > 0 || news.gain > 0 ? "NEW" : "");
+  for (const [key, on] of [["menu", news.cards > 0 || news.dress.length > 0 || news.gain > 0], ["dex", news.cards > 0], ["dress", news.dress.length > 0], ["records", news.gain > 0]]) {
+    for (const dot of document.querySelectorAll(`#pager [data-news="${key}"]`)) dot.classList.toggle("has-news", on);
+  }
 }
 // 結果の画面に、あたらしく手に入れたものを、まとめて出す
 function renderNews() {
@@ -1458,7 +1463,7 @@ function celebrateUnlocks() {
   $("dlg-unlock").showModal();
   playSe("correct");
 }
-const KIND_WORD = { color: "フロリの色", hat: "飾り", theme: "背景" };
+const KIND_WORD = { color: "フロリの色", head: "頭の飾り", body: "体の飾り", face: "顔の飾り", theme: "背景" };
 async function showUnlock() {
   const [kind, id] = unlockQueue[unlockIndex].split(":");
   const item = DRESS_LISTS[kind].find((entry) => entry.id === id);
@@ -1470,14 +1475,10 @@ async function showUnlock() {
   $("unlock-count").textContent = unlockQueue.length > 1 ? `${unlockIndex + 1} / ${unlockQueue.length}` : "";
   $("unlock-count").hidden = unlockQueue.length < 2;
   // フロリに、付けたところを見せる
-  const hat = $("unlock-hat");
   const flori = $("unlock-flori");
   const stage = $("unlock-stage");
   stage.style.background = kind === "theme" ? (item.preview ?? item.tint) : "";
-  const hatItem = kind === "hat" ? item : HATS.find((entry) => entry.id === dress.hat);
-  hat.hidden = !hatItem?.img;
-  if (hatItem?.img) hat.src = hatItem.img;
-  hat.dataset.hat = hatItem?.id ?? "";
+  setDecor("unlock-decor", wornItems(kind === "head" || kind === "body" || kind === "face" ? { [kind]: id } : {}));
   flori.dataset.sample = "1";
   if (kind === "color") {
     try {
@@ -1556,6 +1557,9 @@ function openDexCard(question, label, owned) {
   $("dlg-dex").showModal();
 }
 
+let dexFilter = "すべて"; // 図鑑で、いま見ている分類
+const DEX_FILTER_ICON = { すべて: "📚", 理系: "🔬", 文系: "📖", ひらめき: "💡", オニ: "👹" };
+
 function showDex() {
   const stats = loadStats();
   const met = new Set([...stats.dex, ...stats.seen, ...stats.right, ...stats.oniRight]);
@@ -1602,15 +1606,32 @@ function showDex() {
     });
     return button;
   };
-  const cards = playableList.map((q, i) => card(q, `No.${i + 1}`));
-  // オニ問題は、出会ったものだけを、のせる(あることは、先にばらさない)
-  oniList.forEach((q, i) => {
-    if (met.has(q.uid ?? q.id)) cards.push(card(q, `オニ${i + 1}`));
-  });
+  const numbered = playableList.map((q, i) => ({ q, label: `No.${i + 1}` }));
+  const oniMet = oniList.map((q, i) => ({ q, label: `オニ${i + 1}` })).filter(({ q }) => met.has(q.uid ?? q.id));
+  const rows = dexFilter === "オニ" ? oniMet : dexFilter === "すべて" ? [...numbered, ...oniMet] : numbered.filter(({ q }) => groupOf(q) === dexFilter);
+  const cards = rows.map(({ q, label }) => card(q, label));
   const have = playableList.filter((q) => met.has(q.uid ?? q.id)).length;
   const percent = Math.round((have / playableList.length) * 100);
   $("dex-count").textContent = `カード ${have} / ${playableList.length}枚(${percent}%)`;
   $("dex-meter-bar").style.width = `${percent}%`;
+  // 分類のボタン(いくつ集めたか)
+  const tabs = ["すべて", ...GROUPS, ...(oniMet.length ? ["オニ"] : [])].map((name) => {
+    const list = name === "すべて" ? playableList : name === "オニ" ? oniList : playableList.filter((q) => groupOf(q) === name);
+    const got = list.filter((q) => met.has(q.uid ?? q.id)).length;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `dex-tab${name === dexFilter ? " is-on" : ""}`;
+    button.dataset.noSe = "";
+    button.innerHTML = '<span class="dt-name"></span><small></small>';
+    button.querySelector(".dt-name").textContent = `${DEX_FILTER_ICON[name]} ${name}`;
+    button.querySelector("small").textContent = name === "オニ" ? `${got}` : `${got}/${list.length}`;
+    button.addEventListener("click", () => {
+      dexFilter = name;
+      showDex();
+    });
+    return button;
+  });
+  $("dex-filter").replaceChildren(...tabs);
   $("dex-comment").textContent =
     have === playableList.length
       ? "🎉 コンプリート! 全部のカードが揃ったヨ!"
@@ -1619,6 +1640,7 @@ function showDex() {
         : "カードを押すと 問題がもう1度見られるヨ。";
   $("screen-dex").classList.toggle("is-complete", have === playableList.length);
   $("dex-grid").replaceChildren(...cards);
+  $("dex-grid").scrollTop = 0;
   // NEW! は、一度見たら、つぎからは出さない
   try {
     localStorage.setItem(DEX_VIEWED_KEY, JSON.stringify([...met]));
@@ -1631,12 +1653,32 @@ $("btn-dex-close").addEventListener("click", () => $("dlg-dex").close());
 
 // ================= 着せ替え・背景 =================
 let dress = loadDress();
+const DRESS_LISTS = { color: COLORS, head: HEADS, body: BODIES, face: FACES, theme: THEMES };
 
-function setHat(imgId, hat) {
-  const img = $(imgId);
-  img.hidden = !hat?.img;
-  if (hat?.img) img.src = hat.img;
-  img.dataset.hat = hat?.id ?? "";
+// フロリの絵の上に、頭・体・顔のかざりを重ねる(場所と大きさは、badges.js の pos。うしろに回るものは、フロリのうしろに)
+function setDecor(containerId, items) {
+  const box = $(containerId);
+  box.replaceChildren(
+    ...items
+      .filter((item) => item?.img)
+      .map((item) => {
+        const img = document.createElement("img");
+        img.src = item.img;
+        img.alt = "";
+        img.draggable = false;
+        if (item.pos.back) img.className = "is-back";
+        img.style.left = `${item.pos.x}%`;
+        img.style.top = `${item.pos.y}%`;
+        img.style.width = `${item.pos.w}%`;
+        img.style.transform = `translate(-50%, -50%) rotate(${item.pos.r ?? 0}deg)`;
+        return img;
+      }),
+  );
+}
+// いまの着せ替え(over:ためしに、ほかのものに入れかえるとき)
+function wornItems(over = {}) {
+  const now = { ...dress, ...over };
+  return [BODIES.find((i) => i.id === now.body), HEADS.find((i) => i.id === now.head), FACES.find((i) => i.id === now.face)];
 }
 
 function applyDress() {
@@ -1648,16 +1690,11 @@ function applyDress() {
     else root.removeProperty(name);
   }
   setFloriColor(COLORS.find((color) => color.id === dress.color) ?? null);
-  // フロリの飾り(画像)。飾りごとに、場所と大きさが、ちがう(style.css の data-hat)
-  const hat = HATS.find((item) => item.id === dress.hat);
-  setHat("hero-hat", hat);
-  setHat("dress-hat", hat);
-  setHat("flow-hat", hat);
+  setDecor("hero-decor", wornItems());
+  setDecor("dress-decor", wornItems());
 }
 
-let dressTab = "color"; // 着せ替えで、いま見ている種類(color / hat / theme)
-const DRESS_LISTS = { color: COLORS, hat: HATS, theme: THEMES };
-const DRESS_TAB_LABEL = { color: "🎨 フロリの色", hat: "🎀 飾り", theme: "🖼️ 背景" };
+let dressTab = "color"; // 着せ替えで、いま見ている種類(color / head / body / face / theme)
 let freshKeys = new Set(); // この画面を、あたらしく開いて、初めて見るもの(NEW のしるし)
 
 // 表紙から開く:あたらしく増えたものに NEW を付ける
@@ -1666,32 +1703,22 @@ function openDress() {
   const base = noticeBase();
   freshKeys = new Set(noticeNow(loadStats()).dress.filter((key) => !base.dress.includes(key)));
   if (freshKeys.size > 0) {
-    // NEW があるのは、そのしゅるいのタブから
-    const first = [...freshKeys][0].split(":")[0];
-    dressTab = first;
+    // NEW があるのは、その種類のタブから
+    dressTab = [...freshKeys][0].split(":")[0];
   }
   renderDress();
   markSeen("dress");
   show("dress");
 }
 
-function dressCaption(hover = null) {
-  const nameOf = (list, id) => list.find((item) => item.id === id)?.name ?? "";
-  $("dress-caption").textContent = hover
-    ? `${KIND_WORD[hover.kind]}:${hover.item.name}`
-    : `${nameOf(COLORS, dress.color)} ・ ${nameOf(HATS, dress.hat)} ・ ${nameOf(THEMES, dress.theme)}`;
-}
-
-// マウスをのせたとき、付ける前に、見ためを、ためせる(飾り・背景)
+// マウスをのせたとき、付ける前に、見ためを、ためせる(かざり・背景)
 function previewDress(kind, item) {
-  if (kind === "hat") setHat("dress-hat", item);
+  if (kind === "head" || kind === "body" || kind === "face") setDecor("dress-decor", wornItems({ [kind]: item.id }));
   if (kind === "theme") $("dress-stage").style.background = item.preview ?? item.tint;
-  dressCaption({ kind, item });
 }
 function endPreview() {
-  setHat("dress-hat", HATS.find((item) => item.id === dress.hat));
+  setDecor("dress-decor", wornItems());
   $("dress-stage").style.background = THEMES.find((item) => item.id === dress.theme)?.preview ?? "";
-  dressCaption();
 }
 
 // ロック中のきせかえの、もらい方の吹き出し。画面の上に1つだけ出す(一覧が動いても、切れないように)
@@ -1729,17 +1756,18 @@ function renderDress() {
   $("dress-meter-text").textContent = `ご褒美 GET ${owned} / ${total}個${owned >= total ? "  全部 コンプリート! 🎉" : ""}`;
   renderRewardCard($("dress-reward"));
   $("dress-stage").style.background = THEMES.find((item) => item.id === dress.theme)?.preview ?? "";
-  setHat("dress-hat", HATS.find((item) => item.id === dress.hat));
-  dressCaption();
+  setDecor("dress-decor", wornItems());
   for (const tab of document.querySelectorAll("[data-dress-tab]")) {
     const kind = tab.dataset.dressTab;
-    const list = DRESS_LISTS[kind];
-    const owned = list.filter((item) => isOpen(item, ctx)).length;
+    const list = DRESS_LISTS[kind].filter((item) => item.unlock);
+    const have = list.filter((item) => isOpen(item, ctx)).length;
     tab.classList.toggle("is-on", kind === dressTab);
-    tab.replaceChildren(document.createTextNode(DRESS_TAB_LABEL[kind]));
-    const count = document.createElement("small");
-    count.textContent = `${owned}/${list.length}`;
-    tab.append(count);
+    let count = tab.querySelector("small");
+    if (!count) {
+      count = document.createElement("small");
+      tab.append(count);
+    }
+    count.textContent = `${have}/${list.length}`;
     tab.classList.toggle("has-new", [...freshKeys].some((key) => key.startsWith(`${kind}:`)));
   }
   const kind = dressTab;
@@ -1751,7 +1779,7 @@ function renderDress() {
       button.type = "button";
       button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}${open ? "" : " is-locked"}${isNew ? " is-new" : ""}`;
       button.style.setProperty("--tint", choice.tint);
-      // 絵だけを見せる(名前や、もらいかたは、マウスをのせたときに出す)
+      // 絵だけを見せる(名前や、もらいかたは、押したときや、マウスをのせたときに出す)
       const art = document.createElement("span");
       art.className = `dress-art is-${kind}`;
       if (kind === "color") art.style.background = choice.swatch ?? choice.tint;
