@@ -12,9 +12,24 @@
     <div class="confetti" aria-hidden="true"><span>⭐</span><span>✨</span><span>🎈</span><span>🌸</span><span>💡</span><span>⭐</span><span>🎈</span><span>✨</span><span>🌸</span><span>💡</span></div>
     <img class="logo" src="../assets/flori/src/logo.png" alt="フロリ">
     <p class="opening-title" aria-label="ひらめきクイズ"><span style="--i:0">ひ</span><span style="--i:1">ら</span><span style="--i:2">め</span><span style="--i:3">き</span><span style="--i:4">ク</span><span style="--i:5">イ</span><span style="--i:6">ズ</span></p>
-    <p class="opening-hint">画面をマウスでクリックして スタート!</p>
+    <p class="opening-hint">画面をタッチして スタート!</p>
+    <button id="btn-tutorial" class="btn btn-sub opening-tutorial" type="button"><span aria-hidden="true">▶</span> あそびかたを みる</button>
     <img class="opening-flori" src="../assets/flori/src/body_wave.webp" alt="" hidden>
   </div>
+  <div id="tutorial" class="overlay tutorial" role="dialog" aria-label="あそびかた" hidden>
+    <div class="tut-box">
+      <h2 id="tut-title" class="tut-title"></h2>
+      <div id="tut-stage" class="tut-stage"></div>
+      <div class="tut-flori-row"><img class="tut-side-flori" src="../assets/flori/src/body_wave.webp" alt=""><p id="tut-caption" class="tut-caption"></p></div>
+      <div id="tut-dots" class="tut-dots" aria-hidden="true"></div>
+      <div class="tut-buttons">
+        <button id="tut-prev" class="btn btn-plain btn-small" type="button">◀ もどる</button>
+        <button id="tut-next" class="btn btn-main btn-small" type="button">つぎへ ▶</button>
+        <button id="tut-skip" class="btn btn-sub btn-small" type="button">とじる</button>
+      </div>
+    </div>
+  </div>
+  <nav id="pager" class="pager" aria-label="ページ" hidden></nav>
   <div id="announce" class="overlay announce" aria-live="polite" hidden>
     <div class="confetti" aria-hidden="true"><span>⭐</span><span>✨</span><span>🎈</span><span>🌸</span><span>💡</span><span>⭐</span><span>🎈</span><span>✨</span><span>🌸</span><span>💡</span></div>
     <img id="announce-flori" class="announce-flori" alt="" hidden>
@@ -34,7 +49,7 @@
       <h1 class="sr-only">Flori_Quiz</h1>
       <div class="home-stage">
         <div class="speech home-speech">
-          <p>ヤア! ボクはフロリだヨ!<br>ひらめきクイズで遊ぼう!</p>
+          <p id="cover-talk" class="cover-talk">ヤア! ボクはフロリだヨ!</p>
           <p id="cover-title" class="cover-title"></p>
         </div>
         <div class="hero hero-cover home-hero">
@@ -46,10 +61,12 @@
       </div>
       <p class="pick-lead">どれに ちょうせんする?</p>
       <div class="group-buttons">
-        <button class="group-btn g-sci" type="button" data-group="理系"><span class="gi" aria-hidden="true">🔬</span><span class="gt"><b>理系</b><small>理科・算数</small></span></button>
-        <button class="group-btn g-lit" type="button" data-group="文系"><span class="gi" aria-hidden="true">📖</span><span class="gt"><b>文系</b><small>国語・社会</small></span></button>
-        <button class="group-btn g-idea" type="button" data-group="ひらめき"><span class="gi" aria-hidden="true">💡</span><span class="gt"><b>ひらめき</b><small>なぞ・パズル</small></span></button>
+        <button class="group-btn g-sci" type="button" data-group="理系"><span class="gi" aria-hidden="true">🔬</span><span class="gt"><b>理系</b><span class="picto" aria-hidden="true"><i>🧪</i><i>🔢</i><i>🧲</i></span></span></button>
+        <button class="group-btn g-lit" type="button" data-group="文系"><span class="gi" aria-hidden="true">📖</span><span class="gt"><b>文系</b><span class="picto" aria-hidden="true"><i>🗾</i><i>📜</i><i>🔤</i></span></span></button>
+        <button class="group-btn g-idea" type="button" data-group="ひらめき"><span class="gi" aria-hidden="true">💡</span><span class="gt"><b>ひらめき</b><span class="picto" aria-hidden="true"><i>🧩</i><i>🎲</i><i>🪄</i></span></span></button>
+        <button class="group-btn g-rand" type="button" data-group="ランダム"><span class="gi" aria-hidden="true">🎲</span><span class="gt"><b>ランダム</b><span class="picto" aria-hidden="true"><i>🔬</i><i>📖</i><i>💡</i></span></span></button>
       </div>
+      <button id="btn-versus-cover" class="group-btn g-versus" type="button"><span class="gi" aria-hidden="true">👥</span><span class="gt"><b>みんなで 対戦</b><span class="picto" aria-hidden="true"><i>😀</i><i>⚔️</i><i>😎</i><i>🏆</i></span></span></button>
       <button id="btn-more" class="more-btn" type="button">▼ ほかのメニュー<span class="tile-dot" hidden></span></button>
       <p id="sound-hint" class="note">♪ 画面をタッチすると音楽が流れるよ。</p>
     </section>
@@ -73,6 +90,7 @@
         </div>
       </div>
       <div id="flow-buttons" class="flow-buttons"></div>
+      <div id="flow-reward" class="reward-card" hidden></div>
     </section>
 
     <!-- ほかのメニュー(2ページ目) -->
@@ -86,6 +104,7 @@
         <button id="btn-dex" class="tile t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-text"><span class="tile-label">問題図鑑</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-dress" class="tile t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">きせかえ</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-records" class="tile t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-tutorial-menu" class="tile t-tutorial" type="button"><span class="tile-icon" aria-hidden="true">▶</span><span class="tile-text"><span class="tile-label">あそびかた</span></span><span class="tile-dot" hidden></span></button>
       </div>
       <button id="btn-menu-back" class="btn btn-sub" type="button">▲ 表紙へ</button>
     </section>
@@ -119,6 +138,12 @@
         <button class="dress-tab" type="button" data-dress-tab="hat">🎀 かざり</button>
         <button class="dress-tab" type="button" data-dress-tab="theme">🖼️ 背景</button>
       </div>
+      <div class="dress-banner">
+        <p class="dress-banner-text"><span aria-hidden="true">🎁</span> きせかえは、がんばった<b>ごほうび</b>だヨ! 問題に こたえて ゲットしよう!</p>
+        <div class="dress-meter" aria-hidden="true"><i id="dress-meter-bar"></i></div>
+        <p id="dress-meter-text" class="dress-meter-text"></p>
+      </div>
+      <div id="dress-reward" class="reward-card" hidden></div>
       <p id="dress-message" class="dress-message" role="status"></p>
       <div id="dress-list" class="dress-list"></div>
       <p class="note dress-note">制限時間をつけて遊ぶと、ごほうびの星 ⭐ がもらえるヨ。いま ⭐ <span id="dress-stars">0</span>こ</p>
@@ -309,6 +334,7 @@
       <p id="r-record" class="record" hidden>新記録!</p>
       <p id="r-set" class="note" hidden></p>
       <p id="r-reward" class="reward-news" hidden></p>
+      <div id="r-next-reward" class="reward-card" hidden></div>
       <ul id="r-news" class="news-list" hidden></ul>
       <div class="buttons">
         <button id="btn-again" class="btn btn-main" type="button">続けて遊ぶ</button>

@@ -38,6 +38,8 @@ import {
   recordVersus,
 } from "./storage.js";
 import { illustrationFor } from "./illustrations.js";
+import { createTalker } from "./talk.js";
+import { initTutorial, openTutorial } from "./tutorial.js";
 import { COLORS, HATS, THEMES, earnedBadges, isOpen, loadDress, progressOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
@@ -72,34 +74,13 @@ function sceneOf(name) {
   return name === "error" ? null : "cover";
 }
 
-// 表紙のフロリ:表紙を出して3秒たったら、動きだす
+// 表紙のフロリ:表紙を出して3秒たったら、ときどき、はねる(30秒なにもしなくても、オープニングには、もどらない)
 let idleTimer = 0;
 function startCoverIdle() {
   clearTimeout(idleTimer);
   $("screen-cover").classList.remove("is-lively");
-  clearTimeout(idleReturnTimer);
   if (!$("opening").hidden) return; // オープニングの間は、まだ
   idleTimer = setTimeout(() => $("screen-cover").classList.add("is-lively"), 3000);
-  idleReturnTimer = setTimeout(returnToOpening, IDLE_RETURN_MS);
-}
-
-// 表紙で30秒間なにもしなかったら、オープニング画面にもどって、フロリが遊ぶ。さわると、表紙にもどる。
-const IDLE_RETURN_MS = 30000;
-let idleReturnTimer = 0;
-function returnToOpening() {
-  if ($("screen-cover").hidden || !$("opening").hidden || announcing || document.querySelector("dialog[open]")) return;
-  clearTimeout(idleTimer);
-  $("screen-cover").classList.remove("is-lively");
-  const opening = $("opening");
-  opening.classList.remove("is-leaving", "is-playing");
-  opening.classList.add("is-idle");
-  const flori = opening.querySelector(".opening-flori");
-  flori.hidden = false;
-  flori.style.animation = "none";
-  void flori.offsetWidth; // フロリの登場を、はじめから動かす
-  flori.style.animation = "";
-  opening.hidden = false;
-  setScene("cover"); // もどったあいだも、表紙のBGM
 }
 
 // 表紙で、画面にさわる・動かす・キーをおすと、動きを止めて、また3秒数えなおす
@@ -110,21 +91,61 @@ for (const type of ["pointerdown", "pointermove", "keydown", "wheel", "touchstar
   document.addEventListener(type, noteActivity, { passive: true });
 }
 
+// 表紙のフロリのセリフ:10秒に1回、豆知識や、ひとりごとに、かわる
+const talker = createTalker({ textEl: $("cover-talk"), bubbleEl: document.querySelector("#screen-cover .home-speech"), extra: talkExtras });
+
+// 横にスワイプ(なぞる)して、行き来できる画面
+const PAGER = ["cover", "menu", "dex", "dress", "records", "settings"];
+const PAGER_ICON = { cover: "🏠", menu: "📋", dex: "📚", dress: "👑", records: "🏆", settings: "⚙️" };
+const PAGER_NAME = { cover: "表紙", menu: "メニュー", dex: "問題図鑑", dress: "きせかえ", records: "成績", settings: "設定" };
+let currentScreen = "cover";
+
+function renderPager(name) {
+  const pager = $("pager");
+  pager.replaceChildren(
+    ...PAGER.map((key) => {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = `pager-dot${key === name ? " is-on" : ""}`;
+      dot.textContent = PAGER_ICON[key];
+      dot.setAttribute("aria-label", PAGER_NAME[key]);
+      dot.addEventListener("click", () => PAGE_OPEN[key]());
+      return dot;
+    }),
+  );
+}
+
+// 動きは、transform と opacity だけ(カクつかないように)
+function slideIn(name, direction) {
+  const el = $(`screen-${name}`);
+  el.classList.remove("slide-r", "slide-l");
+  void el.offsetWidth;
+  el.classList.add(direction > 0 ? "slide-r" : "slide-l");
+  el.addEventListener("animationend", () => el.classList.remove("slide-r", "slide-l"), { once: true });
+}
+
 function show(name) {
+  const previous = currentScreen;
   for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
   if (name !== "cover") coverTaps = 0;
   if (name === "cover") {
     refreshCover();
     startCoverIdle();
+    talker.start();
   } else {
     clearTimeout(idleTimer);
-    clearTimeout(idleReturnTimer);
     $("screen-cover").classList.remove("is-lively");
+    talker.stop();
   }
   if (name !== "question") {
     stopTimer();
     stopSpeaking();
   }
+  currentScreen = name;
+  const pager = $("pager");
+  pager.hidden = !PAGER.includes(name);
+  if (!pager.hidden) renderPager(name);
+  if (PAGER.includes(name) && PAGER.includes(previous) && previous !== name) slideIn(name, PAGER.indexOf(name) > PAGER.indexOf(previous) ? 1 : -1);
   setScene(sceneOf(name));
   window.scrollTo(0, 0);
 }
@@ -633,6 +654,7 @@ function showResult() {
   }
   awardBadges();
   renderNews();
+  renderRewardCard($("r-next-reward"));
   show("result");
   setTimeout(celebrateUnlocks, 1400); // きせかえが、ふえていたら、お祝いの画面
 }
@@ -791,7 +813,7 @@ function renderFlow() {
   };
   if (flowStep === "level") {
     $("flow-title").textContent = "むずかしさを えらぼう";
-    $("flow-bubble").textContent = `${pick.group}の問題に、ちょうせん! どっちにする?`;
+    $("flow-bubble").textContent = pick.group === "ランダム" ? "いろんな 問題が ごちゃまぜ! どっちにする?" : `${pick.group}の問題に、ちょうせん! どっちにする?`;
     const normalKey = `${pick.group}-normal`;
     const hardKey = `${pick.group}-hard`;
     buttons.replaceChildren(
@@ -835,13 +857,15 @@ function renderFlow() {
   }
 }
 
-const GROUP_ICON = { 理系: "🔬", 文系: "📖", ひらめき: "💡" };
+const GROUP_ICON = { 理系: "🔬", 文系: "📖", ひらめき: "💡", ランダム: "🎲" };
 function openFlow(group) {
   pick.group = group;
   flowStep = "level";
   renderFlow();
+  renderRewardCard($("flow-reward"));
   show("flow");
 }
+$("btn-versus-cover").addEventListener("click", () => show("versus"));
 for (const button of document.querySelectorAll("[data-group]")) {
   button.addEventListener("click", () => openFlow(button.dataset.group));
 }
@@ -870,13 +894,42 @@ $("screen-cover").addEventListener(
   },
   { passive: true },
 );
-let swipeStartY = null;
-$("screen-cover").addEventListener("touchstart", (event) => (swipeStartY = event.touches[0].clientY), { passive: true });
-$("screen-cover").addEventListener(
+const PAGE_OPEN = {
+  cover: () => show("cover"),
+  menu: () => openMenu(),
+  dex: () => showDex(),
+  dress: () => openDress(),
+  records: () => showRecords(),
+  settings: () => {
+    $("settings-message").textContent = "";
+    show("settings");
+  },
+};
+let swipe = null;
+document.addEventListener(
+  "touchstart",
+  (event) => {
+    swipe = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
+  },
+  { passive: true },
+);
+document.addEventListener(
   "touchend",
   (event) => {
-    if (swipeStartY !== null && swipeStartY - event.changedTouches[0].clientY > 60) openMenu();
-    swipeStartY = null;
+    const start = swipe;
+    swipe = null;
+    if (!start || !PAGER.includes(currentScreen)) return;
+    if (document.querySelector("dialog[open]") || !$("tutorial").hidden || !$("opening").hidden || announcing) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) {
+      // 横にスワイプ:左へなぞると、つぎの画面。右へなぞると、まえの画面
+      const next = PAGER.indexOf(currentScreen) + (dx < 0 ? 1 : -1);
+      if (next >= 0 && next < PAGER.length) PAGE_OPEN[PAGER[next]]();
+    } else if (currentScreen === "cover" && -dy > 60 && Math.abs(dy) > Math.abs(dx) * 1.5) {
+      openMenu(); // 上へスワイプ:ほかのメニュー
+    }
   },
   { passive: true },
 );
@@ -915,7 +968,7 @@ function getSession(group, kind) {
   if (sessions.has(key)) return sessions.get(key);
   const [min, max] = kind === "hard" ? [HARD_MIN_LEVEL, HARD_LEVEL] : [1, MAX_LEVEL];
   const inBand = playableQuestions.filter((q) => q.level >= min && q.level <= max);
-  let pool = inBand.filter((q) => groupOf(q) === group);
+  let pool = group === "ランダム" ? inBand : inBand.filter((q) => groupOf(q) === group);
   if (pool.length < MIN_POOL) {
     // 問題が少ない組み合わせは、ほかの分類の同じ段階の問題を足して、同じ問題がすぐにもどってこないようにする
     const others = inBand.filter((q) => groupOf(q) !== group);
@@ -1032,10 +1085,7 @@ for (const button of document.querySelectorAll("[data-garden]")) {
 
 $("btn-records").addEventListener("click", showRecords);
 $("btn-records-back").addEventListener("click", () => show("cover"));
-$("btn-settings").addEventListener("click", () => {
-  $("settings-message").textContent = "";
-  show("settings");
-});
+$("btn-settings").addEventListener("click", () => PAGE_OPEN.settings());
 $("btn-settings-back").addEventListener("click", () => show("cover"));
 $("btn-next").addEventListener("click", next);
 $("btn-again").addEventListener("click", () => startPlay(mode));
@@ -1142,8 +1192,15 @@ function closeOpening() {
 }
 $("opening").addEventListener("click", closeOpening);
 $("opening").addEventListener("keydown", (event) => {
-  if (event.key === "Enter" || event.key === " ") closeOpening();
+  if (event.target === $("opening") && (event.key === "Enter" || event.key === " ")) closeOpening();
 });
+// あそびかた(チュートリアルムービー):オープニングからも、ほかのメニューからも、見られる
+initTutorial();
+$("btn-tutorial").addEventListener("click", (event) => {
+  event.stopPropagation(); // オープニングを、とじてしまわないように
+  openTutorial();
+});
+$("btn-tutorial-menu").addEventListener("click", () => openTutorial());
 
 // ================= きせかえの解放(条件は badges.js) =================
 // 条件を数えるための材料
@@ -1281,6 +1338,77 @@ function renderNews() {
       return item;
     }),
   );
+}
+
+// ===== つぎの、ごほうび(きせかえ)の案内 =====
+// まだ手に入れていないものの中で、もらえるまでが、いちばん近いものを、さがす
+function nextRewards(count = 1) {
+  const stats = loadStats();
+  const ctx = badgeContext(stats);
+  const state = { have: new Set(stats.badges), stars: stats.stars };
+  const list = [];
+  for (const [kind, items] of Object.entries(DRESS_LISTS)) {
+    for (const item of items) {
+      if (!item.unlock || isOpen(item, state)) continue;
+      const p = progressOf(item, ctx);
+      if (p && p.goal > 0) list.push({ kind, item, p, ratio: p.now / p.goal });
+    }
+  }
+  list.sort((a, b) => b.ratio - a.ratio || a.p.goal - a.p.now - (b.p.goal - b.p.now));
+  return list.slice(0, count);
+}
+function rewardArt(kind, item) {
+  const art = document.createElement("span");
+  art.className = `reward-art is-${kind}`;
+  if (kind === "color") art.style.background = item.original ? "linear-gradient(135deg, #dfe8ee, #7ec3e0)" : item.tint;
+  else if (kind === "theme") art.style.background = item.preview ?? item.tint;
+  else if (item.img) {
+    const pic = document.createElement("img");
+    pic.src = item.img;
+    pic.alt = "";
+    art.append(pic);
+  }
+  return art;
+}
+// 「🎁 つぎの ごほうび」カード:絵・もらうまでの進み具合の棒・あと、どれくらいか
+function renderRewardCard(el) {
+  const next = nextRewards(1)[0];
+  if (!next) {
+    el.hidden = true;
+    return;
+  }
+  const { kind, item, p } = next;
+  const icon = document.createElement("span");
+  icon.className = "reward-icon";
+  icon.textContent = "🎁";
+  icon.setAttribute("aria-hidden", "true");
+  const info = document.createElement("div");
+  info.className = "reward-info";
+  const title = document.createElement("b");
+  title.className = "reward-title";
+  title.textContent = `ごほうび:${item.name}`;
+  const bar = document.createElement("span");
+  bar.className = "reward-bar";
+  const fill = document.createElement("i");
+  fill.style.width = `${Math.round((p.now / p.goal) * 100)}%`;
+  bar.append(fill);
+  const note = document.createElement("small");
+  note.className = "reward-note";
+  note.textContent = p.goal > 1 ? `${todoText(item)}  あと ${p.goal - p.now}!` : `${todoText(item)}と、もらえるヨ!`;
+  info.append(title, bar, note);
+  el.replaceChildren(icon, rewardArt(kind, item), info);
+  el.hidden = false;
+}
+// フロリの、ひとこと:ごほうびまで、あと少しのとき
+function talkExtras() {
+  const next = nextRewards(1)[0];
+  if (!next) return ["独り言:きせかえは、ぜんぶ ゲットしたヨ! すごいネ!"];
+  const { item, p } = next;
+  const left = p.goal - p.now;
+  return [
+    `ごほうび:「${item.name}」まで、あと ${left}! きせかえは、がんばった ごほうびだヨ!`,
+    `独り言:「${item.name}」を ゲットしたいナ。${todoText(item)}と、もらえるんだヨ。`,
+  ];
 }
 
 // ===== きせかえを手に入れたときの、お祝いの画面 =====
@@ -1553,6 +1681,12 @@ function renderDress() {
   const bctx = badgeContext(stats);
   const ctx = { have: new Set(stats.badges), stars: stats.stars };
   $("dress-stars").textContent = stats.stars;
+  // ごほうびを、いくつ ゲットしたか(進み具合の棒)と、つぎの ごほうび
+  const owned = dressOwned(stats);
+  const total = dressTotal();
+  $("dress-meter-bar").style.width = `${Math.round((owned / total) * 100)}%`;
+  $("dress-meter-text").textContent = `ごほうびゲット ${owned} / ${total}こ${owned >= total ? "  ぜんぶ コンプリート! 🎉" : ""}`;
+  renderRewardCard($("dress-reward"));
   $("dress-stage").style.background = THEMES.find((item) => item.id === dress.theme)?.preview ?? "";
   setHat("dress-hat", HATS.find((item) => item.id === dress.hat));
   dressCaption();
