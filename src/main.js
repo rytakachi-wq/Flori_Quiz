@@ -31,8 +31,7 @@ import {
   recordDaily,
   recordDex,
   recordGarden,
-  saveCourse,
-  saveHardCourse,
+  saveCourseKey,
   recordOni,
   recordReview,
   recordRound,
@@ -55,7 +54,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "versus", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
+const SCREENS = ["cover", "flow", "menu", "versus", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(ふつう)、"hard"(難しい)、"oni"(オニ)、"versus"(みんなで対戦)、"review"(おさらい)、"daily"(毎日1問)
@@ -195,8 +194,11 @@ let playableQuestions = []; // ふつう+難しい問題(おさらい・毎日1�
 let normalIds = new Set(); // ふつうの問題の uid(成績の記録に使う。番号がつけなおされても、変わらない)
 let hardIds = new Set(); // 難しい問題の uid
 let oniIds = new Set(); // オニ問題の uid
-let session; // ふつうモードの遊び(難しさのカウンターを引き継ぐ)
-let hardSession; // 難しいモードの遊び(こちらも、引き継ぐ)
+const sessions = new Map(); // 「理系-normal」のような名前 → ふつう・難しいモードの遊び(難しさのカウンターを引き継ぐ)
+let activeKey = null; // いま遊んでいる、sessions の名前
+const pick = { group: "理系", level: "normal", time: false }; // 表紙で選んだ、分類・むずかしさ・制限時間
+const GROUPS = ["理系", "文系", "ひらめき"];
+const MIN_POOL = 10; // 1つの組み合わせで、最低これだけの問題がないと、ほかの分類から足す
 let versusQuestions = []; // 対戦で使う問題(段階1〜3)
 let play; // いま遊んでいるもの(session・hardSession・オニ問題など)
 let current = null; // 今出している問題
@@ -242,13 +244,7 @@ function refreshCover() {
   const left = stats.wrong.filter((id) => playableIds().has(id)).length;
   $("btn-review").querySelector(".tile-label").textContent = left > 0 ? `おさらい(${left}問)` : "おさらい(なし)";
   $("btn-review").disabled = left === 0;
-  // 記録があれば「つづきから」、なければ「始める」(どちらも、押せる)
-  const saved = hasCourse(stats);
-  $("btn-continue").querySelector(".tile-label").textContent = saved ? "つづきから" : "始める";
   refreshNoticeDots();
-  const level = levelFromCounter(stats.courseCounter, 1, MAX_LEVEL);
-  $("hard-sub").textContent = hasHardCourse(stats) ? `つづきから ・ ${stars(levelFromCounter(stats.hardCounter, HARD_MIN_LEVEL, HARD_LEVEL))}` : "";
-  $("continue-sub").textContent = saved ? `難しさ ${stars(level)}` : "";
 }
 
 // 難しさの星(全部で4段階)
@@ -264,7 +260,7 @@ function startPlay(nextMode) {
   mode = nextMode;
   if (mode === "oni") timeLimit = false; // オニ問題には、制限時間はない
   if (mode === "oni") play = new OniRound(oniQuestions);
-  else if (mode === "hard") play = hardSession;
+  else if (mode === "hard") play = getSession(pick.group, "hard");
   else if (mode === "versus") play = new VersusRound(versusQuestions, versusPlayers);
   else if (mode === "review") {
     const wrong = new Set(loadStats().wrong);
@@ -273,8 +269,8 @@ function startPlay(nextMode) {
     play = new PracticeRound(pool); // まちがえた問題を、ぜんぶ(正解すると、おさらいから消える)
   } else if (mode === "daily") {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
-  } else play = session;
-  const resume = (mode === "normal" && hasCourse()) || (mode === "hard" && hasHardCourse()); // つづきから遊ぶときは、そう知らせる
+  } else play = getSession(pick.group, "normal");
+  const resume = (mode === "normal" || mode === "hard") && hasCourseKey(activeKey); // つづきから遊ぶときは、そう知らせる
   announce(resume ? "つづきから、スタート!" : "それでは、スタート!", "start", showQuestion, "../assets/flori/src/body_wave.webp");
 }
 
@@ -766,6 +762,132 @@ $("btn-q-settings").addEventListener("click", () => {
 });
 $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
+
+// ================= 表紙からの流れ:分類 → むずかしさ → 制限時間 → スタート =================
+let flowStep = "level"; // いま出している段(level / time / start)
+
+function renderFlow() {
+  const buttons = $("flow-buttons");
+  const chips = $("flow-chips");
+  chips.replaceChildren();
+  const addChip = (text) => {
+    const chip = document.createElement("span");
+    chip.className = "flow-chip";
+    chip.textContent = text;
+    chips.append(chip);
+  };
+  addChip(`${GROUP_ICON[pick.group]} ${pick.group}`);
+  if (flowStep !== "level") addChip(pick.level === "hard" ? "🔥 難しい" : "🌱 ふつう");
+  if (flowStep === "start") addChip(pick.time ? "⏱ 制限時間あり" : "⏱ 制限時間なし");
+  const make = (cls, icon, label, sub, handler) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = `flow-btn ${cls}`;
+    b.innerHTML = `<span class="flow-icon" aria-hidden="true">${icon}</span><span class="flow-text"><span class="flow-label"></span><span class="flow-sub"></span></span>`;
+    b.querySelector(".flow-label").textContent = label;
+    b.querySelector(".flow-sub").textContent = sub;
+    b.addEventListener("click", handler);
+    return b;
+  };
+  if (flowStep === "level") {
+    $("flow-title").textContent = "むずかしさを えらぼう";
+    $("flow-bubble").textContent = `${pick.group}の問題に、ちょうせん! どっちにする?`;
+    const normalKey = `${pick.group}-normal`;
+    const hardKey = `${pick.group}-hard`;
+    buttons.replaceChildren(
+      make("flow-normal", "🌱", "ふつう", hasCourseKey(normalKey) ? "つづきから あそべるよ" : "やさしめ ★☆☆☆〜★★☆☆", () => {
+        pick.level = "normal";
+        flowStep = "time";
+        renderFlow();
+      }),
+      make("flow-hard", "🔥", "難しい", hasCourseKey(hardKey) ? "つづきから あそべるよ" : "ぐっと難しい ★★★☆〜★★★★", () => {
+        pick.level = "hard";
+        flowStep = "time";
+        renderFlow();
+      }),
+    );
+  } else if (flowStep === "time") {
+    $("flow-title").textContent = "制限時間は つける?";
+    $("flow-bubble").textContent = "つけると 1問30秒。星の ごほうびが もらえるよ!";
+    buttons.replaceChildren(
+      make("flow-yes", "⏱", "つける", "ごほうびの星が もらえる", () => {
+        pick.time = true;
+        flowStep = "start";
+        renderFlow();
+      }),
+      make("flow-no", "🙂", "つけない", "ゆっくり じっくり", () => {
+        pick.time = false;
+        flowStep = "start";
+        renderFlow();
+      }),
+    );
+  } else {
+    const key = `${pick.group}-${pick.level}`;
+    const resume = hasCourseKey(key);
+    $("flow-title").textContent = "じゅんび OK!";
+    $("flow-bubble").textContent = resume ? "前のつづきから はじめよう!" : "さあ、はじめよう! がんばってね!";
+    buttons.replaceChildren(
+      make("flow-start", "▶️", resume ? "つづきから スタート!" : "スタート!", "", () => {
+        timeLimit = pick.time;
+        startPlay(pick.level);
+      }),
+    );
+  }
+}
+
+const GROUP_ICON = { 理系: "🔬", 文系: "📖", ひらめき: "💡" };
+function openFlow(group) {
+  pick.group = group;
+  flowStep = "level";
+  renderFlow();
+  show("flow");
+}
+for (const button of document.querySelectorAll("[data-group]")) {
+  button.addEventListener("click", () => openFlow(button.dataset.group));
+}
+$("btn-flow-back").addEventListener("click", () => {
+  if (flowStep === "start") flowStep = "time";
+  else if (flowStep === "time") flowStep = "level";
+  else return show("cover");
+  renderFlow();
+});
+
+// ほかのメニュー(2ページ目):「▼ ほかのメニュー」を押す・画面のあいているところを押す・下へスクロール(上へスワイプ)で、出る
+function openMenu() {
+  refreshCover();
+  show("menu");
+}
+$("btn-more").addEventListener("click", openMenu);
+$("btn-menu-back").addEventListener("click", () => show("cover"));
+$("screen-cover").addEventListener("click", (event) => {
+  if (event.target.closest("button, a, input")) return;
+  openMenu();
+});
+$("screen-cover").addEventListener(
+  "wheel",
+  (event) => {
+    if (event.deltaY > 30) openMenu();
+  },
+  { passive: true },
+);
+let swipeStartY = null;
+$("screen-cover").addEventListener("touchstart", (event) => (swipeStartY = event.touches[0].clientY), { passive: true });
+$("screen-cover").addEventListener(
+  "touchend",
+  (event) => {
+    if (swipeStartY !== null && swipeStartY - event.changedTouches[0].clientY > 60) openMenu();
+    swipeStartY = null;
+  },
+  { passive: true },
+);
+$("screen-menu").addEventListener(
+  "wheel",
+  (event) => {
+    if (event.deltaY < -30 && window.scrollY <= 0) show("cover");
+  },
+  { passive: true },
+);
+
 // 問題を解く前に、制限時間をつけるかを聞く(ふつう・難しい・おさらい・毎日1問)
 let pendingMode = null;
 function chooseTime(nextMode) {
@@ -784,17 +906,41 @@ $("btn-time-yes").addEventListener("click", () => closeTimeDialog(true));
 $("btn-time-no").addEventListener("click", () => closeTimeDialog(false));
 $("btn-time-cancel").addEventListener("click", () => closeTimeDialog(null));
 
-// 「つづきから」と「最初から」(ふつうモードの、難しさと、何回目かを、つづける)
-function hasCourse(stats = loadStats()) {
-  return stats.courseUsed.length > 0 || stats.courseCounter > 0;
+// ふつう・難しいモードの遊び。分類(理系・文系・ひらめき)×むずかしさごとに、ひとつずつ作って、「つづきから」を保存する。
+const groupOf = (q) => q.group ?? "ひらめき";
+let uidToIdMap = new Map();
+function getSession(group, kind) {
+  const key = `${group}-${kind}`;
+  activeKey = key;
+  if (sessions.has(key)) return sessions.get(key);
+  const [min, max] = kind === "hard" ? [HARD_MIN_LEVEL, HARD_LEVEL] : [1, MAX_LEVEL];
+  const inBand = playableQuestions.filter((q) => q.level >= min && q.level <= max);
+  let pool = inBand.filter((q) => groupOf(q) === group);
+  if (pool.length < MIN_POOL) {
+    // 問題が少ない組み合わせは、ほかの分類の同じ段階の問題を足して、同じ問題がすぐにもどってこないようにする
+    const others = inBand.filter((q) => groupOf(q) !== group);
+    pool = [...pool, ...others.slice(0, MIN_POOL - pool.length)];
+  }
+  const s = new Session(pool, Math.random, min, max);
+  const saved = loadStats().courses[key];
+  if (saved) {
+    const valid = new Set(pool.map((q) => q.id));
+    s.restore(saved.counter, saved.used.map((uid) => uidToIdMap.get(uid)).filter((id) => valid.has(id)));
+  }
+  sessions.set(key, s);
+  return s;
 }
-function hasHardCourse(stats = loadStats()) {
-  return stats.hardUsed.length > 0 || stats.hardCounter > 0;
+function hasCourseKey(key) {
+  const saved = loadStats().courses[key];
+  return Boolean(saved && (saved.counter > 0 || saved.used.length > 0));
 }
-function persistCourse() {
-  saveCourse({ counter: session.counter, used: [...session.used].map((id) => idToUid.get(id)).filter(Boolean) });
+function persistSession() {
+  const s = sessions.get(activeKey);
+  if (!s) return;
+  saveCourseKey(activeKey, { counter: s.counter, used: [...s.used].map((id) => idToUid.get(id)).filter(Boolean) });
 }
-$("btn-continue").addEventListener("click", () => chooseTime("normal"));
+const persistCourse = persistSession;
+const persistHard = persistSession;
 // セーブデータを消す(設定から):データが消えるので、本当にいいか、聞く
 let restartAction = null;
 function askRestart(action) {
@@ -819,11 +965,6 @@ $("btn-restart-yes").addEventListener("click", () => {
   restartAction?.();
   restartAction = null;
 });
-// 難しいモードの「つづきから」と「最初から」(もう出した問題を、おぼえておく)
-function persistHard() {
-  saveHardCourse({ counter: hardSession.counter, used: [...hardSession.used].map((id) => idToUid.get(id)).filter(Boolean) });
-}
-$("btn-hard").addEventListener("click", () => chooseTime("hard"));
 $("btn-daily").addEventListener("click", () => {
   if (loadStats().dailyLast === dateKey()) {
     // 今日の分は、もう終わっている
@@ -963,16 +1104,7 @@ async function init() {
     pruneStats(new Set([...normalIds, ...hardIds, ...oniIds])); // 古い番号の記録を、取りのぞく
     for (const q of normal) idToUid.set(q.id, q.uid ?? q.id);
     for (const q of hardQuestions) idToUid.set(q.id, q.uid ?? q.id);
-    session = new Session(normal, Math.random, 1, MAX_LEVEL);
-    hardSession = new Session(hardQuestions, Math.random, HARD_MIN_LEVEL, HARD_LEVEL);
-    const saved = loadStats();
-    const uidToId = new Map([...idToUid].map(([id, uid]) => [uid, id]));
-    const idsOf = (uids, list) => {
-      const valid = new Set(list.map((q) => q.id));
-      return uids.map((uid) => uidToId.get(uid)).filter((id) => valid.has(id));
-    };
-    session.restore(saved.courseCounter, idsOf(saved.courseUsed, normal)); // つづきから
-    hardSession.restore(saved.hardCounter, idsOf(saved.hardUsed, hardQuestions)); // 難しいモードの、つづきから
+    uidToIdMap = new Map([...idToUid].map(([id, uid]) => [uid, id]));
     show("cover");
   } catch (error) {
     console.error(error);
@@ -1131,6 +1263,7 @@ function refreshNoticeDots() {
   set("btn-dex", news.cards > 0 ? `NEW ${news.cards}` : "");
   set("btn-dress", news.dress.length > 0 ? "NEW" : "");
   set("btn-records", news.gain > 0 ? "UP" : "");
+  set("btn-more", news.cards > 0 || news.dress.length > 0 || news.gain > 0 ? "NEW" : "");
 }
 // 結果の画面に、あたらしく手に入れたものを、まとめて出す
 function renderNews() {
@@ -1354,6 +1487,7 @@ function applyDress() {
   const hat = HATS.find((item) => item.id === dress.hat);
   setHat("hero-hat", hat);
   setHat("dress-hat", hat);
+  setHat("flow-hat", hat);
 }
 
 let dressTab = "color"; // きせかえで、いま見ている種類(color / hat / theme)

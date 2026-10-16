@@ -52,6 +52,11 @@ export const HATS = [
   { id: "starclip", img: "../assets/dress/starclip.png", name: "ほしのヘアピン", tint: "#f0c030", unlock: { stars: 5 } },
   { id: "sparkle", img: "../assets/dress/sparkle.png", name: "きらきら", tint: "#f2b61e", unlock: { stars: 10 } },
   { id: "scarf", img: "../assets/dress/scarf.png", name: "マフラー", tint: "#4aa0d8", unlock: { stars: 30 } },
+  { id: "scarfred", img: "../assets/dress/scarfred.png", name: "あかいマフラー", tint: "#c0392b", unlock: "play50" },
+  { id: "crowngold", img: "../assets/dress/crowngold.png", name: "きんのかんむり", tint: "#f0a818", unlock: "total100" },
+  { id: "strawhat", img: "../assets/dress/strawhat.png", name: "むぎわらぼうし", tint: "#d9a526", unlock: "streak3" },
+  { id: "apron", img: "../assets/dress/apron.png", name: "エプロン", tint: "#f0a0a0", unlock: "versus1" },
+  { id: "catears", img: "../assets/dress/catears.png", name: "ねこみみ", tint: "#f4b82a", unlock: "dex10" },
 ];
 
 export const THEMES = [

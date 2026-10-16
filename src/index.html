@@ -32,37 +32,62 @@
         <button id="btn-settings" class="cover-gear" type="button" aria-label="設定"><span aria-hidden="true">⚙️</span> 設定</button>
       </header>
       <h1 class="sr-only">Flori_Quiz</h1>
-      <div class="home-main">
-        <div class="home-side home-left">
-          <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-text"><span class="tile-label">毎日1問</span></span><span class="tile-dot" hidden></span></button>
-          <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">おさらい</span></span><span class="tile-dot" hidden></span></button>
+      <div class="home-stage">
+        <div class="speech home-speech">
+          <p>ヤア! ボクはフロリだヨ!<br>ひらめきクイズで遊ぼう!</p>
+          <p id="cover-title" class="cover-title"></p>
         </div>
-        <div class="home-stage">
-          <div class="speech home-speech">
-            <p>ヤア! ボクはフロリだヨ!<br>ひらめきクイズで遊ぼう!</p>
-            <p id="cover-title" class="cover-title"></p>
+        <div class="hero hero-cover home-hero">
+          <div class="hero-fig">
+            <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
+            <img id="hero-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
           </div>
-          <div class="hero hero-cover home-hero">
-            <span class="spark s1" aria-hidden="true">✨</span><span class="spark s2" aria-hidden="true">⭐</span><span class="spark s3" aria-hidden="true">✨</span>
-            <div class="hero-fig">
-              <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
-              <img id="hero-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
-            </div>
-          </div>
-        </div>
-        <div class="home-side home-right">
-          <button id="btn-hard" class="tile t-hard" type="button"><span class="tile-icon" aria-hidden="true">🔥</span><span class="tile-text"><span class="tile-label">難しいモード</span><span id="hard-sub" class="tile-sub"></span></span><span class="tile-dot" hidden></span></button>
-          <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-text"><span class="tile-label">みんなで対戦</span></span><span class="tile-dot" hidden></span></button>
         </div>
       </div>
-      <button id="btn-continue" class="tile t-continue home-start" type="button"><span class="tile-icon" aria-hidden="true">💡</span><span class="tile-text"><span class="tile-label">始める</span><span id="continue-sub" class="tile-sub"></span></span><span class="tile-dot" hidden></span></button>
-      <nav class="home-nav" aria-label="メニュー">
+      <p class="pick-lead">どれに ちょうせんする?</p>
+      <div class="group-buttons">
+        <button class="group-btn g-sci" type="button" data-group="理系"><span class="gi" aria-hidden="true">🔬</span><span class="gt"><b>理系</b><small>理科・算数</small></span></button>
+        <button class="group-btn g-lit" type="button" data-group="文系"><span class="gi" aria-hidden="true">📖</span><span class="gt"><b>文系</b><small>国語・社会</small></span></button>
+        <button class="group-btn g-idea" type="button" data-group="ひらめき"><span class="gi" aria-hidden="true">💡</span><span class="gt"><b>ひらめき</b><small>なぞ・パズル</small></span></button>
+      </div>
+      <button id="btn-more" class="more-btn" type="button">▼ ほかのメニュー<span class="tile-dot" hidden></span></button>
+      <p id="sound-hint" class="note">♪ 画面をタッチすると音楽が流れるよ。</p>
+    </section>
+
+    <!-- 表紙からの流れ:むずかしさ → 制限時間 → スタート -->
+    <section id="screen-flow" class="screen flow-screen" aria-label="じゅんび" hidden>
+      <header class="home-top">
+        <button id="btn-flow-back" class="cover-gear" type="button"><span aria-hidden="true">◀</span> もどる</button>
+        <img class="logo logo-small" src="../assets/flori/src/logo.png" alt="フロリ">
+        <span class="home-top-space" aria-hidden="true"></span>
+      </header>
+      <h2 id="flow-title" class="title"></h2>
+      <div id="flow-chips" class="flow-chips"></div>
+      <div class="home-stage">
+        <p id="flow-bubble" class="speech home-speech"></p>
+        <div class="hero hero-cover home-hero">
+          <div class="hero-fig">
+            <img class="flori flori-cover" src="../assets/flori/src/body_wave.webp" alt="手を振るフロリ">
+            <img id="flow-hat" class="hero-hat" alt="" aria-hidden="true" hidden>
+          </div>
+        </div>
+      </div>
+      <div id="flow-buttons" class="flow-buttons"></div>
+    </section>
+
+    <!-- ほかのメニュー(2ページ目) -->
+    <section id="screen-menu" class="screen menu-screen" aria-label="ほかのメニュー" hidden>
+      <h2 class="title">ほかのメニュー</h2>
+      <div class="menu-grid">
+        <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-text"><span class="tile-label">毎日1問</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">おさらい</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-text"><span class="tile-label">みんなで対戦</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-text"><span class="tile-label">リラックス</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-dex" class="tile t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-text"><span class="tile-label">問題図鑑</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-dress" class="tile t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">きせかえ</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-records" class="tile t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span><span class="tile-dot" hidden></span></button>
-      </nav>
-      <p id="sound-hint" class="note">♪ 画面をクリックすると音楽が流れるよ。</p>
+      </div>
+      <button id="btn-menu-back" class="btn btn-sub" type="button">▲ 表紙へ</button>
     </section>
     <!-- 問題図鑑 -->
     <section id="screen-dex" class="screen dex-screen" aria-label="問題図鑑" hidden>

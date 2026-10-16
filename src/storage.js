@@ -35,6 +35,7 @@ const EMPTY = {
   hardUsed: [], // 難しいモードの「つづきから」:もう出した問題の番号
   hardCounter: 0, // 難しいモードの「つづきから」:難しさのカウンター
   qpts: {}, // 問題ごとの、これまでの最高の点(ヒントなしで正解=2、ヒントを見て正解=1)。総合得点に使う
+  courses: {}, // 「つづきから」:分類(理系・文系・ひらめき)×むずかしさごとの、難しさのカウンターと、もう出した問題 { "理系-normal": { counter, used } }
   scoreVer: 2, // 点数のつけかた(2=1問2点。ないものは、1問5点だったころの記録)
 };
 
@@ -57,6 +58,16 @@ function oldToNew(points) {
   return Math.round(number(points) * 0.4);
 }
 
+function cleanCourses(raw) {
+  const out = {};
+  if (raw && typeof raw === "object") {
+    for (const [key, value] of Object.entries(raw)) {
+      if (typeof key === "string" && value && typeof value === "object") out[key] = { counter: number(value.counter), used: ids(value.used) };
+    }
+  }
+  return out;
+}
+
 function clean(raw) {
   const old = raw?.scoreVer !== 2 && raw !== EMPTY; // 点数のつけかたが変わる前の記録
   const convert = old ? oldToNew : number;
@@ -66,6 +77,7 @@ function clean(raw) {
   }
   return {
     scoreVer: 2,
+    courses: cleanCourses(raw?.courses),
     qpts,
     best: convert(raw?.best),
     bestHard: convert(raw?.bestHard),
@@ -117,7 +129,7 @@ export function reconcile(stats) {
 }
 
 export function loadStats() {
-  if (cache) return { ...cache, qpts: { ...cache.qpts }, seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges], courseUsed: [...cache.courseUsed], hardUsed: [...cache.hardUsed] };
+  if (cache) return { ...cache, qpts: { ...cache.qpts }, courses: JSON.parse(JSON.stringify(cache.courses)), seen: [...cache.seen], right: [...cache.right], oniRight: [...cache.oniRight], wrong: [...cache.wrong], dex: [...cache.dex], badges: [...cache.badges], courseUsed: [...cache.courseUsed], hardUsed: [...cache.hardUsed] };
   let stats = clean(EMPTY);
   try {
     const saved = localStorage.getItem(KEY);
@@ -238,6 +250,13 @@ export function saveCourse({ counter, used }) {
   const stats = loadStats();
   stats.courseCounter = counter;
   stats.courseUsed = ids(used);
+  save(stats);
+}
+
+// 「つづきから」の記録(分類×むずかしさごと)
+export function saveCourseKey(key, { counter, used }) {
+  const stats = loadStats();
+  stats.courses[key] = { counter, used: ids(used) };
   save(stats);
 }
 
