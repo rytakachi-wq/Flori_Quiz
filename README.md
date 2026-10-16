@@ -13,7 +13,7 @@
 | `src/` | アプリ本体（`index.html`、`main.js`、`game.js`、`storage.js`、`audio.js`、`music.js`、`furigana.js`、`furigana-data.js`、`garden.js`、`badges.js`、`style.css`） |
 | `assets/audio/` | 効果音(利用者が提供)。BGMは、`src/music.js` で演奏するオリジナルの曲 |
 | `assets/flori/` | フロリの画像（利用者が提供） |
-| `data/questions/` | 問題と解説（全55問(ふつう28問+難しい22問+オニ5問)） |
+| `data/questions/` | 問題と解説（全100問(ふつう45問+難しい45問+オニ10問)） |
 | `docs/` | 決定事項の記録など |
 
 ## 動かし方

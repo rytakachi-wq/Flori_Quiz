@@ -124,8 +124,61 @@ const ART = {
   u0222dcac: row(e("🧍", "ia-bob"), e("🧍", "ia-bob", 0.15), e("🧍", "ia-bob", 0.3), e("🧍", "ia-bob", 0.45), e("🔦", "ia-flicker"), e("🌉", "ia-sway")),
 };
 
+
+// あとから足した問題の絵:絵文字を、ならべて、順に、ちがう動きをつける(uid → 絵文字の並び)
+const AUTO_ART = {
+  udb224dfe: ["🚶", "😊", "✨"],
+  ud6c9ef11: ["☁️", "🌤️"],
+  ufe10010e: ["🧲", "🔩"],
+  u5d2fe453: ["🕙", "⏩"],
+  u5c5a026c: ["✏️", "📦"],
+  ue5bf374f: ["🌙", "☀️"],
+  ua62d15b1: ["🔢", "🔍"],
+  u513aec73: ["➕", "✖️", "6️⃣"],
+  ua154b5bc: ["🔤", "6️⃣"],
+  ub6d4d70d: ["😀", "🤝", "🤝"],
+  u1bdb1b91: ["🌱", "☀️", "💨"],
+  u562c5e7f: ["🔔", "⏱️"],
+  uf4ddfd14: ["📐", "🔺"],
+  ucbd33964: ["👶", "🚶", "👴"],
+  u685cf4de: ["🃏", "➕"],
+  ub7cf6d53: ["🔥", "◻️"],
+  u85664eb4: ["📅", "⏪", "⏩"],
+  u8f0c6ab2: ["🧑‍💼", "🗳️"],
+  u25682e80: ["🏙️", "🗾"],
+  u1618d0ff: ["📜", "💡"],
+  u2692bb62: ["👀", "🧑‍🏫"],
+  u4c0aeb39: ["🔋", "💡"],
+  u245b9539: ["🧂", "🥛"],
+  u0cb8bbbd: ["🏷️", "💴"],
+  u02ad7743: ["🕑", "📐"],
+  ua0fbfb66: ["🔢", "➗"],
+  u15cff843: ["🌿", "🐸"],
+  u2da1b67a: ["📓", "🖊️"],
+  u6e9e738d: ["☁️", "😌"],
+  uf3cdf664: ["🎭", "💪"],
+  uf1a7ee8d: ["🏞️", "⛩️"],
+  u45d94d35: ["🕛", "🗾"],
+  u9cac65fd: ["🏜️", "🗾"],
+  ubbbdca0f: ["🐉", "👁️"],
+  uad5da38b: ["📖", "☝️"],
+  u6ee54a61: ["🦂", "⭐"],
+  u68fd890b: ["🏷️", "💴"],
+  u93c3d45a: ["🚰", "🪣", "⏱️"],
+  u7a96d119: ["📄", "🔁"],
+  u415753af: ["🔢", "🧩"],
+  uf05c25ac: ["⏳", "🩹"],
+  u2ea07188: ["🙂", "🤝"],
+  ua08fcc82: ["📜", "🏯"],
+  u34a93d55: ["🥞", "🍽️"],
+  u9f3e96a1: ["🎂", "👥"],
+};
+const AUTO_ANIM = ["ia-bob", "ia-pop", "ia-sway", "ia-bob", "ia-pop"];
+const autoRow = (emojis) => row(...emojis.map((emoji, i) => e(emoji, AUTO_ANIM[i % AUTO_ANIM.length], (i % 5) * 0.2)));
+
 // その問題の、イラストのHTML(ないときは、空)
 export function illustrationFor(question) {
-  const art = ART[question.uid ?? question.id];
+  const uid = question.uid ?? question.id;
+  const art = ART[uid] ?? (AUTO_ART[uid] ? autoRow(AUTO_ART[uid]) : "");
   return art ? `<span class="qa-in">${art}</span>` : "";
 }

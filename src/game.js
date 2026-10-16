@@ -18,14 +18,15 @@ export const VERSUS_MIN_PLAYERS = 2;
 export const VERSUS_MAX_PLAYERS = 4;
 export const VERSUS_ROUNDS = 3;
 
-// 総合得点(100点満点)。ふつうの問題と難しい問題が、1問2点で、合わせて100点(50問)。
-// 問題ごとに、これまでの最高の点(ヒントなしで正解=2点、ヒントを見て正解=1点)を足す。何度正解しても、同じ問題は1回ぶん。
-// 問題が増えても、100点をこえないようにする。オニ問題は、総合得点には入れない(オニの記録は、別に数える)。
+// 総合得点(100点満点)。ふつう・難しい問題の、問題ごとの、これまでの最高の点(ヒントなし=2点、ヒントあり=1点)を足して、
+// 全部の問題を、ヒントなしで正解したときの点(2点×問題数)を、100点として、割合で出す。問題の数が、増えても減っても、満点は、100点のまま。
+// オニ問題は、総合得点には入れない(オニの記録は、別に数える)。
 export const TOTAL_POINTS = 100;
 
-export function totalScore(questionPoints) {
+export function totalScore(questionPoints, playableCount) {
+  if (!playableCount) return 0;
   const sum = questionPoints.reduce((total, points) => total + points, 0);
-  return Math.min(TOTAL_POINTS, sum);
+  return Math.min(TOTAL_POINTS, Math.round((TOTAL_POINTS * sum) / (POINTS_PER_CORRECT * playableCount)));
 }
 
 export function levelFromCounter(counter, minLevel = 1, maxLevel = MAX_LEVEL) {

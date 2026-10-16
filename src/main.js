@@ -539,7 +539,7 @@ function answerReading() {
 // 総合得点(100点満点)を、保存した記録から数える。いまあるふつう・難しい問題の、問題ごとの最高の点を足す(1問2点・ヒントを見たら1点)。
 function currentTotal(stats = loadStats()) {
   const valid = playableIds();
-  return totalScore(stats.right.filter((id) => valid.has(id)).map((id) => stats.qpts[id] ?? POINTS_PER_CORRECT));
+  return totalScore(stats.right.filter((id) => valid.has(id)).map((id) => stats.qpts[id] ?? POINTS_PER_CORRECT), valid.size);
 }
 
 function showResult() {
