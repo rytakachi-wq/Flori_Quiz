@@ -62,7 +62,7 @@ body {
 .bubble {
   margin: 0;
   padding: 10px 18px;
-  background: var(--green);
+  background: var(--blue);
   border: 2px solid var(--line);
   border-radius: 20px;
   font-weight: bold;
@@ -226,7 +226,7 @@ body {
   position: relative;
   flex: 1;
   padding: 8px 14px;
-  background: var(--green);
+  background: var(--blue);
   border: 3px solid var(--line);
   border-radius: 20px;
   font-weight: bold;
@@ -235,7 +235,7 @@ body {
 }
 .speech::before, .speech::after { content: ""; position: absolute; top: 34%; border-style: solid; border-color: transparent; }
 .speech::before { left: -21px; border-width: 11px 20px 11px 0; border-right-color: var(--line); }
-.speech::after { left: -15px; top: calc(34% + 3px); border-width: 8px 15px 8px 0; border-right-color: var(--green); }
+.speech::after { left: -15px; top: calc(34% + 3px); border-width: 8px 15px 8px 0; border-right-color: var(--blue); }
 .speech p { margin: 0; }
 .logo-small { width: clamp(130px, 20vh, 200px); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -1175,7 +1175,7 @@ body { overflow-x: hidden; }
 #screen-cover .home-speech { flex: none; width: min(100%, 300px); font-size: 15px; padding: 6px 10px; line-height: 1.5; }
 #screen-cover .home-speech::before, #screen-cover .home-speech::after { left: 50%; top: 100%; transform: translateX(-50%); border-color: transparent; }
 #screen-cover .home-speech::before { border-width: 18px 12px 0 12px; border-top-color: var(--line); margin-top: -1px; }
-#screen-cover .home-speech::after { border-width: 13px 9px 0 9px; border-top-color: var(--green); margin-top: -4px; }
+#screen-cover .home-speech::after { border-width: 13px 9px 0 9px; border-top-color: var(--blue); margin-top: -4px; }
 #screen-cover .home-hero { position: relative; width: clamp(150px, min(44vh, 100%), 330px); background: radial-gradient(circle, #fff 0 45%, #d7edf8 62%, transparent 72%); }
 #screen-cover .home-hero .hero-fig { width: 92%; transform-origin: 50% 92%; animation: homeBob 3.2s ease-in-out infinite; }
 #screen-cover .home-hero .hero-hat { font-size: 0; }
@@ -1444,7 +1444,7 @@ img.hero-hat[data-hat="catears"] { left: 12%; top: -6%; width: 76%; }
 #screen-cover .home-speech, #screen-flow .home-speech { flex: none; width: min(100%, 340px); margin: 0; font-size: 16px; padding: 8px 12px; line-height: 1.5; text-align: center; }
 #screen-flow .home-speech::before, #screen-flow .home-speech::after { left: 50%; top: 100%; transform: translateX(-50%); border-color: transparent; }
 #screen-flow .home-speech::before { border-width: 18px 12px 0 12px; border-top-color: var(--line); margin-top: -1px; }
-#screen-flow .home-speech::after { border-width: 13px 9px 0 9px; border-top-color: var(--green); margin-top: -4px; }
+#screen-flow .home-speech::after { border-width: 13px 9px 0 9px; border-top-color: var(--blue); margin-top: -4px; }
 #screen-cover .home-hero, #screen-flow .home-hero { position: relative; width: clamp(150px, min(33vh, 70vw), 340px); background: radial-gradient(circle, #fff 0 45%, #d7edf8 62%, transparent 72%); }
 #screen-flow .home-hero .hero-fig { width: 92%; transform-origin: 50% 92%; animation: homeBob 3.2s ease-in-out infinite; }
 #screen-flow .home-hero .hero-hat { font-size: 0; }
@@ -1935,9 +1935,8 @@ body.has-pager { padding-bottom: 56px; }
    ===================================================================== */
 
 /* ---- どの画面でも、同じ場所(左上)に、同じ形の、戻るボタン。まん中に題字。右に、フロリ ---- */
-.screen-head { display: grid; grid-template-columns: 96px 1fr 52px; align-items: center; gap: 6px; flex: none; width: 100%; min-height: 46px; }
+.screen-head { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px; flex: none; width: 100%; min-height: 46px; }
 .screen-head .title { margin: 0; text-align: center; font-size: clamp(19px, 3.4dvh, 26px); line-height: 1.25; }
-.screen-flori { justify-self: end; width: 46px; height: auto; pointer-events: none; }
 .back-btn { justify-self: start; display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 2px 12px; font: inherit; font-size: 16px; font-weight: bold; color: #1f3f66; white-space: nowrap; cursor: pointer; background: linear-gradient(180deg, #dcefff, #9fd0f5); border: 3px solid #4a7fb3; border-radius: 999px; box-shadow: 0 4px 0 rgba(53, 95, 140, 0.4); touch-action: manipulation; transition: transform 0.12s, box-shadow 0.12s; }
 .back-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(53, 95, 140, 0.4); }
 .back-btn:focus-visible { outline: 4px solid var(--green); outline-offset: 2px; }
@@ -2081,8 +2080,8 @@ body.has-pager { padding-bottom: 56px; }
   #screen-dress .hero-small { width: min(44vw, 21dvh); }
 }
 @media (max-width: 340px) {
-  .screen-head { grid-template-columns: 88px 1fr 40px; }
-  .screen-flori { width: 38px; }
+  .screen-head { grid-template-columns: auto minmax(0, 1fr); }
+
   .back-btn { padding: 2px 9px; font-size: 14px; }
   .pager-dot { width: 46px; }
   .hud-chip { padding: 0 6px; font-size: 12px; }
@@ -2495,3 +2494,16 @@ body.has-pager { padding-bottom: 56px; }
   #screen-question .board li { flex: 0 1 62px; padding: 2px 1px; font-size: 16px; }
   #screen-question .btn-read { min-height: 30px; padding: 0 12px; font-size: 13px; }
 }
+
+/* ===== 全画面の共通ルール(その45) ===== */
+/* 文の途中で折り返さない:文節のところで折り返す */
+body, button, p, h1, h2, h3, li, span, label { word-break: auto-phrase; line-break: strict; }
+/* ボタンを押したとき:青い四角や選択の色が出ない。ちょっと沈む */
+* { -webkit-tap-highlight-color: transparent; }
+button { -webkit-user-select: none; user-select: none; }
+button::selection, button *::selection { background: transparent; }
+button:not(:disabled):active { transform: translateY(3px) !important; filter: none !important; }
+/* 戻るボタンを大きく */
+.back-btn, #screen-question .back-btn, #screen-question .status .back-btn { height: 48px; min-height: 48px; padding: 0 18px; font-size: 20px; gap: 6px; }
+@media (max-width: 400px) { .back-btn, #screen-question .back-btn, #screen-question .status .back-btn { height: 44px; min-height: 44px; padding: 0 12px; font-size: 18px; } }
+.screen-head, :is(#screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { min-height: 50px; height: 50px; grid-template-rows: 50px; }
