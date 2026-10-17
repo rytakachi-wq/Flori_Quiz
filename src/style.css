@@ -2435,11 +2435,11 @@ body.has-pager { padding-bottom: 56px; }
    ===================================================================== */
 
 /* ---- 表紙の背景の画像と、クイズボタンの彩度を、さらに下げる ---- */
-#screen-cover.cover-home::before, #screen-cover.cover-home::after { filter: saturate(0.55); }
-.play-btn { background: linear-gradient(180deg, #ecd0cb 0%, #d9a29b 55%, #c98a83 100%); border-color: #94645f; box-shadow: 0 7px 0 #94645f, 0 10px 18px rgba(110, 75, 72, 0.25); }
-.play-btn:active { box-shadow: 0 2px 0 #94645f; }
-.play-btn .pb-text b { text-shadow: 0 3px 0 #94645f, 2px 0 0 #94645f, -2px 0 0 #94645f; }
-.play-btn .pb-go { text-shadow: 0 2px 0 #94645f; }
+#screen-cover.cover-home::before, #screen-cover.cover-home::after { background: linear-gradient(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.42)), var(--cover-bg, url("../assets/bg/sky.webp")) 30% 50% / cover no-repeat; }
+.play-btn { background: linear-gradient(180deg, #ffd3ca 0%, #ffa79f 55%, #f2938d 100%); border-color: #bd6c68; box-shadow: 0 7px 0 #bd6c68, 0 10px 18px rgba(189, 108, 104, 0.25); }
+.play-btn:active { box-shadow: 0 2px 0 #bd6c68; }
+.play-btn .pb-text b { text-shadow: 0 3px 0 #bd6c68, 2px 0 0 #bd6c68, -2px 0 0 #bd6c68; }
+.play-btn .pb-go { text-shadow: 0 2px 0 #bd6c68; }
 
 /* ---- モード選択:おすすめ(左)とスタートの確認へ(右)を、同じ段に ---- */
 .setup-actions { flex: none; display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; width: 100%; }
@@ -2507,3 +2507,193 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
 .back-btn, #screen-question .back-btn, #screen-question .status .back-btn { height: 48px; min-height: 48px; padding: 0 18px; font-size: 20px; gap: 6px; }
 @media (max-width: 400px) { .back-btn, #screen-question .back-btn, #screen-question .status .back-btn { height: 44px; min-height: 44px; padding: 0 12px; font-size: 18px; } }
 .screen-head, :is(#screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { min-height: 50px; height: 50px; grid-template-rows: 50px; }
+
+/* =====================================================================
+   追加(その45):ルールのフリップ(次へで進む。共通=青、1人=黄色、皆で=薄紫)・折り返し・結果のフロリ
+   ===================================================================== */
+
+/* ---- ことばの折り返し:文節のところで折る(読みづらい所で切らない) ---- */
+.cover-talk, .question, .bubble, .explanation, .tut-caption, .rf-caption, .hint, .reward-note, .setup-note {
+  word-break: auto-phrase; line-break: strict; text-wrap: pretty;
+}
+.cover-talk, .bubble, .rf-caption { text-wrap: balance; }
+
+/* ---- ルール画面:色のテーマ ---- */
+#screen-rules { --rf-bd: var(--blue); --rf-bg1: #eef8fd; --rf-bg2: #cfe9f5; --rf-cap: #fff6cf; --rf-capbd: #e0b43a; --rf-ac: var(--blue-dark); --rf-screen: #fff; transition: background-color 0.4s, border-color 0.4s; }
+#screen-rules.rf-solo { --rf-bd: #e6c14a; --rf-bg1: #fffbe0; --rf-bg2: #ffeea0; --rf-cap: #fff3b8; --rf-capbd: #d9a82a; --rf-ac: #a67c00; --rf-screen: #fffdf0; }
+#screen-rules.rf-vs { --rf-bd: #b9a0e8; --rf-bg1: #f6f0ff; --rf-bg2: #e0d2fa; --rf-cap: #eadffc; --rf-capbd: #a98ae0; --rf-ac: #6c46b8; --rf-screen: #faf6ff; }
+:is(#screen-rules).screen:not([hidden]) { background: var(--rf-screen); border-color: var(--rf-bd); }
+#screen-rules .rf-box { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 8px 10px; background: #fff; border: 4px solid var(--rf-bd); border-radius: 22px; transition: border-color 0.4s; }
+.rf-tag { align-self: center; margin: 0; padding: 0 14px; font-size: 14px; font-weight: bold; line-height: 1.7; color: #fff; background: var(--rf-ac); border-radius: 999px; }
+.rf-title { margin: 0; font-size: clamp(20px, 3.4dvh, 26px); line-height: 1.3; text-align: center; color: var(--rf-ac); }
+.rf-stage { position: relative; flex: 1 1 0; min-height: 110px; overflow: hidden; background: linear-gradient(180deg, var(--rf-bg1), var(--rf-bg2)); border: 3px solid var(--rf-bd); border-radius: 16px; }
+.rf-caption { margin: 0; padding: 6px 10px; font-size: clamp(15px, 2.3dvh, 18px); font-weight: bold; line-height: 1.55; background: var(--rf-cap); border: 3px solid var(--rf-capbd); border-radius: 14px; }
+.rf-box .tut-dots { flex: none; }
+.rf-dot-solo.is-on { background: #f0b020; border-color: #b98300; }
+.rf-dot-vs.is-on { background: #9b78e0; border-color: #6c46b8; }
+.rf-buttons { flex: none; display: grid; grid-template-columns: 1fr 2fr; gap: 8px; width: 100%; }
+.rf-prev { font: inherit; font-size: 18px; font-weight: bold; color: #4a5c66; background: #fff; border: 3px solid #9fb2bd; border-radius: 22px; box-shadow: 0 4px 0 rgba(70, 85, 94, 0.25); cursor: pointer; }
+.rf-prev:disabled { opacity: 0.35; cursor: default; }
+.rf-next { min-height: 54px; font-size: 20px; border-radius: 22px; }
+.rf-skip { flex: none; padding: 0; font: inherit; font-size: 13px; font-weight: bold; color: var(--rf-ac); text-decoration: underline; background: none; border: 0; cursor: pointer; }
+#screen-rules.rf-solo .rf-next { background: linear-gradient(180deg, #fff3b0, #ffd45a); border-color: #c99a10; color: #5a4200; box-shadow: 0 6px 0 rgba(150, 110, 20, 0.45); }
+#screen-rules.rf-vs .rf-next { background: linear-gradient(180deg, #eee4ff, #c4aaf0); border-color: #7b55c0; color: #3e2a70; box-shadow: 0 6px 0 rgba(100, 70, 170, 0.4); }
+#screen-rules .back-btn { transition: none; }
+
+/* ---- フリップの絵(5秒のくり返し) ---- */
+.rf-q { position: absolute; left: 8%; right: 8%; top: 8%; padding: 4px 10px; font-size: clamp(14px, 2.2dvh, 18px); font-weight: bold; background: #fff; border: 3px solid var(--line); border-radius: 12px; }
+.rf-qn { display: inline-block; width: 1.5em; margin-right: 4px; text-align: center; color: #fff; background: var(--blue-dark); border-radius: 50%; }
+.rf-ch { position: absolute; left: 8%; right: 8%; top: 36%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.rf-ch > span { padding: 2px 4px; font-size: clamp(14px, 2.3dvh, 19px); font-weight: bold; text-align: center; background: #fff; border: 3px solid #9fb2bd; border-radius: 12px; }
+.rf-ch.f1 > .rf-ok { animation: rfOk 5s infinite; }
+.rf-btn { position: absolute; padding: 2px 12px; font-size: clamp(13px, 2.1dvh, 17px); font-weight: bold; border: 3px solid #d9b73a; border-radius: 999px; background: #fff6c8; }
+.rf-hintbtn { left: 8%; top: 66%; animation: rfBtn 5s infinite; }
+.rf-givebtn { left: 8%; top: 66%; background: #eef1f3; border-color: #aab6be; animation: rfBtn 5s infinite; }
+.rf-hinttext { position: absolute; left: 40%; top: 68%; font-size: clamp(13px, 2dvh, 16px); font-weight: bold; color: #8a6a00; opacity: 0; animation: rfShow 5s infinite; }
+.rf-pts { position: absolute; right: 8%; top: 82%; font-size: clamp(16px, 2.7dvh, 22px); font-weight: bold; opacity: 0; animation: rfShow 5s infinite; transform: translateY(-100%); }
+.rf-pts b { color: #d08a1a; font-size: 1.3em; } .rf-pts small { margin-left: 4px; color: #d08a1a; }
+.rf-answer { position: absolute; right: 8%; top: 68%; font-size: clamp(14px, 2.2dvh, 18px); font-weight: bold; color: #2a7a46; opacity: 0; animation: rfShow 5s infinite; }
+.rf-badge { position: absolute; right: 8%; top: 70%; padding: 2px 12px; font-size: clamp(15px, 2.5dvh, 20px); font-weight: bold; color: #fff; border-radius: 999px; opacity: 0; }
+.rf-good { background: #3d9a62; animation: rfPop 5s infinite; }
+.rf-bad { background: #c4574f; top: 84%; transform: translateY(-100%); animation: rfShow 5s infinite; }
+.rf-finger { position: absolute; z-index: 3; font-size: clamp(26px, 4.4dvh, 38px); line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3)); opacity: 0; animation: rfFinger 5s infinite; }
+.fg1 { left: 46%; top: 50%; } .fg2 { left: 14%; top: 76%; } .fg3 { left: 14%; top: 76%; }
+@keyframes rfFinger { 0%, 12% { opacity: 0; transform: translateY(14px); } 20% { opacity: 1; transform: none; } 30% { opacity: 1; transform: scale(0.82); } 40% { opacity: 1; transform: none; } 50%, 100% { opacity: 0; } }
+@keyframes rfOk { 0%, 28% { background: #fff; border-color: #9fb2bd; } 34%, 92% { background: #bfe8c6; border-color: #3d9a62; } 100% { background: #fff; border-color: #9fb2bd; } }
+@keyframes rfBtn { 0%, 28% { filter: none; } 34%, 92% { filter: brightness(0.9) saturate(1.2); transform: scale(0.95); } 100% { filter: none; transform: none; } }
+@keyframes rfPop { 0%, 32% { opacity: 0; transform: scale(0.5); } 40% { opacity: 1; transform: scale(1.15); } 46%, 92% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+@keyframes rfShow { 0%, 34% { opacity: 0; } 42%, 92% { opacity: 1; } 100% { opacity: 0; } }
+.rf-bad { animation-name: rfShowUp; }
+.rf-pts { animation-name: rfShowUp; }
+@keyframes rfShowUp { 0%, 34% { opacity: 0; } 42%, 92% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ④ 制限時間 */
+.rf-clock { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; }
+.rf-clock-n { font-size: clamp(28px, 6dvh, 44px); font-weight: bold; }
+.rf-bar { display: block; width: min(80vw, 300px); height: 22px; background: #fff; border: 3px solid var(--line); border-radius: 99px; overflow: hidden; }
+.rf-bar i { display: block; height: 100%; background: linear-gradient(90deg, #f0c030, #e0603a); border-radius: 99px; transform-origin: left; animation: rfBar 5s linear infinite; }
+.rf-over { font-size: clamp(20px, 3.6dvh, 28px); font-weight: bold; color: #c4574f; opacity: 0; animation: rfOver 5s infinite; }
+@keyframes rfBar { 0% { transform: scaleX(1); } 80%, 100% { transform: scaleX(0.02); } }
+@keyframes rfOver { 0%, 78% { opacity: 0; transform: scale(0.6); } 86%, 96% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+
+/* 1人:5問 */
+.rf-five { position: absolute; left: 6%; right: 6%; top: 18%; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.rf-five > span { display: grid; justify-items: center; gap: 2px; padding: 4px 0; background: #fff; border: 3px solid #d9a82a; border-radius: 14px; opacity: 0.25; animation: rfFive 5s infinite; animation-delay: calc(var(--n) * 0.55s); }
+.rf-five b { font-size: clamp(20px, 4dvh, 30px); } .rf-five em { font-style: normal; font-size: clamp(14px, 2.4dvh, 18px); font-weight: bold; color: #3d9a62; }
+@keyframes rfFive { 0%, 5% { opacity: 0.25; transform: none; } 12% { opacity: 1; transform: scale(1.12); background: #fff6b0; } 20%, 100% { opacity: 1; transform: none; background: #fff; } }
+.rf-total { position: absolute; left: 50%; bottom: 12%; padding: 3px 16px; font-size: clamp(17px, 3dvh, 24px); font-weight: bold; color: #5a4200; background: #fff; border: 3px solid #d9a82a; border-radius: 999px; transform: translateX(-50%); white-space: nowrap; }
+.rf-total.t100 { bottom: 8%; }
+/* 1人:難しさ */
+.rf-ladder { position: absolute; left: 0; right: 0; top: 10%; height: 2.2em; font-size: clamp(20px, 4dvh, 30px); font-weight: bold; text-align: center; }
+.rf-ladder > span { position: absolute; left: 0; right: 0; opacity: 0; color: #a67c00; }
+.rf-ladder .l1 { animation: rfL1 5s infinite; } .rf-ladder .l2 { animation: rfL2 5s infinite; } .rf-ladder .l3 { animation: rfL3 5s infinite; }
+@keyframes rfL1 { 0%, 26% { opacity: 1; } 32%, 100% { opacity: 0; } }
+@keyframes rfL2 { 0%, 28% { opacity: 0; } 34%, 58% { opacity: 1; } 64%, 100% { opacity: 0; } }
+@keyframes rfL3 { 0%, 60% { opacity: 0; } 68%, 96% { opacity: 1; } 100% { opacity: 0; } }
+.rf-chain { position: absolute; left: 0; right: 0; top: 40%; display: flex; justify-content: center; align-items: center; gap: 10px; font-size: clamp(26px, 5dvh, 38px); }
+.rf-chain > span { opacity: 0; animation: rfChain 5s infinite; }
+.rf-chain > span:nth-child(2) { animation-delay: 1.2s; } .rf-chain > span:nth-child(3) { animation-delay: 2.4s; }
+.rf-chain em { font-style: normal; font-size: 0.55em; font-weight: bold; color: #c4574f; opacity: 0; animation: rfShow 5s infinite; }
+@keyframes rfChain { 0%, 4% { opacity: 0; transform: scale(0.5); } 12%, 90% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+
+/* 皆で:順番 */
+.rf-players { position: absolute; left: 4%; right: 4%; top: 14%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.rf-pl { display: grid; justify-items: center; padding: 4px 0; border: 3px solid var(--line); border-radius: 14px; opacity: 0.5; animation: rfTurn 4s infinite; animation-delay: calc(var(--n) * 1s); }
+.rf-pl i { font-style: normal; font-size: clamp(24px, 4.6dvh, 36px); line-height: 1.2; } .rf-pl b { font-size: clamp(10px, 1.7dvh, 13px); white-space: nowrap; }
+.rf-pl.p1 { background: var(--p1); } .rf-pl.p2 { background: var(--p2); } .rf-pl.p3 { background: var(--p3); } .rf-pl.p4 { background: var(--p4); }
+@keyframes rfTurn { 0% { opacity: 1; transform: scale(1.12); box-shadow: 0 0 0 4px #fff, 0 0 0 7px #7b55c0; } 24% { opacity: 1; transform: scale(1.12); box-shadow: 0 0 0 4px #fff, 0 0 0 7px #7b55c0; } 26%, 100% { opacity: 0.5; transform: none; box-shadow: none; } }
+.rf-turn { position: absolute; left: 50%; bottom: 14%; padding: 3px 16px; font-size: clamp(17px, 3dvh, 24px); font-weight: bold; color: #3e2a70; background: #fff; border: 3px solid #a98ae0; border-radius: 999px; transform: translateX(-50%); white-space: nowrap; }
+/* 皆で:3回戦 */
+.rf-rounds { position: absolute; left: 4%; right: 4%; top: 12%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.rf-rd { display: grid; justify-items: center; gap: 2px; padding: 8px 2px; background: #fff; border: 3px solid #a98ae0; border-radius: 16px; opacity: 0; animation: rfRound 5s infinite; animation-delay: calc(var(--n) * 0.7s); }
+.rf-rd b { font-size: clamp(16px, 2.8dvh, 22px); } .rf-rd em { font-style: normal; font-size: clamp(16px, 2.8dvh, 22px); color: #d19a1d; letter-spacing: 1px; } .rf-rd strong { font-size: clamp(14px, 2.4dvh, 18px); color: #c0394f; }
+.rf-rd.r1 { background: #e6f6ea; } .rf-rd.r2 { background: #fff6cf; } .rf-rd.r3 { background: #fde4e6; }
+@keyframes rfRound { 0%, 4% { opacity: 0; transform: translateY(14px) scale(0.8); } 14%, 100% { opacity: 1; transform: none; } }
+.rf-crown { position: absolute; left: 50%; bottom: 12%; padding: 3px 14px; font-size: clamp(16px, 2.8dvh, 22px); font-weight: bold; color: #3e2a70; background: #fff; border: 3px solid #a98ae0; border-radius: 999px; transform: translateX(-50%); white-space: nowrap; opacity: 0; animation: rfCrown 5s infinite; }
+@keyframes rfCrown { 0%, 50% { opacity: 0; } 62%, 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  #screen-rules .rf-stage * { animation: none !important; }
+  .rf-hinttext, .rf-pts, .rf-answer, .rf-bad, .rf-good, .rf-rd, .rf-crown, .rf-over, .rf-chain > span, .rf-chain em, .rf-ladder .l1 { opacity: 1 !important; }
+  .rf-five > span, .rf-pl { opacity: 1 !important; }
+}
+@media (max-width: 340px) { .rf-pl b { display: none; } .rf-box { padding: 6px 8px; } .rf-caption { font-size: 14px; padding: 4px 8px; } }
+@media (max-height: 640px) { .rf-tag { display: none; } .rf-stage { min-height: 96px; } .rf-title { font-size: 18px; } .rf-next { min-height: 46px; font-size: 17px; } .rf-skip { display: none; } }
+
+/* ---- 対戦の結果:フロリを、もっと大きく ---- */
+#screen-result.is-versus .screen-head + .flori-cover { height: clamp(120px, 24dvh, 230px); width: auto; max-width: 70%; object-fit: contain; }
+@media (max-height: 620px) { #screen-result.is-versus .screen-head + .flori-cover { height: 96px; } }
+#screen-rules .rf-box { justify-content: center; }
+.rf-stage { flex: 0 1 auto; height: clamp(190px, 36dvh, 330px); }
+.rf-q { white-space: nowrap; font-size: clamp(13px, 2.2dvh, 18px); padding: 3px 8px; }
+@media (max-height: 700px) { .rf-stage { height: auto; flex: 1 1 0; } }
+
+/* =====================================================================
+   図鑑・成績の見直し:ランクの説明、科目ごとの正解、フロリを置く、「すべて」を大きく
+   ===================================================================== */
+#screen-records .rec-top { display: flex; align-items: center; gap: 8px; width: min(640px, 100%); }
+#screen-records .rec-flori { flex: none; width: auto; height: clamp(84px, 15dvh, 150px); max-width: 34%; object-fit: contain; }
+#screen-records .rec-top-text { flex: 1 1 0; min-width: 0; display: grid; gap: 4px; justify-items: stretch; }
+#screen-records .rec-top .scores.total { width: 100%; }
+#screen-records .rec-top .rank-line { font-size: 15px; }
+#screen-records .rec-top .total-bar { width: 100%; height: 12px; }
+.rank-next { margin: 0; font-size: 13px; line-height: 1.4; font-weight: bold; color: var(--blue-dark); text-wrap: pretty; }
+.rank-info-btn { justify-self: start; min-height: 0; padding: 3px 12px; font-size: 14px; }
+#screen-records .scores .wide dd { font-size: 16px; }
+.group-box { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; width: min(640px, 100%); margin: 0; padding: 6px 10px; list-style: none; background: #fff; border: 2px solid var(--blue); border-left-width: 8px; border-radius: 12px; }
+.group-box li { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "name num" "bar bar"; align-items: baseline; gap: 0 6px; min-width: 0; font-size: 14px; font-weight: bold; }
+.gb-name { grid-area: name; white-space: nowrap; }
+.gb-num { grid-area: num; justify-self: end; color: var(--blue-dark); font-size: 15px; }
+.gb-bar { grid-area: bar; display: block; height: 8px; background: #e4ebef; border-radius: 999px; overflow: hidden; }
+.gb-bar i { display: block; height: 100%; background: linear-gradient(90deg, #7ec3e0, #7cc48f); }
+.ranks-dialog { width: min(440px, 94vw); }
+.ranks-title { margin: 0 0 4px; font-size: 20px; }
+.ranks-howto { margin: 0 0 6px; font-size: 14px; line-height: 1.6; text-align: left; text-wrap: pretty; }
+.ranks-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; margin: 0 0 8px; padding: 0; list-style: none; }
+.ranks-list li { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "icon name" "icon min"; column-gap: 6px; align-items: center; padding: 3px 8px; font-size: 14px; background: #f1f5f7; border: 2px solid #c3ced5; border-radius: 10px; text-align: left; opacity: 0.7; }
+.ranks-list .rk-icon { grid-area: icon; font-size: 22px; }
+.ranks-list .rk-name { grid-area: name; font-weight: bold; }
+.ranks-list .rk-min { grid-area: min; font-size: 12px; color: var(--blue-dark); }
+.ranks-list li.is-past { opacity: 1; background: #fff; border-color: var(--blue); }
+.ranks-list li.is-now { opacity: 1; background: #fff7c9; border-color: #e0b43a; box-shadow: 0 2px 0 #e0b43a; }
+@media (max-height: 700px) {
+  #screen-records { gap: 5px; }
+  #screen-records .rec-top { gap: 6px; }
+  #screen-records .rec-flori { height: clamp(64px, 12dvh, 84px); }
+  #screen-records .rec-top-text { gap: 2px; }
+  #screen-records .rec-top .scores.total div { padding: 2px 12px; }
+  #screen-records .rec-top .scores.total dt { font-size: 13px; }
+  #screen-records .rec-top .scores.total dd { font-size: 20px; }
+  #screen-records .rec-top .rank-line { font-size: 13px; }
+  #screen-records .rec-top .rank-line b { font-size: 15px; }
+  .rank-next { font-size: 11px; line-height: 1.3; }
+  .rank-info-btn { padding: 1px 10px; font-size: 12px; }
+  #screen-records .scores:not(.total) { gap: 3px 5px; }
+  #screen-records .scores:not(.total) div { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 4px; padding: 2px 8px; }
+  #screen-records .scores dt { font-size: 11.5px; line-height: 1.25; }
+  #screen-records .scores dd { font-size: 13px; line-height: 1.25; text-align: right; }
+  #screen-records .scores .wide { display: flex; }
+  .group-box { gap: 2px 8px; padding: 3px 8px; }
+  .group-box li { font-size: 12px; }
+  .gb-num { font-size: 12px; }
+  .gb-bar { height: 6px; }
+}
+@media (max-height: 700px) and (max-width: 360px) {
+  #screen-records .scores dt { font-size: 10.5px; letter-spacing: -0.03em; }
+}
+
+/* 問題図鑑:フロリを置く。「すべて」は他より大きく。文章は、読みやすい所で折り返す */
+#screen-dex .dex-head-box { display: flex; align-items: center; justify-content: center; gap: 8px; width: min(520px, 100%); }
+#screen-dex .dex-flori { flex: none; width: auto; height: clamp(56px, 10dvh, 96px); max-width: 28%; object-fit: contain; }
+#screen-dex .dex-head-text { flex: 1 1 0; min-width: 0; display: grid; gap: 3px; justify-items: center; }
+#screen-dex .dex-head-text .note { margin: 0; text-align: center; text-wrap: pretty; }
+#screen-dex .dex-filter .dex-tab-all { flex: 1.7; font-size: 17px; padding: 4px 2px; }
+#screen-dex .dex-filter .dex-tab-all small { font-size: 12px; }
+.dex-big .dex-q, .dex-big .dex-choices li, .dex-big .dex-owned, .dex-head-box .note { overflow-wrap: normal; word-break: auto-phrase; line-break: strict; text-wrap: pretty; }
+.rf-rd strong { font-size: clamp(18px, 3.2dvh, 26px); }
+.rf-crown { bottom: 6%; }
+.rf-rounds { top: 8%; }
+@media (max-width: 340px) { #screen-setup .set-row { grid-template-columns: 72px 1fr; } #screen-setup .set-label { font-size: 13px; } }
+/* スタートの確認の画面も、ほかの画面と同じように、画面いっぱいに */
+:is(#screen-confirm).screen:not([hidden]) { flex: 1 1 0; min-height: 0; height: auto; overflow: hidden; padding: 8px 8px 10px; gap: 8px; justify-content: flex-start; border-radius: 22px; }
+.hud-rank { flex: 1.5 1 0; }
+.hud-rank .hv { font-size: 12.5px; }

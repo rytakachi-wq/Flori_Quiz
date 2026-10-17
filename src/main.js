@@ -40,6 +40,7 @@ import {
 import { illustrationFor } from "./illustrations.js";
 import { createTalker } from "./talk.js";
 import { initTutorial, openTutorial } from "./tutorial.js";
+import { initRules, openRules as resetRules } from "./rules.js";
 import { BODIES, COLORS, FACES, HEADS, RANKS, THEMES, earnedBadges, getText, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
@@ -98,7 +99,7 @@ for (const type of ["pointerdown", "pointermove", "keydown", "wheel", "touchstar
 const talker = createTalker({ textEl: $("cover-talk") });
 
 // 横にスワイプ(なぞる)して、行き来できる画面
-const PAGER = ["cover", "dex", "dress", "records", "menu", "settings"];
+const PAGER = ["cover", "dress", "dex", "records", "menu", "settings"];
 const PAGER_ICON = { cover: "🏠", menu: "📋", dex: "📚", dress: "👑", records: "🏆", settings: "⚙️" };
 const PAGER_NAME = { cover: "ホーム", menu: "その他", dex: "図鑑", dress: "着せ替え", records: "成績", settings: "設定" };
 let currentScreen = "cover";
@@ -741,22 +742,58 @@ function showRecords() {
   const running = s.dailyLast === today || s.dailyLast === previousDateKey(today) ? s.dailyStreak : 0;
   $("s-daily").textContent = `${running}日連続・計${s.dailyDays}日`;
   $("s-wrong").textContent = `${s.wrong.filter((id) => playable.has(id)).length}問`;
-  const rank = rankOf(currentTotal(s));
-  const nextRank = RANKS.find((item) => item.min > currentTotal(s));
+  const total = currentTotal(s);
+  const rank = rankOf(total);
+  const nextRank = RANKS.find((item) => item.min > total);
   $("s-rank-icon").textContent = rank.icon;
   $("s-rank").textContent = rank.name;
-  $("s-rank-next").textContent = nextRank ? ` あと${nextRank.min - currentTotal(s)}点で ${nextRank.icon}` : " 最高ランク!";
+  // 次のランクまで:1問をヒントなしで正解すると、100点÷問題数の点が入る
+  const perQuestion = TOTAL_POINTS / Math.max(1, playable.size);
+  $("s-rank-next").textContent = nextRank
+    ? `次は ${nextRank.icon} ${nextRank.name} まで あと${nextRank.min - total}点(ヒントなしで約${Math.ceil((nextRank.min - total) / perQuestion)}問)`
+    : "最高ランク! すごいヨ!";
   const rightIds = new Set(s.right);
-  $("s-groups").textContent = GROUPS.map((group) => {
-    const list = playableQuestions.filter((q) => groupOf(q) === group);
-    return `${list.filter((q) => rightIds.has(q.uid ?? q.id)).length}/${list.length}`;
-  }).join("  ");
+  const groupRows = [...GROUPS, "ランダム"].map((group) => {
+    const list = group === "ランダム" ? playableQuestions : playableQuestions.filter((q) => groupOf(q) === group);
+    const got = list.filter((q) => rightIds.has(q.uid ?? q.id)).length;
+    const item = document.createElement("li");
+    item.innerHTML = '<span class="gb-name"></span><span class="gb-bar"><i></i></span><b class="gb-num"></b>';
+    item.querySelector(".gb-name").textContent = `${GROUP_ICON[group]} ${group === "ランダム" ? "ランダム(全部)" : group}`;
+    item.querySelector(".gb-bar i").style.width = `${list.length ? (got / list.length) * 100 : 0}%`;
+    item.querySelector(".gb-num").textContent = `${got}/${list.length}`;
+    return item;
+  });
+  $("s-groups").replaceChildren(...groupRows);
+  const rightPlayable = s.right.filter((id) => playable.has(id));
+  const full = rightPlayable.filter((id) => (s.qpts[id] ?? POINTS_PER_CORRECT) >= POINTS_PER_CORRECT).length;
+  $("s-full").textContent = `${full}問`;
+  $("s-half").textContent = `${rightPlayable.length - full}問`;
+  $("s-oni").textContent = `${s.oniRight.filter((id) => oniIds.has(id)).length} / ${oniIds.size}問`;
   $("s-right").textContent = `${right} / ${playable.size}問`;
-  $("s-answered").textContent = `${s.answered}問・正解${s.correct}問`;
-  $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%` : "まだないよ";
+  $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%(${s.correct}/${s.answered}問)` : "まだないよ";
   markSeen("records");
   show("records");
 }
+
+// ランクの一覧:いまのランクに しるしをつける
+function openRankInfo() {
+  const total = currentTotal();
+  const now = rankOf(total);
+  $("ranks-list").replaceChildren(
+    ...RANKS.map((rank) => {
+      const item = document.createElement("li");
+      item.className = rank.min === now.min ? "is-now" : total >= rank.min ? "is-past" : "";
+      item.innerHTML = '<span class="rk-icon" aria-hidden="true"></span><span class="rk-name"></span><span class="rk-min"></span>';
+      item.querySelector(".rk-icon").textContent = rank.icon;
+      item.querySelector(".rk-name").textContent = rank.name;
+      item.querySelector(".rk-min").textContent = rank.min === now.min ? `${rank.min}点〜 いまここ!` : `${rank.min}点〜`;
+      return item;
+    }),
+  );
+  $("dlg-ranks").showModal();
+}
+$("btn-rank-info").addEventListener("click", openRankInfo);
+$("btn-ranks-close").addEventListener("click", () => $("dlg-ranks").close());
 
 function next() {
   stopSpeaking(); // 先へ進んだら、読み上げは止める
@@ -943,10 +980,19 @@ function renderSetup() {
   renderRewardCard($("flow-reward"));
 }
 
-// おすすめ:分類・難しさ・制限時間を、まとめて選ぶ(人数選択は、そのまま)
+// おすすめ:分類・難しさ・制限時間を、まとめて選ぶ(人数選択は、そのまま)。続きがあるときは、いちばん進んでいる続きを選ぶ
 function chooseRecommended() {
-  pick.group = "ランダム";
-  pick.level = "normal";
+  const courses = loadStats().courses;
+  let best = null;
+  for (const group of [...GROUPS, "ランダム"]) {
+    for (const level of ["normal", "hard"]) {
+      const saved = courses[courseKey(group, level)];
+      const progress = saved ? saved.used.length + saved.counter : 0;
+      if (hasCourseKey(courseKey(group, level)) && (!best || progress > best.progress)) best = { group, level, progress };
+    }
+  }
+  pick.group = best && pick.kind !== "versus" ? best.group : "ランダム";
+  pick.level = best ? best.level : "normal";
   pick.time = false;
   renderSetup();
 }
@@ -976,10 +1022,11 @@ function renderConfirm() {
 }
 
 function openRules() {
+  resetRules();
   show("rules");
 }
 $("btn-quiz").addEventListener("click", openRules);
-$("btn-rules-next").addEventListener("click", () => {
+initRules(() => {
   renderSetup();
   show("setup");
 });
@@ -1684,7 +1731,7 @@ function showDex() {
     const got = list.filter((q) => met.has(q.uid ?? q.id)).length;
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `dex-tab${name === dexFilter ? " is-on" : ""}`;
+    button.className = `dex-tab${name === dexFilter ? " is-on" : ""}${name === "すべて" ? " dex-tab-all" : ""}`;
     button.dataset.noSe = "";
     button.innerHTML = '<span class="dt-name"></span><small></small>';
     button.querySelector(".dt-name").textContent = `${DEX_FILTER_ICON[name]} ${name}`;

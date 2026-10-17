@@ -73,40 +73,18 @@
         <button id="btn-rules-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
         <h2 class="title">クイズのルール</h2>
       </header>
-      <div class="rule-demo" role="img" aria-label="ルールの動画。問題が出て、答えを選ぶと正解で点が入る。ヒントを見ると点が半分。分からないを押すと不正解。制限時間は30秒。1人は1回5問、皆で対戦は3回戦。">
-        <div class="rd-card" aria-hidden="true">
-          <p class="rd-q"><span class="rd-qn">Q</span> りんご3こ + みかん2こ = ?</p>
-          <div class="rd-choices"><span>4こ</span><span class="rd-right">5こ</span><span>6こ</span></div>
-          <div class="rd-bottom">
-            <span class="rd-hintbtn">💡 ヒント</span>
-            <span class="rd-giveupbtn">🤔 分からない</span>
-            <span class="rd-hinttext">たしてね</span>
-          </div>
-          <span class="rd-time"><i></i></span>
-          <span class="rd-finger">👆</span>
-          <span class="rd-badge rd-b2">⭕ 正解 +2点</span>
-          <span class="rd-badge rd-b1">💡 半分 +1点</span>
-          <span class="rd-badge rd-b0">❌ 不正解 0点</span>
-          <span class="rd-badge rd-bs">🙂 1人 5問</span>
-          <span class="rd-badge rd-bv">👥 3回戦</span>
-        </div>
-        <p class="rd-caption" aria-hidden="true">
-          <span class="rc1">① 問題が 出るよ</span>
-          <span class="rc2">② 答えを 選ぶ</span>
-          <span class="rc3">③ 正解で 点が 入る!</span>
-          <span class="rc4">💡 ヒントを 見ると 点が 半分</span>
-          <span class="rc5">🤔 分からない=答えを見る(不正解)</span>
-          <span class="rc6">⏱ 制限時間は 30秒(つけた時だけ)</span>
-          <span class="rc7">🙂 1人:1回5問 続くと 難しく</span>
-          <span class="rc8">👥 皆で:3回戦 正解で 1・2・3点</span>
-        </p>
+      <div class="rf-box">
+        <p id="rf-tag" class="rf-tag"></p>
+        <h3 id="rf-title" class="rf-title"></h3>
+        <div id="rf-stage" class="rf-stage"></div>
+        <p id="rf-caption" class="rf-caption"></p>
+        <div id="rf-dots" class="tut-dots" aria-hidden="true"></div>
       </div>
-      <ul class="rule-brief">
-        <li class="rb-common"><b>🎯 どちらも</b><span>ヒント=点が半分 / 分からない=不正解 / 30秒</span></li>
-        <li class="rb-solo"><b>🙂 1人</b><span>1回5問 正解2点 / 続くと難しく</span></li>
-        <li class="rb-vs"><b>👥 皆で</b><span>順番に1問 / 3回戦 1・2・3点</span></li>
-      </ul>
-      <button id="btn-rules-next" class="go-btn" type="button">クイズのモード選択へ <span aria-hidden="true">▶</span></button>
+      <div class="rf-buttons">
+        <button id="rf-prev" class="rf-prev" type="button">◀ 前へ</button>
+        <button id="btn-rules-next" class="go-btn rf-next" type="button">次へ <span aria-hidden="true">▶</span></button>
+      </div>
+      <button id="rf-skip" class="rf-skip" type="button">ルールを とばして モード選択へ</button>
     </section>
 
     <!-- クイズのモード選択(1つの画面で、ぜんぶ選ぶ) -->
@@ -163,9 +141,12 @@
         <h2 class="title">📚 問題図鑑</h2>
       </header>
       <div class="dex-head-box">
-        <p id="dex-count" class="dex-count"></p>
-        <div class="dex-meter"><span id="dex-meter-bar"></span></div>
-        <p id="dex-comment" class="note" role="status"></p>
+        <img class="flori dex-flori" src="../assets/flori/wave_nikkori.png" alt="">
+        <div class="dex-head-text">
+          <p id="dex-count" class="dex-count"></p>
+          <div class="dex-meter"><span id="dex-meter-bar"></span></div>
+          <p id="dex-comment" class="note" role="status"></p>
+        </div>
       </div>
       <div id="dex-filter" class="dex-filter" role="tablist" aria-label="分類"></div>
       <div id="dex-grid" class="dex-grid"></div>
@@ -226,11 +207,18 @@
         <button id="btn-records-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
         <h2 class="title">🏆 成績</h2>
       </header>
-      <dl class="scores total">
-        <div><dt>総合得点</dt><dd id="s-total"></dd></div>
-      </dl>
-      <p class="rank-line"><span id="s-rank-icon" aria-hidden="true">🥚</span> ランク <b id="s-rank">たまご</b><small id="s-rank-next"></small></p>
-      <div class="total-bar" aria-hidden="true"><span id="s-total-bar"></span></div>
+      <div class="rec-top">
+        <img class="flori rec-flori" src="../assets/flori/wave_surprised.png" alt="">
+        <div class="rec-top-text">
+          <dl class="scores total">
+            <div><dt>総合得点</dt><dd id="s-total"></dd></div>
+          </dl>
+          <p class="rank-line"><span id="s-rank-icon" aria-hidden="true">🥚</span> ランク <b id="s-rank">たまご</b></p>
+          <div class="total-bar" aria-hidden="true"><span id="s-total-bar"></span></div>
+          <p id="s-rank-next" class="rank-next"></p>
+          <button id="btn-rank-info" class="btn btn-sub btn-small rank-info-btn" type="button">🏅 ランクの一覧</button>
+        </div>
+      </div>
       <dl class="scores">
         <div><dt>👑 着せ替え</dt><dd id="s-dress"></dd></div>
         <div><dt>⭐ ご褒美の星</dt><dd id="s-stars"></dd></div>
@@ -238,11 +226,13 @@
         <div><dt>👥 対戦した回数</dt><dd id="s-versus"></dd></div>
         <div><dt>📅 毎日1問</dt><dd id="s-daily"></dd></div>
         <div><dt>📖 復習待ち</dt><dd id="s-wrong"></dd></div>
-        <div><dt>✏️ 解いた問題</dt><dd id="s-answered"></dd></div>
         <div><dt>✅ 正解した問題</dt><dd id="s-right"></dd></div>
         <div><dt>🎯 正解率</dt><dd id="s-rate"></dd></div>
-        <div class="wide"><dt>🔬 理系 / 📖 文系 / 💡 ひらめき(正解した問題)</dt><dd id="s-groups"></dd></div>
+        <div><dt>🌟 ヒントなしで正解</dt><dd id="s-full"></dd></div>
+        <div><dt>💡 ヒントありで正解</dt><dd id="s-half"></dd></div>
+        <div class="wide"><dt>👹 オニ問題(5点・総合得点には入らない)</dt><dd id="s-oni"></dd></div>
       </dl>
+      <ul id="s-groups" class="group-box" aria-label="科目ごとの正解"></ul>
     </section>
 
     <!-- 設定 -->
@@ -444,6 +434,14 @@
     <div id="dex-big" class="dex-big"></div>
     <div class="buttons">
       <button id="btn-dex-close" class="btn btn-main" type="button">閉じる</button>
+    </div>
+  </dialog>
+  <dialog id="dlg-ranks" class="dialog ranks-dialog" aria-labelledby="ranks-title">
+    <h3 id="ranks-title" class="ranks-title">🏅 ランクの一覧</h3>
+    <p class="ranks-howto">総合得点は 100点満点。問題ごとに <b>ヒントなしで正解=満点</b>・<b>ヒントありで正解=半分</b>。ヒントありで正解した問題を ヒントなしで解きなおすと 点が上がるヨ。<b>10点ごと</b>にランクアップ!</p>
+    <ol id="ranks-list" class="ranks-list"></ol>
+    <div class="buttons">
+      <button id="btn-ranks-close" class="btn btn-main" type="button">閉じる</button>
     </div>
   </dialog>
   <dialog id="dlg-info" class="dialog" aria-labelledby="dlg-info-text">
