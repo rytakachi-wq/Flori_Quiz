@@ -74,55 +74,39 @@
         <h2 class="title">クイズのルール</h2>
         <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
       </header>
-      <div class="rule-demo" role="img" aria-label="ルールの動画。問題が出て、答えを選ぶと正解で点が入る。ヒントを見ると、点が半分になる。">
+      <div class="rule-demo" role="img" aria-label="ルールの動画。問題が出て、答えを選ぶと正解で点が入る。ヒントを見ると点が半分。分からないを押すと不正解。制限時間は30秒。1人は1回5問、皆で対戦は3回戦。">
         <div class="rd-card" aria-hidden="true">
           <p class="rd-q"><span class="rd-qn">Q</span> りんご3こ + みかん2こ = ?</p>
           <div class="rd-choices"><span>4こ</span><span class="rd-right">5こ</span><span>6こ</span></div>
           <div class="rd-bottom">
             <span class="rd-hintbtn">💡 ヒント</span>
-            <span class="rd-hinttext">りんごと みかんを たしてね</span>
+            <span class="rd-giveupbtn">🤔 分からない</span>
+            <span class="rd-hinttext">たしてね</span>
           </div>
+          <span class="rd-time"><i></i></span>
           <span class="rd-finger">👆</span>
-          <span class="rd-badge rd-b2">⭕ 正解! +2点</span>
-          <span class="rd-badge rd-b1">💡 ヒントで 半分 +1点</span>
+          <span class="rd-badge rd-b2">⭕ 正解 +2点</span>
+          <span class="rd-badge rd-b1">💡 半分 +1点</span>
+          <span class="rd-badge rd-b0">❌ 不正解 0点</span>
+          <span class="rd-badge rd-bs">🙂 1人 5問</span>
+          <span class="rd-badge rd-bv">👥 3回戦</span>
         </div>
         <p class="rd-caption" aria-hidden="true">
           <span class="rc1">① 問題が 出るよ</span>
           <span class="rc2">② 答えを 選ぶ</span>
           <span class="rc3">③ 正解で 点が 入る!</span>
           <span class="rc4">💡 ヒントを 見ると 点が 半分</span>
+          <span class="rc5">🤔 分からない=答えを見る(不正解)</span>
+          <span class="rc6">⏱ 制限時間は 30秒(つけた時だけ)</span>
+          <span class="rc7">🙂 1人:1回5問 続くと 難しく</span>
+          <span class="rc8">👥 皆で:3回戦 正解で 1・2・3点</span>
         </p>
       </div>
-      <div class="rule-cards">
-        <article class="rule-card is-common">
-          <h3><span aria-hidden="true">🎯</span> どちらも 同じルール</h3>
-          <ul>
-            <li><span aria-hidden="true">📝</span> 問題に 答えて 進もう</li>
-            <li><span aria-hidden="true">💡</span> ヒントを 見ると その問題の 点が <b>半分</b></li>
-            <li><span aria-hidden="true">🤔</span> 「分からない」で 答えが 見られる(不正解)</li>
-            <li><span aria-hidden="true">⏱</span> 制限時間(30秒)を 付けられる</li>
-          </ul>
-        </article>
-        <div class="rule-split">
-          <article class="rule-card is-solo">
-            <h3><span aria-hidden="true">🙂</span> 1人で</h3>
-            <ul>
-              <li><span aria-hidden="true">📝</span> 1回 <b>5問</b> 正解で <b>2点</b></li>
-              <li><span aria-hidden="true">🔥</span> 正解が 続くと <b>難しく</b></li>
-              <li><span aria-hidden="true">🏆</span> 総合得点は <b>100点</b>満点</li>
-              <li><span aria-hidden="true">⭐</span> 制限時間つきで <b>星</b> GET</li>
-            </ul>
-          </article>
-          <article class="rule-card is-vs">
-            <h3><span aria-hidden="true">👥</span> 皆で 対戦</h3>
-            <ul>
-              <li><span aria-hidden="true">🔁</span> 順番に 1人1問ずつ</li>
-              <li><span aria-hidden="true">🏁</span> <b>3回戦</b> 正解で <b>1・2・3点</b></li>
-              <li><span aria-hidden="true">👑</span> 合計点が 1番高い人の 勝ち</li>
-            </ul>
-          </article>
-        </div>
-      </div>
+      <ul class="rule-brief">
+        <li class="rb-common"><b>🎯 どちらも</b><span>ヒント=点が半分 / 分からない=不正解 / 30秒</span></li>
+        <li class="rb-solo"><b>🙂 1人</b><span>1回5問 正解2点 / 続くと難しく</span></li>
+        <li class="rb-vs"><b>👥 皆で</b><span>順番に1問 / 3回戦 1・2・3点</span></li>
+      </ul>
       <button id="btn-rules-next" class="go-btn" type="button">クイズのモード選択へ <span aria-hidden="true">▶</span></button>
     </section>
 
@@ -133,7 +117,6 @@
         <h2 class="title">クイズのモード選択</h2>
         <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
       </header>
-      <button id="btn-recommend" class="reco-btn" type="button"><span aria-hidden="true">✨</span> おすすめで まとめて 選ぶ</button>
       <div class="set-list">
         <div class="set-row"><span class="set-label"><span aria-hidden="true">👥</span> 人数選択</span><div id="seg-kind" class="seg"></div></div>
         <div class="set-row"><span class="set-label"><span aria-hidden="true">📚</span> 分類</span><div id="seg-group" class="seg seg-4"></div></div>
@@ -142,7 +125,10 @@
       </div>
       <p id="setup-note" class="setup-note" role="status"></p>
       <div id="flow-reward" class="reward-card" hidden></div>
-      <button id="btn-start" class="go-btn is-start" type="button">スタートの 確認へ <span aria-hidden="true">▶</span></button>
+      <div class="setup-actions">
+        <button id="btn-recommend" class="reco-btn" type="button"><span aria-hidden="true">✨</span> おすすめで<br>選ぶ</button>
+        <button id="btn-start" class="go-btn is-start" type="button"><span class="ga">スタートの<br>確認へ</span><span aria-hidden="true">▶</span></button>
+      </div>
     </section>
 
     <!-- スタートの前の確認 -->

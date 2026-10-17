@@ -393,7 +393,13 @@ function showQuestion() {
   else $("q-timer").hidden = true;
   stopSpeaking();
   // 自動の読み上げ(400ミリ秒のあいだに、先へ進んだり、他の画面にいったときは、読まない)
-  if (readAloud()) setTimeout(() => current === question && !answered && !$("screen-question").hidden && speak(readableQuestion(question)), 400);
+  if (readAloud() && canSpeak) {
+    setSpeaking(true); // 読み上げが始まる前から、制限時間を止めておく
+    setTimeout(() => {
+      if (current === question && !answered && !$("screen-question").hidden) speak(readableQuestion(question));
+      else if (!speechSynthesis.speaking) setSpeaking(false);
+    }, 400);
+  }
 }
 
 
@@ -421,10 +427,13 @@ function startTimer() {
   renderTimer();
   timerId = setInterval(() => {
     if ($("dlg-quit").open || $("dlg-giveup").open || $("dlg-volume").open) return; // 設定やめるの確認を開いている間は、とめる
-    if (speaking) {
+    if (speaking || (canSpeak && (speechSynthesis.speaking || speechSynthesis.pending))) {
       // 読み上げが終わるまで、とめる(終わりの知らせが来ないときの、ほけんつき)
-      if (Date.now() - speakingSince > 1500 && !speechSynthesis.speaking && !speechSynthesis.pending) setSpeaking(false);
-      else return;
+      if (speaking && Date.now() - speakingSince > 2500 && !speechSynthesis.speaking && !speechSynthesis.pending) setSpeaking(false);
+      else {
+        if (!speaking) setSpeaking(true);
+        return;
+      }
     }
     timerLeft -= 0.1;
     renderTimer();
@@ -518,7 +527,7 @@ function renderBoard(list, scores, active) {
     ...scores.map((score, index) => {
       const item = document.createElement("li");
       item.className = `p${index + 1}${index === active ? " is-active" : ""}`;
-      item.textContent = list.classList.contains("big") ? `${PLAYER_NAMES[index]}  ${score}点` : `P${index + 1}  ${score}点`; // 問題の画面は、せまいので、P1 のように短く
+      item.textContent = list.classList.contains("big") ? `${PLAYER_NAMES[index]}  ${score}点` : `${score}点`; // 問題の画面は、せまいので、点数だけ(だれかは、色で分かる)
       return item;
     }),
   );
@@ -548,6 +557,7 @@ function answer(response) {
   timedOut = false;
   gaveUp = false;
   const correct = play.answer(current, response, hinted);
+  if (mode === "normal" || mode === "hard") persistSession(); // 答えるたびに「続き」を保存(途中でやめても、💾 続き が付く)
   $("btn-hint").disabled = true;
   $("btn-giveup").disabled = true;
   if (mode === "versus") renderBoard($("q-board"), play.scores, answeringPlayer);
@@ -599,6 +609,7 @@ function currentTotal(stats = loadStats()) {
 function showResult() {
   const result = play.finishRound();
   const versus = mode === "versus";
+  $("screen-result").classList.toggle("is-versus", versus);
   $("btn-again").hidden = false;
   recordDex(result.answers); // 図鑑(どのモードでも)
   $("r-correct-row").hidden = versus;
@@ -914,7 +925,7 @@ function renderSetup() {
     $("seg-time"),
     [
       { value: true, icon: "⏱", text: "つける", sub: "星が もらえる", color: "c-red" },
-      { value: false, icon: "🙂", text: "なし", color: "c-gray", small: true },
+      { value: false, icon: "🙂", text: "なし", sub: "ご褒美が なくなるよ", color: "c-gray", small: true },
     ],
     pick.time,
     (value) => {
@@ -923,12 +934,12 @@ function renderSetup() {
     },
   );
   $("setup-note").textContent = versus
-    ? "1台の画面で 順番に 答えるよ。皆で遊ぶときは 毎回 はじめからだよ。"
+    ? "1台の画面で 順番に 答えるよ。毎回 はじめから。"
     : hasCourseKey(courseKey())
-      ? "💾 この組み合わせは 前の続きから 始まるよ!"
+      ? "💾 続きから 始まるよ!"
       : anySavedCourse()
-        ? "この組み合わせは はじめから。(💾 続き の印は 続きがあるよ)"
-        : "はじめから 遊ぶよ。ゆっくり じっくり 考えよう!";
+        ? "はじめから 始まるよ。(💾 = 続きあり)"
+        : "はじめから 始まるよ。じっくり 考えよう!";
   renderRewardCard($("flow-reward"));
 }
 
@@ -1206,6 +1217,7 @@ $("btn-quit-no").addEventListener("click", () => $("dlg-quit").close());
 $("btn-quit-yes").addEventListener("click", () => {
   $("dlg-quit").close();
   play.abandonRound();
+  if (mode === "normal" || mode === "hard") sessions.delete(activeKey); // 保存した続きから、作りなおす
   show("cover", -1);
 });
 
