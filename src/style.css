@@ -2137,7 +2137,6 @@ body.has-pager { padding-bottom: 56px; }
 
 /* とても背の低い画面(高さ620px以下):成績の「分類ごとの正解」は、かくす */
 @media (max-height: 660px) {
-  #screen-records .scores .wide { display: none; }
   #screen-records .rank-line { font-size: 14px; }
 }
 @media (max-height: 620px) {
@@ -2632,14 +2631,13 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
    ===================================================================== */
 #screen-records .rec-top { display: flex; align-items: center; gap: 8px; width: min(640px, 100%); }
 #screen-records .rec-flori { flex: none; width: auto; height: clamp(84px, 15dvh, 150px); max-width: 34%; object-fit: contain; }
-#screen-records .rec-top-text { flex: 1 1 0; min-width: 0; display: grid; gap: 4px; justify-items: stretch; }
+#screen-records .rec-top-text { flex: 1 1 0; min-width: 0; overflow: hidden; display: grid; gap: 4px; justify-items: stretch; }
 #screen-records .rec-top .scores.total { width: 100%; }
 #screen-records .rec-top .rank-line { font-size: 15px; }
 #screen-records .rec-top .total-bar { width: 100%; height: 12px; }
 .rank-next { margin: 0; font-size: 13px; line-height: 1.4; font-weight: bold; color: var(--blue-dark); text-wrap: pretty; }
-.rank-info-btn { justify-self: start; min-height: 0; padding: 3px 12px; font-size: 14px; }
-#screen-records .scores .wide dd { font-size: 16px; }
-.group-box { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; width: min(640px, 100%); margin: 0; padding: 6px 10px; list-style: none; background: #fff; border: 2px solid var(--blue); border-left-width: 8px; border-radius: 12px; }
+.rank-info-btn { margin-left: 6px; padding: 1px 10px; font: inherit; font-size: 13px; font-weight: bold; color: var(--text); cursor: pointer; background: #fff; border: 2px solid var(--blue-dark); border-radius: 999px; vertical-align: middle; }
+.group-box { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 10px; width: min(640px, 100%); margin: 0; padding: 6px 10px; list-style: none; background: #fff; border: 2px solid var(--blue); border-left-width: 8px; border-radius: 12px; }
 .group-box li { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "name num" "bar bar"; align-items: baseline; gap: 0 6px; min-width: 0; font-size: 14px; font-weight: bold; }
 .gb-name { grid-area: name; white-space: nowrap; }
 .gb-num { grid-area: num; justify-self: end; color: var(--blue-dark); font-size: 15px; }
@@ -2647,31 +2645,31 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
 .gb-bar i { display: block; height: 100%; background: linear-gradient(90deg, #7ec3e0, #7cc48f); }
 .ranks-dialog { width: min(440px, 94vw); }
 .ranks-title { margin: 0 0 4px; font-size: 20px; }
-.ranks-howto { margin: 0 0 6px; font-size: 14px; line-height: 1.6; text-align: left; text-wrap: pretty; }
-.ranks-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; margin: 0 0 8px; padding: 0; list-style: none; }
-.ranks-list li { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "icon name" "icon min"; column-gap: 6px; align-items: center; padding: 3px 8px; font-size: 14px; background: #f1f5f7; border: 2px solid #c3ced5; border-radius: 10px; text-align: left; opacity: 0.7; }
-.ranks-list .rk-icon { grid-area: icon; font-size: 22px; }
-.ranks-list .rk-name { grid-area: name; font-weight: bold; }
+.ranks-howto { margin: 0 0 6px; font-size: 13px; line-height: 1.5; text-align: center; text-wrap: pretty; }
+.ranks-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 6px; margin: 0 0 6px; padding: 0; list-style: none; }
+.ranks-list li { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "icon name" "icon min"; column-gap: 5px; align-items: center; padding: 0 6px; font-size: 13px; line-height: 1.25; background: #f1f5f7; border: 2px solid #c3ced5; border-radius: 10px; text-align: left; opacity: 0.7; }
+.ranks-list .rk-icon { grid-area: icon; font-size: 20px; }
+.ranks-list .rk-name { grid-area: name; font-weight: bold; font-size: 12.5px; letter-spacing: -0.02em; }
 .ranks-list .rk-min { grid-area: min; font-size: 12px; color: var(--blue-dark); }
 .ranks-list li.is-past { opacity: 1; background: #fff; border-color: var(--blue); }
 .ranks-list li.is-now { opacity: 1; background: #fff7c9; border-color: #e0b43a; box-shadow: 0 2px 0 #e0b43a; }
 @media (max-height: 700px) {
   #screen-records { gap: 5px; }
   #screen-records .rec-top { gap: 6px; }
-  #screen-records .rec-flori { height: clamp(64px, 12dvh, 84px); }
+  #screen-records .rec-flori { height: clamp(60px, 11dvh, 84px); max-width: 26%; }
   #screen-records .rec-top-text { gap: 2px; }
   #screen-records .rec-top .scores.total div { padding: 2px 12px; }
-  #screen-records .rec-top .scores.total dt { font-size: 13px; }
-  #screen-records .rec-top .scores.total dd { font-size: 20px; }
+  #screen-records .rec-top .scores.total div { flex-wrap: wrap; justify-content: center; gap: 0 6px; }
+  #screen-records .rec-top .scores.total dt { font-size: 11px; }
+  #screen-records .rec-top .scores.total dd { font-size: 17px; white-space: nowrap; }
   #screen-records .rec-top .rank-line { font-size: 13px; }
   #screen-records .rec-top .rank-line b { font-size: 15px; }
   .rank-next { font-size: 11px; line-height: 1.3; }
-  .rank-info-btn { padding: 1px 10px; font-size: 12px; }
+  .rank-info-btn { margin-left: 4px; padding: 0 7px; font-size: 11px; }
   #screen-records .scores:not(.total) { gap: 3px 5px; }
-  #screen-records .scores:not(.total) div { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 4px; padding: 2px 8px; }
-  #screen-records .scores dt { font-size: 11.5px; line-height: 1.25; }
-  #screen-records .scores dd { font-size: 13px; line-height: 1.25; text-align: right; }
-  #screen-records .scores .wide { display: flex; }
+  #screen-records .scores:not(.total) div { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 0; padding: 1px 8px; min-width: 0; }
+  #screen-records .scores dt { font-size: 11px; line-height: 1.3; }
+  #screen-records .scores dd { font-size: 13px; line-height: 1.2; text-align: left; white-space: nowrap; }
   .group-box { gap: 2px 8px; padding: 3px 8px; }
   .group-box li { font-size: 12px; }
   .gb-num { font-size: 12px; }
@@ -2686,7 +2684,9 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
 #screen-dex .dex-flori { flex: none; width: auto; height: clamp(56px, 10dvh, 96px); max-width: 28%; object-fit: contain; }
 #screen-dex .dex-head-text { flex: 1 1 0; min-width: 0; display: grid; gap: 3px; justify-items: center; }
 #screen-dex .dex-head-text .note { margin: 0; text-align: center; text-wrap: pretty; }
-#screen-dex .dex-filter .dex-tab-all { flex: 1.7; font-size: 17px; padding: 4px 2px; }
+#screen-dex .dex-filter .dex-tab-all { flex: 1.35; font-size: 16px; padding: 5px 2px; }
+#screen-dex .dex-filter .dex-tab:not(.dex-tab-all) { font-size: 11.5px; letter-spacing: -0.06em; }
+#screen-dex .dex-card:has(.dex-new) .dex-cat { margin-bottom: 13px; }
 #screen-dex .dex-filter .dex-tab-all small { font-size: 12px; }
 .dex-big .dex-q, .dex-big .dex-choices li, .dex-big .dex-owned, .dex-head-box .note { overflow-wrap: normal; word-break: auto-phrase; line-break: strict; text-wrap: pretty; }
 .rf-rd strong { font-size: clamp(18px, 3.2dvh, 26px); }
@@ -2697,3 +2697,19 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
 :is(#screen-confirm).screen:not([hidden]) { flex: 1 1 0; min-height: 0; height: auto; overflow: hidden; padding: 8px 8px 10px; gap: 8px; justify-content: flex-start; border-radius: 22px; }
 .hud-rank { flex: 1.5 1 0; }
 .hud-rank .hv { font-size: 12.5px; }
+@media (max-height: 700px) { .ranks-dialog { padding: 8px 10px; } .ranks-title { font-size: 17px; margin: 0 0 2px; } .ranks-howto { font-size: 12px; line-height: 1.4; margin-bottom: 4px; } .ranks-dialog .buttons .btn { min-height: 0; padding: 4px 18px; font-size: 15px; } }
+.dex-dialog { padding: 14px 10px; width: min(480px, 96vw); max-width: 96vw; }
+.dex-big { padding: 12px 14px 14px; }
+.dex-big .dex-tail { white-space: nowrap; }
+/* 成績:背の高い画面でも、右の列が はみ出さないように */
+#screen-records .rec-top .scores.total div { flex-wrap: wrap; justify-content: center; gap: 0 8px; padding: 4px 10px; }
+#screen-records .rec-top .scores.total dt { font-size: 14px; }
+#screen-records .rec-top .scores.total dd { font-size: 22px; white-space: nowrap; }
+#screen-records .rec-top .rank-line { font-size: 14px; white-space: nowrap; }
+#screen-records .rec-top-text { overflow: visible; }
+@media (max-height: 700px) {
+  #screen-records .rec-top .scores.total dt { font-size: 11px; }
+  #screen-records .rec-top .scores.total dd { font-size: 17px; }
+  #screen-records .rec-top .rank-line { font-size: 13px; }
+}
+.rank-next { text-wrap: balance; }

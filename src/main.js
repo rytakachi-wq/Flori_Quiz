@@ -729,18 +729,16 @@ function showRecords() {
   const s = loadStats();
   // 「出会った問題」「正解した問題」は、いまある問題(普通+難しい)のうち、何問か。問題が増えても、全体の数を合わせる。
   const playable = new Set([...normalIds, ...hardIds]);
-  const right = s.right.filter((id) => playable.has(id)).length;
   // 総合得点は、100点満点(普通+難しい問題、1問2点)
   $("s-total").textContent = `${currentTotal(s)}点 / ${TOTAL_POINTS}点`;
   $("s-total-bar").style.width = `${(currentTotal(s) / TOTAL_POINTS) * 100}%`;
-  $("s-plays").textContent = `${s.plays}回`;
+  $("s-plays").textContent = `${s.plays}回(対戦${s.versusPlays}回)`;
   $("s-dress").textContent = `${dressOwned(s)} / ${dressTotal()}個`;
   $("s-stars").textContent = `⭐ ${s.stars}個`;
-  $("s-versus").textContent = `${s.versusPlays}回`;
   // 毎日1問:きのうか今日やっていれば、続けた日数。それより前なら、0日(とぎれた)
   const today = dateKey();
   const running = s.dailyLast === today || s.dailyLast === previousDateKey(today) ? s.dailyStreak : 0;
-  $("s-daily").textContent = `${running}日連続・計${s.dailyDays}日`;
+  $("s-daily").textContent = `${running}日連続(計${s.dailyDays}日)`;
   $("s-wrong").textContent = `${s.wrong.filter((id) => playable.has(id)).length}問`;
   const total = currentTotal(s);
   const rank = rankOf(total);
@@ -750,15 +748,18 @@ function showRecords() {
   // 次のランクまで:1問をヒントなしで正解すると、100点÷問題数の点が入る
   const perQuestion = TOTAL_POINTS / Math.max(1, playable.size);
   $("s-rank-next").textContent = nextRank
-    ? `次は ${nextRank.icon} ${nextRank.name} まで あと${nextRank.min - total}点(ヒントなしで約${Math.ceil((nextRank.min - total) / perQuestion)}問)`
+    ? `次は ${nextRank.icon} ${nextRank.name} まで あと${nextRank.min - total}点(約${Math.ceil((nextRank.min - total) / perQuestion)}問)`
     : "最高ランク! すごいヨ!";
   const rightIds = new Set(s.right);
-  const groupRows = [...GROUPS, "ランダム"].map((group) => {
-    const list = group === "ランダム" ? playableQuestions : playableQuestions.filter((q) => groupOf(q) === group);
-    const got = list.filter((q) => rightIds.has(q.uid ?? q.id)).length;
+  // 理系・文系・ひらめき・ランダム(=全部)は総合得点の問題。オニ問題は、別に数える
+  const oniRight = new Set(s.oniRight);
+  const groupRows = [...GROUPS, "ランダム", "オニ"].map((group) => {
+    const oni = group === "オニ";
+    const list = oni ? oniQuestions : group === "ランダム" ? playableQuestions : playableQuestions.filter((q) => groupOf(q) === group);
+    const got = list.filter((q) => (oni ? oniRight : rightIds).has(q.uid ?? q.id)).length;
     const item = document.createElement("li");
     item.innerHTML = '<span class="gb-name"></span><span class="gb-bar"><i></i></span><b class="gb-num"></b>';
-    item.querySelector(".gb-name").textContent = `${GROUP_ICON[group]} ${group === "ランダム" ? "ランダム(全部)" : group}`;
+    item.querySelector(".gb-name").textContent = `${oni ? "👹" : GROUP_ICON[group]} ${group}`;
     item.querySelector(".gb-bar i").style.width = `${list.length ? (got / list.length) * 100 : 0}%`;
     item.querySelector(".gb-num").textContent = `${got}/${list.length}`;
     return item;
@@ -768,8 +769,6 @@ function showRecords() {
   const full = rightPlayable.filter((id) => (s.qpts[id] ?? POINTS_PER_CORRECT) >= POINTS_PER_CORRECT).length;
   $("s-full").textContent = `${full}問`;
   $("s-half").textContent = `${rightPlayable.length - full}問`;
-  $("s-oni").textContent = `${s.oniRight.filter((id) => oniIds.has(id)).length} / ${oniIds.size}問`;
-  $("s-right").textContent = `${right} / ${playable.size}問`;
   $("s-rate").textContent = s.answered ? `${Math.round((s.correct / s.answered) * 100)}%(${s.correct}/${s.answered}問)` : "まだないよ";
   markSeen("records");
   show("records");
@@ -786,7 +785,7 @@ function openRankInfo() {
       item.innerHTML = '<span class="rk-icon" aria-hidden="true"></span><span class="rk-name"></span><span class="rk-min"></span>';
       item.querySelector(".rk-icon").textContent = rank.icon;
       item.querySelector(".rk-name").textContent = rank.name;
-      item.querySelector(".rk-min").textContent = rank.min === now.min ? `${rank.min}点〜 いまここ!` : `${rank.min}点〜`;
+      item.querySelector(".rk-min").textContent = rank.min === now.min ? `${rank.min}点〜 いま!` : `${rank.min}点〜`;
       return item;
     }),
   );
@@ -1096,13 +1095,6 @@ document.addEventListener(
 let pendingMode = null;
 function chooseTime(nextMode) {
   pendingMode = nextMode;
-  if (nextMode === "review") {
-    // 復習には、制限時間は付けない(理由を説明してから始める)
-    $("dlg-review").showModal();
-    return;
-  }
-  // 毎日1問は、どんな問題かを、さきに説明する
-  $("dlg-time-daily").hidden = nextMode !== "daily";
   $("dlg-time").showModal();
 }
 function closeTimeDialog(limit) {
@@ -1114,12 +1106,6 @@ function closeTimeDialog(limit) {
 $("btn-time-yes").addEventListener("click", () => closeTimeDialog(true));
 $("btn-time-no").addEventListener("click", () => closeTimeDialog(false));
 $("btn-time-cancel").addEventListener("click", () => closeTimeDialog(null));
-$("btn-review-yes").addEventListener("click", () => {
-  $("dlg-review").close();
-  timeLimit = false;
-  startPlay("review");
-});
-$("btn-review-no").addEventListener("click", () => $("dlg-review").close());
 
 // 普通・難しいモードの遊び。分類(理系・文系・ひらめき)×難しさごとに、ひとつずつ作って、「続きから」を保存する。
 const groupOf = (q) => q.group ?? "ひらめき";
@@ -1164,7 +1150,7 @@ function askRestart(action) {
 }
 // 消すのは、成績・図鑑・着せ替え・続き。音の大きさ・ふりがな・文字の大きさなどの設定は、のこす。
 function eraseSaveData() {
-  for (const key of ["floriQuiz.stats", "floriQuiz.dress", "floriQuiz.dexViewed", "floriQuiz.notice", "floriQuiz.bestScore"]) {
+  for (const key of ["floriQuiz.stats", "floriQuiz.dress", "floriQuiz.dexViewed", "floriQuiz.notice", "floriQuiz.bestScore", RELAX_SEEN_KEY]) {
     try {
       localStorage.removeItem(key);
     } catch {
@@ -1185,10 +1171,16 @@ $("btn-daily").addEventListener("click", () => {
     // 今日の分は、もう終わっている
     $("dlg-info-text").textContent = "今日の分はもう終わったヨ。また明日挑戦してネ!";
     $("dlg-info").showModal();
-  } else chooseTime("daily");
+  } else playTutorial("daily", () => chooseTime("daily"));
 });
 $("btn-info-close").addEventListener("click", () => $("dlg-info").close());
-$("btn-review").addEventListener("click", () => chooseTime("review"));
+// 復習には制限時間は付けない(ムービーで説明してから始める)
+$("btn-review").addEventListener("click", () =>
+  playTutorial("review", () => {
+    timeLimit = false;
+    startPlay("review");
+  }),
+);
 // ヒント:1問に1回。見ると、その問題の点が半分になる。
 $("btn-hint").addEventListener("click", () => {
   if (answered || hinted || !current?.hint) return;
@@ -1206,11 +1198,11 @@ let gardenSize = 3;
 
 function startGarden(size = gardenSize) {
   gardenSize = size;
-  $("garden-message").textContent = "木を押して全部を桜の木にしよう。";
+  $("garden-message").textContent = "ボタンを押した回数:0回";
   garden = new GardenUI($("garden"), {
     size,
-    onChange: ({ bloomed, total, moves }) => {
-      if (moves > 0) $("garden-message").textContent = `桜の木 ${bloomed} / ${total} ・ ${moves}回`;
+    onChange: ({ moves }) => {
+      $("garden-message").textContent = `ボタンを押した回数:${moves}回`;
     },
     onSolved: (moves) => {
       $("garden-message").textContent = `全部桜の木になったヨ!${moves}回で完成。すごいネ!`;
@@ -1224,8 +1216,20 @@ function startGarden(size = gardenSize) {
 }
 
 // リラックスを選ぶと、説明・遊び方・コツのムービーを見てから、お花畑へ進む
-$("btn-relax").addEventListener("click", () => playTutorial("relax", () => startGarden()));
-$("btn-relax-back").addEventListener("click", () => show("cover", -1));
+// (ムービーは、はじめて選んだときだけ。あとは、「遊び方・コツ」ボタンで、いつでも見られる)
+const RELAX_SEEN_KEY = "floriQuiz.relaxGuideSeen";
+$("btn-relax").addEventListener("click", () => {
+  let seen = false;
+  try {
+    seen = localStorage.getItem(RELAX_SEEN_KEY) === "1";
+    localStorage.setItem(RELAX_SEEN_KEY, "1");
+  } catch {
+    // 保存できなくても、遊べる(毎回ムービーが出るだけ)
+  }
+  if (seen) startGarden();
+  else playTutorial("relax", () => startGarden());
+});
+$("btn-relax-back").addEventListener("click", () => openMenu());
 $("btn-garden-hint").addEventListener("click", () => garden?.hint()); // 光る木を教える
 // リセット:配置が変わるので、確認してから
 $("btn-garden-again").addEventListener("click", () => $("dlg-garden-reset").showModal());
@@ -1244,7 +1248,9 @@ $("btn-settings").addEventListener("click", () => PAGE_OPEN.settings());
 $("btn-settings-back").addEventListener("click", () => show("cover", -1));
 $("btn-next").addEventListener("click", next);
 $("btn-again").addEventListener("click", () => startPlay(mode));
-$("btn-cover").addEventListener("click", () => show("cover", -1));
+// 毎日1問・復習のあとは、「その他」へ戻る
+const leaveGame = () => (mode === "daily" || mode === "review" ? openMenu() : show("cover", -1));
+$("btn-cover").addEventListener("click", leaveGame);
 
 // やめる:確認してから、この回をなかったことにして表紙へ戻る。
 // 「分からない」:答えを見ると、不正解になる。まちがえて押さないように、先に聞く
@@ -1265,7 +1271,7 @@ $("btn-quit-yes").addEventListener("click", () => {
   $("dlg-quit").close();
   play.abandonRound();
   if (mode === "normal" || mode === "hard") sessions.delete(activeKey); // 保存した続きから、作りなおす
-  show("cover", -1);
+  leaveGame();
 });
 
 // 表紙のすみのフロリ:何回か押すと、オニ問題が出る。
@@ -1646,7 +1652,16 @@ function openDexCard(question, label, owned) {
   head.textContent = `${CATEGORY_ICON[question.category] ?? "❓"} ${label}  ${question.category}  ${RARITY[question.level] ?? ""}`;
   const text = document.createElement("p");
   text.className = "dex-q";
-  text.textContent = question.text;
+  const body = question.text.replace(/。(?=[^\n」)])/g, "。\n"); // 文の終わりで改行(文の途中で切れて読みにくくならないように)
+  const tail = body.match(/[^、。\n」]{2,10}$/)?.[0]; // 最後の「どれになる?」などは、切り離さない(1行に「なる?」だけ残らないように)
+  if (tail && tail.length < body.length) {
+    const keep = document.createElement("span");
+    keep.className = "dex-tail";
+    keep.textContent = tail;
+    text.append(body.slice(0, body.length - tail.length), keep);
+  } else {
+    text.textContent = body;
+  }
   big.replaceChildren(head, text);
   if (question.type === "choice") {
     const list = document.createElement("ol");
@@ -1748,7 +1763,7 @@ function showDex() {
       ? "🎉 コンプリート! 全部のカードが揃ったヨ!"
       : have === 0
         ? "問題を解くと カードが集まるヨ!"
-        : "カードを押すと 問題がもう1度見られるヨ。";
+        : "カードを押すと 問題が見られるヨ!";
   $("screen-dex").classList.toggle("is-complete", have === playableList.length);
   $("dex-grid").replaceChildren(...cards);
   $("dex-grid").scrollTop = 0;

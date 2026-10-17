@@ -213,24 +213,20 @@
           <dl class="scores total">
             <div><dt>総合得点</dt><dd id="s-total"></dd></div>
           </dl>
-          <p class="rank-line"><span id="s-rank-icon" aria-hidden="true">🥚</span> ランク <b id="s-rank">たまご</b></p>
+          <p class="rank-line"><span id="s-rank-icon" aria-hidden="true">🥚</span> ランク <b id="s-rank">たまご</b><button id="btn-rank-info" class="rank-info-btn" type="button" aria-label="ランクの一覧">一覧</button></p>
           <div class="total-bar" aria-hidden="true"><span id="s-total-bar"></span></div>
           <p id="s-rank-next" class="rank-next"></p>
-          <button id="btn-rank-info" class="btn btn-sub btn-small rank-info-btn" type="button">🏅 ランクの一覧</button>
         </div>
       </div>
       <dl class="scores">
         <div><dt>👑 着せ替え</dt><dd id="s-dress"></dd></div>
         <div><dt>⭐ ご褒美の星</dt><dd id="s-stars"></dd></div>
         <div><dt>🎮 遊んだ回数</dt><dd id="s-plays"></dd></div>
-        <div><dt>👥 対戦した回数</dt><dd id="s-versus"></dd></div>
         <div><dt>📅 毎日1問</dt><dd id="s-daily"></dd></div>
         <div><dt>📖 復習待ち</dt><dd id="s-wrong"></dd></div>
-        <div><dt>✅ 正解した問題</dt><dd id="s-right"></dd></div>
         <div><dt>🎯 正解率</dt><dd id="s-rate"></dd></div>
-        <div><dt>🌟 ヒントなしで正解</dt><dd id="s-full"></dd></div>
-        <div><dt>💡 ヒントありで正解</dt><dd id="s-half"></dd></div>
-        <div class="wide"><dt>👹 オニ問題(5点・総合得点には入らない)</dt><dd id="s-oni"></dd></div>
+        <div><dt>🌟 ヒントなし正解</dt><dd id="s-full"></dd></div>
+        <div><dt>💡 ヒントあり正解</dt><dd id="s-half"></dd></div>
       </dl>
       <ul id="s-groups" class="group-box" aria-label="科目ごとの正解"></ul>
     </section>
@@ -400,20 +396,11 @@
   </dialog>
 
   <dialog id="dlg-time" class="dialog" aria-labelledby="dlg-time-text">
-    <p id="dlg-time-daily" class="dlg-review" hidden>📅 <b>毎日1問</b>は 1日に1問だけ出る <b>今日の問題</b>です。毎日続けて解くと 連続の日数がのびて ご褒美がもらえます。</p>
     <p id="dlg-time-text">制限時間を付ける?<br>付けると1問30秒で答えるヨ。<br>星のご褒美がもらえるヨ。</p>
     <div class="buttons buttons-choice">
       <button id="btn-time-yes" class="btn btn-main btn-mid-big" type="button">付ける<small>(ご褒美あり)</small></button>
       <button id="btn-time-no" class="btn btn-plain btn-mid" type="button">付けない</button>
       <button id="btn-time-cancel" class="btn btn-plain btn-small" type="button">やめる</button>
-    </div>
-  </dialog>
-  <dialog id="dlg-review" class="dialog" aria-labelledby="dlg-review-text">
-    <p id="dlg-review-text">📖 <b>復習</b>では <b>間違えた問題</b>と <b>ヒントを見て解いた問題</b>が出ます。ヒントを見ないで正解すると 復習から消えます。</p>
-    <p class="dlg-review">⏱ 復習には <b>制限時間は付きません</b>。理由は 急がずに じっくり考えて 思い出す練習にするためです。</p>
-    <div class="buttons buttons-choice">
-      <button id="btn-review-yes" class="btn btn-main btn-mid-big" type="button">復習を 始める</button>
-      <button id="btn-review-no" class="btn btn-plain btn-small" type="button">やめる</button>
     </div>
   </dialog>
   <dialog id="dlg-garden-reset" class="dialog" aria-labelledby="dlg-garden-reset-text">
@@ -438,7 +425,7 @@
   </dialog>
   <dialog id="dlg-ranks" class="dialog ranks-dialog" aria-labelledby="ranks-title">
     <h3 id="ranks-title" class="ranks-title">🏅 ランクの一覧</h3>
-    <p class="ranks-howto">総合得点は 100点満点。問題ごとに <b>ヒントなしで正解=満点</b>・<b>ヒントありで正解=半分</b>。ヒントありで正解した問題を ヒントなしで解きなおすと 点が上がるヨ。<b>10点ごと</b>にランクアップ!</p>
+    <p class="ranks-howto"><b>ヒントなしで正解</b>=満点、<b>ヒントあり</b>=半分。<br>10点ごとに ランクアップ!<br>👹オニ問題は 総合得点に入らないヨ。</p>
     <ol id="ranks-list" class="ranks-list"></ol>
     <div class="buttons">
       <button id="btn-ranks-close" class="btn btn-main" type="button">閉じる</button>
