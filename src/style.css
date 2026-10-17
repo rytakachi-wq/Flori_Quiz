@@ -2632,7 +2632,7 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
    図鑑・成績の見直し:ランクの説明、科目ごとの正解、フロリを置く、「すべて」を大きく
    ===================================================================== */
 #screen-records .rec-top { display: flex; align-items: center; gap: 8px; width: min(640px, 100%); }
-#screen-records .rec-flori { flex: none; width: auto; height: clamp(84px, 15dvh, 150px); max-width: 34%; object-fit: contain; }
+#screen-records .rec-flori { flex: none; width: auto; height: clamp(120px, 22dvh, 210px); max-width: 40%; object-fit: contain; }
 #screen-records .rec-top-text { flex: 1 1 0; min-width: 0; overflow: hidden; display: grid; gap: 4px; justify-items: stretch; }
 #screen-records .rec-top .scores.total { width: 100%; }
 #screen-records .rec-top .rank-line { font-size: 15px; }
@@ -2658,7 +2658,7 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
 @media (max-height: 700px) {
   #screen-records { gap: 5px; }
   #screen-records .rec-top { gap: 6px; }
-  #screen-records .rec-flori { height: clamp(60px, 11dvh, 84px); max-width: 26%; }
+  #screen-records .rec-flori { height: 92px; max-width: 31%; }
   #screen-records .rec-top-text { gap: 2px; }
   #screen-records .rec-top .scores.total div { padding: 2px 12px; }
   #screen-records .rec-top .scores.total div { flex-wrap: wrap; justify-content: center; gap: 0 6px; }
@@ -2686,10 +2686,8 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
 #screen-dex .dex-flori { flex: none; width: auto; height: clamp(56px, 10dvh, 96px); max-width: 28%; object-fit: contain; }
 #screen-dex .dex-head-text { flex: 1 1 0; min-width: 0; display: grid; gap: 3px; justify-items: center; }
 #screen-dex .dex-head-text .note { margin: 0; text-align: center; text-wrap: pretty; }
-#screen-dex .dex-filter .dex-tab-all { flex: 1.35; font-size: 16px; padding: 5px 2px; }
-#screen-dex .dex-filter .dex-tab:not(.dex-tab-all) { font-size: 11.5px; letter-spacing: -0.06em; }
+#screen-dex .dex-filter .dex-tab { flex: 1 1 0; font-size: 12px; letter-spacing: -0.06em; padding: 3px 0; }
 #screen-dex .dex-card:has(.dex-new) .dex-cat { margin-bottom: 13px; }
-#screen-dex .dex-filter .dex-tab-all small { font-size: 12px; }
 .dex-big .dex-q, .dex-big .dex-choices li, .dex-big .dex-owned, .dex-head-box .note { overflow-wrap: normal; word-break: auto-phrase; line-break: strict; text-wrap: pretty; }
 .rf-rd strong { font-size: clamp(18px, 3.2dvh, 26px); }
 .rf-crown { bottom: 6%; }
@@ -2715,3 +2713,29 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
   #screen-records .rec-top .rank-line { font-size: 13px; }
 }
 .rank-next { text-wrap: balance; }
+#screen-records .rank-next { text-align: center; width: min(640px, 100%); }
+@media (max-height: 700px) { #screen-records .rank-next { font-size: 12px; line-height: 1.2; } }
+/* 成績(背が低い画面):科目の四角は3列、フロリは少し小さめ */
+@media (max-height: 700px) {
+  #screen-records .rec-flori { height: 84px; }
+  .group-box { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px 6px; }
+  .group-box li { grid-template-columns: 1fr; grid-template-areas: "name" "num" "bar"; gap: 0; justify-items: start; font-size: 11.5px; }
+  .group-box .gb-num { justify-self: start; font-size: 11.5px; line-height: 1.1; }
+  .group-box .gb-bar { width: 100%; height: 5px; }
+}
+@media (max-height: 700px) {
+  #screen-records .scores:not(.total) div { padding: 0 8px; }
+  #screen-records .scores dt { line-height: 1.15; }
+  #screen-records .scores dd { line-height: 1.05; }
+  #screen-records .scores:not(.total) { gap: 2px 5px; }
+  #screen-records { gap: 3px; }
+  .group-box { padding: 2px 8px; }
+  #screen-records .rec-top .scores.total div { padding: 0 12px; }
+}
+@media (max-height: 700px) {
+  #screen-records .rank-next { line-height: 1.1; }
+  #screen-records .rec-top-text { gap: 1px; }
+  .group-box .gb-num { line-height: 1; }
+  .group-box li { line-height: 1.15; }
+}
+@media (max-height: 700px) { .ranks-list { gap: 2px 6px; margin-bottom: 4px; } .ranks-list li { line-height: 1.1; } .ranks-list .rk-icon { font-size: 18px; } .ranks-howto { line-height: 1.3; } .ranks-dialog { padding: 6px 10px; } }

@@ -748,7 +748,7 @@ function showRecords() {
   // 次のランクまで:1問をヒントなしで正解すると、100点÷問題数の点が入る
   const perQuestion = TOTAL_POINTS / Math.max(1, playable.size);
   $("s-rank-next").textContent = nextRank
-    ? `次は ${nextRank.icon} ${nextRank.name} まで あと${nextRank.min - total}点(約${Math.ceil((nextRank.min - total) / perQuestion)}問)`
+    ? `次は ${nextRank.icon}${nextRank.name} あと${nextRank.min - total}点(約${Math.ceil((nextRank.min - total) / perQuestion)}問)`
     : "最高ランク! すごいヨ!";
   const rightIds = new Set(s.right);
   // 理系・文系・ひらめき・ランダム(=全部)は総合得点の問題。オニ問題は、別に数える
@@ -759,9 +759,9 @@ function showRecords() {
     const got = list.filter((q) => (oni ? oniRight : rightIds).has(q.uid ?? q.id)).length;
     const item = document.createElement("li");
     item.innerHTML = '<span class="gb-name"></span><span class="gb-bar"><i></i></span><b class="gb-num"></b>';
-    item.querySelector(".gb-name").textContent = `${oni ? "👹" : GROUP_ICON[group]} ${group}`;
-    item.querySelector(".gb-bar i").style.width = `${list.length ? (got / list.length) * 100 : 0}%`;
-    item.querySelector(".gb-num").textContent = `${got}/${list.length}`;
+    item.querySelector(".gb-name").textContent = oni ? "❓ ？？" : `${GROUP_ICON[group]} ${group}`;
+    item.querySelector(".gb-bar i").style.width = oni ? "0%" : `${list.length ? (got / list.length) * 100 : 0}%`;
+    item.querySelector(".gb-num").textContent = oni ? "？？" : `${got}/${list.length}`;
     return item;
   });
   $("s-groups").replaceChildren(...groupRows);
@@ -785,7 +785,7 @@ function openRankInfo() {
       item.innerHTML = '<span class="rk-icon" aria-hidden="true"></span><span class="rk-name"></span><span class="rk-min"></span>';
       item.querySelector(".rk-icon").textContent = rank.icon;
       item.querySelector(".rk-name").textContent = rank.name;
-      item.querySelector(".rk-min").textContent = rank.min === now.min ? `${rank.min}点〜 いま!` : `${rank.min}点〜`;
+      item.querySelector(".rk-min").textContent = (rank.min === 100 ? "〜100点" : `${rank.min}点〜`) + (rank.min === now.min ? " いま!" : "");
       return item;
     }),
   );
@@ -1746,7 +1746,7 @@ function showDex() {
     const got = list.filter((q) => met.has(q.uid ?? q.id)).length;
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `dex-tab${name === dexFilter ? " is-on" : ""}${name === "すべて" ? " dex-tab-all" : ""}`;
+    button.className = `dex-tab${name === dexFilter ? " is-on" : ""}`;
     button.dataset.noSe = "";
     button.innerHTML = '<span class="dt-name"></span><small></small>';
     button.querySelector(".dt-name").textContent = `${DEX_FILTER_ICON[name]} ${name}`;
