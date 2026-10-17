@@ -56,7 +56,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "rules", "setup", "menu", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
+const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問)
@@ -360,12 +360,12 @@ function showQuestion() {
   $("q-text").textContent = question.text;
   $("q-text").classList.toggle("long", question.text.length > 70); // 長い問題は、文字を少し小さくして、画面に収める
   $("screen-question").classList.toggle("is-long", question.text.length > 100); // とても長い問題は、もっとぎゅっと
-  $("screen-question").classList.remove("is-answered");
+  $("screen-question").classList.remove("is-answered", "is-hinted");
   $("q-feedback").hidden = true;
 
   const message = $("q-message");
   const roundStart = versus && play.player === 0; // 対戦で、新しい回戦の最初の問題
-  if (leveledUp || roundStart || ((mode === "hard" || mode === "oni") && play.asked === 0)) {
+  if (!versus && (leveledUp || roundStart || ((mode === "hard" || mode === "oni") && play.asked === 0))) {
     setFlori(IMG.surprised, "驚くフロリ");
     message.textContent =
       mode === "versus"
@@ -377,14 +377,14 @@ function showQuestion() {
     message.hidden = true;
   }
 
-  // ヒント:普通・難しい・復習・毎日1問で、1問に1回だけ。オニと対戦では、出さない。
+  // ヒント:普通・難しい・復習・毎日1問・皆で対戦で、1問に1回だけ(見ると、その問題の点が半分)。オニは、ヒントなし。「分からない」だけ
   hinted = false;
   $("q-hint").hidden = true;
   $("btn-hint").disabled = false;
-  const hintable = Boolean(question.hint) && mode !== "oni" && mode !== "versus";
-  $("q-hint-area").hidden = !(hintable || mode === "oni"); // オニ問題は、ヒントなし。「分からない」だけ
+  const hintable = Boolean(question.hint) && mode !== "oni";
+  $("q-hint-area").hidden = false;
   $("btn-hint").hidden = !hintable;
-  $("btn-giveup").hidden = mode === "versus";
+  $("btn-giveup").hidden = false;
   $("btn-giveup").disabled = false;
 
   renderers[question.type].render(question, answer);
@@ -526,13 +526,14 @@ function renderBoard(list, scores, active) {
 }
 
 function renderTurn(versus) {
+  $("screen-question").dataset.player = versus ? String(play.player + 1) : ""; // 対戦のとき、いま答える人の色で、画面のふちを染める
   const turn = $("q-player");
   const board = $("q-board");
   turn.hidden = !versus;
   board.hidden = !versus;
   if (!versus) return;
   turn.className = `turn p${play.player + 1}`;
-  turn.textContent = `${PLAYER_NAMES[play.player]}の番です。(正解で${play.round}点)`;
+  turn.textContent = `👉 ${PLAYER_NAMES[play.player]}の番!`;
   renderBoard(board, play.scores, play.player);
 }
 
@@ -558,10 +559,10 @@ function answer(response) {
   const verdict = $("q-verdict");
   verdict.textContent =
     mode === "versus" && correct
-      ? `正解! ${PLAYER_NAMES[answeringPlayer]}に${answeringRound}点!`
+      ? `正解! ${PLAYER_NAMES[answeringPlayer]}に${hinted ? `半分の${answeringRound / 2}` : answeringRound}点!`
       : correct
         ? hinted
-          ? `正解!(ヒントを使ったので${POINTS_PER_CORRECT - HINT_COST}点)`
+          ? `正解!(ヒントを使ったので 半分の${POINTS_PER_CORRECT - HINT_COST}点)`
           : "正解!"
         : wasTimedOut
           ? "時間切れ…"
@@ -763,7 +764,6 @@ document.addEventListener("keydown", (event) => {
 for (const type of ["pointerdown", "keydown"]) {
   document.addEventListener(type, () => {
     unlock();
-    $("sound-hint").hidden = true;
   }, { capture: true });
 }
 document.addEventListener("click", (event) => {
@@ -825,25 +825,35 @@ $("btn-q-settings").addEventListener("click", () => {
 $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
 
-// ================= クイズ:ルール → 設定(1つの画面で、ぜんぶ選ぶ)→ スタート =================
+// ================= クイズ:ルール → モード選択(1つの画面で、ぜんぶ選ぶ)→ 確認 → スタート =================
 const GROUP_ICON = { 理系: "🔬", 文系: "📖", ひらめき: "💡", ランダム: "🎲" };
+const SAVE_MARK = "💾 続き"; // 続きから遊べるしるし
 
-// ボタンのならび(絵文字の色に合わせた色は、style.css の .c-○○)
+// ボタンのならび(絵文字の色に合わせた色は、style.css の .c-○○)。badge:ボタンの角のしるし、sub:文字の下の小さい文
 function renderSeg(el, options, value, onPick) {
   el.replaceChildren(
     ...options.map((option) => {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `seg-btn ${option.color}${option.value === value ? " is-on" : ""}`;
+      button.className = `seg-btn ${option.color}${option.value === value ? " is-on" : ""}${option.small ? " is-small" : ""}`;
       button.setAttribute("aria-pressed", String(option.value === value));
-      button.innerHTML = '<span class="si" aria-hidden="true"></span><span class="st"></span>';
+      button.innerHTML = '<span class="si" aria-hidden="true"></span><span class="st"></span><span class="ss"></span><span class="sb"></span>';
       button.querySelector(".si").textContent = option.icon;
       button.querySelector(".st").textContent = option.text;
+      button.querySelector(".ss").textContent = option.sub ?? "";
+      const badge = button.querySelector(".sb");
+      badge.textContent = option.badge ?? "";
+      badge.hidden = !option.badge;
+      if (option.badge) button.setAttribute("aria-label", `${option.text}(${option.badge})`);
       button.addEventListener("click", () => onPick(option.value));
       return button;
     }),
   );
 }
+
+const LEVEL_TEXT = { normal: "普通", hard: "難しい" };
+const courseKey = (group = pick.group, level = pick.level) => `${group}-${level}`;
+const anySavedCourse = () => [...GROUPS, "ランダム"].some((group) => ["normal", "hard"].some((level) => hasCourseKey(courseKey(group, level))));
 
 function renderSetup() {
   const versus = pick.kind === "versus";
@@ -866,15 +876,15 @@ function renderSetup() {
       { value: "文系", icon: "📖", text: "文系", color: "c-tan" },
       { value: "ひらめき", icon: "💡", text: "ひらめき", color: "c-yellow" },
       { value: "ランダム", icon: "🎲", text: "ランダム", color: "c-red" },
-    ],
+    ].map((option) => ({ ...option, badge: !versus && hasCourseKey(courseKey(option.value)) ? SAVE_MARK : "" })),
     pick.group,
     (value) => {
       pick.group = value;
       renderSetup();
     },
   );
-  // 3つめの行は、1人のときは「難しさ」、皆のときは「人数」(場所と高さは、同じ)
-  $("set-label-3").innerHTML = versus ? '<span aria-hidden="true">👥</span> 人数' : '<span aria-hidden="true">🔥</span> 難しさ';
+  // 3つめの行は、1人のときは「難しさ」、皆のときは「皆の人数」(場所と高さは、同じ)
+  $("set-label-3").innerHTML = versus ? '<span aria-hidden="true">🔢</span> 皆の人数' : '<span aria-hidden="true">🔥</span> 難しさ';
   if (versus) {
     renderSeg(
       $("seg-third"),
@@ -891,7 +901,7 @@ function renderSetup() {
       [
         { value: "normal", icon: "🌱", text: "普通", color: "c-green" },
         { value: "hard", icon: "🔥", text: "難しい", color: "c-orange" },
-      ],
+      ].map((option) => ({ ...option, badge: hasCourseKey(courseKey(pick.group, option.value)) ? SAVE_MARK : "" })),
       pick.level,
       (value) => {
         pick.level = value;
@@ -899,11 +909,12 @@ function renderSetup() {
       },
     );
   }
+  // 制限時間:「つける」を大きく、「なし」を小さく
   renderSeg(
     $("seg-time"),
     [
-      { value: true, icon: "⏱", text: "あり", color: "c-gray" },
-      { value: false, icon: "🙂", text: "なし", color: "c-yellow" },
+      { value: true, icon: "⏱", text: "つける", sub: "星が もらえる", color: "c-red" },
+      { value: false, icon: "🙂", text: "なし", color: "c-gray", small: true },
     ],
     pick.time,
     (value) => {
@@ -912,13 +923,45 @@ function renderSetup() {
     },
   );
   $("setup-note").textContent = versus
-    ? "1台の画面で 順番に 答えるよ。ヒントは ないよ。"
-    : hasCourseKey(`${pick.group}-${pick.level}`)
-      ? "前の続きから 始まるよ!"
-      : pick.time
-        ? "1問30秒。星の ご褒美が もらえるよ!"
-        : "ゆっくり じっくり 考えよう!";
+    ? "1台の画面で 順番に 答えるよ。皆で遊ぶときは 毎回 はじめからだよ。"
+    : hasCourseKey(courseKey())
+      ? "💾 この組み合わせは 前の続きから 始まるよ!"
+      : anySavedCourse()
+        ? "この組み合わせは はじめから。(💾 続き の印は 続きがあるよ)"
+        : "はじめから 遊ぶよ。ゆっくり じっくり 考えよう!";
   renderRewardCard($("flow-reward"));
+}
+
+// おすすめ:分類・難しさ・制限時間を、まとめて選ぶ(人数選択は、そのまま)
+function chooseRecommended() {
+  pick.group = "ランダム";
+  pick.level = "normal";
+  pick.time = false;
+  renderSetup();
+}
+
+// 確認の画面:選んだものを、ならべて見せる
+function renderConfirm() {
+  const versus = pick.kind === "versus";
+  const saved = !versus && hasCourseKey(courseKey());
+  const rows = [
+    ["👥", "人数選択", versus ? `皆で(${pick.players}人)` : "1人", "c-blue"],
+    ["📚", "分類", `${GROUP_ICON[pick.group]} ${pick.group}`, "c-tan"],
+    versus ? ["🏁", "進み方", "3回戦で 対戦", "c-green"] : ["🔥", "難しさ", LEVEL_TEXT[pick.level], "c-orange"],
+    ["⏱", "制限時間", pick.time ? "つける(30秒)" : "なし", pick.time ? "c-red" : "c-gray"],
+    saved ? ["💾", "続き", "前の続きから 遊ぶ", "c-yellow"] : ["🆕", "続き", "はじめから 遊ぶ", "c-yellow"],
+  ];
+  $("confirm-list").replaceChildren(
+    ...rows.map(([icon, label, value, color]) => {
+      const item = document.createElement("li");
+      item.className = color;
+      item.innerHTML = '<span class="cl-i" aria-hidden="true"></span><span class="cl-l"></span><b class="cl-v"></b>';
+      item.querySelector(".cl-i").textContent = icon;
+      item.querySelector(".cl-l").textContent = label;
+      item.querySelector(".cl-v").textContent = value;
+      return item;
+    }),
+  );
 }
 
 function openRules() {
@@ -929,7 +972,13 @@ $("btn-rules-next").addEventListener("click", () => {
   renderSetup();
   show("setup");
 });
+$("btn-recommend").addEventListener("click", chooseRecommended);
 $("btn-start").addEventListener("click", () => {
+  renderConfirm();
+  show("confirm");
+});
+$("btn-confirm-back").addEventListener("click", () => show("setup", -1));
+$("btn-confirm-start").addEventListener("click", () => {
   timeLimit = pick.time;
   if (pick.kind === "versus") {
     versusPlayers = Math.min(VERSUS_MAX_PLAYERS, Math.max(VERSUS_MIN_PLAYERS, pick.players));
@@ -1071,12 +1120,13 @@ $("btn-daily").addEventListener("click", () => {
 });
 $("btn-info-close").addEventListener("click", () => $("dlg-info").close());
 $("btn-review").addEventListener("click", () => chooseTime("review"));
-// ヒント:1問に1回。見ると、その問題の点が1点へる。
+// ヒント:1問に1回。見ると、その問題の点が半分になる。
 $("btn-hint").addEventListener("click", () => {
   if (answered || hinted || !current?.hint) return;
   hinted = true;
   $("q-hint").textContent = `ヒント:${current.hint}`;
   $("q-hint").hidden = false;
+  $("screen-question").classList.add("is-hinted"); // ヒントの文が出たぶん、フロリを小さくして、場所をあける
   $("btn-hint").disabled = true;
   if (readAloud()) speak(`ヒント。${current.hint}`); // ヒントも読み上げる
 });
@@ -1434,7 +1484,7 @@ function renderRewardCard(el) {
   info.className = "reward-info";
   const title = document.createElement("b");
   title.className = "reward-title";
-  title.textContent = `ご褒美:${item.name}`;
+  title.textContent = `次の ご褒美:${item.name}(${KIND_WORD[kind]})`;
   const bar = document.createElement("span");
   bar.className = "reward-bar";
   const fill = document.createElement("i");
@@ -1442,7 +1492,7 @@ function renderRewardCard(el) {
   bar.append(fill);
   const note = document.createElement("small");
   note.className = "reward-note";
-  note.textContent = p.goal > 1 ? `${getText(item)}(あと ${p.goal - p.now})` : getText(item);
+  note.textContent = p.goal > 1 ? `${getText(item)}(いま ${p.now} / ${p.goal}${p.unit ?? ""})` : getText(item);
   info.append(title, bar, note);
   el.replaceChildren(icon, rewardArt(kind, item), info);
   el.hidden = false;
@@ -1683,6 +1733,7 @@ function wornItems(over = {}) {
 
 function applyDress() {
   document.documentElement.dataset.theme = dress.theme;
+  document.documentElement.style.setProperty("--cover-bg", `url("../assets/bg/${dress.theme}.webp")`); // 表紙の背景の模様(色ごと)
   const theme = THEMES.find((item) => item.id === dress.theme);
   const root = document.documentElement.style;
   for (const [name, key] of [["--bg", "bg"], ["--blue", "blue"], ["--blue-dark", "dark"]]) {

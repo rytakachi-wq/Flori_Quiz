@@ -50,11 +50,14 @@ const COUNT = {
   garden: (c) => c.stats.gardenClears,
   total: (c) => c.total,
 };
+// 数のあとに付ける、ことば(「いま 2 / 5問」のように)
+const UNIT = { right: "問", plays: "回", perfect: "回", perfectHard: "回", oni: "問", streak: "日", daily: "日", versus: "回", review: "回", dex: "枚", timed: "回", timedPerfect: "回", garden: "回", total: "点" };
 const GOAL = { playable: (c) => c.playable, oni: (c) => c.oni, all: (c) => c.all };
 
 export const CONDITIONS = SPEC.map(([id, quest, key, goal]) => ({
   id,
   quest,
+  unit: UNIT[key] ?? "",
   now: COUNT[key],
   goal: typeof goal === "string" ? GOAL[goal] : goal,
 }));
@@ -213,11 +216,11 @@ export function getText(item) {
 export function progressOf(item, ctx) {
   const u = item.unlock;
   if (!u) return null;
-  if (typeof u !== "string") return { now: Math.min(ctx.stats.stars, u.stars), goal: u.stars };
+  if (typeof u !== "string") return { now: Math.min(ctx.stats.stars, u.stars), goal: u.stars, unit: "個" };
   const condition = BY_ID.get(u);
   if (!condition) return null;
   const goal = goalOf(condition, ctx);
-  return { now: Math.min(condition.now(ctx), goal), goal };
+  return { now: Math.min(condition.now(ctx), goal), goal, unit: condition.unit };
 }
 
 // ---------------- ランク(総合得点で決まる)----------------

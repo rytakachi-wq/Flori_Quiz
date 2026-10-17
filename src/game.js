@@ -11,7 +11,7 @@ const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上�
 
 export const MAX_SCORE = QUESTIONS_PER_ROUND * POINTS_PER_CORRECT;
 export const TIMED_SECONDS = 30; // 制限時間をつけたときの、1問の制限時間(秒)
-export const HINT_COST = 1; // ヒントを見ると、その問題の点が1点へる(正解したとき、2点→1点)
+export const HINT_COST = 1; // ヒントを見ると、その問題の点が半分になる(正解したとき、2点→1点)
 
 // みんなで対戦。2〜4人が、1台の画面で、順番に答えて点数を競う。3回戦(段階1・2・3)で、1回戦は1点、2回戦は2点、3回戦は3点。
 export const VERSUS_MIN_PLAYERS = 2;
@@ -285,7 +285,7 @@ export function dailyQuestion(questions, key) {
 }
 
 // みんなで対戦。各回戦(段階1→2→3)で、全員に、同じ段階の、別々の問題を出す。ふつうモードの問題から、ランダムに選ぶ。
-// 正解すると、回戦の数だけ点が入る(1回戦は1点、2回戦は2点、3回戦は3点)。最後に、点数が一番高い人が勝ち(同点は引き分け)。
+// 正解すると、回戦の数だけ点が入る(1回戦は1点、2回戦は2点、3回戦は3点。ヒントを見たら、その半分)。最後に、点数が一番高い人が勝ち(同点は引き分け)。
 export class VersusRound {
   constructor(questions, players, rng = Math.random) {
     this.players = players;
@@ -326,10 +326,11 @@ export class VersusRound {
     return { question: this.current.question, leveledUp: false };
   }
 
-  answer(question, response) {
+  // ヒントを見たときは、その問題の点が半分(1回戦は0.5点、2回戦は1点、3回戦は1.5点)
+  answer(question, response, hinted = false) {
     const correct = judge(question, response);
-    this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: 0 });
-    if (correct) this.scores[this.current.player] += this.current.round;
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct, points: 0, hinted });
+    if (correct) this.scores[this.current.player] += this.current.round * (hinted ? 0.5 : 1);
     this.asked += 1;
     return correct;
   }

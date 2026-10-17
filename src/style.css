@@ -2154,3 +2154,238 @@ body.has-pager { padding-bottom: 56px; }
   #screen-settings .settings-grid { gap: 4px; }
 }
 #screen-question .status { margin-top: 4px; }
+
+/* =====================================================================
+   追加(その43):表紙の背景の模様・クイズボタンの色/場所・記録のラベル・ルールの動画・
+   モード選択・スタートの確認・問題の画面(情報を大きく、対戦の番を分かりやすく)
+   ===================================================================== */
+
+/* ---- 表紙の背景:色ごとの模様の画像。上半分はそのまま、下半分は上下反転 ---- */
+#screen-cover.cover-home { position: relative; overflow: hidden; isolation: isolate; background: var(--bg); }
+#screen-cover.cover-home::before, #screen-cover.cover-home::after { content: ""; position: absolute; left: 0; right: 0; z-index: -1; height: 50%; background: var(--cover-bg, url("../assets/bg/sky.webp")) 30% 50% / cover no-repeat; pointer-events: none; }
+#screen-cover.cover-home::before { top: 0; }
+#screen-cover.cover-home::after { bottom: 0; transform: scaleY(-1); }
+#screen-cover .home-stage { background: none; }
+#screen-cover .home-hero { background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0 38%, rgba(255, 255, 255, 0.25) 58%, transparent 72%); }
+#screen-cover .home-hero::after { background: radial-gradient(ellipse, rgba(60, 70, 90, 0.22), rgba(60, 70, 90, 0) 70%); }
+
+/* ---- クイズボタン:彩度をおさえた赤。上のほうに置いて、そっと、はずむ ---- */
+.play-btn { min-height: 84px; background: linear-gradient(180deg, #f3c0b6 0%, #e4877d 55%, #d2695f 100%); border-color: #a2554f; box-shadow: 0 7px 0 #a2554f, 0 10px 18px rgba(130, 70, 66, 0.28); animation: playBounce 2.6s ease-in-out infinite; }
+.play-btn:active { box-shadow: 0 2px 0 #a2554f; animation: none; }
+.play-btn .pb-text b { text-shadow: 0 3px 0 #a2554f, 2px 0 0 #a2554f, -2px 0 0 #a2554f; }
+.play-btn .pb-go { text-shadow: 0 2px 0 #a2554f; animation: playNudge 1.3s ease-in-out infinite; }
+@keyframes playBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes playNudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+@media (prefers-reduced-motion: reduce) { .play-btn, .play-btn .pb-go { animation: none; } }
+
+/* ---- 表紙の記録:何の数かが分かるように、ラベルを付ける ---- */
+.hud { gap: 4px; }
+.hud-chip { flex: 1 1 0; flex-direction: column; justify-content: center; gap: 0; padding: 2px 3px 3px; line-height: 1.2; border-radius: 16px; text-align: center; overflow: hidden; }
+.hud-chip small { display: block; font-size: 10.5px; font-weight: bold; color: #55646e; line-height: 1.25; }
+.hud-chip .hv { display: block; max-width: 100%; font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
+.hud-chip .hv b { font-size: 15px; }
+
+/* ---- クイズのルール:動画(くりかえし)+ 共通 + 1人 / 皆で ---- */
+:is(#screen-rules, #screen-setup, #screen-confirm).screen:not([hidden]) { flex: 1 1 0; min-height: 0; height: auto; overflow: hidden; padding: 8px 8px 10px; gap: 8px; justify-content: flex-start; border-radius: 22px; }
+.rule-demo { flex: none; width: 100%; padding: 6px 8px 8px; background: linear-gradient(180deg, #eaf5fb, #d7ecf8); border: 3px solid var(--blue); border-radius: 18px; }
+.rd-card { position: relative; height: clamp(84px, 15dvh, 116px); padding: 6px 10px; background: #fff; border: 3px solid var(--line); border-radius: 14px; overflow: hidden; }
+.rd-q { margin: 0; font-size: 14px; font-weight: bold; line-height: 1.5; }
+.rd-qn { display: inline-block; width: 1.5em; margin-right: 4px; text-align: center; color: #fff; background: var(--blue-dark); border-radius: 50%; }
+.rd-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 3px; }
+.rd-choices span { padding: 0 4px; font-size: 14px; font-weight: bold; line-height: 1.7; text-align: center; background: #f3f9ff; border: 2px solid #9fb2bd; border-radius: 10px; animation: rdChoice 12s infinite; }
+.rd-choices span:nth-child(2) { animation-name: rdChoiceRight; }
+.rd-bottom { position: absolute; left: 10px; right: 10px; bottom: 5px; display: flex; align-items: center; gap: 8px; }
+.rd-hintbtn { flex: none; padding: 0 8px; font-size: 12px; font-weight: bold; line-height: 1.6; background: #fff6c8; border: 2px solid #d9b73a; border-radius: 999px; animation: rdHintBtn 12s infinite; }
+.rd-hinttext { font-size: 12px; font-weight: bold; color: #8a6a00; opacity: 0; animation: rdHintText 12s infinite; }
+.rd-finger { position: absolute; left: 40%; top: 54%; font-size: 24px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25)); opacity: 0; animation: rdFinger 12s infinite; }
+.rd-badge { position: absolute; right: 8px; top: 6px; padding: 1px 10px; font-size: 14px; font-weight: bold; color: #fff; border-radius: 999px; opacity: 0; transform: scale(0.6); }
+.rd-b2 { background: #3d9a62; animation: rdB2 12s infinite; }
+.rd-b1 { background: #d08a1a; animation: rdB1 12s infinite; }
+.rd-caption { position: relative; margin: 6px 0 0; height: 1.6em; font-size: 14px; font-weight: bold; line-height: 1.6; text-align: center; color: var(--blue-dark); }
+.rd-caption span { position: absolute; inset: 0; opacity: 0; }
+.rc1 { animation: rdC1 12s infinite; } .rc2 { animation: rdC2 12s infinite; } .rc3 { animation: rdC3 12s infinite; } .rc4 { animation: rdC4 12s infinite; }
+@keyframes rdC1 { 0%, 22% { opacity: 1; } 25%, 100% { opacity: 0; } }
+@keyframes rdC2 { 0%, 24% { opacity: 0; } 27%, 46% { opacity: 1; } 49%, 100% { opacity: 0; } }
+@keyframes rdC3 { 0%, 48% { opacity: 0; } 51%, 70% { opacity: 1; } 73%, 100% { opacity: 0; } }
+@keyframes rdC4 { 0%, 72% { opacity: 0; } 75%, 96% { opacity: 1; } 99%, 100% { opacity: 0; } }
+@keyframes rdChoice { 0% { opacity: 0; transform: translateY(6px); } 6%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@keyframes rdChoiceRight { 0% { opacity: 0; transform: translateY(6px); } 6% { opacity: 1; transform: none; background: #f3f9ff; border-color: #9fb2bd; } 36% { background: #f3f9ff; border-color: #9fb2bd; } 40%, 70% { background: #bfe8c6; border-color: #3d9a62; } 74% { background: #f3f9ff; border-color: #9fb2bd; } 94% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes rdFinger { 0%, 26% { opacity: 0; left: 70%; top: 70%; } 30% { opacity: 1; left: 50%; top: 56%; } 36% { opacity: 1; left: 50%; top: 56%; transform: scale(0.85); } 42% { opacity: 0; transform: none; } 74% { opacity: 0; left: 80%; top: 80%; } 78% { opacity: 1; left: 20%; top: 80%; } 84% { opacity: 1; left: 20%; top: 80%; transform: scale(0.85); } 90%, 100% { opacity: 0; transform: none; } }
+@keyframes rdB2 { 0%, 38% { opacity: 0; transform: scale(0.6); } 43% { opacity: 1; transform: scale(1.12); } 47%, 68% { opacity: 1; transform: scale(1); } 72%, 100% { opacity: 0; } }
+@keyframes rdB1 { 0%, 82% { opacity: 0; transform: scale(0.6); } 87% { opacity: 1; transform: scale(1.12); } 91%, 97% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+@keyframes rdHintBtn { 0%, 76% { background: #fff6c8; } 82%, 96% { background: #ffe27a; } 100% { background: #fff6c8; } }
+@keyframes rdHintText { 0%, 82% { opacity: 0; } 86%, 96% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .rd-choices span, .rd-hintbtn, .rd-hinttext, .rd-finger, .rd-badge, .rd-caption span { animation: none; }
+  .rd-choices span:nth-child(2) { background: #bfe8c6; border-color: #3d9a62; }
+  .rd-b2, .rc3 { opacity: 1; transform: none; }
+}
+#screen-rules .rule-cards { flex: 1 1 0; min-height: 0; overflow-y: auto; align-content: start; gap: 6px; overscroll-behavior: contain; }
+.rule-card.is-common { background: #f1f8ee; border-color: #8cc58f; }
+.rule-split { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.rule-split .rule-card { padding: 6px 8px; }
+.rule-split .rule-card h3 { font-size: 16px; }
+.rule-split .rule-card ul { font-size: 13px; line-height: 1.55; }
+.rule-card.is-common ul { font-size: 14px; line-height: 1.6; }
+@media (max-height: 760px) { .rd-card { height: 78px; } .rd-q { font-size: 13px; } .rd-choices span { line-height: 1.5; } .rd-badge { font-size: 12px; } .rule-demo { padding: 4px 6px 4px; } .rd-caption { margin-top: 3px; } }
+@media (max-height: 640px) { .rule-demo { display: none; } }
+
+/* ---- モード選択 ---- */
+.reco-btn { flex: none; width: 100%; min-height: 40px; padding: 2px 12px; font: inherit; font-size: 16px; font-weight: bold; color: #6b4a00; cursor: pointer; background: linear-gradient(180deg, #fff3b8, #ffd966); border: 3px solid #c9a02a; border-radius: 999px; box-shadow: 0 4px 0 rgba(150, 110, 20, 0.4); touch-action: manipulation; }
+.reco-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(150, 110, 20, 0.4); }
+.seg-btn { position: relative; }
+.seg-btn .ss { font-size: 10.5px; font-weight: normal; line-height: 1.2; }
+.seg-btn .ss:empty { display: none; }
+.seg-btn .sb { position: absolute; top: -9px; right: -3px; padding: 0 6px; font-size: 10.5px; font-weight: bold; line-height: 1.45; color: #5a4300; background: #ffec9a; border: 2px solid var(--line); border-radius: 10px; white-space: nowrap; }
+.seg-btn .sb[hidden] { display: none; }
+.seg.seg-time { grid-auto-flow: row; grid-template-columns: 2.3fr 1fr; align-items: center; }
+#screen-setup .seg-time .seg-btn { height: 100%; }
+#screen-setup .seg-time .seg-btn:first-child .st { font-size: 18px; }
+#screen-setup .seg-time .seg-btn:first-child .si { font-size: 26px; }
+#screen-setup .seg-time .seg-btn.is-small { height: 62%; min-height: 34px; font-size: 12px; opacity: 0.55; }
+#screen-setup .seg-time .seg-btn.is-small.is-on { opacity: 1; }
+#screen-setup .seg-time .seg-btn.is-small .si { font-size: 15px; }
+#screen-setup .set-list { padding-top: 6px; }
+#screen-setup .reward-note { white-space: normal; }
+#screen-setup .setup-note { flex: none; line-height: 1.35; }
+@media (max-height: 700px) { #screen-setup .reward-card { display: none; } }
+
+/* ---- スタートの確認 ---- */
+.confirm-stage { display: flex; align-items: center; justify-content: center; gap: 8px; flex: none; width: 100%; }
+.confirm-flori { height: clamp(74px, 14dvh, 130px); width: auto; }
+.confirm-ask { margin: 0; font-size: 20px; font-weight: bold; }
+.confirm-list { flex: 1 1 0; min-height: 0; display: grid; grid-auto-rows: minmax(0, 1fr); gap: 6px; width: 100%; margin: 0; padding: 0; list-style: none; max-height: 330px; }
+.confirm-list li { display: grid; grid-template-columns: 34px 82px 1fr; align-items: center; gap: 4px; padding: 2px 10px; background: var(--c, #fff); border: 3px solid #8a98a2; border-radius: 14px; }
+.confirm-list .cl-i { font-size: 22px; text-align: center; }
+.confirm-list .cl-l { font-size: 13px; font-weight: bold; color: #55646e; }
+.confirm-list .cl-v { font-size: 18px; line-height: 1.3; }
+@media (max-width: 340px) { .confirm-list li { grid-template-columns: 28px 70px 1fr; } .confirm-list .cl-v { font-size: 16px; } }
+
+/* ---- 問題の画面:「第何問」と「難しさ」を、大きく ---- */
+#screen-question .status { justify-content: space-between; flex-wrap: nowrap; min-height: 44px; }
+.q-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: none; width: 100%; }
+.q-chip { display: flex; align-items: center; justify-content: center; min-width: 0; padding: 2px 8px; font-size: clamp(17px, 2.7dvh, 22px); font-weight: bold; line-height: 1.35; text-align: center; border: 3px solid var(--line); border-radius: 16px; box-shadow: 0 3px 0 rgba(70, 85, 94, 0.25); }
+.q-chip-no { background: #fff3c4; }
+.q-chip-level { background: #d6f0d0; }
+@media (max-width: 340px) { .q-chip { font-size: 15px; } }
+
+/* ---- 問題の画面:あまった下の場所ぶん、フロリと問題文を大きく ---- */
+#screen-question .q-row .flori-small { height: clamp(104px, 21dvh, 230px); }
+#screen-question .question { font-size: clamp(17px, 3.1dvh, 26px); }
+#screen-question .question.long { font-size: clamp(14px, 2.5dvh, 20px); }
+#screen-question .choice { min-height: clamp(42px, 7.4dvh, 66px); }
+#screen-question.is-long .q-row .flori-small { height: clamp(80px, 13dvh, 130px); }
+
+/* ---- 皆で対戦:だれの番かを、はっきり。ふち・案内板・点数が、その人の色 ---- */
+#screen-question .turn { font-size: clamp(20px, 3.3dvh, 28px); line-height: 1.3; padding: 4px 10px; border-width: 4px; box-shadow: 0 4px 0 rgba(70, 85, 94, 0.3); animation: turnPop 0.4s ease-out; }
+@keyframes turnPop { 0% { transform: scale(0.92); } 60% { transform: scale(1.04); } 100% { transform: none; } }
+#screen-question[data-player="1"] { border-color: var(--p1); box-shadow: 0 0 0 5px var(--p1); }
+#screen-question[data-player="2"] { border-color: var(--p2); box-shadow: 0 0 0 5px var(--p2); }
+#screen-question[data-player="3"] { border-color: var(--p3); box-shadow: 0 0 0 5px var(--p3); }
+#screen-question[data-player="4"] { border-color: var(--p4); box-shadow: 0 0 0 5px var(--p4); }
+#screen-question[data-player="1"] .q-row .question { border-color: var(--p1); }
+#screen-question[data-player="2"] .q-row .question { border-color: var(--p2); }
+#screen-question[data-player="3"] .q-row .question { border-color: var(--p3); }
+#screen-question[data-player="4"] .q-row .question { border-color: var(--p4); }
+#screen-question .board li { font-size: 15px; }
+#screen-question .board li.is-active { transform: scale(1.06); }
+
+/* ---- 対戦の結果:負けた方は、色をうすく ---- */
+#r-board.big li:not(.is-winner) { opacity: 0.4; filter: saturate(0.5); }
+
+/* ---- モード選択・確認:題字と、見出しのならび ---- */
+#screen-setup .screen-head .title, #screen-confirm .screen-head .title { font-size: clamp(16px, 2.7dvh, 21px); white-space: nowrap; }
+#screen-setup .set-label { display: grid; justify-items: center; text-align: center; gap: 0; }
+#screen-setup .set-label > span:first-child { display: block; font-size: 17px; line-height: 1.2; }
+@media (min-height: 780px) {
+  .rd-card { height: 124px; }
+  .rd-q { font-size: 15px; }
+  .rd-caption { font-size: 16px; margin-top: 8px; }
+  .rule-split .rule-card ul { font-size: 14px; }
+  .rule-card.is-common ul { font-size: 15px; }
+}
+
+/* 問題の画面:フロリの場所をひろげて、大きく */
+.q-row .stage { max-width: 42%; }
+#screen-question .q-row .flori-small { height: clamp(112px, 23dvh, 250px); }
+#screen-question .question { font-size: clamp(17px, 3.2dvh, 28px); }
+#screen-question.is-long .q-row .stage { max-width: 34%; }
+#screen-question .q-chip, #screen-question .chip-button { flex: none; }
+#screen-question .chip-button { min-height: 36px; padding: 2px 12px; font-size: 16px; line-height: 1.3; }
+#screen-question:not([data-player=""]) #q-art { display: none; }
+#screen-question .turn { padding: 2px 10px; }
+
+/* 背の低い画面(高さ700px以下):問題の画面を、ぎゅっと。対戦(情報が多い)でも、1画面に収まるように */
+@media (max-height: 700px) {
+  #screen-question .q-info { gap: 6px; }
+  #screen-question .q-chip { min-height: 30px; padding: 0 6px; font-size: 14px; line-height: 1.25; border-width: 2px; border-radius: 12px; }
+  #screen-question .chip-button { min-height: 32px; font-size: 14px; }
+  #screen-question .board li { padding: 0 8px; font-size: 13px; line-height: 1.5; }
+  #screen-question .turn { font-size: 17px; line-height: 1.3; padding: 0 8px; border-width: 3px; }
+  #screen-question .hint-buttons { flex-wrap: nowrap; gap: 6px; }
+  #screen-question .hint-buttons .btn { min-height: 34px; padding: 2px 10px; font-size: 13px; }
+  #screen-question[data-player] .q-row .flori-small, #screen-question .q-row .flori-small { height: clamp(84px, 17dvh, 120px); }
+  #screen-question .choice { min-height: 38px; }
+}
+@media (max-height: 700px) {
+  #screen-question.is-hinted .q-row .flori-small { height: 62px; }
+  #screen-question.is-hinted .hint { padding: 3px 10px; font-size: 13px; line-height: 1.45; }
+  #screen-question.is-answered .turn { display: none; }
+  #screen-question .react-flori { height: 72px; }
+}
+@media (max-height: 700px) {
+  #screen-question .board { flex-wrap: nowrap; gap: 4px; }
+  #screen-question .board li { flex: 1 1 0; min-width: 0; padding: 0 2px; font-size: 12px; white-space: nowrap; }
+  #screen-question.is-hinted .q-row .flori-small { height: 50px; }
+  #screen-question.is-hinted .hint { font-size: 12.5px; line-height: 1.4; }
+}
+
+/* 問題の画面の上:戻る・設定と、第何問・難しさ。背が高いときは2段、低いときは1段 */
+#screen-question .status { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "back . set" "info info info"; align-items: center; gap: 6px 8px; min-height: 0; height: auto; }
+#screen-question .status .back-btn { grid-area: back; }
+#screen-question .status .chip-button { grid-area: set; justify-self: end; }
+#screen-question .status .q-info { grid-area: info; }
+@media (max-height: 700px) {
+  #screen-question .status { grid-template-areas: "back info set"; gap: 6px; }
+  #screen-question .status .q-info { min-width: 0; }
+  #screen-question .q-chip { min-height: 36px; font-size: 13px; line-height: 1.2; padding: 0 3px; }
+  #screen-question .status .back-btn { padding: 0 8px; font-size: 14px; }
+  #screen-question .status .chip-button { padding: 2px 8px; font-size: 13px; }
+}
+@media (max-height: 700px) {
+  #screen-question .status .q-info { grid-template-columns: 0.8fr 1.2fr; gap: 4px; }
+  #screen-question .q-chip { white-space: normal; }
+}
+/* 1人用は、対戦ほど情報が多くないので、背の低い画面でも、フロリ・選択肢を、できるだけ大きく */
+@media (max-height: 700px) {
+  #screen-question[data-player=""] .q-row .flori-small { height: clamp(100px, 21dvh, 200px); }
+  #screen-question[data-player=""].is-hinted .q-row .flori-small { height: clamp(70px, 14dvh, 130px); }
+  #screen-question[data-player=""] .choice { min-height: clamp(38px, 6.4dvh, 56px); }
+  #screen-question[data-player=""] .hint-buttons .btn { min-height: 38px; font-size: 14px; }
+  #screen-question[data-player=""] .turn { display: none; }
+}
+
+/* 確認の画面:せまい画面でも、文字が折れないように */
+.confirm-list li { grid-template-columns: 30px 92px 1fr; }
+.confirm-ask { font-size: clamp(16px, 4.6vw, 20px); white-space: nowrap; }
+@media (max-width: 340px) {
+  .confirm-list li { grid-template-columns: 26px 86px 1fr; padding: 2px 8px; }
+  .confirm-list .cl-l { font-size: 12px; }
+  .confirm-list .cl-v { font-size: 15px; }
+  #screen-confirm .go-btn.is-start { font-size: 22px; padding: 4px 10px; }
+  .confirm-ask { padding: 4px 8px; }
+}
+
+/* とても背の低い画面(高さ620px以下):ルールの画面を、1画面に収める */
+@media (max-height: 620px) {
+  #screen-rules .rule-cards { gap: 4px; }
+  #screen-rules .rule-card { padding: 4px 8px; border-width: 2px; }
+  #screen-rules .rule-card h3 { margin: 0; font-size: 15px; }
+  #screen-rules .rule-card ul, #screen-rules .rule-card.is-common ul { font-size: 13px; line-height: 1.55; }
+  #screen-rules .rule-split .rule-card ul { font-size: 12px; line-height: 1.45; }
+  #screen-rules .go-btn { min-height: 46px; font-size: 17px; }
+}
+
+/* 結果の画面:せまい画面では、題字を1行に、次のご褒美を、かくす */
+#screen-result .screen-head .title { white-space: nowrap; font-size: clamp(16px, 5.2vw, 24px); }
+@media (max-height: 620px) { #screen-result #r-next-reward { display: none; } }

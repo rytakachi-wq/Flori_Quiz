@@ -48,11 +48,12 @@
       </header>
       <h1 class="sr-only">Flori_Quiz</h1>
       <div class="hud" aria-label="いまの記録">
-        <span class="hud-chip hud-rank"><span id="hud-rank-icon" aria-hidden="true">🥚</span> <b id="hud-rank">たまご</b></span>
-        <span class="hud-chip">🏆 <b id="hud-total">0</b>点</span>
-        <span class="hud-chip">⭐ <b id="hud-stars">0</b></span>
-        <span class="hud-chip">🎁 <b id="hud-dress">0</b>/<span id="hud-dress-all">90</span></span>
+        <span class="hud-chip hud-rank"><small>ランク</small><span class="hv"><span id="hud-rank-icon" aria-hidden="true">🥚</span><b id="hud-rank">たまご</b></span></span>
+        <span class="hud-chip"><small>総合得点</small><span class="hv">🏆 <b id="hud-total">0</b>点</span></span>
+        <span class="hud-chip"><small>ご褒美の星</small><span class="hv">⭐ <b id="hud-stars">0</b>個</span></span>
+        <span class="hud-chip"><small>着せ替え</small><span class="hv">🎁 <b id="hud-dress">0</b>/<span id="hud-dress-all">90</span></span></span>
       </div>
+      <button id="btn-quiz" class="play-btn" type="button"><span class="gi" aria-hidden="true">🎯</span><span class="pb-text"><b>クイズ</b></span><span class="pb-go" aria-hidden="true">▶</span></button>
       <div class="home-stage">
         <div class="speech home-speech">
           <p id="cover-talk" class="cover-talk">ヤア! ボクはフロリだヨ!</p>
@@ -64,8 +65,6 @@
           </div>
         </div>
       </div>
-      <button id="btn-quiz" class="play-btn" type="button"><span class="gi" aria-hidden="true">🎯</span><span class="pb-text"><b>クイズ</b><small>1人で 遊ぶ・皆で 対戦</small></span><span class="pb-go" aria-hidden="true">▶</span></button>
-      <p id="sound-hint" class="note">♪ 画面をタッチすると音楽が流れるよ。</p>
     </section>
 
     <!-- クイズのルール(クイズを押したとき、はじめに出る) -->
@@ -75,49 +74,91 @@
         <h2 class="title">クイズのルール</h2>
         <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
       </header>
+      <div class="rule-demo" role="img" aria-label="ルールの動画。問題が出て、答えを選ぶと正解で点が入る。ヒントを見ると、点が半分になる。">
+        <div class="rd-card" aria-hidden="true">
+          <p class="rd-q"><span class="rd-qn">Q</span> りんご3こ + みかん2こ = ?</p>
+          <div class="rd-choices"><span>4こ</span><span class="rd-right">5こ</span><span>6こ</span></div>
+          <div class="rd-bottom">
+            <span class="rd-hintbtn">💡 ヒント</span>
+            <span class="rd-hinttext">りんごと みかんを たしてね</span>
+          </div>
+          <span class="rd-finger">👆</span>
+          <span class="rd-badge rd-b2">⭕ 正解! +2点</span>
+          <span class="rd-badge rd-b1">💡 ヒントで 半分 +1点</span>
+        </div>
+        <p class="rd-caption" aria-hidden="true">
+          <span class="rc1">① 問題が 出るよ</span>
+          <span class="rc2">② 答えを 選ぶ</span>
+          <span class="rc3">③ 正解で 点が 入る!</span>
+          <span class="rc4">💡 ヒントを 見ると 点が 半分</span>
+        </p>
+      </div>
       <div class="rule-cards">
-        <article class="rule-card is-solo">
-          <h3><span aria-hidden="true">🙂</span> 1人で 遊ぶ</h3>
+        <article class="rule-card is-common">
+          <h3><span aria-hidden="true">🎯</span> どちらも 同じルール</h3>
           <ul>
-            <li><span aria-hidden="true">📝</span> 1回 <b>5問</b>。正解で <b>2点</b>(ヒントを見ると 1点)</li>
-            <li><span aria-hidden="true">🔥</span> 正解が続くと 問題が <b>難しく</b> なるよ</li>
-            <li><span aria-hidden="true">🏆</span> 全部の問題で <b>100点</b> 満点の 総合得点</li>
-            <li><span aria-hidden="true">⏱</span> 制限時間(30秒)を付けると <b>星</b> がもらえる</li>
+            <li><span aria-hidden="true">📝</span> 問題に 答えて 進もう</li>
+            <li><span aria-hidden="true">💡</span> ヒントを 見ると その問題の 点が <b>半分</b></li>
+            <li><span aria-hidden="true">🤔</span> 「分からない」で 答えが 見られる(不正解)</li>
+            <li><span aria-hidden="true">⏱</span> 制限時間(30秒)を 付けられる</li>
           </ul>
         </article>
-        <article class="rule-card is-vs">
-          <h3><span aria-hidden="true">👥</span> 皆で 対戦</h3>
-          <p class="rule-lead">1台の画面を 皆で使って 順番に 1人1問ずつ 答えるよ。</p>
-          <ol class="vs-rounds" aria-label="3回戦">
-            <li class="vs-r1"><span class="vs-name">1回戦</span><span class="vs-stars" aria-hidden="true">★☆☆</span><span class="vs-point">正解で <b>1点</b></span></li>
-            <li class="vs-r2"><span class="vs-name">2回戦</span><span class="vs-stars" aria-hidden="true">★★☆</span><span class="vs-point">正解で <b>2点</b></span></li>
-            <li class="vs-r3"><span class="vs-name">3回戦</span><span class="vs-stars" aria-hidden="true">★★★</span><span class="vs-point">正解で <b>3点</b></span></li>
-          </ol>
-          <p class="rule-foot"><span aria-hidden="true">🏆</span> 合計点が 1番高い人の 勝ち。ヒントは ないよ。</p>
-        </article>
+        <div class="rule-split">
+          <article class="rule-card is-solo">
+            <h3><span aria-hidden="true">🙂</span> 1人で</h3>
+            <ul>
+              <li><span aria-hidden="true">📝</span> 1回 <b>5問</b> 正解で <b>2点</b></li>
+              <li><span aria-hidden="true">🔥</span> 正解が 続くと <b>難しく</b></li>
+              <li><span aria-hidden="true">🏆</span> 総合得点は <b>100点</b>満点</li>
+              <li><span aria-hidden="true">⭐</span> 制限時間つきで <b>星</b> GET</li>
+            </ul>
+          </article>
+          <article class="rule-card is-vs">
+            <h3><span aria-hidden="true">👥</span> 皆で 対戦</h3>
+            <ul>
+              <li><span aria-hidden="true">🔁</span> 順番に 1人1問ずつ</li>
+              <li><span aria-hidden="true">🏁</span> <b>3回戦</b> 正解で <b>1・2・3点</b></li>
+              <li><span aria-hidden="true">👑</span> 合計点が 1番高い人の 勝ち</li>
+            </ul>
+          </article>
+        </div>
       </div>
-      <button id="btn-rules-next" class="go-btn" type="button">設定へ <span aria-hidden="true">▶</span></button>
+      <button id="btn-rules-next" class="go-btn" type="button">クイズのモード選択へ <span aria-hidden="true">▶</span></button>
     </section>
 
-    <!-- クイズの設定(1つの画面で、ぜんぶ選ぶ) -->
-    <section id="screen-setup" class="screen setup-screen" aria-label="クイズの設定" hidden>
+    <!-- クイズのモード選択(1つの画面で、ぜんぶ選ぶ) -->
+    <section id="screen-setup" class="screen setup-screen" aria-label="クイズのモード選択" hidden>
       <header class="screen-head">
         <button id="btn-flow-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
-        <h2 class="title">クイズの設定</h2>
+        <h2 class="title">クイズのモード選択</h2>
         <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
       </header>
+      <button id="btn-recommend" class="reco-btn" type="button"><span aria-hidden="true">✨</span> おすすめで まとめて 選ぶ</button>
       <div class="set-list">
-        <div class="set-row"><span class="set-label"><span aria-hidden="true">🎮</span> 遊ぶ人</span><div id="seg-kind" class="seg"></div></div>
+        <div class="set-row"><span class="set-label"><span aria-hidden="true">👥</span> 人数選択</span><div id="seg-kind" class="seg"></div></div>
         <div class="set-row"><span class="set-label"><span aria-hidden="true">📚</span> 分類</span><div id="seg-group" class="seg seg-4"></div></div>
         <div class="set-row"><span id="set-label-3" class="set-label"></span><div id="seg-third" class="seg"></div></div>
-        <div class="set-row"><span class="set-label"><span aria-hidden="true">⏱</span> 制限時間</span><div id="seg-time" class="seg"></div></div>
+        <div class="set-row"><span class="set-label"><span aria-hidden="true">⏱</span> 制限時間</span><div id="seg-time" class="seg seg-time"></div></div>
       </div>
       <p id="setup-note" class="setup-note" role="status"></p>
-      <button id="btn-start" class="go-btn is-start" type="button"><span aria-hidden="true">▶️</span> スタート!</button>
       <div id="flow-reward" class="reward-card" hidden></div>
+      <button id="btn-start" class="go-btn is-start" type="button">スタートの 確認へ <span aria-hidden="true">▶</span></button>
     </section>
 
-
+    <!-- スタートの前の確認 -->
+    <section id="screen-confirm" class="screen confirm-screen" aria-label="スタートの確認" hidden>
+      <header class="screen-head">
+        <button id="btn-confirm-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
+        <h2 class="title">スタートの確認</h2>
+        <img class="flori screen-flori" src="../assets/flori/src/body_wave.webp" alt="">
+      </header>
+      <div class="confirm-stage">
+        <img class="flori confirm-flori" src="../assets/flori/src/body_wave.webp" alt="">
+        <p class="bubble confirm-ask">これで いいですか?</p>
+      </div>
+      <ul id="confirm-list" class="confirm-list"></ul>
+      <button id="btn-confirm-start" class="go-btn is-start" type="button"><span aria-hidden="true">▶️</span> これで スタート!</button>
+    </section>
 
     <!-- その他(2ページ目) -->
     <section id="screen-menu" class="screen menu-screen" aria-label="その他" hidden>
@@ -298,9 +339,11 @@
     <section id="screen-question" class="screen" aria-label="問題" hidden>
       <header class="status">
         <button id="btn-quit" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
-        <span id="q-progress" class="chip"></span>
-        <span id="q-level" class="chip chip-level"></span>
         <button id="btn-q-settings" class="chip chip-button" type="button">設定</button>
+        <div class="q-info">
+          <span id="q-progress" class="q-chip q-chip-no"></span>
+          <span id="q-level" class="q-chip q-chip-level"></span>
+        </div>
       </header>
       <ol id="q-board" class="board" hidden></ol>
       <p id="q-player" class="turn" hidden></p>
@@ -317,7 +360,7 @@
       <button id="btn-read" class="btn btn-sub btn-read" type="button" data-no-se="1" hidden><span aria-hidden="true">🔊</span> 読み上げ</button>
       <div id="q-hint-area" class="hint-area" hidden>
         <div class="hint-buttons">
-          <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る(−1点)</button>
+          <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る(点が半分)</button>
           <button id="btn-giveup" class="btn btn-plain" type="button">分からない</button>
         </div>
         <p id="q-hint" class="hint" hidden></p>
