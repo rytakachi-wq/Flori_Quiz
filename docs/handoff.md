@@ -1,6 +1,6 @@
 # 引きつぎメモ(別のセッションで作業を始める人は、最初にこれを読む)
 
-プロジェクトの全体の決まりは [CLAUDE.md](../CLAUDE.md) と [scheme.md](../scheme.md)。決めたことの記録は [decisions.md](decisions.md)(その1〜その43、新しいほど下)。
+プロジェクトの全体の決まりは [CLAUDE.md](../CLAUDE.md) と [scheme.md](../scheme.md)。決めたことの記録は [decisions.md](decisions.md)(その1〜その44、新しいほど下)。
 これまでのやり取りの全文は、前のセッションの記録(`~/.claude/projects/C--Users-rytak-Documents-Flori-Quiz/*.jsonl`)にある。細かい経緯が必要なときだけ、そこを検索する。
 
 ## 作業の約束(利用者の指示)
@@ -16,7 +16,7 @@
 - 素の JS(ES modules)。`src/`:main.js(画面・流れ)、game.js(出題・採点)、storage.js、badges.js(ご褒美の条件・着せ替えの表)、flori-color.js(色づけ)、talk.js(ふきだし・豆知識)、tutorial.js、audio.js/music.js、furigana.js/furigana-data.js、garden.js、illustrations.js、style.css、index.html。問題は data/questions/questions.json(遊べる 90 問+オニ 10 問。理系 31/文系 30/ひらめき 29)。
 - 流れ:表紙(ホーム)→ クイズ → ルール(`screen-rules`:動画+共通+1人/皆で)→ モード選択(`screen-setup`:人数選択・分類・難しさ/皆の人数・制限時間+おすすめ+続きのしるし)→ スタートの確認(`screen-confirm`)→ 出題。皆で対戦でもヒント(点が半分)・「分からない」が使える。オニ問題は 10 問続けて出る。
 - 表紙の背景は、`assets/bg/<背景id>.webp`(上半分そのまま+下半分上下反転、表紙の疑似要素)。着せ替えの背景を変えると、`--cover-bg` が変わる。
-- 画面は 6 つのページ(ホーム・その他・図鑑・着せ替え・成績・設定)を、下のタブと横スワイプで移動(`show(name, direction)`)。表紙のクリックでは動かない。
+- 画面は 6 つのページ(ホーム・図鑑・着せ替え・成績・その他・設定。その他=毎日1問・復習[時間なし]・リラックス[先にムービー]・遊び方)を、下のタブと横スワイプで移動(`show(name, direction)`)。表紙のクリックでは動かない。
 - ご褒美:条件 78+星 12=90 個を、色 15・背景 15・頭 20・体 20・顔 20 に割りあて(badges.js の SPEC/LADDER/assignUnlocks)。かざりの画像は assets/dress/(head/body/face 各 01〜20)。位置・大きさは badges.js の表 `{x,y,w,r,back}`(目分量なので、ずれたら直してよい)。
 - ふりがな:furigana-data.js の ENTRIES(後ろの項目が優先。形は `漢字{よみ}送りがな`)、KYOIKU(小学校で習う漢字)。
 - 画面の収まり:style.css 末尾の `@media screen` の層(`:is(#screen-…)` でID指定に勝つ)、小さい画面用の規則、固定高の `.screen-head`(46px)。

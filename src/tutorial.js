@@ -3,10 +3,10 @@
 
 const FLORI = "../assets/flori/src/body_wave.webp";
 
-const SCENES = [
+const PLAY_SCENES = [
   {
     title: "STEP 1 選ぼう",
-    caption: "「クイズ」を押して ルールを見たら、1人か皆で・分類・難しさ・時間を 1つの画面で 選んで スタート!",
+    caption: "「クイズ」を押してルールを見たら モード選択で 人数(1人か皆で対戦)・分類・難しさ・制限時間を 選んで スタート!",
     html: `
       <div class="tm-set">
         <div class="tm-srow"><span class="tm-btn mini c3 is-hit"><i>🙂</i><small>1人</small></span><span class="tm-btn mini c2"><i>👥</i><small>皆で</small></span></div>
@@ -18,7 +18,7 @@ const SCENES = [
   },
   {
     title: "STEP 2 難しさと時間",
-    caption: "「普通」か「難しい」を選んで 制限時間を付けるかも選ぶよ。",
+    caption: "「普通」か「難しい」を選んで 制限時間を付けるかも選ぼう。付けるとご褒美の星がもらえるよ。",
     html: `
       <div class="tm-rows">
         <div class="tm-row"><span class="tm-btn c5"><i>🌱</i><small>普通</small></span><span class="tm-btn c6 is-hit"><i>🔥</i><small>難しい</small></span></div>
@@ -42,10 +42,10 @@ const SCENES = [
   },
   {
     title: "STEP 4 困ったら",
-    caption: "「ヒント」を見ると1点減るけど ヒントが出るよ。「分からない」を押すと答えが見られるけど 不正解になるよ。",
+    caption: "「ヒント」を見ると 点が半分になるよ(皆で対戦でも使える)。「分からない」は答えが見られるけど 不正解だよ。",
     html: `
       <div class="tm-help">
-        <span class="tm-btn c9 is-hit"><i>💬</i><small>ヒント</small><em>-1点</em></span>
+        <span class="tm-btn c9 is-hit"><i>💬</i><small>ヒント</small><em>点が半分</em></span>
         <span class="tm-btn c10"><i>🤷</i><small>分からない</small><em>不正解</em></span>
       </div>
       <div class="tm-hint">💡 ヒント:…</div>
@@ -63,7 +63,7 @@ const SCENES = [
   },
   {
     title: "STEP 6 他にも色々",
-    caption: "「その他」では 毎日1問・復習・リラックス・問題図鑑・着せ替え・成績が楽しめるよ!",
+    caption: "「その他」では 毎日1問・復習・リラックスが遊べるよ。他は 下のメニューから!",
     html: `
       <div class="tm-menu">
         <span class="tm-btn c1" style="--n:0"><i>📅</i><small>毎日1問</small></span>
@@ -75,6 +75,48 @@ const SCENES = [
       </div>`,
   },
 ];
+
+// リラックス(お花畑)の説明・遊び方・コツ
+const SEQ = (items) => items.map(([icon, note], n) => `<span class="tg-seq-item" style="--n:${n}"><b>${icon}</b><small>${note}</small></span>`).join("");
+const cell = (mod = "", a = "🌱", b = "🌿") => `<span class="tg-c ${mod}"><b class="a">${a}</b><b class="b">${b}</b></span>`;
+const RELAX_SCENES = [
+  {
+    title: "お花畑って?",
+    caption: "木を育てて 全部を桜の木にする パズルだよ。点数も時間もないから のんびり遊んでね。",
+    html: `<div class="tg"><div class="tg-seq">${SEQ([["🌱", "芽"], ["🌿", "枝"], ["🌳", "木"], ["🌸", "桜の木"]])}</div></div>`,
+  },
+  {
+    title: "遊び方 1",
+    caption: "木を押すと その木と 上下左右の木が 1つずつ育つよ。",
+    html: `<div class="tg"><div class="tg-grid">
+      ${cell("s")}${cell("up")}${cell("s")}
+      ${cell("up")}<span class="tg-c up tap"><b class="a">🌱</b><b class="b">🌿</b><span class="tg-finger">👆</span></span>${cell("up")}
+      ${cell("s")}${cell("up")}${cell("s")}
+    </div></div>`,
+  },
+  {
+    title: "遊び方 2",
+    caption: "桜の木の次は 芽に戻るよ。全部を桜の木にしたらクリア!",
+    html: `<div class="tg"><div class="tg-seq">${SEQ([["🌳", "木"], ["🌸", "桜の木"], ["🌱", "芽に戻る"]])}</div><span class="tg-clear">✨ クリア! ✨</span></div>`,
+  },
+  {
+    title: "コツ 1",
+    caption: "上の段から順に そろえよう。上の木を育てたいときは そのすぐ下の木を押すよ。",
+    html: `<div class="tg"><div class="tg-grid">
+      ${cell("s", "🌸", "🌸")}${cell("up", "🌿", "🌳")}${cell("s", "🌸", "🌸")}
+      ${cell("s", "🌳", "🌳")}<span class="tg-c up tap"><b class="a">🌳</b><b class="b">🌸</b><span class="tg-finger">👆</span></span>${cell("s", "🌳", "🌳")}
+      ${cell("s", "🌱", "🌱")}${cell("up", "🌸", "🌱")}${cell("s", "🌱", "🌱")}
+    </div></div>`,
+  },
+  {
+    title: "コツ 2",
+    caption: "同じ木は3回まで。4回押すと戻るよ。困ったら「ヒント」で 押す木が光るよ。",
+    html: `<div class="tg"><div class="tg-seq">${SEQ([["🌱", "0回"], ["🌿", "1回"], ["🌳", "2回"], ["🌸", "3回"], ["🌱", "4回で戻る"]])}</div><span class="tg-bulb">💡 ヒント</span></div>`,
+  },
+];
+
+const SCENE_SETS = { play: PLAY_SCENES, relax: RELAX_SCENES };
+let SCENES = PLAY_SCENES;
 
 let index = 0;
 let onClose = null;
@@ -106,8 +148,9 @@ function go(next) {
   render();
 }
 
-export function openTutorial(closed) {
+export function openTutorial(closed, kind = "play") {
   onClose = closed ?? null;
+  SCENES = SCENE_SETS[kind] ?? PLAY_SCENES;
   index = 0;
   $("tutorial").hidden = false;
   render();

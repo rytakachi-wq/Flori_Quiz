@@ -98,7 +98,7 @@ for (const type of ["pointerdown", "pointermove", "keydown", "wheel", "touchstar
 const talker = createTalker({ textEl: $("cover-talk") });
 
 // 横にスワイプ(なぞる)して、行き来できる画面
-const PAGER = ["cover", "menu", "dex", "dress", "records", "settings"];
+const PAGER = ["cover", "dex", "dress", "records", "menu", "settings"];
 const PAGER_ICON = { cover: "🏠", menu: "📋", dex: "📚", dress: "👑", records: "🏆", settings: "⚙️" };
 const PAGER_NAME = { cover: "ホーム", menu: "その他", dex: "図鑑", dress: "着せ替え", records: "成績", settings: "設定" };
 let currentScreen = "cover";
@@ -114,7 +114,7 @@ function renderPager(name) {
       dot.querySelector(".pi").textContent = PAGER_ICON[key];
       dot.querySelector(".pl").textContent = PAGER_NAME[key];
       dot.setAttribute("aria-label", PAGER_NAME[key]);
-      if (key === "menu" || key === "dress" || key === "dex" || key === "records") dot.dataset.news = key;
+      if (key === "dress" || key === "dex" || key === "records") dot.dataset.news = key;
       dot.addEventListener("click", () => PAGE_OPEN[key]());
       return dot;
     }),
@@ -1038,8 +1038,13 @@ document.addEventListener(
 let pendingMode = null;
 function chooseTime(nextMode) {
   pendingMode = nextMode;
-  // 復習のときだけ、どんな問題が出るかを、さきに説明する
-  $("dlg-time-review").hidden = nextMode !== "review";
+  if (nextMode === "review") {
+    // 復習には、制限時間は付けない(理由を説明してから始める)
+    $("dlg-review").showModal();
+    return;
+  }
+  // 毎日1問は、どんな問題かを、さきに説明する
+  $("dlg-time-daily").hidden = nextMode !== "daily";
   $("dlg-time").showModal();
 }
 function closeTimeDialog(limit) {
@@ -1051,6 +1056,12 @@ function closeTimeDialog(limit) {
 $("btn-time-yes").addEventListener("click", () => closeTimeDialog(true));
 $("btn-time-no").addEventListener("click", () => closeTimeDialog(false));
 $("btn-time-cancel").addEventListener("click", () => closeTimeDialog(null));
+$("btn-review-yes").addEventListener("click", () => {
+  $("dlg-review").close();
+  timeLimit = false;
+  startPlay("review");
+});
+$("btn-review-no").addEventListener("click", () => $("dlg-review").close());
 
 // 普通・難しいモードの遊び。分類(理系・文系・ひらめき)×難しさごとに、ひとつずつ作って、「続きから」を保存する。
 const groupOf = (q) => q.group ?? "ひらめき";
@@ -1130,10 +1141,6 @@ $("btn-hint").addEventListener("click", () => {
   $("btn-hint").disabled = true;
   if (readAloud()) speak(`ヒント。${current.hint}`); // ヒントも読み上げる
 });
-$("btn-versus").addEventListener("click", () => {
-  pick.kind = "versus";
-  show("rules");
-});
 
 // リラックス:お花畑(点数も時間もない)
 let garden = null;
@@ -1142,7 +1149,6 @@ let gardenSize = 3;
 function startGarden(size = gardenSize) {
   gardenSize = size;
   $("garden-message").textContent = "木を押して全部を桜の木にしよう。";
-  $("garden-hint").hidden = true;
   garden = new GardenUI($("garden"), {
     size,
     onChange: ({ bloomed, total, moves }) => {
@@ -1159,21 +1165,22 @@ function startGarden(size = gardenSize) {
   show("relax");
 }
 
-$("btn-relax").addEventListener("click", () => startGarden());
+// リラックスを選ぶと、説明・遊び方・コツのムービーを見てから、お花畑へ進む
+$("btn-relax").addEventListener("click", () => playTutorial("relax", () => startGarden()));
 $("btn-relax-back").addEventListener("click", () => show("cover", -1));
-$("btn-garden-hint").addEventListener("click", () => {
-  // ヒントは、おすたびに、出す・かくすが入れかわる
-  // (説明を閉じても、光った木は、そのまま)
-  const show = $("garden-hint").hidden;
-  $("garden-hint").hidden = !show;
-  if (show) garden?.hint();
+$("btn-garden-hint").addEventListener("click", () => garden?.hint()); // 光る木を教える
+// リセット:配置が変わるので、確認してから
+$("btn-garden-again").addEventListener("click", () => $("dlg-garden-reset").showModal());
+$("btn-garden-reset-yes").addEventListener("click", () => {
+  $("dlg-garden-reset").close();
+  startGarden();
 });
-$("btn-garden-again").addEventListener("click", () => startGarden());
+$("btn-garden-reset-no").addEventListener("click", () => $("dlg-garden-reset").close());
+$("btn-garden-guide").addEventListener("click", () => playTutorial("relax")); // 説明・遊び方・コツ(ムービー)
 for (const button of document.querySelectorAll("[data-garden]")) {
   button.addEventListener("click", () => startGarden(Number(button.dataset.garden)));
 }
 
-$("btn-records").addEventListener("click", showRecords);
 $("btn-records-back").addEventListener("click", () => show("cover", -1));
 $("btn-settings").addEventListener("click", () => PAGE_OPEN.settings());
 $("btn-settings-back").addEventListener("click", () => show("cover", -1));
@@ -1288,15 +1295,18 @@ $("opening").addEventListener("keydown", (event) => {
 });
 // 遊び方(チュートリアルムービー):オープニングからも、その他からも、見られる
 initTutorial();
-function playTutorial() {
+function playTutorial(kind = "play", then = null) {
   setScene("tutorial");
-  openTutorial(() => setScene(sceneOf(currentScreen))); // 閉じたら、もとの画面のBGMに戻る
+  openTutorial(() => {
+    setScene(sceneOf(currentScreen)); // 閉じたら、もとの画面のBGMに戻る
+    then?.();
+  }, kind);
 }
 $("btn-tutorial").addEventListener("click", (event) => {
   event.stopPropagation(); // オープニングを、閉じてしまわないように
   playTutorial();
 });
-$("btn-tutorial-menu").addEventListener("click", playTutorial);
+$("btn-tutorial-menu").addEventListener("click", () => playTutorial());
 
 // ================= 着せ替えの解放(条件は badges.js) =================
 // 条件を数えるための材料
@@ -1408,15 +1418,7 @@ function markSeen(kind) {
 function refreshNoticeDots() {
   if (allQuestions.length === 0) return;
   const news = computeNews();
-  const set = (id, text) => {
-    const dot = $(id).querySelector(".tile-dot");
-    dot.hidden = !text;
-    dot.textContent = text;
-  };
-  set("btn-dex", news.cards > 0 ? `NEW ${news.cards}` : "");
-  set("btn-dress", news.dress.length > 0 ? "NEW" : "");
-  set("btn-records", news.gain > 0 ? "UP" : "");
-  for (const [key, on] of [["menu", news.cards > 0 || news.dress.length > 0 || news.gain > 0], ["dex", news.cards > 0], ["dress", news.dress.length > 0], ["records", news.gain > 0]]) {
+  for (const [key, on] of [["dex", news.cards > 0], ["dress", news.dress.length > 0], ["records", news.gain > 0]]) {
     for (const dot of document.querySelectorAll(`#pager [data-news="${key}"]`)) dot.classList.toggle("has-news", on);
   }
 }
@@ -1899,9 +1901,7 @@ for (const tab of document.querySelectorAll("[data-dress-tab]")) {
 }
 applyDress();
 
-$("btn-dex").addEventListener("click", showDex);
 $("btn-dex-back").addEventListener("click", () => show("cover", -1));
-$("btn-dress").addEventListener("click", openDress);
 $("btn-dress-back").addEventListener("click", () => show("cover", -1));
 
 // 読み上げ

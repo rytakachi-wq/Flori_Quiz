@@ -170,11 +170,7 @@
       <div class="menu-grid">
         <button id="btn-daily" class="tile t-daily" type="button"><span class="tile-icon" aria-hidden="true">📅</span><span class="tile-text"><span class="tile-label">毎日1問</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">復習</span></span><span class="tile-dot" hidden></span></button>
-        <button id="btn-versus" class="tile t-versus" type="button"><span class="tile-icon" aria-hidden="true">👥</span><span class="tile-text"><span class="tile-label">皆で対戦</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-text"><span class="tile-label">リラックス</span></span><span class="tile-dot" hidden></span></button>
-        <button id="btn-dex" class="tile t-dex" type="button"><span class="tile-icon" aria-hidden="true">📚</span><span class="tile-text"><span class="tile-label">問題図鑑</span></span><span class="tile-dot" hidden></span></button>
-        <button id="btn-dress" class="tile t-dress" type="button"><span class="tile-icon" aria-hidden="true">👑</span><span class="tile-text"><span class="tile-label">着せ替え</span></span><span class="tile-dot" hidden></span></button>
-        <button id="btn-records" class="tile t-records" type="button"><span class="tile-icon" aria-hidden="true">🏆</span><span class="tile-text"><span class="tile-label">成績</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-tutorial-menu" class="tile t-tutorial" type="button"><span class="tile-icon" aria-hidden="true">🎬</span><span class="tile-text"><span class="tile-label">遊び方</span></span><span class="tile-dot" hidden></span></button>
       </div>
     </section>
@@ -236,25 +232,12 @@
       </header>
       <p id="garden-message" class="bubble"></p>
       <div id="garden"></div>
-      <div id="garden-hint" class="garden-tips" hidden>
-        <h3>ルール</h3>
-        <p>木を押すと その木と上下左右の木が1つずつ育つヨ。</p>
-        <p class="stage-line">🌱芽 → 🌿枝 → 🌳木 → 🌸桜の木</p>
-        <p>桜の木の次は芽に戻るヨ。</p>
-        <p>全部を<b>🌸桜の木</b>にしたらクリア!</p>
-        <h3>解くコツ</h3>
-        <ol>
-          <li><b>上の段から順に揃える。</b>上の木を育てたいときは その「すぐ下」の木を押す。</li>
-          <li><b>同じ木は3回までで十分。</b>4回押すと 元に戻るヨ。</li>
-          <li><b>下の段にそろわない木が残ったら。</b>上の段の木を何個か押して、もう1度上から順にやり直す。</li>
-          <li><b>行きづまったら「ヒント」。</b>光る木を押してみよう。</li>
-        </ol>
-      </div>
       <div class="buttons">
         <button class="btn btn-main" type="button" data-garden="3">易しい(3×3)</button>
         <button class="btn btn-main" type="button" data-garden="4">普通(4×4)</button>
         <button id="btn-garden-hint" class="btn btn-sub" type="button">ヒント</button>
-        <button id="btn-garden-again" class="btn btn-sub" type="button">もう1度</button>
+        <button id="btn-garden-again" class="btn btn-sub" type="button">リセット</button>
+        <button id="btn-garden-guide" class="btn btn-sub" type="button">🎬 遊び方・コツ</button>
       </div>
     </section>
 
@@ -451,12 +434,27 @@
   </dialog>
 
   <dialog id="dlg-time" class="dialog" aria-labelledby="dlg-time-text">
-    <p id="dlg-time-review" class="dlg-review" hidden>📖 <b>復習</b>では <b>間違えた問題</b>と <b>ヒントを見て解いた問題</b>が出ます。ヒントを見ないで正解すると 復習から消えます。</p>
+    <p id="dlg-time-daily" class="dlg-review" hidden>📅 <b>毎日1問</b>は 1日に1問だけ出る <b>今日の問題</b>です。毎日続けて解くと 連続の日数がのびて ご褒美がもらえます。</p>
     <p id="dlg-time-text">制限時間を付ける?<br>付けると1問30秒で答えるヨ。<br>星のご褒美がもらえるヨ。</p>
     <div class="buttons buttons-choice">
       <button id="btn-time-yes" class="btn btn-main btn-mid-big" type="button">付ける<small>(ご褒美あり)</small></button>
       <button id="btn-time-no" class="btn btn-plain btn-mid" type="button">付けない</button>
       <button id="btn-time-cancel" class="btn btn-plain btn-small" type="button">やめる</button>
+    </div>
+  </dialog>
+  <dialog id="dlg-review" class="dialog" aria-labelledby="dlg-review-text">
+    <p id="dlg-review-text">📖 <b>復習</b>では <b>間違えた問題</b>と <b>ヒントを見て解いた問題</b>が出ます。ヒントを見ないで正解すると 復習から消えます。</p>
+    <p class="dlg-review">⏱ 復習には <b>制限時間は付きません</b>。理由は 急がずに じっくり考えて 思い出す練習にするためです。</p>
+    <div class="buttons buttons-choice">
+      <button id="btn-review-yes" class="btn btn-main btn-mid-big" type="button">復習を 始める</button>
+      <button id="btn-review-no" class="btn btn-plain btn-small" type="button">やめる</button>
+    </div>
+  </dialog>
+  <dialog id="dlg-garden-reset" class="dialog" aria-labelledby="dlg-garden-reset-text">
+    <p id="dlg-garden-reset-text">🔄 <b>リセット</b>すると 木の配置が 新しく変わります。いまの育ち具合は なくなります。</p>
+    <div class="buttons buttons-choice">
+      <button id="btn-garden-reset-yes" class="btn btn-main btn-mid-big" type="button">リセットする</button>
+      <button id="btn-garden-reset-no" class="btn btn-plain btn-small" type="button">やめる</button>
     </div>
   </dialog>
   <dialog id="dlg-restart" class="dialog" aria-labelledby="dlg-restart-text">
