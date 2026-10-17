@@ -6,7 +6,7 @@ const FLORI = "../assets/flori/src/body_wave.webp";
 const PLAY_SCENES = [
   {
     title: "STEP 1 選ぼう",
-    caption: "「クイズ」を押してルールを見たら モード選択で 人数(1人か皆で対戦)・分類・難しさ・制限時間を 選んで スタート!",
+    caption: "「クイズ」を押して 人数・分類・難しさ・制限時間を 選んで スタート!",
     html: `
       <div class="tm-set">
         <div class="tm-srow"><span class="tm-btn mini c3 is-hit"><i>🙂</i><small>1人</small></span><span class="tm-btn mini c2"><i>👥</i><small>皆で</small></span></div>
@@ -36,13 +36,13 @@ const PLAY_SCENES = [
           <span class="tm-choice">1</span><span class="tm-choice">2</span>
           <span class="tm-choice is-right">3<b>✔</b></span><span class="tm-choice">4</span>
         </div>
-        <div class="tm-score">+2点</div>
+        <div class="tm-score">+1点</div>
       </div>
       <span class="tm-finger tm-finger-3">👆</span>`,
   },
   {
     title: "STEP 4 困ったら",
-    caption: "「ヒント」を見ると 点が半分になるよ(皆で対戦でも使える)。「分からない」は答えが見られるけど 不正解だよ。",
+    caption: "「ヒント」を見ると 点が半分になるよ。「分からない」は答えが見られるけど 不正解だよ。",
     html: `
       <div class="tm-help">
         <span class="tm-btn c9 is-hit"><i>💬</i><small>ヒント</small><em>点が半分</em></span>
@@ -63,7 +63,7 @@ const PLAY_SCENES = [
   },
   {
     title: "STEP 6 他にも色々",
-    caption: "「その他」では 毎日1問・復習・リラックスが遊べるよ。他は 下のメニューから!",
+    caption: "「その他」では 毎日1問・復習・リラックスが遊べるよ。",
     html: `
       <div class="tm-menu">
         <span class="tm-btn c1" style="--n:0"><i>📅</i><small>毎日1問</small></span>
@@ -77,13 +77,14 @@ const PLAY_SCENES = [
 ];
 
 // リラックス(お花畑)の説明・遊び方・コツ
+const seq = (items, cls = "") => `<div class="tg-seq ${cls}">${SEQ(items)}</div>`;
 const SEQ = (items) => items.map(([icon, note], n) => `<span class="tg-seq-item" style="--n:${n}"><b>${icon}</b><small>${note}</small></span>`).join("");
 const cell = (mod = "", a = "🌱", b = "🌿") => `<span class="tg-c ${mod}"><b class="a">${a}</b><b class="b">${b}</b></span>`;
 const RELAX_SCENES = [
   {
     title: "お花畑って?",
     caption: "木を育てて 全部を桜の木にする パズルだよ。点数も時間もないから のんびり遊んでね。",
-    html: `<div class="tg"><div class="tg-seq">${SEQ([["🌱", "芽"], ["🌿", "枝"], ["🌳", "木"], ["🌸", "桜の木"]])}</div></div>`,
+    html: `<div class="tg">${seq([["🌱", "芽"], ["🌿", "枝"], ["🌳", "木"], ["🌸", "桜の木"]])}</div>`,
   },
   {
     title: "遊び方 1",
@@ -97,7 +98,7 @@ const RELAX_SCENES = [
   {
     title: "遊び方 2",
     caption: "桜の木の次は 芽に戻るよ。全部を桜の木にしたらクリア!",
-    html: `<div class="tg"><div class="tg-seq">${SEQ([["🌳", "木"], ["🌸", "桜の木"], ["🌱", "芽に戻る"]])}</div><span class="tg-clear">✨ クリア! ✨</span></div>`,
+    html: `<div class="tg">${seq([["🌳", "木"], ["🌸", "桜の木"], ["🌱", "芽に戻る"]], "wide")}<span class="tg-clear">✨ クリア! ✨</span></div>`,
   },
   {
     title: "コツ 1",
@@ -111,11 +112,44 @@ const RELAX_SCENES = [
   {
     title: "コツ 2",
     caption: "同じ木は3回まで。4回押すと戻るよ。困ったら「ヒント」で 押す木が光るよ。",
-    html: `<div class="tg"><div class="tg-seq">${SEQ([["🌱", "0回"], ["🌿", "1回"], ["🌳", "2回"], ["🌸", "3回"], ["🌱", "4回で戻る"]])}</div><span class="tg-bulb">💡 ヒント</span></div>`,
+    html: `<div class="tg">${seq([["🌱", "0回"], ["🌿", "1回"], ["🌳", "2回"], ["🌸", "3回"], ["🌱", "4回で戻る"]], "tight")}<span class="tg-bulb">💡 ヒント</span></div>`,
   },
 ];
 
-const SCENE_SETS = { play: PLAY_SCENES, relax: RELAX_SCENES };
+// 毎日1問の説明
+const DAILY_SCENES = [
+  {
+    title: "毎日1問",
+    caption: "1日に1問だけ出る 今日の問題だよ。1日1回 挑戦できるよ。",
+    html: `<div class="tg">${seq([["📅", "今日の問題"], ["❓", "1問だけ"]], "wide")}</div>`,
+  },
+  {
+    title: "毎日1問",
+    caption: "毎日続けて解くと 連続の日数がのびて ご褒美がもらえるよ。",
+    html: `<div class="tg">${seq([["📅", "1日目"], ["📅", "2日目"], ["📅", "3日目"], ["🎁", "ご褒美"]])}</div>`,
+  },
+];
+
+// 復習の説明
+const REVIEW_SCENES = [
+  {
+    title: "復習",
+    caption: "間違えた問題と ヒントを見て解いた問題が 出るよ。",
+    html: `<div class="tg">${seq([["❌", "間違えた問題"], ["💡", "ヒントを見た問題"]], "wide")}</div>`,
+  },
+  {
+    title: "復習",
+    caption: "ヒントを見ないで 正解すると 復習から消えるよ。",
+    html: `<div class="tg">${seq([["📖", "復習"], ["✅", "正解"], ["✨", "消える"]], "wide")}</div>`,
+  },
+  {
+    title: "復習",
+    caption: "制限時間は付かないよ(急がず じっくり 思い出す練習にするため)。",
+    html: `<div class="tg">${seq([["⏱", "制限時間"], ["🚫", "付かない"]], "wide")}</div>`,
+  },
+];
+
+const SCENE_SETS = { play: PLAY_SCENES, relax: RELAX_SCENES, daily: DAILY_SCENES, review: REVIEW_SCENES };
 let SCENES = PLAY_SCENES;
 
 let index = 0;
