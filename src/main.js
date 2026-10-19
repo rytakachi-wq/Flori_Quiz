@@ -151,6 +151,7 @@ function show(name, direction = 0) {
     stopTimer();
     stopSpeaking();
   }
+  if (name !== "result") stopResultSound();
   currentScreen = name;
   const pager = $("pager");
   pager.hidden = !PAGER.includes(name);
@@ -283,8 +284,6 @@ function refreshCover() {
   $("btn-daily").querySelector(".tile-label").textContent = "毎日1問";
   $("btn-daily").querySelector(".tile-icon").textContent = dailyDone ? "✅" : "📅"; // 今日の分をやったら、チェック
   $("btn-daily").classList.toggle("is-done", dailyDone);
-  $("btn-daily-cover").classList.toggle("is-done", dailyDone);
-  $("btn-daily-cover").querySelector(".db-mark").textContent = dailyDone ? "✅ 今日は おわり" : "";
   const left = stats.wrong.filter((id) => playableIds().has(id)).length;
   $("btn-review").querySelector(".tile-label").textContent = left > 0 ? `復習(${left}問)` : "復習(なし)";
   $("btn-review").disabled = left === 0;
@@ -300,6 +299,7 @@ function playableIds() {
   return new Set([...normalIds, ...hardIds]);
 }
 
+let reviewFromQuiz = false; // クイズの結果から、すぐ復習に来たか(戻る先が、モード選択になる)
 let reviewOnly = null; // 結果から「すぐ復習」したときの、復習する問題(uid)
 let lastCorrect = null; // 前の問題に正解したか(フロリのセリフに使う)
 const pickOf = (list) => list[Math.floor(Math.random() * list.length)];
@@ -384,7 +384,6 @@ function showQuestion() {
     setFlori(IMG.think, "本とペンを持つフロリ");
     message.hidden = true;
   }
-  if (coach?.levelup) playSe("levelup");
 
   // ヒント:普通・難しい・復習・毎日1問・皆で対戦で、1問に1回だけ(見ると、その問題の点が半分)。オニは、ヒントなし。「分からない」だけ
   hinted = false;
@@ -701,6 +700,12 @@ function fitFeedback() {
   }
 }
 window.addEventListener("resize", () => fitFeedback());
+// ふりがなが、あとから付いて、高さが変わったときも、収めなおす
+let fitTimer = 0;
+new MutationObserver(() => {
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(fitFeedback, 30);
+}).observe($("q-explanation"), { childList: true, subtree: true });
 
 // 解説の文字の大きさを、枠に収まるまで、少しずつ小さくする。それでも収まらないときは、上の問題文をかくす
 function fitExplanation() {
@@ -840,7 +845,7 @@ function showResult() {
   fitResult();
   setTimeout(fitResult, 150);
   setTimeout(fitResult, 700);
-  setTimeout(celebrateUnlocks, 1400); // 着せ替えが、ふえていたら、お祝いの画面
+  setTimeout(celebrateUnlocks, DRUMROLL_MS + 1500); // 着せ替えが、ふえていたら、お祝いの画面
 }
 
 // 結果の画面が、1画面に収まるように、大事でないものから順に、かくす
@@ -858,14 +863,24 @@ window.addEventListener("resize", () => fitResult());
 
 // 結果発表を、盛り上げる:星・まわる紙ふぶき・点数の数えあげ・フロリの声
 let reviewNow = [];
+let resultSound = null;
+let resultTimers = [];
+const DRUMROLL_MS = 3800; // ドラムロールが鳴って、点数を数えあげてから、「ジャン!」で、発表する
+function stopResultSound() {
+  resultTimers.forEach(clearTimeout);
+  resultTimers = [];
+  resultSound?.stop();
+  resultSound = null;
+}
 function celebrateResult(result, versus) {
+  stopResultSound();
   const screen = $("screen-result");
   const ratio = versus ? 1 : result.total > 0 ? result.correct / result.total : 0;
   const mood = ratio === 1 ? "perfect" : ratio >= 0.6 ? "good" : ratio > 0 ? "ok" : "low";
   screen.dataset.mood = versus ? "perfect" : mood;
-  screen.classList.remove("is-celebrate");
+  screen.classList.remove("is-celebrate", "is-reveal");
   void screen.offsetWidth;
-  screen.classList.add("is-celebrate"); // 動きを、はじめからやりなおす
+  screen.classList.add("is-celebrate"); // フロリは、すぐ、はねて登場
   const stars = $("r-stars");
   if (versus) stars.replaceChildren();
   else {
@@ -873,14 +888,14 @@ function celebrateResult(result, versus) {
     stars.replaceChildren(
       ...Array.from({ length: 5 }, (_, i) => {
         const star = document.createElement("span");
-        star.textContent = i < filled ? "⭐" : "☆";
+        star.textContent = "💡"; // ひらめきの電球(とれた数だけ、光る)
         star.className = i < filled ? "on" : "off";
         star.style.setProperty("--i", String(i));
         return star;
       }),
     );
   }
-  // 紙ふぶき(盛り上がるほど、多く)
+  // 紙ふぶき(盛り上がるほど、多く)。発表のときに、降る
   const icons = mood === "perfect" || versus ? ["🎉", "⭐", "✨", "🎊", "🌟", "💖"] : ["⭐", "✨", "🌸"];
   const count = versus || mood === "perfect" ? 26 : mood === "good" ? 14 : mood === "ok" ? 6 : 0;
   $("r-fx").replaceChildren(
@@ -893,20 +908,27 @@ function celebrateResult(result, versus) {
       return bit;
     }),
   );
-  // 音
-  if (mood === "perfect" || versus) setTimeout(() => playSe("levelup"), 500);
-  // 点数の数えあげ(0から)
+  // ドラムロール → 点数の数えあげ → ロールのしめ + 発表(電球・紙ふぶき)
+  resultSound = playSe("drumroll");
   const scoreEl = $("r-score");
   if (!versus && result.score > 0 && !scoreEl.hidden) {
     const text = scoreEl.textContent;
     const total = text.slice(text.indexOf("点"));
     let n = 0;
+    const step = Math.max(40, Math.floor((DRUMROLL_MS - 300) / result.score));
     const timer = setInterval(() => {
       n += 1;
       scoreEl.textContent = `${Math.min(n, result.score)}${total}`;
       if (n >= result.score) clearInterval(timer);
-    }, 90);
+    }, step);
+    resultTimers.push(timer);
   }
+  resultTimers.push(
+    setTimeout(() => {
+      resultSound = playSe("rollend");
+      screen.classList.add("is-reveal");
+    }, DRUMROLL_MS),
+  );
 }
 
 function comment(correct, total = QUESTIONS_PER_ROUND) {
@@ -1404,11 +1426,11 @@ function openDaily() {
   } else guideOnce("daily", () => chooseTime("daily"));
 }
 $("btn-daily").addEventListener("click", openDaily);
-$("btn-daily-cover").addEventListener("click", openDaily); // 表紙からも、毎日1問
 $("btn-info-close").addEventListener("click", () => $("dlg-info").close());
 // 復習には制限時間は付けない(ムービーで説明してから始める)
 $("btn-review").addEventListener("click", () =>
   guideOnce("review", () => {
+    reviewFromQuiz = false;
     timeLimit = false;
     startPlay("review");
   }),
@@ -1498,11 +1520,18 @@ $("btn-again").addEventListener("click", () => startPlay(mode));
 $("btn-r-review").addEventListener("click", () => {
   if (reviewNow.length === 0) return;
   reviewOnly = [...reviewNow];
+  reviewFromQuiz = true;
   timeLimit = false;
   startPlay("review", "ここで 正解すると 復習モードから 消えるヨ!");
 });
 // 毎日1問・復習のあとは、「その他」へ戻る
-const leaveGame = () => (mode === "daily" || mode === "review" ? openMenu() : show("cover", -1));
+const leaveGame = () => {
+  if (mode === "review" && reviewFromQuiz) {
+    renderSetup();
+    show("setup", -1); // クイズから来た復習は、クイズのモード選択へ戻る
+  } else if (mode === "daily" || mode === "review") openMenu();
+  else show("cover", -1);
+};
 $("btn-cover").addEventListener("click", leaveGame);
 
 // やめる:確認してから、この回をなかったことにして表紙へ戻る。

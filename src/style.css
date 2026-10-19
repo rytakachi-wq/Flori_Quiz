@@ -2830,7 +2830,7 @@ button:focus:not(:focus-visible) { outline: none; }
 .r-fx span { position: absolute; top: -8%; opacity: 0; animation: rFall 3.4s ease-in 1 both; }
 @keyframes rFall { 0% { opacity: 0; transform: translateY(0) rotate(0); } 8% { opacity: 1; } 100% { opacity: 0.9; transform: translateY(115dvh) rotate(300deg); } }
 #screen-result.is-celebrate .flori-cover { animation: rJump 1.2s cubic-bezier(0.3, 1.5, 0.5, 1) both, homeBob 3.4s ease-in-out 1.2s infinite; }
-#screen-result.is-celebrate .r-stars .on { animation: rStar 0.6s cubic-bezier(0.3, 1.8, 0.5, 1) both; animation-delay: calc(0.5s + var(--i) * 0.2s); }
+#screen-result.is-reveal .r-stars .on { animation: rStar 0.6s cubic-bezier(0.3, 1.8, 0.5, 1) both; animation-delay: calc(var(--i) * 0.18s); }
 #screen-result.is-celebrate #r-score, #screen-result.is-celebrate #r-correct { animation: rPop 0.7s ease-out 0.4s both; }
 #screen-result.is-celebrate .title { animation: rTitle 0.9s ease-out both; }
 #screen-result.is-celebrate .bubble { animation: rBubble 0.5s ease-out 0.3s both; }
@@ -2938,3 +2938,26 @@ button:focus:not(:focus-visible) { outline: none; }
   #screen-settings .setting-box .rate-row { margin-top: 0; line-height: 1.1; }
   #screen-settings .setting-box .rate-row input[type="range"] { height: 18px; }
 }
+
+/* =====================================================================
+   追加(その47):ドラムロールの発表・電球・確認の項目・ルールをもう1度見る・ヒントのボタン
+   ===================================================================== */
+.r-stars .on, .r-stars .off { opacity: 0; }
+.r-stars .off { filter: grayscale(1); }
+#screen-result.is-reveal .r-stars .off { opacity: 0.3; transition: opacity 0.4s; }
+.r-fx span { animation: none; }
+#screen-result.is-reveal .r-fx span { animation: rFall 3.4s ease-in 1 both; }
+.r-stars { font-size: clamp(28px, 4.8dvh, 44px); }
+
+.rules-again { flex: none; align-self: center; padding: 6px 20px; font: inherit; font-size: 17px; font-weight: bold; color: #1f3f66; cursor: pointer; background: #fff; border: 3px solid #4a7fb3; border-radius: 999px; box-shadow: 0 4px 0 rgba(53, 95, 140, 0.35); touch-action: manipulation; }
+.rules-again:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(53, 95, 140, 0.35); }
+@media (max-height: 620px) { .rules-again { display: none; } }
+
+.hint-dialog .buttons .btn { min-height: 60px; font-size: 20px; }
+.hint-dialog #btn-hint-no { flex: 1.3; min-height: 66px; font-size: 22px; }
+.hint-dialog #btn-hint-yes { flex: 1; }
+
+.confirm-list { flex: none; grid-auto-rows: 46px; gap: 6px; max-height: none; }
+.confirm-list li { padding: 0 10px; }
+.confirm-list .cl-v { font-size: 17px; }
+.confirm-flori { height: clamp(110px, 24dvh, 230px); }

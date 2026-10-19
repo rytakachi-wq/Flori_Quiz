@@ -31,7 +31,9 @@ const SE = {
   whistle: { file: "se-whistle.mp3", boost: 1 }, // 時間切れ
   tick: { file: "se-tick.mp3", boost: 1 }, // 制限時間のあいだ(くり返す)
   timerFast: { file: "se-timer-fast.mp3", boost: 1 }, // 制限時間の、のこり5秒(くり返す)
-  levelup: { file: "se-levelup.mp3", boost: 1 }, // 難しくなった・ご褒美をもらった
+  levelup: { file: "se-levelup.mp3", boost: 1 }, // 着せ替えなどの、アイテムをもらったとき(テッテレー)
+  drumroll: { file: "se-drumroll.mp3", boost: 1 }, // 結果発表のドラムロール
+  rollend: { file: "se-rollend.mp3", boost: 1 }, // ドラムロールの、しめ
 };
 
 const DEFAULTS = { bgm: 0.7, se: 0.8 };
@@ -138,9 +140,10 @@ document.addEventListener("visibilitychange", () => {
   else if (unlocked) context.resume().catch(() => {});
 });
 
+// 鳴らして、止められる形(stop)を返す。止めなくてもよい
 export function playSe(name) {
   const se = SE[name];
-  if (!se || volumes.se === 0) return;
+  if (!se || volumes.se === 0) return { stop() {} };
   const level = curve(volumes.se) * se.boost;
   if (context && buffers[name] && context.state === "running") {
     const source = context.createBufferSource();
@@ -149,12 +152,21 @@ export function playSe(name) {
     gain.gain.value = level;
     source.connect(gain).connect(context.destination);
     source.start();
-    return;
+    return {
+      stop() {
+        try {
+          source.stop();
+        } catch {
+          // もう止まっている
+        }
+      },
+    };
   }
-  if (!unlocked) return;
+  if (!unlocked) return { stop() {} };
   const sound = new Audio(BASE + se.file);
   sound.volume = Math.min(1, level);
   sound.play().catch(() => {});
+  return { stop: () => sound.pause() };
 }
 
 // くり返す音(制限時間のカチカチ)。止めるときは、stopLoop()

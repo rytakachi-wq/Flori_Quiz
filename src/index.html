@@ -57,7 +57,6 @@
         <span class="hud-chip"><small>着せ替え</small><span class="hv">🎁 <b id="hud-dress">0</b>/<span id="hud-dress-all">90</span></span></span>
       </div>
       <button id="btn-quiz" class="play-btn" type="button"><span class="gi" aria-hidden="true">🎯</span><span class="pb-text"><b>クイズ</b></span><span class="pb-go" aria-hidden="true">▶</span></button>
-      <button id="btn-daily-cover" class="daily-btn" type="button"><span class="gi" aria-hidden="true">📅</span><b>毎日1問</b><span class="db-mark" aria-hidden="true"></span></button>
       <div class="home-stage">
         <div class="speech home-speech">
           <p id="cover-talk" class="cover-talk">ヤア! ボクはフロリだヨ!</p>
@@ -104,7 +103,7 @@
         <div class="set-row"><span class="set-label"><span aria-hidden="true">⏱</span> 制限時間</span><div id="seg-time" class="seg seg-time"></div></div>
       </div>
       <p id="setup-note" class="setup-note" role="status"></p>
-      <button id="btn-show-rules" class="rf-skip" type="button">📖 ルールを もう1度 見る</button>
+      <button id="btn-show-rules" class="rules-again" type="button">📖 ルールを もう1度 見る</button>
       <div id="flow-reward" class="reward-card" hidden></div>
       <div class="setup-actions">
         <button id="btn-recommend" class="reco-btn" type="button"><span aria-hidden="true">✨</span> おすすめで<br>選ぶ</button>
@@ -410,8 +409,8 @@
     <img class="flori flori-small hint-dlg-flori" src="../assets/flori/wave_surprised.png" alt="">
     <p id="dlg-hint-text">ヒントを 見ると この問題の 点が <b>半分</b>に なっちゃうヨ。<br>それでも 見るカナ?</p>
     <div class="buttons">
-      <button id="btn-hint-no" class="btn btn-sub" type="button">NO やめとく</button>
-      <button id="btn-hint-yes" class="btn btn-main" type="button" data-no-se="1">YES 見る!</button>
+      <button id="btn-hint-no" class="btn btn-sub" type="button">やめとく</button>
+      <button id="btn-hint-yes" class="btn btn-main" type="button" data-no-se="1">見る!</button>
     </div>
   </dialog>
   <dialog id="dlg-giveup" class="dialog" aria-labelledby="dlg-giveup-text">
