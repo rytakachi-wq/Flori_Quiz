@@ -2924,3 +2924,12 @@ button:focus:not(:focus-visible) { outline: none; }
 .slide-l { animation: slideInL 0.1s ease-out; }
 @keyframes slideInR { from { transform: translate3d(14px, 0, 0); opacity: 0.4; } to { transform: none; opacity: 1; } }
 @keyframes slideInL { from { transform: translate3d(-14px, 0, 0); opacity: 0.4; } to { transform: none; opacity: 1; } }
+
+/* 答えたあと:解説が長くても、全部見えるように(はみ出すときは、問題のイラストと、フロリを小さく。それでも足りないときは、問題文をかくす) */
+#screen-question.is-answered #q-art { display: none; }
+#screen-question.is-answered .react-flori { height: clamp(56px, 11dvh, 110px); }
+#screen-question.is-answered.is-tight .q-row { display: none; }
+#screen-question.is-answered .explanation { word-break: auto-phrase; }
+
+/* 読み上げの速さ */
+.setting-box .rate-row { grid-template-columns: 2.6em 1fr 3.2em; margin-top: 2px; }

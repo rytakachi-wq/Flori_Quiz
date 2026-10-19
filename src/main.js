@@ -517,6 +517,23 @@ function setReadAloud(on) {
     // 保存できなくても、そのページを開いている間は、かわったまま。
   }
 }
+const RATE_KEY = "floriQuiz.readRate";
+const RATE_DEFAULT = 1.6;
+function readRate() {
+  try {
+    const n = parseFloat(localStorage.getItem(RATE_KEY));
+    return n >= 0.8 && n <= 2.4 ? n : RATE_DEFAULT;
+  } catch {
+    return RATE_DEFAULT;
+  }
+}
+function setReadRate(n) {
+  try {
+    localStorage.setItem(RATE_KEY, String(n));
+  } catch {
+    // 保存できなくても、そのページを開いている間は、かわったまま。
+  }
+}
 const canSpeak = "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
 let speaking = false; // 読み上げている間は、制限時間を止める
 let speakingSince = 0;
@@ -551,7 +568,7 @@ function speak(text) {
   const voice = new SpeechSynthesisUtterance(readingOf(text).replace(/□/g, "なにか").replace(/\n/g, "。"));
   voice.lang = "ja-JP";
   if (japaneseVoice) voice.voice = japaneseVoice;
-  voice.rate = 1.6;
+  voice.rate = readRate();
   // 読み直したとき、前の声が止まった知らせ(onend・onerror)が、あとから来る。今の声のときだけ、時間を動かす
   voice.onend = () => nowSpeaking === voice && setSpeaking(false);
   voice.onerror = () => nowSpeaking === voice && setSpeaking(false);
@@ -644,6 +661,7 @@ function answer(response) {
   $("q-detail").hidden = false;
   $("q-feedback").hidden = false;
   $("btn-next").focus({ preventScroll: true });
+  fitExplanation(); // 解説が長くても、スクロールしなくても、全部見えるように
   $("q-feedback").scrollIntoView({ block: "nearest", behavior: "instant" });
   fitFeedback();
   setTimeout(fitFeedback, 80); // ふりがなが付いたあとに、もう1度(高さが変わるため)
@@ -683,6 +701,30 @@ function fitFeedback() {
   }
 }
 window.addEventListener("resize", () => fitFeedback());
+
+// 解説の文字の大きさを、枠に収まるまで、少しずつ小さくする。それでも収まらないときは、上の問題文をかくす
+function fitExplanation() {
+  const box = $("q-feedback");
+  const text = $("q-explanation");
+  const screen = $("screen-question");
+  screen.classList.remove("is-tight");
+  text.style.fontSize = "";
+  let size = parseFloat(getComputedStyle(text).fontSize);
+  const over = () => box.scrollHeight > box.clientHeight + 1;
+  while (over() && size > 12) {
+    size -= 0.5;
+    text.style.fontSize = `${size}px`;
+  }
+  if (over()) {
+    screen.classList.add("is-tight");
+    text.style.fontSize = "";
+    size = parseFloat(getComputedStyle(text).fontSize);
+    while (over() && size > 12) {
+      size -= 0.5;
+      text.style.fontSize = `${size}px`;
+    }
+  }
+}
 
 // 答えたあとに読む文(正解かどうか・正解・解説)
 function answerReading() {
@@ -1025,6 +1067,7 @@ for (const radio of document.querySelectorAll('input[type="radio"][name^="furiga
 $("btn-settings-reset").addEventListener("click", () => {
   resetVolumes();
   setReadAloud(false);
+  setReadRate(RATE_DEFAULT);
   syncReadSettings();
   setTextSize("normal");
   setFuriganaMode("all");
@@ -2222,6 +2265,8 @@ $("btn-dress-back").addEventListener("click", () => show("cover", -1));
 function syncReadSettings() {
   $("set-read").checked = readAloud();
   $("set-read-dlg").checked = readAloud();
+  $("set-rate").value = readRate();
+  $("set-rate-out").textContent = `${readRate().toFixed(1)}倍`;
   $("btn-read").hidden = !(canSpeak && readAloud()); // 設定でチェックを入れたときだけ、「読み上げ」ボタンを出す
 }
 syncReadSettings();
@@ -2232,6 +2277,14 @@ for (const box of [$("set-read"), $("set-read-dlg")]) {
     if (!box.checked) stopSpeaking();
   });
 }
+
+$("set-rate").addEventListener("input", () => {
+  setReadRate(parseFloat($("set-rate").value));
+  syncReadSettings();
+});
+$("set-rate").addEventListener("change", () => {
+  if (canSpeak) speak("この速さで読み上げるよ。"); // 試しに聞ける
+});
 
 $("btn-read").addEventListener("click", () => {
   if (answered) speak(answerReading());
