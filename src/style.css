@@ -2771,3 +2771,132 @@ button:focus:not(:focus-visible) { outline: none; }
 #screen-menu .menu-hero .hero-hat { font-size: 0; }
 #screen-menu .menu-grid { flex: none; margin-top: auto; grid-template-rows: repeat(2, clamp(64px, 11dvh, 96px)); align-content: end; }
 @media (prefers-reduced-motion: reduce) { #screen-menu .menu-hero .hero-fig { animation: none; } }
+
+/* =====================================================================
+   追加(その46):表紙の毎日1問・ふきだし・確認の画面・対戦の色・ヒント・結果の盛り上げ
+   ===================================================================== */
+
+/* ---- 表紙:毎日1問のボタン(クイズの下)。ふきだしは、かざりに隠れないように ---- */
+.daily-btn { position: relative; flex: none; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 54px; padding: 2px 14px; font: inherit; font-size: 22px; font-weight: bold; color: #6b4a00; cursor: pointer; background: linear-gradient(180deg, #fff9d8, #ffe9a0); border: 4px solid #d9b958; border-radius: 26px; box-shadow: 0 5px 0 #d9b958; touch-action: manipulation; transition: transform 0.12s, box-shadow 0.12s; }
+.daily-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #d9b958; }
+.daily-btn .gi { font-size: 28px; line-height: 1; }
+.daily-btn .db-mark { font-size: 13px; color: #2a7a46; }
+.daily-btn .db-mark:empty { display: none; }
+.daily-btn.is-done { background: linear-gradient(180deg, #f3faee, #d8efcf); border-color: #9fc890; box-shadow: 0 5px 0 #9fc890; color: #3b6a35; }
+#screen-cover .home-speech { position: relative; z-index: 6; }
+#screen-cover .home-hero .hero-fig { margin-top: clamp(14px, 5dvh, 52px); }
+@media (max-height: 700px) { .daily-btn { min-height: 44px; font-size: 18px; } #screen-cover .home-hero .hero-fig { margin-top: 12px; } }
+@media (max-height: 620px) { .daily-btn { min-height: 40px; } }
+
+/* ---- スタートの確認:フロリを大きく、スタートのボタンも大きく ---- */
+.confirm-flori { height: clamp(110px, 21dvh, 210px); }
+.confirm-ask { font-size: clamp(20px, 5.6vw, 26px); padding: 8px 14px; }
+#screen-confirm .go-btn.is-start { min-height: clamp(72px, 12dvh, 110px); font-size: clamp(26px, 4dvh, 34px); border-radius: 32px; }
+@media (max-height: 640px) { .confirm-flori { height: 88px; } #screen-confirm .go-btn.is-start { min-height: 64px; font-size: 24px; } .confirm-ask { font-size: 18px; } }
+
+/* ---- 皆で対戦:色は、プレイヤーの色だけ。ほかは、白と灰色 ---- */
+#screen-question[data-player]:not([data-player=""]) .q-chip { background: #fff; }
+#screen-question[data-player]:not([data-player=""]) .q-chip-level { color: #55646e; }
+#screen-question[data-player]:not([data-player=""]) .chip-button { background: #fff; }
+#screen-question[data-player]:not([data-player=""]) .btn-sub { background: #fff; }
+#screen-question[data-player]:not([data-player=""]) .choice-no { background: #e4eaee; }
+#screen-question[data-player]:not([data-player=""]) .choice { border-color: #c3ced5; }
+#screen-question[data-player]:not([data-player=""]) .question { background: #fff; border-left-color: inherit; }
+#screen-question[data-player]:not([data-player=""]) .hint { background: #fff; border-color: #c3ced5; }
+#screen-question[data-player]:not([data-player=""]) .feedback { background: #fff; border-color: #c3ced5; }
+#screen-question[data-player]:not([data-player=""]) { background: #fff; }
+
+/* ---- 問題のイラスト:ヒントを見ても、つぶれない(場所がたりないときは、ほかを小さく) ---- */
+#screen-question .q-art { flex: none; min-height: 64px; max-height: 104px; overflow: hidden; }
+#screen-question.is-hinted .q-art { min-height: 52px; max-height: 70px; }
+@media (max-height: 700px) { #screen-question.is-hinted .q-art { display: none; } }
+
+/* ---- 問題のフロリのセリフ(問題の番号で変わる) ---- */
+.q-row .stage .bubble { font-size: 13.5px; line-height: 1.35; padding: 3px 8px; font-weight: bold; }
+
+/* ---- ヒントの確認(フリップ) ---- */
+.hint-dialog { text-align: center; }
+.hint-dlg-flori { height: clamp(70px, 14dvh, 120px); width: auto; }
+.hint-dialog .buttons .btn { min-height: 54px; font-size: 18px; }
+
+/* ---- 結果の画面:フロリを大きく、盛り上げる ---- */
+#screen-result .screen-head + .flori-cover { height: clamp(120px, 24dvh, 240px); width: auto; max-width: 70%; object-fit: contain; }
+#screen-result.is-versus .screen-head + .flori-cover { height: clamp(120px, 24dvh, 240px); }
+@media (max-height: 700px) { #screen-result .screen-head + .flori-cover, #screen-result.is-versus .screen-head + .flori-cover { height: clamp(84px, 17dvh, 120px); } }
+.r-stars { display: flex; justify-content: center; gap: 6px; flex: none; font-size: clamp(26px, 4.4dvh, 40px); line-height: 1; }
+.r-stars:empty { display: none; }
+.r-stars .off { opacity: 0.35; color: #8a98a2; }
+.r-fx { position: fixed; inset: 0; z-index: 30; overflow: hidden; pointer-events: none; }
+.r-fx span { position: absolute; top: -8%; opacity: 0; animation: rFall 3.4s ease-in 1 both; }
+@keyframes rFall { 0% { opacity: 0; transform: translateY(0) rotate(0); } 8% { opacity: 1; } 100% { opacity: 0.9; transform: translateY(115dvh) rotate(300deg); } }
+#screen-result.is-celebrate .flori-cover { animation: rJump 1.2s cubic-bezier(0.3, 1.5, 0.5, 1) both, homeBob 3.4s ease-in-out 1.2s infinite; }
+#screen-result.is-celebrate .r-stars .on { animation: rStar 0.6s cubic-bezier(0.3, 1.8, 0.5, 1) both; animation-delay: calc(0.5s + var(--i) * 0.2s); }
+#screen-result.is-celebrate #r-score, #screen-result.is-celebrate #r-correct { animation: rPop 0.7s ease-out 0.4s both; }
+#screen-result.is-celebrate .title { animation: rTitle 0.9s ease-out both; }
+#screen-result.is-celebrate .bubble { animation: rBubble 0.5s ease-out 0.3s both; }
+@keyframes rJump { 0% { transform: translateY(40px) scale(0.5); opacity: 0; } 55% { transform: translateY(-22px) scale(1.12); opacity: 1; } 75% { transform: translateY(0) scale(0.96); } 100% { transform: none; opacity: 1; } }
+@keyframes rStar { 0% { transform: scale(0) rotate(-120deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes rPop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.25); opacity: 1; } 100% { transform: none; } }
+@keyframes rTitle { 0% { transform: scale(0.5); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: none; } }
+@keyframes rBubble { 0% { transform: translateY(10px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+#screen-result[data-mood="perfect"] { background: radial-gradient(circle at 50% 14%, #fff4b0 0%, #ffeaf0 38%, #fff 75%); }
+#screen-result[data-mood="good"] { background: radial-gradient(circle at 50% 14%, #e4f6ff 0%, #fff 70%); }
+#screen-result[data-mood="ok"] { background: radial-gradient(circle at 50% 14%, #f0f9e6 0%, #fff 70%); }
+#screen-result[data-mood="perfect"] .title { color: #d08a1a; text-shadow: 0 2px 0 #fff2c0; }
+@media (prefers-reduced-motion: reduce) { #screen-result.is-celebrate *, .r-fx span { animation: none !important; } .r-fx { display: none; } }
+.btn-review { background: linear-gradient(180deg, #e4f7e4, #b8e6b8); border: 3px solid #5aa860; color: #1f5a28; font-weight: bold; }
+#screen-result .buttons { flex-wrap: wrap; justify-content: center; }
+#screen-question .question { font-size: clamp(16px, 2.5dvh, 22px); }
+#screen-question .question.long { font-size: clamp(14px, 2.2dvh, 18px); }
+.q-row .stage { max-width: 40%; }
+.confirm-list { max-height: 420px; }
+#screen-question .q-row .flori-small { height: clamp(96px, 16dvh, 190px); }
+@media (max-height: 700px) {
+  #screen-question[data-player=""] .q-row .flori-small { height: clamp(84px, 15dvh, 120px); }
+  #screen-question[data-player=""].is-hinted .q-row .flori-small { height: clamp(64px, 11dvh, 96px); }
+  .q-row .stage .bubble { font-size: 12px; padding: 2px 6px; }
+}
+@media (max-height: 600px) { #screen-question[data-player=""] #q-message { display: none; } }
+#screen-question.is-tight1 .q-art { display: none; }
+#screen-question.is-tight2 .q-row .flori-small { height: 64px; }
+#screen-question.is-tight2 #q-message { display: none; }
+#screen-question.is-tight3 .q-row, #screen-question.is-tight3 #q-timer, #screen-question.is-tight3 .q-art { display: none; }
+@media (max-height: 700px) {
+  #screen-question.is-answered .q-timer, #screen-question.is-answered #q-timer { display: none; }
+  #screen-question .q-react .verdict { font-size: 17px; line-height: 1.3; }
+}
+#screen-question.is-tight2 .choice { min-height: 32px; padding: 0 10px; }
+#screen-question.is-tight2 .choices { gap: 3px; }
+#screen-question.is-tight2 .question { line-height: 1.35; padding: 3px 8px; }
+#screen-question.is-tight2 .hint { padding: 2px 8px; line-height: 1.3; }
+#screen-question.is-tight2 .hint-buttons .btn { min-height: 30px; }
+.fit-hide { display: none !important; }
+@media (max-height: 700px) {
+  #screen-result .scores { gap: 4px; }
+  #screen-result .scores > div { padding: 2px 6px; }
+  #screen-result .scores dd { font-size: 16px; line-height: 1.2; }
+  #screen-result .scores dt { font-size: 12px; }
+  #screen-result .bubble { font-size: 15px; line-height: 1.4; padding: 3px 10px; }
+  #screen-result .buttons .btn { min-height: 42px; font-size: 15px; }
+}
+
+/* ===== 画面を横に動かせない:真ん中に固定(その45) ===== */
+@media screen {
+  html, body { overscroll-behavior: none; touch-action: pan-y; }
+  body { position: fixed; inset: 0; width: 100%; max-width: 100%; overflow: hidden; }
+  .app { margin-left: auto; margin-right: auto; width: 100%; }
+}
+
+/* 図鑑:カードをめくる動き、正解ずみは「はなまる」を大きく */
+.dex-card { transform-style: preserve-3d; }
+.dex-card.is-flip { animation: dexFlipOut 0.26s ease-in forwards; }
+@keyframes dexFlipOut { 0% { transform: perspective(500px) rotateY(0) scale(1); } 100% { transform: perspective(500px) rotateY(90deg) scale(1.08); } }
+#dlg-dex[open] .dex-big { animation: dexFlipIn 0.3s ease-out; }
+@keyframes dexFlipIn { 0% { transform: perspective(600px) rotateY(-90deg); } 100% { transform: perspective(600px) rotateY(0); } }
+@media (prefers-reduced-motion: reduce) { .dex-card.is-flip, #dlg-dex[open] .dex-big { animation: none; } }
+.dex-star { right: 2px; bottom: 0; font-size: 30px; line-height: 1; text-shadow: none; filter: drop-shadow(0 1px 1px rgba(70, 85, 94, 0.35)); }
+#screen-dex .dex-card:has(.dex-star) .dex-cat { padding-right: 18px; }
+.dex-owned { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
+.dex-owned .dex-hana { font-size: 56px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(70, 85, 94, 0.3)); }
+.dex-owned .dex-owned-text { font-size: 16px; }
+#screen-dex .dex-filter .dex-tab { font-size: 11px; }

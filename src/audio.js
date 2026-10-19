@@ -28,6 +28,10 @@ const SE = {
   button: { file: "se-button.mp3", boost: 2.4 }, // ボタンをおしたとき
   correct: { file: "se-chime.mp3", boost: 1 }, // せいかい
   wrong: { file: "se-wrong.mp3", boost: 2.4 }, // ふせいかい
+  whistle: { file: "se-whistle.mp3", boost: 1 }, // 時間切れ
+  tick: { file: "se-tick.mp3", boost: 1 }, // 制限時間のあいだ(くり返す)
+  timerFast: { file: "se-timer-fast.mp3", boost: 1 }, // 制限時間の、のこり5秒(くり返す)
+  levelup: { file: "se-levelup.mp3", boost: 1 }, // 難しくなった・ご褒美をもらった
 };
 
 const DEFAULTS = { bgm: 0.7, se: 0.8 };
@@ -106,8 +110,12 @@ async function prepare() {
     applyBgm();
     await Promise.all(
       Object.entries(SE).map(async ([name, { file }]) => {
-        const data = await (await fetch(BASE + file)).arrayBuffer();
-        buffers[name] = await context.decodeAudioData(data);
+        try {
+          const data = await (await fetch(BASE + file)).arrayBuffer();
+          buffers[name] = await context.decodeAudioData(data);
+        } catch (error) {
+          console.warn("音の読みこみに失敗しました:", file); // 1つ失敗しても、ほかの音は鳴らす
+        }
       }),
     );
   } catch (error) {
@@ -147,6 +155,34 @@ export function playSe(name) {
   const sound = new Audio(BASE + se.file);
   sound.volume = Math.min(1, level);
   sound.play().catch(() => {});
+}
+
+// くり返す音(制限時間のカチカチ)。止めるときは、stopLoop()
+let loop = null;
+export function startLoop(name) {
+  stopLoop();
+  const se = SE[name];
+  if (!se || volumes.se === 0 || !context || !buffers[name] || context.state !== "running") return;
+  const source = context.createBufferSource();
+  const gain = context.createGain();
+  source.buffer = buffers[name];
+  source.loop = true;
+  gain.gain.value = curve(volumes.se) * se.boost * 0.6;
+  source.connect(gain).connect(context.destination);
+  source.start();
+  loop = { source, name };
+}
+export function stopLoop() {
+  if (!loop) return;
+  try {
+    loop.source.stop();
+  } catch {
+    // もう止まっている
+  }
+  loop = null;
+}
+export function loopName() {
+  return loop?.name ?? null;
 }
 
 export function getVolume(kind) {

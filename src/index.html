@@ -57,6 +57,7 @@
         <span class="hud-chip"><small>着せ替え</small><span class="hv">🎁 <b id="hud-dress">0</b>/<span id="hud-dress-all">90</span></span></span>
       </div>
       <button id="btn-quiz" class="play-btn" type="button"><span class="gi" aria-hidden="true">🎯</span><span class="pb-text"><b>クイズ</b></span><span class="pb-go" aria-hidden="true">▶</span></button>
+      <button id="btn-daily-cover" class="daily-btn" type="button"><span class="gi" aria-hidden="true">📅</span><b>毎日1問</b><span class="db-mark" aria-hidden="true"></span></button>
       <div class="home-stage">
         <div class="speech home-speech">
           <p id="cover-talk" class="cover-talk">ヤア! ボクはフロリだヨ!</p>
@@ -103,6 +104,7 @@
         <div class="set-row"><span class="set-label"><span aria-hidden="true">⏱</span> 制限時間</span><div id="seg-time" class="seg seg-time"></div></div>
       </div>
       <p id="setup-note" class="setup-note" role="status"></p>
+      <button id="btn-show-rules" class="rf-skip" type="button">📖 ルールを もう1度 見る</button>
       <div id="flow-reward" class="reward-card" hidden></div>
       <div class="setup-actions">
         <button id="btn-recommend" class="reco-btn" type="button"><span aria-hidden="true">✨</span> おすすめで<br>選ぶ</button>
@@ -118,7 +120,7 @@
       </header>
       <div class="confirm-stage">
         <img class="flori confirm-flori" src="../assets/flori/src/body_wave.webp" alt="">
-        <p class="bubble confirm-ask">これで いいですか?</p>
+        <p class="bubble confirm-ask">これで いいカナ?</p>
       </div>
       <ul id="confirm-list" class="confirm-list"></ul>
       <button id="btn-confirm-start" class="go-btn is-start" type="button"><span aria-hidden="true">▶️</span> これで スタート!</button>
@@ -315,7 +317,7 @@
       <button id="btn-read" class="btn btn-sub btn-read" type="button" data-no-se="1" hidden><span aria-hidden="true">🔊</span> 読み上げ</button>
       <div id="q-hint-area" class="hint-area" hidden>
         <div class="hint-buttons">
-          <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る(点が半分)</button>
+          <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る</button>
           <button id="btn-giveup" class="btn btn-plain" type="button">分からない</button>
         </div>
         <p id="q-hint" class="hint" hidden></p>
@@ -340,6 +342,8 @@
         <h2 id="r-title" class="title">結果発表!</h2>
       </header>
       <img class="flori flori-cover" src="../assets/flori/wave_nikkori.png" alt="にっこりするフロリ">
+      <div class="r-stars" id="r-stars" aria-hidden="true"></div>
+      <div id="r-fx" class="r-fx" aria-hidden="true"></div>
       <p id="r-comment" class="bubble"></p>
       <dl class="scores">
         <div id="r-correct-row"><dt>正解</dt><dd id="r-correct"></dd></div>
@@ -353,6 +357,7 @@
       <div id="r-next-reward" class="reward-card" hidden></div>
       <ul id="r-news" class="news-list" hidden></ul>
       <div class="buttons">
+        <button id="btn-r-review" class="btn btn-review" type="button" hidden>📖 間違えた問題を すぐ 復習</button>
         <button id="btn-again" class="btn btn-main" type="button">続けて遊ぶ</button>
       </div>
     </section>
@@ -396,6 +401,14 @@
     </div>
   </dialog>
 
+  <dialog id="dlg-hint" class="dialog hint-dialog" aria-labelledby="dlg-hint-text">
+    <img class="flori flori-small hint-dlg-flori" src="../assets/flori/wave_surprised.png" alt="">
+    <p id="dlg-hint-text">ヒントを 見ると この問題の 点が <b>半分</b>に なっちゃうヨ。<br>それでも 見るカナ?</p>
+    <div class="buttons">
+      <button id="btn-hint-no" class="btn btn-sub" type="button">NO やめとく</button>
+      <button id="btn-hint-yes" class="btn btn-main" type="button" data-no-se="1">YES 見る!</button>
+    </div>
+  </dialog>
   <dialog id="dlg-giveup" class="dialog" aria-labelledby="dlg-giveup-text">
     <p id="dlg-giveup-text">答えを見ますか?<br>この問題は <b>不正解</b>になります。</p>
     <div class="buttons">
