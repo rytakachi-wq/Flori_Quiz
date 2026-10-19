@@ -1592,9 +1592,9 @@ body { padding-bottom: 56px; }
 /* ===== チュートリアル(あそびかたの ムービー) ===== */
 .tutorial { z-index: 1000; display: grid; place-items: center; padding: 12px; background: rgba(30, 38, 70, 0.8); }
 .tutorial[hidden] { display: none; }
-.tut-box { display: grid; gap: 8px; width: min(480px, 100%); max-height: 100%; padding: 14px; overflow: auto; background: #fff; border: 4px solid var(--blue); border-radius: 26px; box-shadow: 0 8px 0 rgba(70, 85, 94, 0.3); animation: unlockPop 0.4s ease-out; }
+.tut-box { display: flex; flex-direction: column; gap: 8px; width: min(480px, 100%); max-height: calc(100dvh - 24px); padding: 14px; overflow: hidden; background: #fff; border: 4px solid var(--blue); border-radius: 26px; box-shadow: 0 8px 0 rgba(70, 85, 94, 0.3); animation: unlockPop 0.4s ease-out; }
 .tut-title { margin: 0; font-size: 24px; text-align: center; color: var(--blue-dark); }
-.tut-stage { position: relative; height: clamp(170px, 30vh, 240px); overflow: hidden; background: linear-gradient(180deg, #eef8fd, #cfe9f5); border: 3px solid var(--blue); border-radius: 18px; }
+.tut-stage { position: relative; flex: 0 1 clamp(150px, 30dvh, 240px); min-height: 96px; overflow: hidden; background: linear-gradient(180deg, #eef8fd, #cfe9f5); border: 3px solid var(--blue); border-radius: 18px; }
 .tut-flori-row { display: flex; align-items: center; gap: 10px; }
 .tut-side-flori { flex: none; width: 70px; height: auto; animation: homeBob 3s ease-in-out infinite; }
 .tut-caption { margin: 0; flex: 1; padding: 8px 12px; font-size: 17px; font-weight: bold; line-height: 1.55; background: #fff6cf; border: 3px solid #e0b43a; border-radius: 16px; }
@@ -1872,7 +1872,7 @@ body.has-pager { padding-bottom: 56px; }
   #screen-result .reward-art { width: 38px; height: 38px; }
 
   .dialog { max-height: 90dvh; overflow-y: auto; }
-  .tut-box { max-height: 96dvh; }
+  .tut-box { max-height: calc(100dvh - 16px); }
 }
 
 /* ---- とても小さいスマホ(高さ620px以下・はば340px以下):さらにぎゅっと ---- */
@@ -2746,3 +2746,28 @@ html, body, .app { -webkit-user-select: none; user-select: none; -webkit-touch-c
 input, textarea { -webkit-user-select: text; user-select: text; }
 img { -webkit-user-drag: none; user-select: none; }
 button:focus:not(:focus-visible) { outline: none; }
+
+/* 遊び方のムービー:どんな高さでも、スクロールなしで、全部が映る */
+.tut-title, .tut-flori-row, .tut-dots, .tut-buttons { flex: none; }
+@media (max-height: 560px) {
+  .tut-box { gap: 5px; padding: 8px 12px; }
+  .tut-title { font-size: 18px; }
+  .tut-side-flori { width: 44px; }
+  .tut-caption { padding: 4px 8px; font-size: 14px; line-height: 1.4; }
+  .tut-buttons .btn { min-height: 38px; padding-top: 2px; padding-bottom: 2px; }
+  .tut-stage { min-height: 84px; }
+  .tg-grid { grid-template-columns: repeat(3, 30px); gap: 4px; }
+  .tg-c { width: 30px; height: 30px; font-size: 17px; border-width: 2px; }
+  .tg-seq-item b { font-size: 24px; }
+  .tg-seq-item small { font-size: 10px; }
+  .tg-clear, .tg-bulb { bottom: 4px; font-size: 14px; }
+  .tg-finger { font-size: 24px; }
+}
+
+/* その他:動くフロリ(表紙より小さめ)+ 4つのボタンは下側 */
+#screen-menu .menu-hero { position: relative; flex: 1 1 0; min-height: 0; display: grid; place-items: center; width: 100%; background: none; }
+#screen-menu .menu-hero .hero-fig { width: clamp(84px, 19dvh, 150px); transform-origin: 50% 92%; animation: homeBob 3.2s ease-in-out infinite; }
+#screen-menu .menu-hero .flori-cover { width: 100%; height: auto; display: block; }
+#screen-menu .menu-hero .hero-hat { font-size: 0; }
+#screen-menu .menu-grid { flex: none; margin-top: auto; grid-template-rows: repeat(2, clamp(64px, 11dvh, 96px)); align-content: end; }
+@media (prefers-reduced-motion: reduce) { #screen-menu .menu-hero .hero-fig { animation: none; } }

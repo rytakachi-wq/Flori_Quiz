@@ -149,6 +149,24 @@ const REVIEW_SCENES = [
   },
 ];
 
+PLAY_SCENES.push(
+  {
+    title: "STEP 7 毎日1問",
+    caption: "1日に1問だけ出る 今日の問題だよ。毎日続けると ご褒美がもらえるよ。",
+    html: `<div class="tg">${seq([["📅", "1日目"], ["📅", "2日目"], ["📅", "3日目"], ["🎁", "ご褒美"]])}</div>`,
+  },
+  {
+    title: "STEP 8 復習",
+    caption: "間違えた問題を もう1度 解けるよ。ヒントを見ないで正解すると 消えるよ。制限時間は付かないよ。",
+    html: `<div class="tg">${seq([["❌", "間違えた"], ["📖", "復習"], ["✅", "正解"], ["✨", "消える"]])}</div>`,
+  },
+  {
+    title: "STEP 9 リラックス",
+    caption: "木を押して 全部を桜の木にする お花畑のパズル。点数も時間もないよ。",
+    html: RELAX_SCENES[1].html,
+  },
+);
+
 const SCENE_SETS = { play: PLAY_SCENES, relax: RELAX_SCENES, daily: DAILY_SCENES, review: REVIEW_SCENES };
 let SCENES = PLAY_SCENES;
 

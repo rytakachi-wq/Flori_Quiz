@@ -1150,7 +1150,7 @@ function askRestart(action) {
 }
 // 消すのは、成績・図鑑・着せ替え・続き。音の大きさ・ふりがな・文字の大きさなどの設定は、のこす。
 function eraseSaveData() {
-  for (const key of ["floriQuiz.stats", "floriQuiz.dress", "floriQuiz.dexViewed", "floriQuiz.notice", "floriQuiz.bestScore", RELAX_SEEN_KEY]) {
+  for (const key of ["floriQuiz.stats", "floriQuiz.dress", "floriQuiz.dexViewed", "floriQuiz.notice", "floriQuiz.bestScore", "floriQuiz.relaxGuideSeen", ...GUIDE_SEEN_KEYS]) {
     try {
       localStorage.removeItem(key);
     } catch {
@@ -1171,12 +1171,12 @@ $("btn-daily").addEventListener("click", () => {
     // 今日の分は、もう終わっている
     $("dlg-info-text").textContent = "今日の分はもう終わったヨ。また明日挑戦してネ!";
     $("dlg-info").showModal();
-  } else playTutorial("daily", () => chooseTime("daily"));
+  } else guideOnce("daily", () => chooseTime("daily"));
 });
 $("btn-info-close").addEventListener("click", () => $("dlg-info").close());
 // 復習には制限時間は付けない(ムービーで説明してから始める)
 $("btn-review").addEventListener("click", () =>
-  playTutorial("review", () => {
+  guideOnce("review", () => {
     timeLimit = false;
     startPlay("review");
   }),
@@ -1217,18 +1217,21 @@ function startGarden(size = gardenSize) {
 
 // リラックスを選ぶと、説明・遊び方・コツのムービーを見てから、お花畑へ進む
 // (ムービーは、はじめて選んだときだけ。あとは、「遊び方・コツ」ボタンで、いつでも見られる)
-const RELAX_SEEN_KEY = "floriQuiz.relaxGuideSeen";
-$("btn-relax").addEventListener("click", () => {
+// 毎日1問・復習・リラックスのムービーは、はじめて選んだときだけ、ゲームの前に流れる
+const GUIDE_SEEN_KEYS = ["daily", "review", "relax"].map((kind) => `floriQuiz.guideSeen.${kind}`);
+function guideOnce(kind, then) {
+  const key = `floriQuiz.guideSeen.${kind}`;
   let seen = false;
   try {
-    seen = localStorage.getItem(RELAX_SEEN_KEY) === "1";
-    localStorage.setItem(RELAX_SEEN_KEY, "1");
+    seen = localStorage.getItem(key) === "1";
+    localStorage.setItem(key, "1");
   } catch {
     // 保存できなくても、遊べる(毎回ムービーが出るだけ)
   }
-  if (seen) startGarden();
-  else playTutorial("relax", () => startGarden());
-});
+  if (seen) then();
+  else playTutorial(kind, then);
+}
+$("btn-relax").addEventListener("click", () => guideOnce("relax", () => startGarden()));
 $("btn-relax-back").addEventListener("click", () => openMenu());
 $("btn-garden-hint").addEventListener("click", () => garden?.hint()); // 光る木を教える
 // リセット:配置が変わるので、確認してから
@@ -1818,6 +1821,7 @@ function applyDress() {
   }
   setFloriColor(COLORS.find((color) => color.id === dress.color) ?? null);
   setDecor("hero-decor", wornItems());
+  setDecor("menu-decor", wornItems());
   setDecor("dress-decor", wornItems());
 }
 
