@@ -88,3 +88,21 @@ export function setAutoDecor(list) {
   }
   refresh();
 }
+
+// 動いているフロリ(ゆれる・はねる・出てくる)に、かざりもついていく:絵の変形・透明度を、毎コマ、かざりに写す
+function follow() {
+  for (const [img, box] of overlays) {
+    if (box.hidden) {
+      if (img.offsetWidth > 0) place(img); // 画面が出てきたとき、かざりも出す
+      continue;
+    }
+    const style = getComputedStyle(img);
+    if (box.style.transform !== (style.transform === "none" ? "" : style.transform)) box.style.transform = style.transform === "none" ? "" : style.transform;
+    if (box.style.transformOrigin !== style.transformOrigin) box.style.transformOrigin = style.transformOrigin;
+    if (box.style.opacity !== style.opacity) box.style.opacity = style.opacity;
+    // 絵が動くと、offset の値は変わらないが、場所の取りちがえを防ぐため、毎コマ、大きさも確かめる
+    if (box.style.width !== `${img.offsetWidth}px` || box.style.left !== `${img.offsetLeft}px` || box.style.top !== `${img.offsetTop}px`) place(img);
+  }
+  requestAnimationFrame(follow);
+}
+requestAnimationFrame(follow);
