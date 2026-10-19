@@ -1977,7 +1977,7 @@ function showDex() {
       ? "🎉 コンプリート! 全部のカードが揃ったヨ!"
       : have === 0
         ? "問題を解くと カードが集まるヨ!"
-        : "カードを押すと 問題が見られるヨ!";
+        : "押すと 問題が見られるヨ!";
   $("screen-dex").classList.toggle("is-complete", have === everyList.length);
   $("dex-grid").replaceChildren(...cards);
   $("dex-grid").scrollTop = 0;
