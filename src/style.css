@@ -2916,3 +2916,11 @@ button:focus:not(:focus-visible) { outline: none; }
 .dex-back-hint { margin: 6px 0 0; font-size: 13px; font-weight: bold; color: var(--blue-dark); }
 .dex-dialog .buttons { display: none; }
 @media (max-height: 700px) { #screen-records { gap: 2px; } .group-box { padding: 1px 8px; } }
+
+/* ===== どの画面のフロリにも、着せ替えを重ねる(decor-overlay.js)/ 横の移動をすぐに(その45) ===== */
+.decor-host { position: relative; z-index: 1; }
+.decor-auto { inset: auto; z-index: auto; }
+.slide-r { animation: slideInR 0.1s ease-out; }
+.slide-l { animation: slideInL 0.1s ease-out; }
+@keyframes slideInR { from { transform: translate3d(14px, 0, 0); opacity: 0.4; } to { transform: none; opacity: 1; } }
+@keyframes slideInL { from { transform: translate3d(-14px, 0, 0); opacity: 0.4; } to { transform: none; opacity: 1; } }

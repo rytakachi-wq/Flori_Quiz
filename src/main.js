@@ -43,6 +43,7 @@ import { initTutorial, openTutorial } from "./tutorial.js";
 import { initRules, openRules as resetRules } from "./rules.js";
 import { BODIES, COLORS, FACES, HEADS, RANKS, THEMES, earnedBadges, getText, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
+import { setAutoDecor } from "./decor-overlay.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
 import { getVolume, loopName, playJingle, playSe, resetVolumes, setScene, setVolume, startLoop, stopLoop, unlock } from "./audio.js";
 import { getFuriganaMode, readingOf, setFuriganaMode, startFurigana } from "./furigana.js";
@@ -2055,6 +2056,7 @@ function applyDress() {
   }
   setFloriColor(COLORS.find((color) => color.id === dress.color) ?? null);
   setDecor("hero-decor", wornItems());
+  setAutoDecor(wornItems());
   setDecor("menu-decor", wornItems());
   setDecor("dress-decor", wornItems());
 }
