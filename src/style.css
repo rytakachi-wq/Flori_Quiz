@@ -2902,3 +2902,17 @@ button:focus:not(:focus-visible) { outline: none; }
 #screen-dex .dex-filter .dex-tab { font-size: 11px; }
 .dex-star { right: 1px; bottom: auto; top: 22px; font-size: 28px; z-index: 2; }
 #screen-dex .dex-card:has(.dex-star) .dex-cat { padding-right: 0; }
+
+/* 着せ替え:フロリをかなり大きく。枠の中に、まわりの空きを持たせる */
+#screen-dress .dress-stage { padding: clamp(10px, 2.2dvh, 22px) 0; }
+#screen-dress .hero-small { width: min(52vw, 25dvh); }
+#screen-dress .dress-hero .hero-fig { width: 88%; }
+@media (max-height: 700px) { #screen-dress .hero-small { width: min(46vw, 22dvh); } }
+
+/* 図鑑:めくるのは ぱっと(0.11秒)。カード(□)を押すと めくって閉じる */
+.dex-card.is-flip { animation-duration: 0.11s; }
+#dlg-dex[open] .dex-big { animation-duration: 0.14s; cursor: pointer; }
+#dlg-dex[open] .dex-big.is-flip-out { animation: dexFlipOut 0.11s ease-in forwards; }
+.dex-back-hint { margin: 6px 0 0; font-size: 13px; font-weight: bold; color: var(--blue-dark); }
+.dex-dialog .buttons { display: none; }
+@media (max-height: 700px) { #screen-records { gap: 2px; } .group-box { padding: 1px 8px; } }

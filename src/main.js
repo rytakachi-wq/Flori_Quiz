@@ -887,6 +887,11 @@ function oniComment(correct, total) {
   return "オニは難しいんだヨ。また挑戦してネ!";
 }
 
+// オニ問題を解放したか(オニの問題に、1度でも出会っている)
+function oniOpened(stats) {
+  return [...stats.seen, ...stats.dex, ...stats.right, ...stats.oniRight].some((id) => oniIds.has(id));
+}
+
 function showRecords() {
   const s = loadStats();
   // 「出会った問題」「正解した問題」は、いまある問題(普通+難しい)のうち、何問か。問題が増えても、全体の数を合わせる。
@@ -921,9 +926,10 @@ function showRecords() {
     const got = list.filter((q) => (oni ? oniRight : rightIds).has(q.uid ?? q.id)).length;
     const item = document.createElement("li");
     item.innerHTML = '<span class="gb-name"></span><span class="gb-bar"><i></i></span><b class="gb-num"></b>';
-    item.querySelector(".gb-name").textContent = oni ? "❓ ？？" : `${GROUP_ICON[group]} ${group}`;
-    item.querySelector(".gb-bar i").style.width = oni ? "0%" : `${list.length ? (got / list.length) * 100 : 0}%`;
-    item.querySelector(".gb-num").textContent = oni ? "？？" : `${got}/${list.length}`;
+    const hidden = oni && !oniOpened(s); // オニを解放するまでは「？？」
+    item.querySelector(".gb-name").textContent = hidden ? "❓ ？？" : oni ? "👹 オニ" : `${GROUP_ICON[group]} ${group}`;
+    item.querySelector(".gb-bar i").style.width = hidden ? "0%" : `${list.length ? (got / list.length) * 100 : 0}%`;
+    item.querySelector(".gb-num").textContent = hidden ? "？？" : oni ? `${got}/${list.length}(${got * ONI_POINTS_PER_CORRECT}点)` : `${got}/${list.length}`;
     return item;
   });
   $("s-groups").replaceChildren(...groupRows);
@@ -1940,13 +1946,14 @@ function showDex() {
         setTimeout(() => {
           openDexCard(question, label, rightSet.has(uid));
           button.classList.remove("is-flip");
-        }, 260);
+        }, 110);
       } else $("dex-comment").textContent = "まだ出会っていないヨ。問題を解くと カードがもらえるヨ!";
     });
     return button;
   };
   const numbered = playableList.map((q, i) => ({ q, label: `No.${i + 1}` }));
-  const oniAll = oniList.map((q, i) => ({ q, label: `オニ${i + 1}` })); // オニも、全部のカードを並べる(まだのカードは「？」)
+  const oniOpen = oniList.some((q) => met.has(q.uid ?? q.id)); // オニを解放するまでは「？？」
+  const oniAll = oniList.map((q, i) => ({ q, label: oniOpen ? `オニ${i + 1}` : "？？" })); // オニも、全部のカードを並べる(まだのカードは「？」)
   const rows = dexFilter === "オニ" ? oniAll : dexFilter === "すべて" ? [...numbered, ...oniAll] : numbered.filter(({ q }) => groupOf(q) === dexFilter);
   const cards = rows.map(({ q, label }) => card(q, label));
   const everyList = [...playableList, ...oniList];
@@ -1963,8 +1970,9 @@ function showDex() {
     button.className = `dex-tab${name === dexFilter ? " is-on" : ""}`;
     button.dataset.noSe = "";
     button.innerHTML = '<span class="dt-name"></span><small></small>';
-    button.querySelector(".dt-name").textContent = `${DEX_FILTER_ICON[name]} ${name}`;
-    button.querySelector("small").textContent = `${got}/${list.length}`;
+    const secret = name === "オニ" && !oniOpen;
+    button.querySelector(".dt-name").textContent = secret ? "❓ ？？" : `${DEX_FILTER_ICON[name]} ${name}`;
+    button.querySelector("small").textContent = secret ? "？？" : `${got}/${list.length}`;
     button.addEventListener("click", () => {
       dexFilter = name;
       showDex();
@@ -1989,7 +1997,22 @@ function showDex() {
   }
   show("dex");
 }
-$("btn-dex-close").addEventListener("click", () => $("dlg-dex").close());
+// めくって閉じる:カード(□)を押すと、ぱっとめくって閉じる
+function closeDexCard() {
+  const dialog = $("dlg-dex");
+  const big = $("dex-big");
+  if (!dialog.open) return;
+  if (big.classList.contains("is-flip-out") || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    dialog.close();
+    return;
+  }
+  big.classList.add("is-flip-out");
+  setTimeout(() => {
+    dialog.close();
+    big.classList.remove("is-flip-out");
+  }, 110);
+}
+$("dlg-dex").addEventListener("click", closeDexCard);
 
 // ================= 着せ替え・背景 =================
 let dress = loadDress();
