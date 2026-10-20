@@ -39,6 +39,7 @@ function place(img) {
   box.style.top = `${img.offsetTop}px`;
   box.style.width = `${w}px`;
   box.style.height = `${h}px`;
+  sync(img);
   // かざりの位置は、絵の幅に対する割合なので、絵の大きさに合わせて見えるよう、高さも合わせる
 }
 
@@ -75,7 +76,7 @@ new MutationObserver((records) => {
     if (record.target.closest?.(".decor-auto")) continue;
     touched = true;
   }
-  if (touched) requestAnimationFrame(refresh);
+  if (touched) setTimeout(refresh, 0);
 }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["src", "hidden", "class"] });
 window.addEventListener("resize", refresh);
 
@@ -89,20 +90,33 @@ export function setAutoDecor(list) {
   refresh();
 }
 
-// 動いているフロリ(ゆれる・はねる・出てくる)に、かざりもついていく:絵の変形・透明度を、毎コマ、かざりに写す
-function follow() {
-  for (const [img, box] of overlays) {
-    if (box.hidden) {
-      if (img.offsetWidth > 0) place(img); // 画面が出てきたとき、かざりも出す
-      continue;
-    }
-    const style = getComputedStyle(img);
-    if (box.style.transform !== (style.transform === "none" ? "" : style.transform)) box.style.transform = style.transform === "none" ? "" : style.transform;
-    if (box.style.transformOrigin !== style.transformOrigin) box.style.transformOrigin = style.transformOrigin;
-    if (box.style.opacity !== style.opacity) box.style.opacity = style.opacity;
-    // 絵が動くと、offset の値は変わらないが、場所の取りちがえを防ぐため、毎コマ、大きさも確かめる
-    if (box.style.width !== `${img.offsetWidth}px` || box.style.left !== `${img.offsetLeft}px` || box.style.top !== `${img.offsetTop}px`) place(img);
+// 動いているフロリ(ゆれる・はねる・出てくる)に、かざりもついていく:
+// 絵の CSS アニメーションを、かざりにも同じ位相でかける(毎コマ読み取らない。動きはブラウザにまかせるので、ずれない)
+const synced = new Map(); // かざりの入れもの → いま、かけているアニメーション
+function sync(img) {
+  const box = overlays.get(img);
+  if (!box) return;
+  for (const old of synced.get(box) ?? []) old.cancel();
+  const list = [];
+  const style = getComputedStyle(img);
+  box.style.transformOrigin = style.transformOrigin;
+  box.style.opacity = style.opacity === "1" ? "" : style.opacity;
+  for (const source of img.getAnimations()) {
+    if (!source.effect || !("animationName" in source)) continue; // CSS アニメーションだけ
+    const copy = box.animate(source.effect.getKeyframes(), source.effect.getTiming());
+    if (source.startTime !== null) copy.startTime = source.startTime;
+    else copy.currentTime = source.currentTime ?? 0;
+    list.push(copy);
   }
-  requestAnimationFrame(follow);
+  synced.set(box, list);
 }
-requestAnimationFrame(follow);
+const syncAll = () => {
+  for (const img of overlays.keys()) sync(img);
+};
+document.addEventListener("animationstart", (event) => {
+  if (overlays.has(event.target)) sync(event.target);
+}, true);
+document.addEventListener("animationend", (event) => {
+  if (overlays.has(event.target)) sync(event.target);
+}, true);
+setInterval(syncAll, 1000); // 念のため、1秒ごとに合わせ直す

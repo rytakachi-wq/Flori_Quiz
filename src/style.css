@@ -2766,10 +2766,10 @@ button:focus:not(:focus-visible) { outline: none; }
 
 /* その他:動くフロリ(表紙より小さめ)+ 4つのボタンは下側 */
 #screen-menu .menu-hero { position: relative; flex: 1 1 0; min-height: 0; display: grid; place-items: center; width: 100%; background: none; }
-#screen-menu .menu-hero .hero-fig { width: clamp(84px, 19dvh, 150px); transform-origin: 50% 92%; animation: homeBob 3.2s ease-in-out infinite; }
+#screen-menu .menu-hero .hero-fig { width: clamp(110px, 27dvh, 230px); transform-origin: 50% 92%; animation: homeBob 3.2s ease-in-out infinite; }
 #screen-menu .menu-hero .flori-cover { width: 100%; height: auto; display: block; }
 #screen-menu .menu-hero .hero-hat { font-size: 0; }
-#screen-menu .menu-grid { flex: none; margin-top: auto; grid-template-rows: repeat(2, clamp(64px, 11dvh, 96px)); align-content: end; }
+#screen-menu .menu-grid { flex: none; margin-top: auto; margin-bottom: clamp(30px, 8dvh, 70px); grid-template-rows: repeat(2, clamp(64px, 11dvh, 96px)); align-content: end; }
 @media (prefers-reduced-motion: reduce) { #screen-menu .menu-hero .hero-fig { animation: none; } }
 
 /* =====================================================================
@@ -2961,3 +2961,8 @@ button:focus:not(:focus-visible) { outline: none; }
 .confirm-list li { padding: 0 10px; }
 .confirm-list .cl-v { font-size: 17px; }
 .confirm-flori { height: clamp(110px, 24dvh, 230px); }
+
+/* ===== ふりがなを、くっきりと(その45) =====
+   親の文字のふちどり(text-shadow)が、ふりがなにも付いて、小さい文字がぎざぎざになっていた。ふりがなには、かげを付けない。 */
+rt { text-shadow: none; -webkit-text-stroke: 0; paint-order: normal; font-weight: 700; letter-spacing: 0; text-rendering: geometricPrecision; -webkit-font-smoothing: antialiased; }
+.announce-text rt, .opening-title rt, .unlock-name rt, #screen-result .title rt { color: #46555e; background: rgba(255, 255, 255, 0.88); border-radius: 6px; padding: 0 3px; }
