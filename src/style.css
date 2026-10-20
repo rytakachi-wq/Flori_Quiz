@@ -2965,7 +2965,6 @@ button:focus:not(:focus-visible) { outline: none; }
 /* ===== ふりがなを、くっきりと(その45) =====
    親の文字のふちどり(text-shadow)が、ふりがなにも付いて、小さい文字がぎざぎざになっていた。ふりがなには、かげを付けない。 */
 rt { text-shadow: none; -webkit-text-stroke: 0; paint-order: normal; font-weight: 700; letter-spacing: 0; text-rendering: geometricPrecision; -webkit-font-smoothing: antialiased; }
-.announce-text rt, .opening-title rt, .unlock-name rt, #screen-result .title rt { color: #46555e; background: rgba(255, 255, 255, 0.88); border-radius: 6px; padding: 0 3px; }
 
 /* =====================================================================
    追加(その48):ドラムロール中は結果をかくす・紙ふぶきを打ち上げる・対戦の色・読み上げボタン
