@@ -318,9 +318,9 @@
         </div>
         <p id="q-text" class="question"></p>
       </div>
-      <button id="btn-read" class="btn btn-sub btn-read" type="button" data-no-se="1" hidden><span aria-hidden="true">🔊</span> 読み上げ</button>
       <div id="q-hint-area" class="hint-area" hidden>
         <div class="hint-buttons">
+          <button id="btn-read" class="btn btn-sub btn-read" type="button" data-no-se="1" hidden><span aria-hidden="true">🔊</span> 読み上げ</button>
           <button id="btn-hint" class="btn btn-sub" type="button">ヒントを見る</button>
           <button id="btn-giveup" class="btn btn-plain" type="button">分からない</button>
         </div>
@@ -346,6 +346,7 @@
         <h2 id="r-title" class="title">結果発表!</h2>
       </header>
       <img class="flori flori-cover" src="../assets/flori/wave_nikkori.png" alt="にっこりするフロリ">
+      <p id="r-drum" class="r-drum" aria-live="polite">🥁 けっかは…?</p>
       <div class="r-stars" id="r-stars" aria-hidden="true"></div>
       <div id="r-fx" class="r-fx" aria-hidden="true"></div>
       <p id="r-comment" class="bubble"></p>
@@ -493,6 +494,11 @@
     <fieldset class="furigana" aria-label="読み上げ">
       <legend>読み上げ</legend>
       <label><input type="checkbox" id="set-read-dlg"> 問題を自動で読み上げる</label>
+      <div class="volume rate-row">
+        <label for="set-rate-dlg">速さ</label>
+        <input id="set-rate-dlg" type="range" min="0.8" max="2.4" step="0.1">
+        <output id="set-rate-dlg-out" for="set-rate-dlg"></output>
+      </div>
     </fieldset>
     <div class="buttons">
       <button id="btn-volume-close" class="btn btn-main" type="button">戻る</button>

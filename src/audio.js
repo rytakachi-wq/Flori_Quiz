@@ -141,7 +141,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 // 鳴らして、止められる形(stop)を返す。止めなくてもよい
-export function playSe(name) {
+export function playSe(name, maxMs = 0) {
   const se = SE[name];
   if (!se || volumes.se === 0) return { stop() {} };
   const level = curve(volumes.se) * se.boost;
@@ -152,6 +152,13 @@ export function playSe(name) {
     gain.gain.value = level;
     source.connect(gain).connect(context.destination);
     source.start();
+    if (maxMs > 0) {
+      // 長い音を、途中で、すっと消す(最後の0.15秒で、小さくする)
+      const t = context.currentTime + maxMs / 1000;
+      gain.gain.setValueAtTime(level, t - 0.15);
+      gain.gain.linearRampToValueAtTime(0, t);
+      source.stop(t);
+    }
     return {
       stop() {
         try {

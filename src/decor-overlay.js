@@ -35,10 +35,18 @@ function place(img) {
   const visible = POSE.test(original) && w > 0 && h > 0 && !img.hidden;
   box.hidden = !visible;
   if (!visible) return;
-  box.style.left = `${img.offsetLeft}px`;
-  box.style.top = `${img.offsetTop}px`;
-  box.style.width = `${w}px`;
-  box.style.height = `${h}px`;
+  // object-fit: contain で、絵が枠より小さく入っているときは、絵の見えている部分に、かざりを合わせる
+  let cw = w;
+  let ch = h;
+  if (img.naturalWidth > 0 && getComputedStyle(img).objectFit === "contain") {
+    const scale = Math.min(w / img.naturalWidth, h / img.naturalHeight);
+    cw = img.naturalWidth * scale;
+    ch = img.naturalHeight * scale;
+  }
+  box.style.left = `${img.offsetLeft + (w - cw) / 2}px`;
+  box.style.top = `${img.offsetTop + (h - ch) / 2}px`;
+  box.style.width = `${cw}px`;
+  box.style.height = `${ch}px`;
   sync(img);
   // かざりの位置は、絵の幅に対する割合なので、絵の大きさに合わせて見えるよう、高さも合わせる
 }
@@ -111,7 +119,7 @@ function sync(img) {
   synced.set(box, list);
 }
 const syncAll = () => {
-  for (const img of overlays.keys()) sync(img);
+  for (const img of overlays.keys()) place(img); // 場所・出る/かくれる・アニメーションを、まとめて合わせ直す
 };
 document.addEventListener("animationstart", (event) => {
   if (overlays.has(event.target)) sync(event.target);
@@ -119,4 +127,4 @@ document.addEventListener("animationstart", (event) => {
 document.addEventListener("animationend", (event) => {
   if (overlays.has(event.target)) sync(event.target);
 }, true);
-setInterval(syncAll, 1000); // 念のため、1秒ごとに合わせ直す
+setInterval(syncAll, 500); // 念のため、0.5秒ごとに合わせ直す

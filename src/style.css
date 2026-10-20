@@ -2966,3 +2966,34 @@ button:focus:not(:focus-visible) { outline: none; }
    親の文字のふちどり(text-shadow)が、ふりがなにも付いて、小さい文字がぎざぎざになっていた。ふりがなには、かげを付けない。 */
 rt { text-shadow: none; -webkit-text-stroke: 0; paint-order: normal; font-weight: 700; letter-spacing: 0; text-rendering: geometricPrecision; -webkit-font-smoothing: antialiased; }
 .announce-text rt, .opening-title rt, .unlock-name rt, #screen-result .title rt { color: #46555e; background: rgba(255, 255, 255, 0.88); border-radius: 6px; padding: 0 3px; }
+
+/* =====================================================================
+   追加(その48):ドラムロール中は結果をかくす・紙ふぶきを打ち上げる・対戦の色・読み上げボタン
+   ===================================================================== */
+.r-drum { display: none; margin: 0; font-size: clamp(26px, 5dvh, 38px); font-weight: bold; text-align: center; color: #c0687a; }
+#screen-result.is-celebrate:not(.is-reveal) .r-drum { display: block; animation: rDrum 0.45s ease-in-out infinite alternate; }
+@keyframes rDrum { from { transform: scale(0.94) rotate(-2deg); } to { transform: scale(1.08) rotate(2deg); } }
+#screen-result.is-celebrate:not(.is-reveal) > :not(.screen-head):not(.flori-cover):not(.r-drum):not(.r-fx) { visibility: hidden; }
+#screen-result.is-celebrate:not(.is-reveal) .r-drum { visibility: visible; }
+.r-fx span.burst { top: auto; bottom: -6%; }
+#screen-result.is-reveal .r-fx span.burst { animation: rBurst 2.8s cubic-bezier(0.2, 0.7, 0.3, 1) 1 both; }
+@keyframes rBurst {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0) scale(0.6); }
+  6% { opacity: 1; }
+  38% { opacity: 1; transform: translate(calc(var(--dx) * 0.7), calc(var(--up) * -1)) rotate(200deg) scale(1.1); }
+  100% { opacity: 0.9; transform: translate(var(--dx), 30dvh) rotate(520deg) scale(1); }
+}
+
+/* ---- 皆で対戦:プレイヤー2は紫(水色は、戻るボタンと同じ、ふちの色に使う) ---- */
+:root { --p2: #b9a0e8; }
+#screen-question[data-player]:not([data-player=""]) { --line: #4a7fb3; }
+#screen-question[data-player]:not([data-player=""]) .q-chip { background: #eaf5fd; }
+#screen-question[data-player]:not([data-player=""]) .chip-button, #screen-question[data-player]:not([data-player=""]) .btn-sub { background: #eaf5fd; border-color: #4a7fb3; color: #1f3f66; }
+#screen-question[data-player]:not([data-player=""]) .choice-no { background: #9fd0f5; }
+#screen-question[data-player]:not([data-player=""]) .choice { border-color: #9fd0f5; }
+#screen-question[data-player]:not([data-player=""]) .q-chip-level { color: #1f3f66; }
+
+/* ---- 読み上げボタンは、ヒントのならびに(場所をとらない) ---- */
+.hint-buttons .btn-read { min-height: 38px; padding: 2px 12px; font-size: 14px; }
+#screen-question .hint-buttons { gap: 6px; flex-wrap: wrap; }
+.rate-row { margin-top: 6px; }

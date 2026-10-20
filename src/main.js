@@ -302,6 +302,11 @@ function playableIds() {
 let reviewFromQuiz = false; // クイズの結果から、すぐ復習に来たか(戻る先が、モード選択になる)
 let reviewOnly = null; // 結果から「すぐ復習」したときの、復習する問題(uid)
 let lastCorrect = null; // 前の問題に正解したか(フロリのセリフに使う)
+// 画面に出す得点は、5点満点(中の点は、1問2点のまま。出すときに、半分にする)
+const fmtPts = (internal) => {
+  const v = internal / 2;
+  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+};
 const pickOf = (list) => list[Math.floor(Math.random() * list.length)];
 
 function startPlay(nextMode, startMessage = null) {
@@ -641,7 +646,7 @@ function answer(response) {
       ? `正解! ${PLAYER_NAMES[answeringPlayer]}に${hinted ? `半分の${answeringRound / 2}` : answeringRound}点!`
       : correct
         ? hinted
-          ? `正解!(ヒントを使ったので 半分の${POINTS_PER_CORRECT - HINT_COST}点)`
+          ? `正解!(ヒントを使ったので 半分の${fmtPts(POINTS_PER_CORRECT - HINT_COST)}点)`
           : "正解!"
         : wasTimedOut
           ? "時間切れ…"
@@ -752,7 +757,10 @@ function showResult() {
   $("r-board").hidden = true;
   if (!versus) {
     $("r-correct").textContent = `${result.correct} / ${result.total}問`;
-    $("r-score").textContent = `${result.score}点(${result.total * (mode === "oni" ? ONI_POINTS_PER_CORRECT : POINTS_PER_CORRECT)}点満点)`;
+    $("r-score").textContent =
+      mode === "oni"
+        ? `${result.score}点(${result.total * ONI_POINTS_PER_CORRECT}点満点)`
+        : `${fmtPts(result.score)}点(${fmtPts(result.total * POINTS_PER_CORRECT)}点満点)`;
   }
   $("r-score-row").hidden = versus; // 対戦のときは、1人の得点は出さない
   $("r-comment").textContent =
@@ -808,7 +816,7 @@ function showResult() {
     persistHard(); // 「続きから」の記録
     $("r-title").textContent = "難しいモードの結果!";
     $("r-best-row").hidden = false;
-    $("r-best").textContent = `${loadStats().bestHard}点`;
+    $("r-best").textContent = `${fmtPts(loadStats().bestHard)}点`;
     $("r-record").hidden = !saved.isRecord;
     setNote.textContent = gainText();
     $("btn-again").textContent = "もう1度挑戦";
@@ -817,7 +825,7 @@ function showResult() {
     const stats = loadStats();
     $("r-title").textContent = "結果発表!";
     $("r-best-row").hidden = false;
-    $("r-best").textContent = `${stats.best}点`;
+    $("r-best").textContent = `${fmtPts(stats.best)}点`;
     $("r-record").hidden = !saved.isRecord;
     $("btn-again").textContent = "続けて遊ぶ";
     setNote.textContent = "続けて遊ぶと 難しさも続きます。正解が続くと難しく 間違えると易しくなります。";
@@ -865,7 +873,7 @@ window.addEventListener("resize", () => fitResult());
 let reviewNow = [];
 let resultSound = null;
 let resultTimers = [];
-const DRUMROLL_MS = 3800; // ドラムロールが鳴って、点数を数えあげてから、「ジャン!」で、発表する
+const DRUMROLL_MS = 2000; // ドラムロールが鳴って、点数を数えあげてから、「ジャン!」で、発表する
 function stopResultSound() {
   resultTimers.forEach(clearTimeout);
   resultTimers = [];
@@ -897,36 +905,48 @@ function celebrateResult(result, versus) {
   }
   // 紙ふぶき(盛り上がるほど、多く)。発表のときに、降る
   const icons = mood === "perfect" || versus ? ["🎉", "⭐", "✨", "🎊", "🌟", "💖"] : ["⭐", "✨", "🌸"];
-  const count = versus || mood === "perfect" ? 26 : mood === "good" ? 14 : mood === "ok" ? 6 : 0;
+  const burst = versus || mood === "perfect"; // 下から、ぱーんと、打ち上がる
+  const count = versus ? 60 : mood === "perfect" ? 40 : mood === "good" ? 14 : mood === "ok" ? 6 : 0;
   $("r-fx").replaceChildren(
     ...Array.from({ length: count }, (_, i) => {
       const bit = document.createElement("span");
       bit.textContent = icons[i % icons.length];
-      bit.style.left = `${(i * 37 + 5) % 96}%`;
-      bit.style.animationDelay = `${(i % 9) * 0.22}s`;
-      bit.style.fontSize = `${18 + ((i * 7) % 16)}px`;
+      bit.style.fontSize = `${20 + ((i * 7) % 18)}px`;
+      if (burst) {
+        const left = i % 2 === 0;
+        bit.className = "burst";
+        bit.style.left = left ? "8%" : "92%";
+        bit.style.setProperty("--dx", `${(left ? 1 : -1) * (6 + ((i * 29) % 64))}vw`);
+        bit.style.setProperty("--up", `${35 + ((i * 13) % 50)}dvh`);
+        bit.style.animationDelay = `${((i * 3) % 10) * 0.07}s`;
+      } else {
+        bit.style.left = `${(i * 37 + 5) % 96}%`;
+        bit.style.animationDelay = `${(i % 9) * 0.22}s`;
+      }
       return bit;
     }),
   );
-  // ドラムロール → 点数の数えあげ → ロールのしめ + 発表(電球・紙ふぶき)
-  resultSound = playSe("drumroll");
+  // ドラムロールが鳴っている間は、結果を出さない。鳴りおわったら、ロールのしめと一緒に、発表(点数の数えあげ・電球・紙ふぶき)
+  resultSound = playSe("drumroll", DRUMROLL_MS);
   const scoreEl = $("r-score");
-  if (!versus && result.score > 0 && !scoreEl.hidden) {
-    const text = scoreEl.textContent;
-    const total = text.slice(text.indexOf("点"));
-    let n = 0;
-    const step = Math.max(40, Math.floor((DRUMROLL_MS - 300) / result.score));
-    const timer = setInterval(() => {
-      n += 1;
-      scoreEl.textContent = `${Math.min(n, result.score)}${total}`;
-      if (n >= result.score) clearInterval(timer);
-    }, step);
-    resultTimers.push(timer);
-  }
+  const scoreText = scoreEl.textContent;
+  const scoreTail = scoreText.slice(scoreText.indexOf("点"));
+  const oni = mode === "oni";
+  if (!versus && result.score > 0 && !scoreEl.hidden) scoreEl.textContent = `0${scoreTail}`;
   resultTimers.push(
     setTimeout(() => {
       resultSound = playSe("rollend");
       screen.classList.add("is-reveal");
+      if (!versus && result.score > 0 && !scoreEl.hidden) {
+        let n = 0;
+        const step = Math.max(60, Math.floor(900 / result.score));
+        const timer = setInterval(() => {
+          n += 1;
+          scoreEl.textContent = `${oni ? Math.min(n, result.score) : fmtPts(Math.min(n, result.score))}${scoreTail}`;
+          if (n >= result.score) clearInterval(timer);
+        }, step);
+        resultTimers.push(timer);
+      }
     }, DRUMROLL_MS),
   );
 }
@@ -2296,6 +2316,8 @@ function syncReadSettings() {
   $("set-read-dlg").checked = readAloud();
   $("set-rate").value = readRate();
   $("set-rate-out").textContent = `${readRate().toFixed(1)}倍`;
+  $("set-rate-dlg").value = readRate();
+  $("set-rate-dlg-out").textContent = `${readRate().toFixed(1)}倍`;
   $("btn-read").hidden = !(canSpeak && readAloud()); // 設定でチェックを入れたときだけ、「読み上げ」ボタンを出す
 }
 syncReadSettings();
@@ -2313,6 +2335,11 @@ $("set-rate").addEventListener("input", () => {
 });
 $("set-rate").addEventListener("change", () => {
   if (canSpeak) speak("この速さで読み上げるよ。"); // 試しに聞ける
+});
+// クイズの途中の設定でも、同じ速さを変えられる(次に読むときから、反映)
+$("set-rate-dlg").addEventListener("input", () => {
+  setReadRate(parseFloat($("set-rate-dlg").value));
+  syncReadSettings();
 });
 
 $("btn-read").addEventListener("click", () => {

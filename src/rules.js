@@ -12,14 +12,14 @@ const SCENES = [
     tag: "どちらも 同じ",
     title: "① 答えを 選ぶ",
     caption: "問題の答えを 選ぼう。正解すると 点が もらえるよ!",
-    html: `${Q}${CH("f1")}<span class="rf-badge rf-good b1">⭕ 正解! +2点</span><span class="rf-finger fg1">👆</span>`,
+    html: `${Q}${CH("f1")}<span class="rf-badge rf-good b1">⭕ 正解! +1点</span><span class="rf-finger fg1">👆</span>`,
   },
   {
     theme: "common",
     tag: "どちらも 同じ",
     title: "② ヒント",
     caption: "ヒントを 見ると その問題の 点が 半分に なるよ。",
-    html: `${Q}${CH()}<span class="rf-btn rf-hintbtn">💡 ヒント</span><span class="rf-hinttext">たし算を してみよう</span><span class="rf-pts"><s>2点</s> → <b>1点</b><small>半分</small></span><span class="rf-finger fg2">👆</span>`,
+    html: `${Q}${CH()}<span class="rf-btn rf-hintbtn">💡 ヒント</span><span class="rf-hinttext">たし算を してみよう</span><span class="rf-pts"><s>1点</s> → <b>0.5点</b><small>半分</small></span><span class="rf-finger fg2">👆</span>`,
   },
   {
     theme: "common",
@@ -39,8 +39,8 @@ const SCENES = [
     theme: "solo",
     tag: "🙂 1人で 遊ぶ",
     title: "① 1回は 5問",
-    caption: "1回は 5問。正解すると 1問で 2点。5問 全部で 10点満点だよ。",
-    html: `<div class="rf-five">${[1, 2, 3, 4, 5].map((n) => `<span style="--n:${n - 1}"><b>${n}</b><em>+2</em></span>`).join("")}</div><span class="rf-total">合計 10点満点</span>`,
+    caption: "1回は 5問。正解すると 1問で 1点。5問 全部で 5点満点だよ。",
+    html: `<div class="rf-five">${[1, 2, 3, 4, 5].map((n) => `<span style="--n:${n - 1}"><b>${n}</b><em>+1</em></span>`).join("")}</div><span class="rf-total">合計 5点満点</span>`,
   },
   {
     theme: "solo",
