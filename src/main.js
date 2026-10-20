@@ -853,7 +853,7 @@ function showResult() {
   fitResult();
   setTimeout(fitResult, 150);
   setTimeout(fitResult, 700);
-  setTimeout(celebrateUnlocks, DRUMROLL_MS + 1500); // 着せ替えが、ふえていたら、お祝いの画面
+  setTimeout(celebrateUnlocks, DRUMROLL_MS + 3300); // 着せ替えが、ふえていたら、お祝いの画面
 }
 
 // 結果の画面が、1画面に収まるように、大事でないものから順に、かくす

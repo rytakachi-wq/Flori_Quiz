@@ -2997,3 +2997,7 @@ rt { text-shadow: none; -webkit-text-stroke: 0; paint-order: normal; font-weight
 .hint-buttons .btn-read { min-height: 38px; padding: 2px 12px; font-size: 14px; }
 #screen-question .hint-buttons { gap: 6px; flex-wrap: wrap; }
 .rate-row { margin-top: 6px; }
+#screen-question.is-tight2 .timer { transform: scaleY(0.8); margin: -3px 0; }
+#screen-question.is-tight2 .hint-buttons { gap: 4px; }
+#screen-question.is-tight2 .hint-buttons .btn { min-height: 28px; padding: 0 10px; font-size: 13px; }
+@media (max-width: 340px) { #screen-question .status .q-info { grid-template-columns: 1fr 1fr; } #screen-question .q-chip { font-size: 12px; } }
