@@ -2749,13 +2749,17 @@ button:focus:not(:focus-visible) { outline: none; }
 
 /* 遊び方のムービー:どんな高さでも、スクロールなしで、全部が映る */
 .tut-title, .tut-flori-row, .tut-dots, .tut-buttons { flex: none; }
+/* 説明文が3〜4行になっても枠が切れないよう、絵の場面のほうを縮める(最後の安全策でスクロールも可) */
+.tut-box { overflow-y: auto; }
+.tut-stage { min-height: 64px; }
+.tut-caption { overflow: visible; }
 @media (max-height: 560px) {
   .tut-box { gap: 5px; padding: 8px 12px; }
   .tut-title { font-size: 18px; }
   .tut-side-flori { width: 44px; }
   .tut-caption { padding: 4px 8px; font-size: 14px; line-height: 1.4; }
   .tut-buttons .btn { min-height: 38px; padding-top: 2px; padding-bottom: 2px; }
-  .tut-stage { min-height: 84px; }
+  .tut-stage { min-height: 64px; }
   .tg-grid { grid-template-columns: repeat(3, 30px); gap: 4px; }
   .tg-c { width: 30px; height: 30px; font-size: 17px; border-width: 2px; }
   .tg-seq-item b { font-size: 24px; }
@@ -3000,3 +3004,44 @@ rt { text-shadow: none; -webkit-text-stroke: 0; paint-order: normal; font-weight
 #screen-question.is-tight2 .hint-buttons { gap: 4px; }
 #screen-question.is-tight2 .hint-buttons .btn { min-height: 28px; padding: 0 10px; font-size: 13px; }
 @media (max-width: 340px) { #screen-question .status .q-info { grid-template-columns: 1fr 1fr; } #screen-question .q-chip { font-size: 12px; } }
+
+/* 設定画面のフロリ(見出しの右) */
+#screen-settings .screen-head { grid-template-columns: auto minmax(0, 1fr) auto; }
+#screen-settings .settings-flori { width: auto; height: 50px; max-width: none; object-fit: contain; pointer-events: none; }
+#screen-settings .screen-head .title { text-align: center; }
+
+/* =====================================================================
+   追加(その49):紙ふぶき・結果のフロリ・クイズボタンを下に(背景と同じ色)・対戦の問題文
+   ===================================================================== */
+/* 紙ふぶき:あちこちに、まばらに、ぽんと出て、ゆっくり散る */
+.r-fx span, .r-fx span.burst { top: auto; bottom: auto; animation: none; }
+#screen-result.is-reveal .r-fx span { animation: rDrift 8s ease-in-out 1 both; }
+@keyframes rDrift {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0) scale(0.3); }
+  8% { opacity: 1; transform: translate(0, 0) rotate(20deg) scale(1.15); }
+  14% { transform: translate(0, 0) rotate(0) scale(1); }
+  45% { opacity: 1; transform: translate(var(--sway), 22dvh) rotate(120deg); }
+  75% { opacity: 0.9; transform: translate(calc(var(--sway) * -0.6), 42dvh) rotate(240deg); }
+  100% { opacity: 0; transform: translate(var(--sway), 60dvh) rotate(360deg); }
+}
+.r-fx span { position: absolute; }
+
+/* 結果のフロリを、さらに大きく */
+#screen-result .screen-head + .flori-cover, #screen-result.is-versus .screen-head + .flori-cover { height: clamp(150px, 31dvh, 320px); max-width: 80%; }
+@media (max-height: 700px) { #screen-result .screen-head + .flori-cover, #screen-result.is-versus .screen-head + .flori-cover { height: clamp(100px, 22dvh, 150px); } }
+
+/* 皆で対戦の問題文は、1人のときと同じ色 */
+#screen-question[data-player]:not([data-player=""]) .question { background: var(--body, #dfe8ee); border-left-color: var(--blue); }
+#screen-question[data-player]:not([data-player=""]) .q-row .question { border-color: transparent; border-left: 8px solid var(--blue); }
+
+/* クイズボタンは、下側。色は、選んだ背景と同じ色 */
+.play-btn { margin-top: auto; background: linear-gradient(180deg, color-mix(in srgb, var(--blue) 35%, #fff), var(--blue)); border-color: var(--blue-dark); box-shadow: 0 7px 0 var(--blue-dark), 0 10px 18px rgba(60, 80, 100, 0.22); }
+.play-btn:active { box-shadow: 0 2px 0 var(--blue-dark); }
+.play-btn .pb-text b { text-shadow: 0 3px 0 var(--blue-dark), 2px 0 0 var(--blue-dark), -2px 0 0 var(--blue-dark); }
+.play-btn .pb-go { text-shadow: 0 2px 0 var(--blue-dark); }
+#screen-cover .home-stage { margin-bottom: 4px; }
+
+/* ボタンの反応を、すぐに(その45):タップを待たない・押した瞬間に沈む */
+button, [role="button"], input, label, select, summary, .tile, .choice { touch-action: manipulation; }
+button:not(:disabled):active { transition: none !important; }
+.decor-auto { will-change: transform; }

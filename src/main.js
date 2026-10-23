@@ -46,7 +46,7 @@ import { GardenUI } from "./garden.js";
 import { setAutoDecor } from "./decor-overlay.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
 import { getVolume, loopName, playJingle, playSe, resetVolumes, setScene, setVolume, startLoop, stopLoop, unlock } from "./audio.js";
-import { getFuriganaMode, readingOf, setFuriganaMode, startFurigana } from "./furigana.js";
+import { getFuriganaMode, setFuriganaMode, speechOf, startFurigana } from "./furigana.js";
 
 const QUESTIONS_URL = "../data/questions/questions.json";
 const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数押すと、オニ問題が出る
@@ -569,7 +569,7 @@ function speak(text) {
   clearTimeout(speakTimer);
   speechSynthesis.cancel();
   // 漢字は、ふりがな(辞書の読み)に置きかえて、読みまちがいを減らす
-  const voice = new SpeechSynthesisUtterance(readingOf(text).replace(/□/g, "なにか").replace(/\n/g, "。"));
+  const voice = new SpeechSynthesisUtterance(speechOf(text).replace(/□/g, "なにか").replace(/\n/g, "。"));
   voice.lang = "ja-JP";
   if (japaneseVoice) voice.voice = japaneseVoice;
   voice.rate = readRate();
@@ -873,7 +873,7 @@ window.addEventListener("resize", () => fitResult());
 let reviewNow = [];
 let resultSound = null;
 let resultTimers = [];
-const DRUMROLL_MS = 2000; // ドラムロールが鳴って、点数を数えあげてから、「ジャン!」で、発表する
+const DRUMROLL_MS = 1200; // ドラムロールが鳴って、点数を数えあげてから、「ジャン!」で、発表する
 function stopResultSound() {
   resultTimers.forEach(clearTimeout);
   resultTimers = [];
@@ -904,25 +904,19 @@ function celebrateResult(result, versus) {
     );
   }
   // 紙ふぶき(盛り上がるほど、多く)。発表のときに、降る
-  const icons = mood === "perfect" || versus ? ["🎉", "⭐", "✨", "🎊", "🌟", "💖"] : ["⭐", "✨", "🌸"];
-  const burst = versus || mood === "perfect"; // 下から、ぱーんと、打ち上がる
-  const count = versus ? 60 : mood === "perfect" ? 40 : mood === "good" ? 14 : mood === "ok" ? 6 : 0;
+  const icons = ["🎉", "⭐", "✨", "🎊", "🌟", "💖"];
+  // 紙ふぶき:画面のあちこちに、まばらに ぽんと出て、ゆっくり、ひらひら、散っていく(1人でも皆でも同じ)
+  const count = ratio === 0 && !versus ? 0 : versus || mood === "perfect" ? 30 : 22;
   $("r-fx").replaceChildren(
     ...Array.from({ length: count }, (_, i) => {
       const bit = document.createElement("span");
       bit.textContent = icons[i % icons.length];
       bit.style.fontSize = `${20 + ((i * 7) % 18)}px`;
-      if (burst) {
-        const left = i % 2 === 0;
-        bit.className = "burst";
-        bit.style.left = left ? "8%" : "92%";
-        bit.style.setProperty("--dx", `${(left ? 1 : -1) * (6 + ((i * 29) % 64))}vw`);
-        bit.style.setProperty("--up", `${35 + ((i * 13) % 50)}dvh`);
-        bit.style.animationDelay = `${((i * 3) % 10) * 0.07}s`;
-      } else {
-        bit.style.left = `${(i * 37 + 5) % 96}%`;
-        bit.style.animationDelay = `${(i % 9) * 0.22}s`;
-      }
+      bit.style.left = `${(i * 37 + 7) % 92}%`;
+      bit.style.top = `${4 + ((i * 53) % 52)}%`;
+      bit.style.setProperty("--sway", `${((i % 2 ? 1 : -1) * (16 + ((i * 11) % 30)))}px`);
+      bit.style.animationDelay = `${((i * 7) % 12) * 0.28}s`;
+      bit.style.animationDuration = `${7 + ((i * 5) % 5)}s`;
       return bit;
     }),
   );
@@ -1337,31 +1331,36 @@ const PAGE_OPEN = {
   },
 };
 let swipe = null;
+// 横にスワイプ:左へなぞると、次の画面。右へなぞると、前の画面。指を離すのを待たず、少し動かしたらすぐ移動する
+function trySwipe(touch) {
+  const start = swipe;
+  if (!start || start.done || !PAGER.includes(currentScreen)) return;
+  if (document.querySelector("dialog[open]") || !$("tutorial").hidden || !$("opening").hidden || announcing) return;
+  const dx = touch.clientX - start.x;
+  const dy = touch.clientY - start.y;
+  if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+    start.done = true;
+    const next = PAGER.indexOf(currentScreen) + (dx < 0 ? 1 : -1);
+    if (next >= 0 && next < PAGER.length) PAGE_OPEN[PAGER[next]]();
+  }
+}
 document.addEventListener(
   "touchstart",
   (event) => {
-    swipe = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
+    swipe = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY, done: false } : null;
   },
   { passive: true },
 );
+document.addEventListener("touchmove", (event) => trySwipe(event.touches[0]), { passive: true });
 document.addEventListener(
   "touchend",
   (event) => {
-    const start = swipe;
+    trySwipe(event.changedTouches[0]);
     swipe = null;
-    if (!start || !PAGER.includes(currentScreen)) return;
-    if (document.querySelector("dialog[open]") || !$("tutorial").hidden || !$("opening").hidden || announcing) return;
-    const touch = event.changedTouches[0];
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) {
-      // 横にスワイプ:左へなぞると、次の画面。右へなぞると、前の画面
-      const next = PAGER.indexOf(currentScreen) + (dx < 0 ? 1 : -1);
-      if (next >= 0 && next < PAGER.length) PAGE_OPEN[PAGER[next]]();
-    }
   },
   { passive: true },
 );
+document.addEventListener("touchcancel", () => { swipe = null; }, { passive: true });
 
 // 問題を解く前に、制限時間を付けるかを聞く(普通・難しい・復習・毎日1問)
 let pendingMode = null;

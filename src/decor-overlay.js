@@ -18,6 +18,7 @@ function build({ front, back }) {
           el.src = item.img;
           el.alt = "";
           el.draggable = false;
+          el.decoding = "async";
           el.style.left = `${item.pos.x}%`;
           el.style.top = `${item.pos.y}%`;
           el.style.width = `${item.pos.w}%`;
@@ -49,7 +50,11 @@ function place(img) {
   const visible = POSE.test(original) && w > 0 && h > 0 && !img.hidden;
   pair.front.hidden = !visible;
   pair.back.hidden = !visible;
-  if (!visible) return;
+  if (!visible) {
+    pair.signature = null;
+    pair.geometry = null;
+    return;
+  }
   layer(img);
   // object-fit: contain で、絵が枠より小さく入っているときは、絵の見えている部分に、かざりを合わせる
   let cw = w;
@@ -59,11 +64,15 @@ function place(img) {
     cw = img.naturalWidth * scale;
     ch = img.naturalHeight * scale;
   }
-  for (const box of [pair.front, pair.back]) {
-    box.style.left = `${img.offsetLeft + (w - cw) / 2}px`;
-    box.style.top = `${img.offsetTop + (h - ch) / 2}px`;
-    box.style.width = `${cw}px`;
-    box.style.height = `${ch}px`;
+  const geometry = `${img.offsetLeft + (w - cw) / 2}|${img.offsetTop + (h - ch) / 2}|${cw}|${ch}`;
+  if (pair.geometry !== geometry) {
+    pair.geometry = geometry;
+    for (const box of [pair.front, pair.back]) {
+      box.style.left = `${img.offsetLeft + (w - cw) / 2}px`;
+      box.style.top = `${img.offsetTop + (h - ch) / 2}px`;
+      box.style.width = `${cw}px`;
+      box.style.height = `${ch}px`;
+    }
   }
   sync(img);
 }
@@ -126,14 +135,17 @@ const synced = new Map(); // かざりの入れもの → いま、かけてい�
 function sync(img) {
   const pair = overlays.get(img);
   if (!pair) return;
+  const sources = img.getAnimations().filter((a) => a.effect && "animationName" in a);
+  const signature = sources.map((a) => `${a.animationName}|${a.startTime}|${a.effect.getTiming().duration}`).join(",");
+  if (pair.signature === signature) return; // 動きが変わっていなければ、かけなおさない(かくつきの原因)
+  pair.signature = signature;
   const style = getComputedStyle(img);
   for (const box of [pair.front, pair.back]) {
     for (const old of synced.get(box) ?? []) old.cancel();
     const list = [];
     box.style.transformOrigin = style.transformOrigin;
     box.style.opacity = style.opacity === "1" ? "" : style.opacity;
-    for (const source of img.getAnimations()) {
-      if (!source.effect || !("animationName" in source)) continue; // CSS アニメーションだけ
+    for (const source of sources) {
       const copy = box.animate(source.effect.getKeyframes(), source.effect.getTiming());
       if (source.startTime !== null) copy.startTime = source.startTime;
       else copy.currentTime = source.currentTime ?? 0;
@@ -151,4 +163,4 @@ document.addEventListener("animationstart", (event) => {
 document.addEventListener("animationend", (event) => {
   if (overlays.has(event.target)) sync(event.target);
 }, true);
-setInterval(syncAll, 500); // 念のため、0.5秒ごとに合わせ直す
+setInterval(syncAll, 1000); // 念のため、1秒ごとに合わせ直す(変わっていなければ、何もしない)

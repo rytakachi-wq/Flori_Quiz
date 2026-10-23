@@ -56,7 +56,6 @@
         <span class="hud-chip"><small>ご褒美の星</small><span class="hv">⭐ <b id="hud-stars">0</b>個</span></span>
         <span class="hud-chip"><small>着せ替え</small><span class="hv">🎁 <b id="hud-dress">0</b>/<span id="hud-dress-all">90</span></span></span>
       </div>
-      <button id="btn-quiz" class="play-btn" type="button"><span class="gi" aria-hidden="true">🎯</span><span class="pb-text"><b>クイズ</b></span><span class="pb-go" aria-hidden="true">▶</span></button>
       <div class="home-stage">
         <div class="speech home-speech">
           <p id="cover-talk" class="cover-talk">ヤア! ボクはフロリだヨ!</p>
@@ -68,6 +67,7 @@
           </div>
         </div>
       </div>
+      <button id="btn-quiz" class="play-btn" type="button"><span class="gi" aria-hidden="true">🎯</span><span class="pb-text"><b>クイズ</b></span><span class="pb-go" aria-hidden="true">▶</span></button>
     </section>
 
     <!-- クイズのルール(クイズを押したとき、はじめに出る) -->
@@ -246,6 +246,7 @@
       <header class="screen-head">
         <button id="btn-settings-back" class="back-btn" type="button"><span aria-hidden="true">⏪</span> 戻る</button>
         <h2 class="title">設定</h2>
+        <img class="flori settings-flori" src="../assets/flori/wave_smile.png" alt="">
       </header>
       <div class="settings-grid">
         <fieldset class="setting-box">
@@ -415,6 +416,7 @@
     </div>
   </dialog>
   <dialog id="dlg-giveup" class="dialog" aria-labelledby="dlg-giveup-text">
+    <img class="flori flori-small hint-dlg-flori" src="../assets/flori/wave_wrong.png" alt="">
     <p id="dlg-giveup-text">答えを見ますか?<br>この問題は <b>不正解</b>になります。</p>
     <div class="buttons">
       <button id="btn-giveup-yes" class="btn btn-sub" type="button">答えを見る</button>

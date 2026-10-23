@@ -82,6 +82,12 @@ function soundChange(digits, [normal, p, b]) {
   return normal;
 }
 
+// 「3分の2」(分数)かどうか:「の」のあとの数字に、時間などの数え方(1時間・2回 など)が続くときは、分数ではない
+function isFraction(following) {
+  const m = /^の([0-9]+)(.?)/.exec(following);
+  return Boolean(m) && !/[時日分秒回個人本枚番年月間倍匹]/.test(m[2]);
+}
+
 function counterSegs(digits, counter, following = "") {
   const n = Number(digits);
   if (counter === "人") {
@@ -94,7 +100,7 @@ function counterSegs(digits, counter, following = "") {
   if (counter === "匹") return [[digits, null], ["匹", soundChange(digits, ["ひき", "ぴき", "びき"])]];
   if (counter === "分") {
     // 「3分の2」(分数)は「ぶん」。「3分の人」(時間)は「ふん・ぷん」
-    if (/^の[0-9]/.test(following)) return [[digits, null], ["分", "ぶん"]];
+    if (isFraction(following)) return [[digits, null], ["分", "ぶん"]];
     const last = Number(digits.slice(-1));
     return [[digits, null], ["分", [1, 3, 4, 6, 8, 0].includes(last) ? "ぷん" : "ふん"]];
   }
@@ -114,7 +120,7 @@ function matchAt(text, i) {
     const next = counter ? longestMatch(text, after) : null;
     // 数字のあとに、辞書の長い語(例:「円玉」「番目」「分の」)があれば、そちらを使う
     if (counter && !(next && next.length > 1)) {
-      const segs = counterSegs(digits[0], counter, text.slice(after + 1, after + 3));
+      const segs = counterSegs(digits[0], counter, text.slice(after + 1, after + 10));
       if (segs) return { length: digits[0].length + 1, segs };
     }
     return null;
@@ -156,6 +162,37 @@ export function readingOf(text) {
   return segments(text)
     .map(({ text: t, reading }) => reading || t)
     .join("");
+}
+
+// 読み上げ用:数字+助数詞(1本・3匹・10分・4時 など)の読み、記号(+ - × ÷ = →)、単位(L・m・km・%)を、声が読みまちがえないように、ひらがなにする。
+const COUNTER_KANA = {
+  本: { 1: "いっぽん", 3: "さんぼん", 4: "よんほん", 6: "ろっぽん", 8: "はっぽん", 10: "じゅっぽん" },
+  匹: { 1: "いっぴき", 3: "さんびき", 4: "よんひき", 6: "ろっぴき", 8: "はっぴき", 10: "じゅっぴき" },
+  分: { 1: "いっぷん", 3: "さんぷん", 4: "よんぷん", 6: "ろっぷん", 8: "はっぷん", 10: "じゅっぷん" },
+  回: { 1: "いっかい", 6: "ろっかい", 8: "はっかい", 10: "じゅっかい" },
+  個: { 1: "いっこ", 6: "ろっこ", 8: "はっこ", 10: "じゅっこ" },
+  滴: { 1: "いってき", 6: "ろってき", 8: "はってき", 10: "じゅってき" },
+  通: { 1: "いっつう", 6: "ろくつう", 8: "はっつう", 10: "じゅっつう" },
+  時: { 4: "よじ", 7: "しちじ", 9: "くじ" },
+};
+const COUNTER_RE = new RegExp(`(?<![0-9.])([0-9]{1,2})(${Object.keys(COUNTER_KANA).join("|")})`, "g");
+const UNITS = [[/(\d)\s?km(?![A-Za-z])/g, "$1キロメートル"], [/(\d)\s?cm(?![A-Za-z])/g, "$1センチメートル"], [/(\d)\s?mm(?![A-Za-z])/g, "$1ミリメートル"], [/(\d)\s?kg(?![A-Za-z])/g, "$1キログラム"], [/(\d)\s?m(?![A-Za-z])/g, "$1メートル"], [/(\d)\s?L(?![A-Za-z])/g, "$1リットル"], [/(\d)\s?g(?![A-Za-z])/g, "$1グラム"], [/%/g, "パーセント"]];
+
+export function speechOf(text) {
+  let out = text.replace(COUNTER_RE, (all, n, counter, offset, whole) => {
+    if (counter === "分" && isFraction(whole.slice(offset + all.length, offset + all.length + 9))) return all; // 3分の2(分数)は、そのまま
+    return COUNTER_KANA[counter][Number(n)] ?? all;
+  });
+  out = readingOf(out);
+  for (const [pattern, replacement] of UNITS) out = out.replace(pattern, replacement);
+  return out
+    .replace(/×/g, "かける")
+    .replace(/÷/g, "わる")
+    .replace(/\+/g, "たす")
+    .replace(/[=＝]/g, "は")
+    .replace(/(?<=[0-9A-Za-zぁ-んァ-ヶ一-鿿)])\s*[-−]\s*(?=[0-9])/g, "ひく")
+    .replace(/→/g, "、つぎに")
+    .replace(/(?<=[0-9])\s*[〜~]\s*(?=[0-9])/g, "から");
 }
 
 export function rubyHtml(text, mode) {
