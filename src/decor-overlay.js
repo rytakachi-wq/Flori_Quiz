@@ -5,6 +5,7 @@ const SELECTOR = "img.flori, img.opening-flori, img.announce-flori, img.tut-side
 const POSE = /(?:wave_(?:nikkori|smile|wrong|surprised)\.png|body_wave\.webp)$/; // かざりの位置が合う絵(同じ大きさ・同じ立ち姿)
 const overlays = new Map(); // 絵 → { front, back }
 let items = [];
+let fit = 1; // かざりをつけたとき、かざりが絵の外に出ても、まわりのボタン・文字と重ならないよう、フロリ+かざりを縮める倍率
 
 const skip = (img) => img.closest(".hero-fig, .decor") || img.id === "unlock-flori";
 
@@ -75,7 +76,15 @@ function place(img) {
       box.style.height = `${ch}px`;
     }
   }
+  applyFit(img, pair);
   sync(img);
+}
+
+function applyFit(img, pair) {
+  for (const el of [img, pair.front, pair.back]) {
+    el.style.scale = fit < 1 ? String(fit) : "";
+    el.style.transformOrigin = fit < 1 ? "50% 100%" : ""; // 足もとの真ん中を止めて縮める
+  }
 }
 
 function makeBox(className) {
@@ -124,10 +133,62 @@ new MutationObserver((records) => {
 }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["src", "hidden", "class"] });
 window.addEventListener("resize", refresh);
 
+// かざりが、フロリの絵の外(上・横)にどれだけはみ出すかを、かざりの絵の大きさから出して、縮める倍率を決める
+const sizeCache = new Map();
+function naturalSize(src) {
+  if (!sizeCache.has(src)) {
+    sizeCache.set(
+      src,
+      new Promise((resolve) => {
+        const el = new Image();
+        el.onload = () => resolve([el.naturalWidth, el.naturalHeight]);
+        el.onerror = () => resolve([0, 0]);
+        el.src = src;
+      }),
+    );
+  }
+  return sizeCache.get(src);
+}
+const FLORI_ASPECT = 1595 / 2000; // フロリの絵の 幅/高さ
+async function computeFit(list) {
+  let top = 0;
+  let side = 0;
+  for (const item of list) {
+    if (!item?.img) continue;
+    const [w, h] = await naturalSize(item.img);
+    if (!w) continue;
+    const { x, y, w: wp, r = 0 } = item.pos;
+    const hp = wp * (h / w) * FLORI_ASPECT; // 高さ(絵の高さに対する%)
+    const rad = (r * Math.PI) / 180;
+    const bw = Math.abs(wp * Math.cos(rad)) + Math.abs(hp * Math.sin(rad));
+    const bh = Math.abs(wp * Math.sin(rad)) + Math.abs(hp * Math.cos(rad));
+    top = Math.max(top, -(y - bh / 2));
+    side = Math.max(side, -(x - bw / 2), x + bw / 2 - 100);
+  }
+  return Math.min(1, 1 / (1 + top / 100), 1 / (1 + side / 100));
+}
+
+// 表紙・その他のフロリ(index.html に、かざり用の場所があるもの)も、同じ倍率で縮める
+function fitStatic() {
+  for (const el of document.querySelectorAll(".hero-fig > img.flori, .hero-fig > .decor")) {
+    if (el.closest("#screen-dress, .unlock-dialog, dialog")) continue;
+    el.style.scale = fit < 1 ? String(fit) : "";
+    el.style.transformOrigin = fit < 1 ? "50% 100%" : "";
+  }
+}
+
 // いまの着せ替えを受け取る(main.js の applyDress から)
+let fitJob = 0;
 export function setAutoDecor(list) {
   items = list;
   for (const pair of overlays.values()) build(pair);
+  const job = ++fitJob;
+  computeFit(list).then((value) => {
+    if (job !== fitJob) return;
+    fit = value;
+    fitStatic();
+    refresh();
+  });
   refresh();
 }
 
