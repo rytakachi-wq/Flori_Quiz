@@ -3107,3 +3107,12 @@ button:not(:disabled):active { transition: none !important; }
 .unlock-hero { width: 64%; }
 .unlock-body { padding: 10px 14px 10px; gap: 4px; }
 .unlock-dialog .buttons { margin-top: 2px; }
+
+/* ===== 画面移動・スワイプのかくつき対策(その45) ===== */
+/* 切りかわる間・指で触っている間は、背景の動く絵を止める(24個が、動き続けていた) */
+body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-state: paused; }
+.badge-bg { contain: strict; }
+/* タッチの画面では、マウスの「なでると大きくなる」を使わない(指の下のボタンが、影つきで大きくなる処理が、スワイプ中に走っていた) */
+@media (hover: none) {
+  .btn:hover:not(:disabled), .tile:hover:not(:disabled), .chip-button:hover:not(:disabled), .dress-item:hover:not(:disabled), .cover-gear:hover, .corner-flori:hover, .choice:hover:not(:disabled) { transform: none; filter: none; }
+}

@@ -133,6 +133,7 @@ function renderPager(name) {
   );
 }
 
+let movingTimer = 0;
 // 画面が変わるときの、横に流れる短い動き(動きは、transform と opacity だけ。カクつかないように)
 // direction:1=右から入ってくる(先へ進む)、-1=左から入ってくる(戻る)
 function slideIn(name, direction) {
@@ -179,6 +180,10 @@ function show(name, direction = 0) {
   setScene(sceneOf(name));
   window.scrollTo(0, 0);
   refreshDecor();
+  // 画面が切りかわる間(と、指で触っている間)は、背景の動く絵を止めて、かくつかないようにする
+  document.body.classList.add("is-moving");
+  clearTimeout(movingTimer);
+  movingTimer = setTimeout(() => document.body.classList.remove("is-moving"), 450);
 }
 
 // 回答の形式ごとの画面部品(出題 render、回答後の表示 mark、正解の言いかた correctText)。
@@ -1395,6 +1400,7 @@ document.addEventListener(
   "touchstart",
   (event) => {
     swipe = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY, t: Date.now(), done: false } : null;
+    document.body.classList.add("is-touching");
   },
   { passive: true },
 );
@@ -1404,10 +1410,11 @@ document.addEventListener(
   (event) => {
     trySwipe(event.changedTouches[0], true);
     swipe = null;
+    setTimeout(() => document.body.classList.remove("is-touching"), 250);
   },
   { passive: true },
 );
-document.addEventListener("touchcancel", () => { swipe = null; }, { passive: true });
+document.addEventListener("touchcancel", () => { swipe = null; document.body.classList.remove("is-touching"); }, { passive: true });
 
 // 問題を解く前に、制限時間を付けるかを聞く(普通・難しい・復習・毎日1問)
 let pendingMode = null;
