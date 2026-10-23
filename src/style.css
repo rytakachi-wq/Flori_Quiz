@@ -513,7 +513,7 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 }
 .opening-flori[hidden], .announce-flori[hidden] { display: none; }
 /* 頭の飾りをつけていても、「ひらめきクイズ」の文字と重ならないよう、フロリを下げる */
-.opening-flori { margin-top: clamp(28px, 6dvh, 56px); }
+.opening-flori { margin-top: clamp(72px, 13dvh, 110px); }
 .opening.is-playing .opening-hint { display: none; }
 @keyframes flori-in {
   0% { transform: translateX(-90vw) rotate(-25deg); opacity: 0; }
