@@ -3045,3 +3045,8 @@ rt { text-shadow: none; -webkit-text-stroke: 0; paint-order: normal; font-weight
 button, [role="button"], input, label, select, summary, .tile, .choice { touch-action: manipulation; }
 button:not(:disabled):active { transition: none !important; }
 .decor-auto { will-change: transform; }
+#screen-cover .home-hero { width: min(66vw, 31dvh); }
+#screen-cover .home-hero .hero-fig { margin-top: clamp(10px, 3.5dvh, 40px); }
+.play-btn { background: linear-gradient(180deg, color-mix(in srgb, var(--blue) 72%, #fff), var(--blue)); min-height: 76px; margin-bottom: 4px; }
+#screen-cover .home-hero { width: min(62vw, 28dvh); }
+@media (max-height: 700px) { .play-btn { min-height: 64px; } .play-btn .gi { font-size: 36px; } .play-btn .pb-text b { font-size: 28px; } }

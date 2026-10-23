@@ -421,7 +421,7 @@ function showQuestion() {
 // 問題の画面が、はみ出すときは、イラスト → フロリ・セリフの順に、小さくして、1画面に収める
 function fitQuestion() {
   const screen = $("screen-question");
-  if (screen.hidden) return;
+  if (screen.hidden || screen.classList.contains("is-answered")) return;
   screen.classList.remove("is-tight1", "is-tight2");
   if (screen.scrollHeight <= screen.clientHeight + 1) return;
   screen.classList.add("is-tight1");
@@ -707,10 +707,22 @@ function fitFeedback() {
 window.addEventListener("resize", () => fitFeedback());
 // ふりがなが、あとから付いて、高さが変わったときも、収めなおす
 let fitTimer = 0;
-new MutationObserver(() => {
+const refit = () => {
   clearTimeout(fitTimer);
-  fitTimer = setTimeout(fitFeedback, 30);
-}).observe($("q-explanation"), { childList: true, subtree: true });
+  fitTimer = setTimeout(() => {
+    fitFeedback();
+    fitQuestion();
+  }, 30);
+};
+new MutationObserver(refit).observe($("q-explanation"), { childList: true, subtree: true });
+// Webフォント(Zen Maru Gothic)は、文字の種類ごとに、あとから読みこまれて、高さが変わる。読みこみが終わるたび・大きさが変わるたびに、収めなおす(スマホで、はみ出す原因だった)
+document.fonts?.addEventListener?.("loadingdone", refit);
+document.fonts?.ready.then(refit);
+if (window.ResizeObserver) {
+  const observer = new ResizeObserver(refit);
+  observer.observe($("q-explanation"));
+  observer.observe($("q-feedback"));
+}
 
 // 解説の文字の大きさを、枠に収まるまで、少しずつ小さくする。それでも収まらないときは、上の問題文をかくす
 function fitExplanation() {
