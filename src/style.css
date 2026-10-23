@@ -2752,7 +2752,8 @@ button:focus:not(:focus-visible) { outline: none; }
 /* 説明文が3〜4行になっても枠が切れないよう、絵の場面のほうを縮める(最後の安全策でスクロールも可) */
 .tut-box { overflow-y: auto; }
 .tut-stage { min-height: 64px; }
-.tut-caption { overflow: visible; }
+.tut-caption { overflow: visible; min-width: 0; box-sizing: border-box; }
+.tut-flori-row { min-width: 0; max-width: 100%; }
 @media (max-height: 560px) {
   .tut-box { gap: 5px; padding: 8px 12px; }
   .tut-title { font-size: 18px; }
