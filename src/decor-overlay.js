@@ -164,3 +164,6 @@ document.addEventListener("animationend", (event) => {
   if (overlays.has(event.target)) sync(event.target);
 }, true);
 setInterval(syncAll, 1000); // 念のため、1秒ごとに合わせ直す(変わっていなければ、何もしない)
+
+// 画面の大きさが変わらなくても、絵の位置だけが変わったとき(解説の大きさに合わせて、絵が小さくなる など)に、かざりを、合わせ直す
+export const refreshDecor = refresh;

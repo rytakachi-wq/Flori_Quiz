@@ -43,7 +43,7 @@ import { initTutorial, openTutorial } from "./tutorial.js";
 import { initRules, openRules as resetRules } from "./rules.js";
 import { BODIES, COLORS, FACES, HEADS, RANKS, THEMES, earnedBadges, getText, canWear, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
-import { setAutoDecor } from "./decor-overlay.js";
+import { refreshDecor, setAutoDecor } from "./decor-overlay.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
 import { getVolume, loopName, playJingle, playSe, resetVolumes, setScene, setVolume, startLoop, stopLoop, unlock } from "./audio.js";
 import { getFuriganaMode, setFuriganaMode, speechOf, startFurigana } from "./furigana.js";
@@ -718,6 +718,9 @@ function fitFeedback() {
     screen.classList.add("is-tight3"); // それでも収まらないときは、問題文と時間の棒を、かくして、解説に場所を回す
     pass();
   }
+  box.scrollLeft = 0;
+  box.scrollTop = 0;
+  refreshDecor(); // フロリの大きさ・場所が変わったので、かざりも、合わせ直す
 }
 window.addEventListener("resize", () => fitFeedback());
 // ふりがなが、あとから付いて、高さが変わったときも、収めなおす
@@ -1358,14 +1361,19 @@ const PAGE_OPEN = {
   },
 };
 let swipe = null;
-// 横にスワイプ:左へなぞると、次の画面。右へなぞると、前の画面。指を離すのを待たず、少し動かしたらすぐ移動する
-function trySwipe(touch) {
+// 横にスワイプ:左へなぞると、次の画面。右へなぞると、前の画面。
+// 少しずらしただけでは動かさない。大きくなぞったら、指を離す前に移動。短くても、すばやく払う(フリック)なら、離したときに移動。
+function trySwipe(touch, released) {
   const start = swipe;
   if (!start || start.done || !PAGER.includes(currentScreen)) return;
   if (document.querySelector("dialog[open]") || !$("tutorial").hidden || !$("opening").hidden || announcing) return;
   const dx = touch.clientX - start.x;
   const dy = touch.clientY - start.y;
-  if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+  const elapsed = Math.max(1, Date.now() - start.t);
+  const horizontal = Math.abs(dx) > Math.abs(dy) * 2.2;
+  const bigDrag = Math.abs(dx) > 110 && horizontal;
+  const flick = released && Math.abs(dx) > 45 && horizontal && Math.abs(dx) / elapsed > 0.45; // 1ミリ秒に 0.45px 以上
+  if (bigDrag || flick) {
     start.done = true;
     const next = PAGER.indexOf(currentScreen) + (dx < 0 ? 1 : -1);
     if (next >= 0 && next < PAGER.length) PAGE_OPEN[PAGER[next]]();
@@ -1374,15 +1382,15 @@ function trySwipe(touch) {
 document.addEventListener(
   "touchstart",
   (event) => {
-    swipe = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY, done: false } : null;
+    swipe = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY, t: Date.now(), done: false } : null;
   },
   { passive: true },
 );
-document.addEventListener("touchmove", (event) => trySwipe(event.touches[0]), { passive: true });
+document.addEventListener("touchmove", (event) => trySwipe(event.touches[0], false), { passive: true });
 document.addEventListener(
   "touchend",
   (event) => {
-    trySwipe(event.changedTouches[0]);
+    trySwipe(event.changedTouches[0], true);
     swipe = null;
   },
   { passive: true },
@@ -1637,6 +1645,7 @@ async function init() {
     playableQuestions = [...normal, ...hardQuestions];
     allQuestions = questions;
     renderBadgeBackground();
+    for (const theme of THEMES) new Image().src = `../assets/bg/${theme.id}.webp`; // 表紙の背景を、先に読みこむ(着せ替えで変えたとき、すぐ変わるように)
     // 答えたあと・結果で出す、フロリの絵を先に読みこんでおく(すぐ出せるように)
     const preload = [...Object.values(IMG), "../assets/flori/wave_nikkori.png", "../assets/flori/src/body_wave.webp"];
     for (const src of preload) new Image().src = src;
