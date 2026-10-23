@@ -51,10 +51,10 @@ import { getFuriganaMode, setFuriganaMode, speechOf, startFurigana } from "./fur
 const QUESTIONS_URL = "../data/questions/questions.json";
 const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数押すと、オニ問題が出る
 const IMG = {
-  think: "../assets/flori/src/book_pen.png",
-  correct: "../assets/flori/wave_smile.png",
-  wrong: "../assets/flori/wave_wrong.png",
-  surprised: "../assets/flori/wave_surprised.png",
+  think: "../assets/flori/m/book_pen.png",
+  correct: "../assets/flori/m/wave_smile.png",
+  wrong: "../assets/flori/m/wave_wrong.png",
+  surprised: "../assets/flori/m/wave_surprised.png",
 };
 
 const $ = (id) => document.getElementById(id);
@@ -347,7 +347,7 @@ function startPlay(nextMode, startMessage = null) {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
   } else play = getSession(pick.group, "normal");
   const resume = (mode === "normal" || mode === "hard") && hasCourseKey(activeKey); // 続きから遊ぶときは、そう知らせる
-  announce(startMessage ?? (resume ? "続きから スタート!" : "それでは スタート!"), "start", showQuestion, "../assets/flori/src/body_wave.webp");
+  announce(startMessage ?? (resume ? "続きから スタート!" : "それでは スタート!"), "start", showQuestion, "../assets/flori/m/body_wave.webp");
 }
 
 // 対戦の問題:選んだ分類の問題。回戦ごとに、人数ぶんの問題がないときは、他の分類から足す
@@ -744,17 +744,6 @@ function fitFeedback() {
     screen.classList.add("is-tight3"); // それでも収まらないときは、問題文と時間の棒を、かくして、解説に場所を回す
     pass();
   }
-  // あまった場所があれば、フロリを、収まるところまで大きくする(大きい画面で、小さく見えないように)
-  if (box.scrollHeight <= box.clientHeight + 1) {
-    const flori = $("q-react-flori");
-    let height = flori.getBoundingClientRect().height;
-    let grown = 0;
-    while (height < 280 && box.scrollHeight <= box.clientHeight + 1 && grown++ < 30) {
-      height += 10;
-      flori.style.height = `${height}px`;
-    }
-    if (box.scrollHeight > box.clientHeight + 1) flori.style.height = `${height - 10}px`;
-  }
   box.scrollLeft = 0;
   box.scrollTop = 0;
   refreshDecor(); // フロリの大きさ・場所が変わったので、かざりも、合わせ直す
@@ -1110,7 +1099,7 @@ $("btn-ranks-close").addEventListener("click", () => $("dlg-ranks").close());
 
 function next() {
   stopSpeaking(); // 先へ進んだら、読み上げは止める
-  if (play.roundFinished) announce("結果発表〜!", "result", showResult, "../assets/flori/wave_surprised.png");
+  if (play.roundFinished) announce("結果発表〜!", "result", showResult, "../assets/flori/m/wave_surprised.png");
   else showQuestion();
 }
 
@@ -1686,7 +1675,7 @@ async function init() {
     renderBadgeBackground();
     for (const theme of THEMES) new Image().src = `../assets/bg/${theme.id}.webp`; // 表紙の背景を、先に読みこむ(着せ替えで変えたとき、すぐ変わるように)
     // 答えたあと・結果で出す、フロリの絵を先に読みこんでおく(すぐ出せるように)
-    const preload = [...Object.values(IMG), "../assets/flori/wave_nikkori.png", "../assets/flori/src/body_wave.webp"];
+    const preload = [...Object.values(IMG), "../assets/flori/m/wave_nikkori.png", "../assets/flori/m/body_wave.webp"];
     for (const src of preload) new Image().src = src;
     setWarmList(preload);
     pruneStats(new Set([...normalIds, ...hardIds, ...oniIds])); // 古い番号の記録を、取りのぞく
@@ -1975,12 +1964,12 @@ async function showUnlock() {
   flori.dataset.sample = "1";
   if (kind === "color") {
     try {
-      flori.src = await recolor("../assets/flori/src/body_wave.webp", item);
+      flori.src = await recolor("../assets/flori/m/body_wave.webp", item);
     } catch {
-      flori.src = "../assets/flori/src/body_wave.webp";
+      flori.src = "../assets/flori/m/body_wave.webp";
     }
   } else {
-    applyFloriSrc(flori, "../assets/flori/src/body_wave.webp");
+    applyFloriSrc(flori, "../assets/flori/m/body_wave.webp");
   }
   const wear = $("btn-unlock-wear");
   wear.disabled = false;

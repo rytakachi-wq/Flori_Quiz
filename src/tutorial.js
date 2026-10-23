@@ -1,7 +1,7 @@
 // 遊び方の、チュートリアルムービー。絵と動きで、6つの場面を見せる(動画ファイルではなく、画面の中で動かす)。
 // 場面は、「次へ」ボタンを押したときだけ進む(自動では進まない)。「戻る」「閉じる」も、ボタンで。
 
-const FLORI = "../assets/flori/src/body_wave.webp";
+const FLORI = "../assets/flori/m/body_wave.webp";
 
 const PLAY_SCENES = [
   {

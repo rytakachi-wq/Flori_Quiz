@@ -3119,3 +3119,13 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 
 /* 着せ替え画面の「ご褒美 GET」の棒(と文)は出さない(次のご褒美のカードは、のこす) */
 #screen-dress .dress-banner { display: none; }
+
+/* ===== フロリを小さく(スタートの確認・設定・正解/失敗・結果発表)(その45) ===== */
+.confirm-flori { height: clamp(60px, 11dvh, 100px); }
+@media (max-height: 640px) { .confirm-flori { height: 60px; } }
+@media screen {
+  #screen-settings .settings-flori { flex: none; min-height: 0; max-height: none; height: clamp(48px, 9dvh, 84px); max-width: 40%; margin-top: auto; }
+}
+#screen-question.is-answered .react-flori { height: clamp(56px, 11dvh, 100px); }
+#screen-result .screen-head + .flori-cover, #screen-result.is-versus .screen-head + .flori-cover { height: clamp(80px, 16dvh, 140px); max-width: 60%; }
+@media (max-height: 700px) { #screen-result .screen-head + .flori-cover, #screen-result.is-versus .screen-head + .flori-cover { height: clamp(60px, 12dvh, 90px); } }
