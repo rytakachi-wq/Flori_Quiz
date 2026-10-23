@@ -569,6 +569,7 @@ function setSpeaking(on) {
 }
 function stopSpeaking() {
   clearTimeout(speakTimer);
+  speechToken += 1;
   if (canSpeak) speechSynthesis.cancel();
   setSpeaking(false);
 }
@@ -583,27 +584,46 @@ if (canSpeak) {
   pickVoice();
   speechSynthesis.addEventListener?.("voiceschanged", pickVoice);
 }
-let nowSpeaking = null; // 読み上げ中の声を持っておく(途中で、とぎれないように)
+// 読み上げは、1文(「。」まで)ずつ読む。速さを変えたとき、今読んでいる文から、新しい速さで読み直せる
+let speechSentences = [];
+let speechIndex = 0;
+let speechToken = 0; // 読み直したとき、前の声の止まった知らせ(onend・onerror)を、無視するため
 let speakTimer = 0;
-function speak(text) {
-  if (!canSpeak || !readableText(text)) return;
-  clearTimeout(speakTimer);
-  speechSynthesis.cancel();
-  // 漢字は、ふりがな(辞書の読み)に置きかえて、読みまちがいを減らす
-  const voice = new SpeechSynthesisUtterance(speechOf(text).replace(/□/g, "なにか").replace(/\n/g, "。"));
+function playSentence(index, token) {
+  if (token !== speechToken) return;
+  if (index >= speechSentences.length) {
+    setSpeaking(false);
+    return;
+  }
+  speechIndex = index;
+  const voice = new SpeechSynthesisUtterance(speechSentences[index]);
   voice.lang = "ja-JP";
   if (japaneseVoice) voice.voice = japaneseVoice;
   voice.rate = readRate();
-  // 読み直したとき、前の声が止まった知らせ(onend・onerror)が、あとから来る。今の声のときだけ、時間を動かす
-  voice.onend = () => nowSpeaking === voice && setSpeaking(false);
-  voice.onerror = () => nowSpeaking === voice && setSpeaking(false);
-  nowSpeaking = voice;
+  voice.onend = () => token === speechToken && playSentence(index + 1, token);
+  voice.onerror = () => token === speechToken && setSpeaking(false);
+  speechSynthesis.resume();
+  speechSynthesis.speak(voice);
+}
+function startSpeech(index) {
+  clearTimeout(speakTimer);
+  speechToken += 1;
+  const token = speechToken;
+  speechSynthesis.cancel();
   setSpeaking(true);
   // cancel の直後に話させると、声が出ないブラウザがあるので、少し待つ
-  speakTimer = setTimeout(() => {
-    speechSynthesis.resume();
-    speechSynthesis.speak(voice);
-  }, 120);
+  speakTimer = setTimeout(() => playSentence(index, token), 120);
+}
+function speak(text) {
+  if (!canSpeak || !readableText(text)) return;
+  // 漢字は、ふりがな(辞書の読み)に置きかえて、読みまちがいを減らす
+  speechSentences = speechOf(text).replace(/□/g, "なにか").replace(/\n/g, "。").match(/[^。]+。?/g) ?? [];
+  speechSentences = speechSentences.filter((sentence) => sentence.replace(/[。\s]/g, "") !== "");
+  startSpeech(0);
+}
+// 速さを変えたとき:読んでいる途中なら、今の文から、新しい速さで読み直す
+function respeakNow() {
+  if (canSpeak && speaking && speechSentences.length) startSpeech(speechIndex);
 }
 function readableText(text) {
   return typeof text === "string" && text.trim() !== "";
@@ -2411,13 +2431,16 @@ $("set-rate").addEventListener("input", () => {
   syncReadSettings();
 });
 $("set-rate").addEventListener("change", () => {
-  if (canSpeak) speak("この速さで読み上げるよ。"); // 試しに聞ける
+  if (!canSpeak) return;
+  if (speaking) respeakNow(); // 読んでいる途中なら、今の文から、新しい速さで
+  else speak("この速さで読み上げるよ。"); // 読んでいないときは、試しに聞ける
 });
-// クイズの途中の設定でも、同じ速さを変えられる(次に読むときから、反映)
+// クイズの途中の設定でも、同じ速さを変えられる(読んでいる途中なら、今の文から反映)
 $("set-rate-dlg").addEventListener("input", () => {
   setReadRate(parseFloat($("set-rate-dlg").value));
   syncReadSettings();
 });
+$("set-rate-dlg").addEventListener("change", () => respeakNow());
 
 $("btn-read").addEventListener("click", () => {
   if (answered) speak(answerReading());
