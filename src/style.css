@@ -3116,3 +3116,6 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 @media (hover: none) {
   .btn:hover:not(:disabled), .tile:hover:not(:disabled), .chip-button:hover:not(:disabled), .dress-item:hover:not(:disabled), .cover-gear:hover, .corner-flori:hover, .choice:hover:not(:disabled) { transform: none; filter: none; }
 }
+
+/* 着せ替え画面の「ご褒美 GET」の棒(と文)は出さない(次のご褒美のカードは、のこす) */
+#screen-dress .dress-banner { display: none; }

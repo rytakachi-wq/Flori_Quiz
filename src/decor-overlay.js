@@ -189,6 +189,8 @@ function fitStatic() {
     if (el.closest("#screen-dress, .unlock-dialog, dialog")) continue;
     el.style.scale = fit < 1 ? String(fit) : "";
     el.style.transformOrigin = fit < 1 ? "50% 100%" : "";
+    // scale をかけると、かざりの入れものが、1つの層になり、フロリ(z-index 1)の下に入って、見えなくなる。上に出す
+    if (el.classList.contains("decor")) el.style.zIndex = fit < 1 ? "2" : "";
   }
 }
 

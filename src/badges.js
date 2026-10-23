@@ -99,7 +99,7 @@ const SWATCH = {
 
 // id、名前、見本の色(tint)、背景(bg:背景の色、blue:ふち・ボタンの色、dark:題字の色)、フロリの色の作り方(color)
 const PALETTE = [
-  { id: "red", name: "炎のレッド", tint: "#d8504a", bg: "#ffe3e0", blue: "#f08a84", dark: "#b8352f", color: { hue: 2, gain: 3, minSat: 0.88, boost: 1.06 } },
+  { id: "red", name: "炎のレッド", tint: "#d8504a", bg: "#ffe3e0", blue: "#f08a84", dark: "#b8352f", color: { hue: 2, gain: 3, minSat: 0.88, boost: 1.16 } },
   { id: "orange", name: "日だまりオレンジ", tint: "#ec8a3a", bg: "#ffeed8", blue: "#f4a85a", dark: "#bf6a1e", color: { hue: 28, gain: 3, minSat: 0.9 } },
   { id: "yellow", name: "ピカピカイエロー", tint: "#e0b920", bg: "#fff8d0", blue: "#f2d24a", dark: "#a8870a", color: { hue: 50, gain: 3, minSat: 0.85 } },
   { id: "lime", name: "若草ライム", tint: "#98c534", bg: "#f2fad0", blue: "#b6dc4c", dark: "#6f8f1a", color: { hue: 85, gain: 2.6, minSat: 0.7 } },
@@ -141,7 +141,7 @@ const HEAD = [
   [24, "星のかざり", { x: 66.6, y: 7.8, w: 36 }],
   [23, "ひまわり", { x: 79, y: 11, w: 30 }],
   [11, "猫耳", { x: 55.6, y: 1.2, w: 55, sy: 0.75 }],
-  [12, "うさぎ耳", { x: 51.9, y: -7.7, w: 51.1, sy: 0.8 }],
+  [12, "うさぎ耳", { x: 51.9, y: -7.7, w: 51.1, sy: 0.8, sx: 1.25 }],
   [13, "くま耳", { x: 52.5, y: 4.1, w: 72, sy: 0.75 }],
   [7, "コック帽", { x: 51.9, y: -6.4, w: 59.5, sy: 0.75 }],
   [17, "プロペラ帽", { x: 52.7, y: -3.7, w: 57.8, sy: 0.73 }],
