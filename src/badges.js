@@ -99,7 +99,7 @@ const SWATCH = {
 
 // id、名前、見本の色(tint)、背景(bg:背景の色、blue:ふち・ボタンの色、dark:題字の色)、フロリの色の作り方(color)
 const PALETTE = [
-  { id: "red", name: "炎のレッド", tint: "#d8504a", bg: "#ffe3e0", blue: "#f08a84", dark: "#b8352f", color: { hue: 2, gain: 3, minSat: 0.88 } },
+  { id: "red", name: "炎のレッド", tint: "#d8504a", bg: "#ffe3e0", blue: "#f08a84", dark: "#b8352f", color: { hue: 2, gain: 3, minSat: 0.88, boost: 1.06 } },
   { id: "orange", name: "日だまりオレンジ", tint: "#ec8a3a", bg: "#ffeed8", blue: "#f4a85a", dark: "#bf6a1e", color: { hue: 28, gain: 3, minSat: 0.9 } },
   { id: "yellow", name: "ピカピカイエロー", tint: "#e0b920", bg: "#fff8d0", blue: "#f2d24a", dark: "#a8870a", color: { hue: 50, gain: 3, minSat: 0.85 } },
   { id: "lime", name: "若草ライム", tint: "#98c534", bg: "#f2fad0", blue: "#b6dc4c", dark: "#6f8f1a", color: { hue: 85, gain: 2.6, minSat: 0.7 } },
@@ -156,7 +156,7 @@ const HEAD = [
 ];
 const BODY = [
   [2, "ボウタイ", { x: 52, y: 55, w: 38 }],
-  [3, "ネクタイ", { x: 53.0, y: 64.9, w: 20 }],
+  [3, "ネクタイ", { x: 53.0, y: 62.2, w: 16 }],
   [1, "マフラー", { x: 49.9, y: 59.4, w: 50, r: 14, sx: 1.3 }],
   [4, "バンダナ", { x: 51.0, y: 64.0, w: 37.5 }],
   [19, "チョーカー", { x: 51.0, y: 61.2, w: 40 }],

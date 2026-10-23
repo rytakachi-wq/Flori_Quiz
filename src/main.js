@@ -2189,6 +2189,7 @@ function applyDress() {
 }
 
 let dressTab = "color"; // 着せ替えで、いま見ている種類(color / head / body / face / theme)
+let seenTabs = new Set(); // この見学で、もう開いた種類(タブの NEW を消す)
 let freshKeys = new Set(); // この画面を、あたらしく開いて、初めて見るもの(NEW のしるし)
 
 // 表紙から開く:あたらしく増えたものに NEW を付ける
@@ -2196,6 +2197,7 @@ function openDress() {
   awardBadges();
   const base = noticeBase();
   freshKeys = new Set(noticeNow(loadStats()).dress.filter((key) => !base.dress.includes(key)));
+  seenTabs = new Set();
   if (freshKeys.size > 0) {
     // NEW があるのは、その種類のタブから
     dressTab = [...freshKeys][0].split(":")[0];
@@ -2240,6 +2242,19 @@ document.addEventListener("click", (event) => {
 });
 $("dress-list").addEventListener("scroll", hideTip, { passive: true });
 
+// 一覧の絵の大きさ:たて長・横長でも、見かけの広さ(面積)が、だいたい同じになるようにする
+function fitIcon(pic) {
+  if (!pic.naturalWidth || !pic.naturalHeight) return;
+  const ratio = pic.naturalWidth / pic.naturalHeight;
+  let w = Math.sqrt(0.6 * ratio);
+  let h = w / ratio;
+  const k = Math.min(1, 0.88 / w, 0.84 / h);
+  w *= k;
+  h *= k;
+  pic.style.width = `${(w * 100).toFixed(1)}%`;
+  pic.style.height = `${(h * 100).toFixed(1)}%`;
+}
+
 function renderDress() {
   hideTip();
   const stats = loadStats();
@@ -2257,6 +2272,7 @@ function renderDress() {
     $("dress-stage").style.background = theme?.stage ?? theme?.preview ?? ""; // 虹色は、表紙と同じ、うすい色
   }
   setDecor("dress-decor", wornItems());
+  seenTabs.add(dressTab); // いま開いている種類の NEW は、すぐ消える
   for (const tab of document.querySelectorAll("[data-dress-tab]")) {
     const kind = tab.dataset.dressTab;
     const list = DRESS_LISTS[kind].filter((item) => item.unlock);
@@ -2268,7 +2284,7 @@ function renderDress() {
       tab.append(count);
     }
     count.textContent = `${have}/${list.length}`;
-    tab.classList.toggle("has-new", [...freshKeys].some((key) => key.startsWith(`${kind}:`)));
+    tab.classList.toggle("has-new", !seenTabs.has(kind) && [...freshKeys].some((key) => key.startsWith(`${kind}:`))); // 開いた種類の NEW は、消える
   }
   const kind = dressTab;
   $("dress-list").replaceChildren(
@@ -2286,9 +2302,11 @@ function renderDress() {
       else if (kind === "theme") art.style.background = choice.preview ?? choice.tint;
       else if (choice.img) {
         const pic = document.createElement("img");
+        pic.addEventListener("load", () => fitIcon(pic)); // 細長いもの・横長のものも、見かけの大きさが、そろうように
         pic.src = choice.img;
         pic.alt = "";
         art.append(pic);
+        if (pic.complete) fitIcon(pic);
       } else art.textContent = "🚫";
       button.append(art);
       if (dress[kind] === choice.id) {
@@ -2332,7 +2350,6 @@ function renderDress() {
         dress = { ...dress, [kind]: choice.id };
         saveDress(dress);
         applyDress();
-        freshKeys.delete(`${kind}:${choice.id}`);
         renderDress();
         playSe("button");
       });

@@ -7,6 +7,7 @@
 | `src/body_wave.webp` | 手を振る全身 |
 | `src/book_pen.png` | 本とペンを持つ姿 |
 | `src/face_smile.png` | 顔:笑顔(口を開けた笑顔) |
+| `src/face_smile_clean.png` | `face_smile.png` の、輪郭線の外にある、青灰色の影だけを、透明にしたもの(描き直しではない)。表紙の左上のフロリ(オニ問題の入り口)に使う |
 | `src/face_nikkori.png` | 顔:にっこり(口を閉じた笑顔) |
 | `src/face_wrong.png` | 顔:目をつぶった表情(><) |
 | `src/face_surprised.png` | 顔:驚いた表情 |

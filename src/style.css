@@ -3071,14 +3071,7 @@ button:not(:disabled):active { transition: none !important; }
 #screen-cover .home-hero { width: min(62vw, 28dvh); }
 @media (max-height: 700px) { .play-btn { min-height: 64px; } .play-btn .gi { font-size: 36px; } .play-btn .pb-text b { font-size: 28px; } }
 
-/* ===== 背景が虹色のとき:ボタン・枠・ふきだしも、虹色に(その45) ===== */
-:root[data-theme="rainbow"] {
-  --blue-fill: linear-gradient(90deg, #ffb3b3, #ffe08a, #b8ecb8, #a8d8ff, #d4bcff);
-  --blue-bc: #ff9a9a #ffd84a #7fdc7f #7ab8ff;
-  --blue-tail-l: #ffb3b3;
-  --blue-tail-c: #b8ecb8;
-}
-
+/* 背景が虹色のとき:ボタン・枠・ふきだしは、虹色にしない(うすい紫のまま) */
 /* 着せ替えのフロリ:ふだんは止まっている。20秒さわらないと、動きだす(main.js の startDressIdle) */
 #screen-dress .dress-hero { animation: none; }
 #screen-dress.is-lively .dress-hero { animation: homeHop 2.4s ease-in-out infinite; }
@@ -3093,9 +3086,8 @@ button:not(:disabled):active { transition: none !important; }
 .q-react { position: relative; }
 
 /* 表紙のすみのフロリ(オニ問題):大きく。原画の、ななめ下の影(青灰色の部分)は、かくす */
-#screen-cover .home-top .corner-flori { width: clamp(72px, 24vw, 96px); opacity: 1; }
-.corner-flori img { clip-path: inset(3% 4% 6% 0.5% round 22% / 32%); }
-@media (max-width: 340px) { #screen-cover .home-top .corner-flori { width: 70px; } }
+#screen-cover .home-top .corner-flori { width: clamp(58px, 18vw, 72px); opacity: 1; }
+@media (max-width: 340px) { #screen-cover .home-top .corner-flori { width: 58px; } }
 /* 表紙:ふきだしは、かざり(帽子など)に、かぶらないように、フロリとの間を広く。クイズボタンは、少し上に */
 #screen-cover .home-hero .hero-fig { margin-top: clamp(26px, 9dvh, 84px); }
 #screen-cover .home-stage { align-content: start; padding-top: 2dvh; }
