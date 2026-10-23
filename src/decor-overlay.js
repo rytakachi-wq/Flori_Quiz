@@ -46,18 +46,30 @@ function layer(img) {
 function place(img) {
   const pair = overlays.get(img);
   if (!pair) return;
+  if (img.closest("[hidden]") && !img.hidden) return; // 隠れている画面の中は、何もしない(画面が出たとき、前の場所のまま、すぐ出る)
   const original = img.dataset.orig ?? img.getAttribute("src") ?? "";
+  const show = POSE.test(original) && !img.hidden;
+  if (pair.front.hidden === show) {
+    pair.front.hidden = !show;
+    pair.back.hidden = !show;
+  }
   const w = img.offsetWidth;
   const h = img.offsetHeight;
-  const visible = POSE.test(original) && w > 0 && h > 0 && !img.hidden;
-  pair.front.hidden = !visible;
-  pair.back.hidden = !visible;
-  if (!visible) {
-    pair.signature = null;
-    pair.geometry = null;
+  if (!show || w === 0 || h === 0) {
+    if (!show) {
+      pair.signature = null;
+      pair.geometry = null;
+    }
     return;
   }
-  layer(img);
+  if (pair.fit !== fit) {
+    pair.fit = fit;
+    applyFit(img, pair);
+  }
+  if (pair.z === undefined) {
+    layer(img);
+    pair.z = true;
+  }
   // object-fit: contain で、絵が枠より小さく入っているときは、絵の見えている部分に、かざりを合わせる
   let cw = w;
   let ch = h;
@@ -66,17 +78,18 @@ function place(img) {
     cw = img.naturalWidth * scale;
     ch = img.naturalHeight * scale;
   }
-  const geometry = `${img.offsetLeft + (w - cw) / 2}|${img.offsetTop + (h - ch) / 2}|${cw}|${ch}`;
+  const left = img.offsetLeft + (w - cw) / 2;
+  const top = img.offsetTop + (h - ch) / 2;
+  const geometry = `${left}|${top}|${cw}|${ch}`;
   if (pair.geometry !== geometry) {
     pair.geometry = geometry;
     for (const box of [pair.front, pair.back]) {
-      box.style.left = `${img.offsetLeft + (w - cw) / 2}px`;
-      box.style.top = `${img.offsetTop + (h - ch) / 2}px`;
+      box.style.left = `${left}px`;
+      box.style.top = `${top}px`;
       box.style.width = `${cw}px`;
       box.style.height = `${ch}px`;
     }
   }
-  applyFit(img, pair);
   sync(img);
 }
 
@@ -165,7 +178,9 @@ async function computeFit(list) {
     top = Math.max(top, -(y - bh / 2));
     side = Math.max(side, -(x - bw / 2), x + bw / 2 - 100);
   }
-  return Math.min(1, 1 / (1 + top / 100), 1 / (1 + side / 100));
+  // まわりには、すきまがあるので、少しのはみ出し(上 12%・横 10%)は、そのまま。縮めすぎないよう、最小は 0.85 倍
+  const need = Math.min(1, 1 / (1 + Math.max(0, top - 12) / 100), 1 / (1 + Math.max(0, side - 10) / 100));
+  return Math.max(0.85, need);
 }
 
 // 表紙・その他のフロリ(index.html に、かざり用の場所があるもの)も、同じ倍率で縮める

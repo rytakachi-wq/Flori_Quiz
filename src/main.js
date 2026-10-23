@@ -178,6 +178,7 @@ function show(name, direction = 0) {
   document.body.classList.toggle("has-pager", PAGER.includes(name));
   setScene(sceneOf(name));
   window.scrollTo(0, 0);
+  refreshDecor();
 }
 
 // 回答の形式ごとの画面部品(出題 render、回答後の表示 mark、正解の言いかた correctText)。
