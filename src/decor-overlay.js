@@ -21,7 +21,7 @@ function build({ front, back }) {
           el.style.left = `${item.pos.x}%`;
           el.style.top = `${item.pos.y}%`;
           el.style.width = `${item.pos.w}%`;
-          el.style.transform = `translate(-50%, -50%) rotate(${item.pos.r ?? 0}deg)`;
+          el.style.transform = `translate(-50%, -50%) rotate(${item.pos.r ?? 0}deg) scale(${item.pos.sx ?? 1}, ${item.pos.sy ?? 1})`;
           return el;
         }),
     );

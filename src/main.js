@@ -2126,7 +2126,7 @@ function setDecor(containerId, items) {
         img.style.left = `${item.pos.x}%`;
         img.style.top = `${item.pos.y}%`;
         img.style.width = `${item.pos.w}%`;
-        img.style.transform = `translate(-50%, -50%) rotate(${item.pos.r ?? 0}deg)`;
+        img.style.transform = `translate(-50%, -50%) rotate(${item.pos.r ?? 0}deg) scale(${item.pos.sx ?? 1}, ${item.pos.sy ?? 1})`;
         return img;
       }),
   );
