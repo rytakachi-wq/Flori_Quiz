@@ -141,7 +141,7 @@ const HEAD = [
   [15, "ひよこ", { x: 50, y: 0.8, w: 22 }],
   [24, "星のかざり", { x: 66.6, y: 7.8, w: 36 }],
   [23, "ひまわり", { x: 79, y: 11, w: 30 }],
-  [11, "猫耳", { x: 55.6, y: 1.2, w: 69.1, sy: 0.75 }],
+  [11, "猫耳", { x: 55.6, y: 1.2, w: 55, sy: 0.75 }],
   [12, "うさぎ耳", { x: 51.9, y: -7.7, w: 51.1, sy: 0.8 }],
   [13, "くま耳", { x: 52.5, y: 4.1, w: 72, sy: 0.75 }],
   [7, "コック帽", { x: 51.9, y: -6.4, w: 59.5, sy: 0.75 }],
@@ -158,7 +158,7 @@ const HEAD = [
 const BODY = [
   [2, "ボウタイ", { x: 52, y: 55, w: 38 }],
   [3, "ネクタイ", { x: 53, y: 64.9, w: 20 }],
-  [1, "マフラー", { x: 49.9, y: 59.4, w: 50, r: 14 }],
+  [1, "マフラー", { x: 49.9, y: 59.4, w: 50, r: 14, sx: 1.3 }],
   [4, "バンダナ", { x: 51.0, y: 64.0, w: 37.5 }],
   [19, "チョーカー", { x: 51.0, y: 61.2, w: 40 }],
   [15, "星のブローチ", { x: 62, y: 64, w: 20 }],
@@ -236,6 +236,20 @@ assignUnlocks([
   [bodies, null],
   [faces, null],
 ]);
+
+// お試し:URL に ?tryall=1 を付けて開くと、着せ替えを、ぜんぶ選べる(端末内に覚える)。?tryall=0 で、もとにもどる。もらった数・NEW・ご褒美の記録は、かわらない。
+const TRY_KEY = "floriQuiz.tryAll";
+export const TRY_ALL = (() => {
+  try {
+    const q = new URLSearchParams(location.search).get("tryall");
+    if (q === "1") localStorage.setItem(TRY_KEY, "1");
+    else if (q === "0") localStorage.removeItem(TRY_KEY);
+    return localStorage.getItem(TRY_KEY) === "1";
+  } catch {
+    return false;
+  }
+})();
+export const canWear = (item, ctx) => TRY_ALL || isOpen(item, ctx);
 
 // きせかえが使えるか(unlock:条件の id、または { stars: 必要な星の数 }、または null)
 export function isOpen(item, { have, stars }) {

@@ -41,7 +41,7 @@ import { illustrationFor } from "./illustrations.js";
 import { createTalker } from "./talk.js";
 import { initTutorial, openTutorial } from "./tutorial.js";
 import { initRules, openRules as resetRules } from "./rules.js";
-import { BODIES, COLORS, FACES, HEADS, RANKS, THEMES, earnedBadges, getText, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
+import { BODIES, COLORS, FACES, HEADS, RANKS, THEMES, earnedBadges, getText, canWear, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { setAutoDecor } from "./decor-overlay.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
@@ -2243,7 +2243,7 @@ function renderDress() {
   const kind = dressTab;
   $("dress-list").replaceChildren(
     ...DRESS_LISTS[kind].map((choice) => {
-      const open = isOpen(choice, ctx);
+      const open = canWear(choice, ctx);
       const isNew = freshKeys.has(`${kind}:${choice.id}`);
       const button = document.createElement("button");
       button.type = "button";

@@ -2909,9 +2909,9 @@ button:focus:not(:focus-visible) { outline: none; }
 
 /* 着せ替え:フロリをかなり大きく。枠の中に、まわりの空きを持たせる */
 #screen-dress .dress-stage { padding: clamp(10px, 2.2dvh, 22px) 0; }
-#screen-dress .hero-small { width: min(52vw, 25dvh); }
+#screen-dress .hero-small { width: min(68vw, 34dvh); }
 #screen-dress .dress-hero .hero-fig { width: 88%; }
-@media (max-height: 700px) { #screen-dress .hero-small { width: min(46vw, 22dvh); } }
+@media (max-height: 700px) { #screen-dress .hero-small { width: min(58vw, 29dvh); } }
 
 /* 図鑑:めくるのは ぱっと(0.11秒)。カード(□)を押すと めくって閉じる */
 .dex-card.is-flip { animation-duration: 0.11s; }
