@@ -1,6 +1,6 @@
 // どの画面のフロリにも、いまの着せ替え(頭・体・顔)を重ねる。
 // 表紙・その他・着せ替えは、index.html に、かざり用の場所(.decor)がある。ほかの画面は、ここで自動で重ねる。
-// 絵の前に出るかざり(front)は絵の直前の上、うしろに回るかざり(back)は絵の直前の下に、それぞれ入れものを作る。
+// 絵の前に出るかざり(front)と、うしろに回るかざり(back)の入れものを、絵のあとに並べる(重なり順は z-index)。
 const SELECTOR = "img.flori, img.opening-flori, img.announce-flori, img.tut-side-flori";
 const POSE = /(?:wave_(?:nikkori|smile|wrong|surprised)\.png|body_wave\.webp)$/; // かざりの位置が合う絵(同じ大きさ・同じ立ち姿)
 const overlays = new Map(); // 絵 → { front, back }
@@ -31,15 +31,15 @@ function build({ front, back }) {
   }
 }
 
-// 絵の重なり順(z-index)を、かざりの入れものに合わせる:うしろ=絵と同じ(DOM で先なので下)、まえ=絵の1つ上
+// 絵の重なり順(z-index)を、かざりの入れものに合わせる:うしろ=絵の1つ下、まえ=絵の1つ上
 function layer(img) {
   const { front, back } = overlays.get(img);
   let z = Number.parseInt(getComputedStyle(img).zIndex, 10);
-  if (Number.isNaN(z)) {
-    z = 1;
-    img.style.zIndex = "1";
+  if (Number.isNaN(z) || z < 1) {
+    z = 2;
+    img.style.zIndex = "2";
   }
-  back.style.zIndex = String(z);
+  back.style.zIndex = String(z - 1); // うしろのかざりは、絵の1つ下
   front.style.zIndex = String(z + 1);
 }
 
@@ -111,8 +111,8 @@ function attach(img) {
   if (overlays.has(img) || skip(img) || !img.parentElement) return;
   const pair = { front: makeBox("decor-front"), back: makeBox("decor-back") };
   if (getComputedStyle(img).position === "static") img.classList.add("decor-host");
-  img.before(pair.back);
-  img.after(pair.front);
+  // 入れものは、絵の「あと」に並べる(絵の直前に、別の要素が入ると、`.screen-head + .flori` のような CSS が効かなくなる)
+  img.after(pair.back, pair.front);
   overlays.set(img, pair);
   img.decode?.().catch(() => {}); // フロリの大きな絵も、先に読みほどいておく
   build(pair);

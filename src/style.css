@@ -3027,7 +3027,7 @@ rt { text-shadow: none; -webkit-text-stroke: 0; paint-order: normal; font-weight
   #screen-settings .back-btn { height: 40px; min-height: 40px; font-size: 17px; }
   #screen-settings .buttons { margin: 0; gap: 6px; }
   #screen-settings .btn { min-height: 34px; padding: 2px 12px; font-size: 13px; }
-  #screen-settings .settings-flori { flex: none; width: auto; height: clamp(48px, 9dvh, 84px); max-width: 40%; object-fit: contain; margin-top: auto; pointer-events: none; }
+  #screen-settings .settings-flori { flex: 1 1 0; min-height: 48px; max-height: 340px; width: auto; height: auto; max-width: 70%; object-fit: contain; margin-top: 4px; pointer-events: none; }
 }
 
 /* =====================================================================
@@ -3092,3 +3092,14 @@ button:not(:disabled):active { transition: none !important; }
 #screen-cover .home-stage { align-content: start; padding-top: 2dvh; }
 .play-btn { margin-bottom: clamp(16px, 4.5dvh, 44px); }
 @media (max-height: 700px) { #screen-cover .home-hero .hero-fig { margin-top: clamp(20px, 7dvh, 40px); } .play-btn { margin-bottom: 14px; } }
+
+/* 着せ替えをもらった画面:かざり(帽子など)が、切れず、スクロールもなく、全部見えるように */
+.unlock-dialog { overflow: hidden !important; max-height: 98dvh; }
+.unlock-stage { overflow: visible; width: min(260px, 66%, 27dvh); }
+.unlock-hero { width: 74%; margin-top: 14%; }
+.unlock-body { padding: 12px 14px 12px; gap: 5px; }
+.unlock-name { font-size: clamp(22px, 4.4dvh, 34px); }
+.unlock-why { font-size: clamp(13px, 2.2dvh, 16px); padding: 4px 10px; }
+.unlock-dialog .btn { min-height: clamp(40px, 6.5dvh, 54px); }
+.unlock-stage { aspect-ratio: 1; height: auto; grid-template-rows: 100%; align-items: end; padding-bottom: 5%; }
+.unlock-hero { width: 60%; margin: 0 auto; }

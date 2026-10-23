@@ -719,6 +719,17 @@ function fitFeedback() {
     screen.classList.add("is-tight3"); // それでも収まらないときは、問題文と時間の棒を、かくして、解説に場所を回す
     pass();
   }
+  // あまった場所があれば、フロリを、収まるところまで大きくする(大きい画面で、小さく見えないように)
+  if (box.scrollHeight <= box.clientHeight + 1) {
+    const flori = $("q-react-flori");
+    let height = flori.getBoundingClientRect().height;
+    let grown = 0;
+    while (height < 280 && box.scrollHeight <= box.clientHeight + 1 && grown++ < 30) {
+      height += 10;
+      flori.style.height = `${height}px`;
+    }
+    if (box.scrollHeight > box.clientHeight + 1) flori.style.height = `${height - 10}px`;
+  }
   box.scrollLeft = 0;
   box.scrollTop = 0;
   refreshDecor(); // フロリの大きさ・場所が変わったので、かざりも、合わせ直す
