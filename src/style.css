@@ -2910,9 +2910,11 @@ button:focus:not(:focus-visible) { outline: none; }
 
 /* 着せ替え:フロリをかなり大きく。枠の中に、まわりの空きを持たせる */
 #screen-dress .dress-stage { padding: clamp(10px, 2.2dvh, 22px) 0; }
-#screen-dress .hero-small { width: min(68vw, 34dvh); }
+#screen-dress { --dress-w: min(56vw, 27dvh); }
+#screen-dress .hero-small { width: var(--dress-w); }
 #screen-dress .dress-hero .hero-fig { width: 88%; }
-@media (max-height: 700px) { #screen-dress .hero-small { width: min(58vw, 29dvh); } }
+#screen-dress .dress-stage { padding-top: calc(var(--dress-w) * 0.28); } /* 頭のかざり(耳・帽子)が、枠の上で切れないように */
+@media (max-height: 700px) { #screen-dress { --dress-w: min(48vw, 23dvh); } }
 
 /* 図鑑:めくるのは ぱっと(0.11秒)。カード(□)を押すと めくって閉じる */
 .dex-card.is-flip { animation-duration: 0.11s; }
