@@ -19,6 +19,7 @@ function build({ front, back }) {
           el.alt = "";
           el.draggable = false;
           el.decoding = "async";
+          el.decode?.().catch(() => {}); // 先に読みほどいておく(画面が出たとき、かくつかないように)
           el.style.left = `${item.pos.x}%`;
           el.style.top = `${item.pos.y}%`;
           el.style.width = `${item.pos.w}%`;
@@ -91,6 +92,7 @@ function attach(img) {
   img.before(pair.back);
   img.after(pair.front);
   overlays.set(img, pair);
+  img.decode?.().catch(() => {}); // フロリの大きな絵も、先に読みほどいておく
   build(pair);
   sizer.observe(img);
   img.addEventListener("load", () => place(img));

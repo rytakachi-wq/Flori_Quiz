@@ -3010,8 +3010,25 @@ rt { text-shadow: none; -webkit-text-stroke: 0; paint-order: normal; font-weight
 #screen-question.is-tight2 .hint-buttons .btn { min-height: 28px; padding: 0 10px; font-size: 13px; }
 @media (max-width: 340px) { #screen-question .status .q-info { grid-template-columns: 1fr 1fr; } #screen-question .q-chip { font-size: 12px; } }
 
-/* 設定画面のフロリ(画面の下のほうに、大きく) */
-#screen-settings .settings-flori { flex: none; width: auto; height: clamp(120px, 27dvh, 240px); max-width: 70%; object-fit: contain; margin-top: auto; pointer-events: none; }
+/* 設定画面:スクロールしないで、全部が見える。フロリは小さく */
+@media screen {
+  #screen-settings .settings-grid { flex: none; overflow: visible; min-height: 0; gap: 4px; grid-template-columns: 1fr; }
+  #screen-settings .setting-box { padding: 0 10px 2px; font-size: 13px; }
+  #screen-settings .setting-box legend { font-size: 13.5px; line-height: 1.1; padding: 0 4px; }
+  #screen-settings .setting-box label { line-height: 1.3; padding: 0; }
+  #screen-settings .setting-box .volumes { gap: 0; }
+  #screen-settings .setting-box .volume { padding: 0 4px; line-height: 1.2; }
+  #screen-settings .setting-box .volume input[type="range"] { height: 18px; }
+  #screen-settings .size-row { gap: 0 3px; flex-wrap: nowrap; justify-content: space-between; }
+  #screen-settings .size-row label { font-size: 12px; white-space: nowrap; gap: 2px; }
+  #screen-settings .size-row input { width: 14px; height: 14px; margin: 0 2px 0 0; }
+  #screen-settings.screen:not([hidden]) { gap: 3px; }
+  #screen-settings .screen-head { height: 44px; min-height: 44px; grid-template-rows: 44px; }
+  #screen-settings .back-btn { height: 40px; min-height: 40px; font-size: 17px; }
+  #screen-settings .buttons { margin: 0; gap: 6px; }
+  #screen-settings .btn { min-height: 34px; padding: 2px 12px; font-size: 13px; }
+  #screen-settings .settings-flori { flex: none; width: auto; height: clamp(48px, 9dvh, 84px); max-width: 40%; object-fit: contain; margin-top: auto; pointer-events: none; }
+}
 
 /* =====================================================================
    追加(その49):紙ふぶき・結果のフロリ・クイズボタンを下に(背景と同じ色)・対戦の問題文
