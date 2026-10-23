@@ -85,12 +85,22 @@ function startCoverIdle() {
   idleTimer = setTimeout(() => $("screen-cover").classList.add("is-lively"), 3000);
 }
 
+// 着せ替えのフロリ:ふだんは止まっていて、20秒なにもさわらないと、動きだす(さわると、止まる)
+let dressIdleTimer = 0;
+function startDressIdle() {
+  clearTimeout(dressIdleTimer);
+  $("screen-dress").classList.remove("is-lively");
+  if (currentScreen !== "dress") return;
+  dressIdleTimer = setTimeout(() => $("screen-dress").classList.add("is-lively"), 20000);
+}
+
 // 表紙で、画面にさわる・動かす・キーを押すと、動きを止めて、また3秒数えなおす
 function noteActivity() {
   if (!$("screen-cover").hidden) {
     startCoverIdle();
     talker.poke();
   }
+  if (!$("screen-dress").hidden) startDressIdle();
 }
 for (const type of ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"]) {
   document.addEventListener(type, noteActivity, { passive: true });
@@ -153,6 +163,11 @@ function show(name, direction = 0) {
   }
   if (name !== "result") stopResultSound();
   currentScreen = name;
+  if (name === "dress") startDressIdle();
+  else {
+    clearTimeout(dressIdleTimer);
+    $("screen-dress").classList.remove("is-lively");
+  }
   const pager = $("pager");
   pager.hidden = !PAGER.includes(name);
   if (!pager.hidden) renderPager(name);
@@ -2188,7 +2203,10 @@ function previewDress(kind, item) {
 }
 function endPreview() {
   setDecor("dress-decor", wornItems());
-  $("dress-stage").style.background = THEMES.find((item) => item.id === dress.theme)?.preview ?? "";
+  {
+    const theme = THEMES.find((item) => item.id === dress.theme);
+    $("dress-stage").style.background = theme?.stage ?? theme?.preview ?? ""; // 虹色は、表紙と同じ、うすい色
+  }
 }
 
 // ロック中のきせかえの、もらい方の吹き出し。画面の上に1つだけ出す(一覧が動いても、切れないように)
@@ -2225,7 +2243,10 @@ function renderDress() {
   $("dress-meter-bar").style.width = `${Math.round((owned / total) * 100)}%`;
   $("dress-meter-text").textContent = `ご褒美 GET ${owned} / ${total}個${owned >= total ? "  全部 コンプリート! 🎉" : ""}`;
   renderRewardCard($("dress-reward"));
-  $("dress-stage").style.background = THEMES.find((item) => item.id === dress.theme)?.preview ?? "";
+  {
+    const theme = THEMES.find((item) => item.id === dress.theme);
+    $("dress-stage").style.background = theme?.stage ?? theme?.preview ?? ""; // 虹色は、表紙と同じ、うすい色
+  }
   setDecor("dress-decor", wornItems());
   for (const tab of document.querySelectorAll("[data-dress-tab]")) {
     const kind = tab.dataset.dressTab;

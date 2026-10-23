@@ -99,7 +99,7 @@ const SWATCH = {
 
 // id、名前、見本の色(tint)、背景(bg:背景の色、blue:ふち・ボタンの色、dark:題字の色)、フロリの色の作り方(color)
 const PALETTE = [
-  { id: "red", name: "炎のレッド", tint: "#d8504a", bg: "#ffe3e0", blue: "#f08a84", dark: "#b8352f", color: { hue: 2, gain: 3, minSat: 0.8 } },
+  { id: "red", name: "炎のレッド", tint: "#d8504a", bg: "#ffe3e0", blue: "#f08a84", dark: "#b8352f", color: { hue: 2, gain: 3, minSat: 0.88 } },
   { id: "orange", name: "日だまりオレンジ", tint: "#ec8a3a", bg: "#ffeed8", blue: "#f4a85a", dark: "#bf6a1e", color: { hue: 28, gain: 3, minSat: 0.9 } },
   { id: "yellow", name: "ピカピカイエロー", tint: "#e0b920", bg: "#fff8d0", blue: "#f2d24a", dark: "#a8870a", color: { hue: 50, gain: 3, minSat: 0.85 } },
   { id: "lime", name: "若草ライム", tint: "#98c534", bg: "#f2fad0", blue: "#b6dc4c", dark: "#6f8f1a", color: { hue: 85, gain: 2.6, minSat: 0.7 } },
@@ -109,15 +109,14 @@ const PALETTE = [
   { id: "white", name: "雪だるまホワイト", tint: "#f4f6f8", bg: "#ffffff", blue: "#cfd6dc", dark: "#6b7a84", color: { tone: "white" } },
   { id: "black", name: "真夜中ブラック", tint: "#2c3038", bg: "#1b1d22", blue: "#9aa0ab", dark: "#2c3038", color: { tone: "black" } },
   { id: "navy", name: "深海ネイビー", tint: "#24367a", bg: "#1d2a55", blue: "#7f93d4", dark: "#24367a", color: { tone: "navy" } },
-  { id: "gray", name: "曇り空グレー", tint: "#8a8f94", bg: "#e6e8ea", blue: "#a9b0b6", dark: "#5f6a72", color: { gray: true } },
   { id: "gold", name: "ゴージャスゴールド", tint: "#d9a21c", bg: SWATCH.gold, blue: "#e6b422", dark: "#8a5a0c", swatch: SWATCH.gold, color: { metal: ["#6e5e3a", "#a8935a", "#cdb878", "#e8dba8", "#faf4dc"] } },
   { id: "silver", name: "ミラクルシルバー", tint: "#aab2ba", bg: SWATCH.silver, blue: "#b9c2ca", dark: "#5a6670", swatch: SWATCH.silver, color: { metal: ["#555c64", "#949ca5", "#cdd3d9", "#f0f3f6", "#ffffff"] } },
   { id: "bronze", name: "どっしりブロンズ", tint: "#b8763a", bg: SWATCH.bronze, blue: "#c98a4a", dark: "#7a4416", swatch: SWATCH.bronze, color: { metal: ["#5e4838", "#8e7054", "#b8906c", "#d8bc9c", "#f0e2d2"] } },
-  { id: "rainbow", name: "七色レインボー", tint: "#c9a8f0", bg: "linear-gradient(135deg, #ffd9d9, #fff3c4, #d9f7d9, #d9ecff, #ead9ff)", blue: "#c9a8f0", dark: "#7a50bd", swatch: SWATCH.rainbow, color: { rainbow: true } },
+  { id: "rainbow", name: "七色レインボー", tint: "#c9a8f0", bg: "linear-gradient(135deg, #ffd9d9, #fff3c4, #d9f7d9, #d9ecff, #ead9ff)", blue: "#c9a8f0", dark: "#7a50bd", swatch: SWATCH.rainbow, color: { rainbow: true }, stage: "linear-gradient(135deg, #ffb3a7 0%, #ffd9a0 22%, #ffeea0 40%, #b9ecb5 60%, #a8d4ff 80%, #cbb6ff 100%)" },
 ];
 // もらえる順(やさしい → むずかしい)
-const COLOR_ORDER = ["pink", "orange", "yellow", "green", "lime", "red", "purple", "white", "gray", "navy", "black", "bronze", "silver", "gold", "rainbow"];
-const THEME_ORDER = ["pink", "yellow", "green", "lime", "orange", "purple", "red", "white", "gray", "navy", "black", "bronze", "silver", "gold", "rainbow"];
+const COLOR_ORDER = ["pink", "orange", "yellow", "green", "lime", "red", "purple", "white", "navy", "black", "bronze", "silver", "gold", "rainbow"];
+const THEME_ORDER = ["pink", "yellow", "green", "lime", "orange", "purple", "red", "white", "navy", "black", "bronze", "silver", "gold", "rainbow"];
 
 // うすい色の見本(フロリは、うすい色に染まるので、見本も、うすくする)
 function soften(hex, amount = 0.5) {
@@ -134,8 +133,8 @@ const HEAD = [
   [1, "リボン", { x: 71.8, y: 7.3, w: 26 }],
   [19, "ちょうちょ", { x: 74.1, y: 7.8, w: 22 }],
   [20, "さくらんぼ", { x: 79.9, y: 11.5, w: 24 }],
-  [4, "キャップ", { x: 54, y: 1.4, w: 66, sy: 0.75 }],
-  [5, "ニット帽", { x: 50.7, y: -5.8, w: 57.1, sy: 0.8 }],
+  [4, "キャップ", { x: 54.0, y: 4.1, w: 52, sy: 0.75 }],
+  [5, "ニット帽", { x: 50.7, y: -2.7, w: 46, sy: 0.8 }],
   [6, "ベレー帽", { x: 53, y: 2.5, w: 59, sy: 0.7 }],
   [14, "小鳥", { x: 50, y: 0.7, w: 22 }],
   [15, "ひよこ", { x: 50, y: 0.8, w: 22 }],
@@ -146,18 +145,18 @@ const HEAD = [
   [13, "くま耳", { x: 52.5, y: 4.1, w: 72, sy: 0.75 }],
   [7, "コック帽", { x: 51.9, y: -6.4, w: 59.5, sy: 0.75 }],
   [17, "プロペラ帽", { x: 52.7, y: -3.7, w: 57.8, sy: 0.73 }],
-  [16, "アンテナ", { x: 54.9, y: -6.0, w: 65.0, sx: 1.15, sy: 0.71 }],
-  [22, "サンタ帽", { x: 51.8, y: -1.5, w: 65.3, sy: 0.75 }],
+  [16, "アンテナ", { x: 54.9, y: -2.8, w: 52, sx: 1.15, sy: 0.71 }],
+  [22, "サンタ帽", { x: 55.3, y: -1.5, w: 65.3, sy: 0.75 }],
   [25, "麦わら帽子", { x: 50.5, y: 1.3, w: 62, sy: 0.8 }],
-  [10, "卒業帽", { x: 48.1, y: -2.0, w: 38 }],
+  [10, "卒業帽", { x: 53.1, y: -2.0, w: 38.0 }],
   [9, "魔女帽", { x: 54, y: -7.0, w: 50 }],
   [18, "天使の輪", { x: 52.2, y: 0.7, w: 57.4, sy: 0.8 }],
   [21, "ティアラ", { x: 55.1, y: 1.0, w: 54.2, sy: 0.75 }],
-  [8, "王冠", { x: 50.7, y: -1.7, w: 60.1, sy: 0.8 }],
+  [8, "王冠", { x: 52.8, y: -1.7, w: 60.1, sy: 0.8 }],
 ];
 const BODY = [
   [2, "ボウタイ", { x: 52, y: 55, w: 38 }],
-  [3, "ネクタイ", { x: 53, y: 64.9, w: 20 }],
+  [3, "ネクタイ", { x: 53.0, y: 68.3, w: 25 }],
   [1, "マフラー", { x: 49.9, y: 59.4, w: 50, r: 14, sx: 1.3 }],
   [4, "バンダナ", { x: 51.0, y: 64.0, w: 37.5 }],
   [19, "チョーカー", { x: 51.0, y: 61.2, w: 40 }],
@@ -170,9 +169,9 @@ const BODY = [
   [21, "水筒", { x: 69.5, y: 73.7, w: 22 }],
   [25, "ペンのポケット", { x: 35.4, y: 70.0, w: 30 }],
   [12, "花のレイ", { x: 50.4, y: 66.1, w: 50 }],
-  [18, "ハートのネックレス", { x: 48.7, y: 64.0, w: 44, sy: 0.7 }],
+  [18, "ハートのネックレス", { x: 52.8, y: 64.0, w: 44.0, sy: 0.7 }],
   [23, "レインボーのよだれかけ", { x: 53, y: 64.2, w: 39 }],
-  [8, "ウエストポーチ", { x: 49.9, y: 67.2, w: 58, r: -20, sy: 0.85 }],
+  [8, "ウエストポーチ", { x: 49.9, y: 67.2, w: 66, r: -20, sy: 0.85 }],
   [24, "くまのぬいぐるみ", { x: 75, y: 72, w: 36 }],
   [28, "ひよこのバッグ", { x: 48.3, y: 67.0, w: 73.0 }],
   [29, "うさぎのバッグ", { x: 47.8, y: 69.5, w: 74.0 }],
@@ -184,7 +183,7 @@ const BODY = [
   [38, "音符のバッジ", { x: 36.0, y: 64.0, w: 22 }],
 ];
 const FACE = [
-  [4, "汗", { x: 71, y: 39, w: 8 }],
+  [4, "汗", { x: 71.0, y: 39.0, w: 9.5 }],
   [6, "ばんそうこう", { x: 77.0, y: 39.1, w: 20, r: -20 }],
   [5, "涙", { x: 50.9, y: 40.0, w: 43.4 }],
   [1, "ハートのほっぺ", { x: 52.4, y: 35.0, w: 59.1 }],
@@ -223,7 +222,7 @@ export const COLORS = [
 ];
 export const THEMES = [
   { id: "sky", name: "青空", tint: "#7ec3e0", preview: "linear-gradient(160deg, #eef8fd, #7ec3e0)", unlock: null },
-  ...PALETTE.map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.swatch ?? `linear-gradient(160deg, ${p.bg}, ${p.blue})`, bg: p.bg, blue: p.blue, dark: p.dark, unlock: null })),
+  ...PALETTE.map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.swatch ?? `linear-gradient(160deg, ${p.bg}, ${p.blue})`, stage: p.stage, bg: p.bg, blue: p.blue, dark: p.dark, unlock: null })),
 ];
 export const HEADS = [{ id: "none", slot: "head", img: "", name: "なし", tint: "#46555e", unlock: null }, ...heads];
 export const BODIES = [{ id: "none", slot: "body", img: "", name: "なし", tint: "#46555e", unlock: null }, ...bodies];

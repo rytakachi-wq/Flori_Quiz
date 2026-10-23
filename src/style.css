@@ -3055,3 +3055,8 @@ button:not(:disabled):active { transition: none !important; }
 .play-btn { background: linear-gradient(180deg, color-mix(in srgb, var(--blue) 72%, #fff), var(--blue)); min-height: 76px; margin-bottom: 4px; }
 #screen-cover .home-hero { width: min(62vw, 28dvh); }
 @media (max-height: 700px) { .play-btn { min-height: 64px; } .play-btn .gi { font-size: 36px; } .play-btn .pb-text b { font-size: 28px; } }
+
+/* 着せ替えのフロリ:ふだんは止まっている。20秒さわらないと、動きだす(main.js の startDressIdle) */
+#screen-dress .dress-hero { animation: none; }
+#screen-dress.is-lively .dress-hero { animation: homeHop 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { #screen-dress.is-lively .dress-hero { animation: none; } }

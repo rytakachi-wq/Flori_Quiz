@@ -51,8 +51,8 @@ const clamp01 = (v) => Math.min(1, Math.max(0, v));
 function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
   if (color.gray) return hslToRgb(h, 0, l);
   if (color.tone === "white") return hslToRgb(0, 0, Math.min(1, 0.9 + (l - 0.55) * 0.26));
-  if (color.tone === "black") return hslToRgb(0, 0, clamp01(0.1 + (l - 0.55) * 0.3));
-  if (color.tone === "navy") return hslToRgb(224, 0.3, clamp01(0.3 + (l - 0.55) * 0.5));
+  if (color.tone === "black") return hslToRgb(0, 0, clamp01(0.2 + (l - 0.55) * 0.3));
+  if (color.tone === "navy") return hslToRgb(224, 0.18, clamp01(0.38 + (l - 0.55) * 0.5));
   if (color.rainbow) return hslToRgb(((x / width) * 320 + (y / height) * 120) % 360, 0.34, Math.min(0.9, l * 0.98 + 0.02));
   if (color.metal) {
     // 金属の光沢:もとの明るさを、暗い色→明るい色の段階に当てはめ、斜めに走る光の帯(つや)を重ねる
