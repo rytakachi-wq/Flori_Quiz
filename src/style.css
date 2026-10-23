@@ -3103,3 +3103,7 @@ button:not(:disabled):active { transition: none !important; }
 .unlock-dialog .btn { min-height: clamp(40px, 6.5dvh, 54px); }
 .unlock-stage { aspect-ratio: 1; height: auto; grid-template-rows: 100%; align-items: end; padding-bottom: 5%; }
 .unlock-hero { width: 60%; margin: 0 auto; }
+.unlock-stage { width: min(260px, 29dvh, 62vw); }
+.unlock-hero { width: 64%; }
+.unlock-body { padding: 10px 14px 10px; gap: 4px; }
+.unlock-dialog .buttons { margin-top: 2px; }
