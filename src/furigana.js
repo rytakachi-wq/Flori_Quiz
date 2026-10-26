@@ -178,8 +178,17 @@ const COUNTER_KANA = {
 const COUNTER_RE = new RegExp(`(?<![0-9.])([0-9]{1,2})(${Object.keys(COUNTER_KANA).join("|")})`, "g");
 const UNITS = [[/(\d)\s?km(?![A-Za-z])/g, "$1キロメートル"], [/(\d)\s?cm(?![A-Za-z])/g, "$1センチメートル"], [/(\d)\s?mm(?![A-Za-z])/g, "$1ミリメートル"], [/(\d)\s?kg(?![A-Za-z])/g, "$1キログラム"], [/(\d)\s?m(?![A-Za-z])/g, "$1メートル"], [/(\d)\s?L(?![A-Za-z])/g, "$1リットル"], [/(\d)\s?g(?![A-Za-z])/g, "$1グラム"], [/%/g, "パーセント"]];
 
+// 1〜99 を、ひらがなにする(「1番」を「いちばん」と、はっきり読ませる。声が「ひとばん」などと読まないように)
+const ONES = ["", "いち", "に", "さん", "よん", "ご", "ろく", "なな", "はち", "きゅう"];
+function numberKana(n) {
+  if (n < 10) return ONES[n];
+  const tens = Math.floor(n / 10);
+  return `${tens === 1 ? "" : ONES[tens]}じゅう${ONES[n % 10]}`;
+}
+
 export function speechOf(text) {
-  let out = text.replace(COUNTER_RE, (all, n, counter, offset, whole) => {
+  let out = text.replace(/(?<![0-9.])([0-9]{1,2})番/g, (all, n) => (Number(n) > 0 ? `${numberKana(Number(n))}ばん` : all));
+  out = out.replace(COUNTER_RE, (all, n, counter, offset, whole) => {
     if (counter === "分" && isFraction(whole.slice(offset + all.length, offset + all.length + 9))) return all; // 3分の2(分数)は、そのまま
     return COUNTER_KANA[counter][Number(n)] ?? all;
   });

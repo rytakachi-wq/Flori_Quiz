@@ -2152,6 +2152,7 @@ function showDex() {
     // 保存できなくても、遊びは続けられる。
   }
   show("dex");
+  fadeNewMarks("screen-dex", ".dex-new", "is-new");
 }
 // めくって閉じる:カード(□)を押すと、ぱっとめくって閉じる
 function closeDexCard() {
@@ -2214,6 +2215,25 @@ function applyDress() {
   setAutoDecor(wornItems());
   setDecor("menu-decor", wornItems());
   setDecor("dress-decor", wornItems());
+}
+
+
+// NEW のしるしは、その画面を見ていれば、さわらなくても(別の画面に移らなくても)、少しして消える
+let newFadeTimer = 0;
+function fadeNewMarks(screenId, markSelector, itemClass, onDone) {
+  clearTimeout(newFadeTimer);
+  newFadeTimer = setTimeout(() => {
+    if ($(screenId).hidden) return;
+    const marks = [...$(screenId).querySelectorAll(markSelector)];
+    for (const mark of marks) mark.classList.add("is-fading");
+    setTimeout(() => {
+      for (const mark of marks) {
+        mark.parentElement?.classList.remove(itemClass);
+        mark.remove();
+      }
+      onDone?.();
+    }, 500);
+  }, 1800);
 }
 
 let dressTab = "color"; // 着せ替えで、いま見ている種類(color / head / body / face / theme)
@@ -2384,6 +2404,12 @@ function renderDress() {
       return button;
     }),
   );
+  // いま見ている種類の NEW は、見ていれば(さわらなくても)少しして消える。消えたら、つぎの描きなおしでも出さない
+  if ($("dress-list").querySelector(".dress-new")) {
+    fadeNewMarks("screen-dress", ".dress-new", "is-new", () => {
+      for (const key of [...freshKeys]) if (key.startsWith(`${kind}:`)) freshKeys.delete(key);
+    });
+  }
 }
 for (const tab of document.querySelectorAll("[data-dress-tab]")) {
   tab.addEventListener("click", () => {

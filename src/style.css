@@ -3129,3 +3129,6 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 #screen-question.is-answered .react-flori { height: clamp(56px, 11dvh, 100px); }
 #screen-result .screen-head + .flori-cover, #screen-result.is-versus .screen-head + .flori-cover { height: clamp(80px, 16dvh, 140px); max-width: 60%; }
 @media (max-height: 700px) { #screen-result .screen-head + .flori-cover, #screen-result.is-versus .screen-head + .flori-cover { height: clamp(60px, 12dvh, 90px); } }
+
+/* NEW のしるしは、見ていれば、ふわっと消える */
+.dress-new.is-fading, .dex-new.is-fading { opacity: 0; transition: opacity 0.45s ease; animation: none; }
