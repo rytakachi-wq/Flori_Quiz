@@ -29,6 +29,34 @@ preset('コブシ上げ', { '右手コブシ': -1, '左手コブシ': -1 });
 preset('顔 左', { '顔': -1, '顔パーツ': -1 });
 preset('顔 右', { '顔': 1, '顔パーツ': 1 });
 preset('まばたき', { '右上まぶた': -1, '右下まぶた': -1, '左上まぶた': -1, '左下まぶた': -1 });
+// デモ再生(仮の動き):まばたき・顔の左右・眉・口・手上げ・足ふみ。スライダーも動く
+const demoBtn = document.createElement('button'); demoBtn.textContent = '▶ デモ再生'; demoBtn.style.fontWeight = 'bold';
+document.getElementById('btns').prepend(demoBtn);
+let demo = 0;
+const clamp01 = x => Math.max(0, Math.min(1, x));
+const tick = t => {
+  const s = t / 1000, v = {};
+  const blink = (s % 3.2) < 0.18 ? Math.sin((s % 3.2) / 0.18 * Math.PI) : 0;      // 3.2秒ごと
+  v['右上まぶた'] = v['左上まぶた'] = -blink; v['右下まぶた'] = v['左下まぶた'] = -blink;
+  v['右白目　まばたき'] = v['左白目　まばたき'] = -blink;
+  const look = Math.sin(s * 0.9);                                                   // 顔・目の左右
+  v['顔'] = v['顔パーツ'] = look * 0.8;
+  v['右白目　左右'] = v['左白目　左右'] = Math.sin(s * 0.9 + 0.8) * 0.8;
+  v['右眉'] = Math.sin(s * 1.7) * 0.6; v['左眉'] = -Math.sin(s * 1.7) * 0.6;
+  v['下唇'] = Math.sin(s * 3) * 0.7;                                                // 口もごもご
+  const cyc = s % 9;                                                                // 9秒で1周:右手バンザイ→左手バンザイ→コブシ
+  const arm = (a, b) => -Math.sin(clamp01((cyc - a) / (b - a)) * Math.PI);
+  v['右手バンザイ'] = arm(0.5, 2.5); v['左手バンザイ'] = arm(3, 5);
+  v['右手コブシ'] = arm(5.5, 7.5); v['左手コブシ'] = arm(6, 8);
+  v['右足'] = Math.max(0, Math.sin(s * 4)) * 0.4 * (cyc > 5.5 ? 1 : 0); v['左足'] = Math.max(0, -Math.sin(s * 4)) * 0.4 * (cyc > 5.5 ? 1 : 0);
+  model.params.forEach((p, i) => { if (p.name in v) inputs[i](Math.max(p.min, Math.min(p.max, v[p.name]))); });
+  redraw();
+  if (demo) demo = requestAnimationFrame(tick);
+};
+demoBtn.onclick = () => {
+  if (demo) { cancelAnimationFrame(demo); demo = 0; demoBtn.textContent = '▶ デモ再生'; return; }
+  demo = requestAnimationFrame(tick); demoBtn.textContent = '■ とめる';
+};
 // パーツごとの表示(ファイルで非表示のパーツは、はじめオフ。BG は白地にしたいのでオフ)
 const parts = document.createElement('details'); parts.innerHTML = '<summary>パーツの表示</summary>';
 model.meshes.forEach((m, i) => {
