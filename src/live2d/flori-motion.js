@@ -45,9 +45,9 @@ export function createMotion(model) {
 
   function nextEvent(t) {
     let r, kind;
-    // 表情 35%、眉だけ 12%、白目 15%、口 13%、腕と足 25%(伸び 10・手を振る 15)。おなじ種類を、続けて出さない。
+    // 表情 28%、眉だけ 10%、白目 12%、口 15%、腕と足 35%(手を振る 12・ぱたぱた 8・ばんざい 7・伸び 8)。おなじ種類を、続けて出さない。
     // ※両手を顔の前に上げる「わくわく」は、やめた(利用者の指示)
-    do { r = Math.random(); kind = r < 0.35 ? 'expr' : r < 0.47 ? 'brow' : r < 0.62 ? 'gaze' : r < 0.75 ? 'mouth' : r < 0.85 ? 'stretch' : 'wave'; } while (kind === lastKind);
+    do { r = Math.random(); kind = r < 0.28 ? 'expr' : r < 0.38 ? 'brow' : r < 0.5 ? 'gaze' : r < 0.65 ? 'mouth' : r < 0.73 ? 'stretch' : r < 0.85 ? 'wave' : r < 0.93 ? 'flap' : 'cheer'; } while (kind === lastKind);
     lastKind = kind;
     if (kind === 'gaze') {      // 白目で左右を見る(look > 0 = 画面の左を見る)。左右、かならず かわりばんこに
       lastLook = -lastLook;
@@ -63,6 +63,8 @@ export function createMotion(model) {
       lastDir = -lastDir;       // 傾ける向きは、かならず かわりばんこ(左も右も)
       return { kind, t0: t, x, dir: lastDir, up: 0.5, hold: rnd(...x.hold), down: 0.5 };
     }
+    if (kind === 'flap') return { kind, t0: t, up: 0.4, hold: rnd(1.4, 2.0), down: 0.4 };       // ぱたぱた:両腕を、からだの横で、小さく ぱたぱた(左右同じ)
+    if (kind === 'cheer') return { kind, t0: t, up: 0.4, hold: rnd(1.4, 2.0), down: 0.5 };      // ばんざい:両腕を上げて、ぴょこぴょこ(左右同じ)
     if (kind === 'mouth') return { kind, t0: t, up: 0.3, hold: rnd(1.4, 2.2), down: 0.3 };    // 口だけ、小さく ぱくぱく
     if (kind === 'stretch') return { kind, t0: t, up: 0.9, hold: 1.5, down: 0.9 };                          // つま先立ちで、両腕を上げて伸び
     if (kind === 'wave') { lastSide = -lastSide; return { kind, t0: t, side: lastSide > 0 ? 'R' : 'L', up: 0.5, hold: 1.9, down: 0.5 }; }   // 片手を上げて、振る(右手・左手、かわりばんこ)
@@ -100,9 +102,9 @@ export function createMotion(model) {
     const kind = ev ? ev.kind : '';
     // 表情:眉・口・傾き・視線を同じ強さで。眉が動くときは、かならず寄り目(眉と同じ強さ)
     // 口:ふだんから、小さく うごかす(ゆっくり ぱくぱく)。表情のときは、表情の口へ
-    const idleMouth = 0.09 * Math.sin(t * 2.2) + 0.05 * Math.sin(t * 3.7);
+    const idleMouth = 0.16 * Math.sin(t * 2.2) + 0.1 * Math.sin(t * 3.7);
     let brow = 0, tilt = 0, mouth = BASE_MOUTH + idleMouth, cross = 0;
-    if (kind === 'mouth') mouth = BASE_MOUTH + k * (0.3 + 0.25 * Math.sin(a * Math.PI * 2 * 3.2));   // 口だけ、小さく ぱくぱく(最大でも −0.3 まで)
+    if (kind === 'mouth') mouth = BASE_MOUTH + k * (0.35 + 0.3 * Math.sin(a * Math.PI * 2 * 3.4));   // 口だけ ぱくぱく(最大でも −0.2 まで)
     if (x) {
       // 顔の傾き:左右で見た目の角度をそろえる(顔 +1 = 右へ 9.6°、−1 = 左へ 12.4°)。傾き 1 = 11°
       const ang = x.tilt * (x.dir ? dir : 1) * e * 11;
@@ -115,16 +117,20 @@ export function createMotion(model) {
     vr = clamp1(vr); vl = clamp1(vl);
 
     // 腕と足
-    let banR = 0, banL = 0, foot = 0;
+    let banR = 0, banL = 0, foot = 0, swing = 0;
     // ふだんの腕:ほんの少し、ゆれる(コブシの腕を、ごく小さく動かす。呼吸のときは、ごく小さく)
     const swayR = 0.02 + 0.012 * Math.sin(t * 1.3), swayL = 0.02 + 0.012 * Math.sin(t * 1.1 + 1.7);   // 左右の手は、べつべつに ゆれる
     if (kind === 'stretch') {   // つま先立ちで、両腕を真上へ(左右同じ)。からだも伸びる
       banR = banL = k; foot = 0.5 * k; bounce += k * 40;
+    } else if (kind === 'flap') {   // 両腕を、からだの横へ、小さく開いたり閉じたり(コブシ 0〜−0.2。左右同じ)
+      swing = k * (0.1 + 0.1 * Math.sin(Math.max(0, a - 0.2) * Math.PI * 2 * 2.4));
+    } else if (kind === 'cheer') {   // 両腕を上げて、ぴょこぴょこ(−0.7〜−1。左右同じ)
+      banR = banL = k * (0.85 + 0.15 * Math.sin(Math.max(0, a - 0.3) * Math.PI * 2 * 2.6)); foot = 0.5 * k * 0.6; bounce += k * 14;
     } else if (kind === 'wave') {   // 片手を上げて、振る(−0.64〜−1 を行き来)。もう片方の手は、ふつうにゆれる
       const w = k * (0.82 + 0.18 * Math.sin(Math.max(0, a - 0.4) * Math.PI * 2 * 2.2));
       if (ev.side === 'R') banR = w; else banL = w;
     }
-    let fistR = swayR, fistL = swayL;
+    let fistR = swing || swayR, fistL = swing || swayL;
 
     if (hopping) {   // ぴょんのあいだは、表情・視線を、はじめの値から すっと ふだんにもどす
       if (!wasHop) { hold = { vr: V[I.gazeR], vl: V[I.gazeL], brow: V[I.browR], face: V[I.face], mouth: V[I.mouth] }; ev = null; waitUntil = t + HOP_SECONDS + 1; }
@@ -139,6 +145,7 @@ export function createMotion(model) {
       else { const u = (hs - 0.94) / 0.26; sy = 1 - 0.07 * Math.sin(u * Math.PI); sx = 1 + 0.035 * Math.sin(u * Math.PI); bounce = 0; }  // 着地
     }
     wasHop = hopping;
+    mouth = Math.max(-1, Math.min(0, mouth));
     V[I.gazeR] = vr; V[I.gazeL] = vl;
     V[I.browR] = V[I.browL] = brow;                         // 左右同じ値(ヽ／ ↔ ／ヽ)
     V[I.face] = V[I.facePart] = tilt; V[I.mouth] = mouth;   // 上唇は、live2d.js の followParams が追尾する
