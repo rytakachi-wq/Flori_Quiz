@@ -2,8 +2,8 @@
 //
 // 方針(ちぐはぐにならないように):
 //  - 動きは「イベント」を1つずつ、順番に出す。イベントのあいだは、かならず 0 にもどして、少し待つ。
-//    イベント = 白目で左右を見る / 表情 / 腕と足の動き(伸び・手を振る・わくわく)。同時には、出さない。
-//  - 口は、ふだんから小さい(BASE_MOUTH)。表情は、そこからの動き。
+//    イベント = 白目で左右を見る / 表情 / 眉だけ / 口だけ / 腕と足の動き(伸び・手を振る)。同時には、出さない。
+//  - 口は、ふだんから小さく、ゆっくり動く(BASE_MOUTH のまわり)。表情は、そこからの動き。
 //  - 表情は、眉・口・顔の傾き・寄り目・視線を、1つの強さ(0→1→0)でそろえて動かす。眉が動くときは、かならず寄り目(眉と同じ強さ)。
 //  - 左右の目は、いつも同じ向き。白目の動く量は、右の目と左の目、左向きと右向きで、ちがう(リグの作り)ので、見た目の量をそろえる。
 //  - 両腕を真上に上げるとき(伸び)は、左右同じ動き。手を振るのは、片手だけ。
@@ -45,8 +45,9 @@ export function createMotion(model) {
 
   function nextEvent(t) {
     let r, kind;
-    // 表情 35%、眉だけ 15%、白目 15%、腕と足 35%(伸び 10・手を振る 13・わくわく 12)。おなじ種類を、続けて出さない
-    do { r = Math.random(); kind = r < 0.35 ? 'expr' : r < 0.5 ? 'brow' : r < 0.65 ? 'gaze' : r < 0.75 ? 'stretch' : r < 0.88 ? 'wave' : 'fist'; } while (kind === lastKind);
+    // 表情 35%、眉だけ 12%、白目 15%、口 13%、腕と足 25%(伸び 10・手を振る 15)。おなじ種類を、続けて出さない。
+    // ※両手を顔の前に上げる「わくわく」は、やめた(利用者の指示)
+    do { r = Math.random(); kind = r < 0.35 ? 'expr' : r < 0.47 ? 'brow' : r < 0.62 ? 'gaze' : r < 0.75 ? 'mouth' : r < 0.85 ? 'stretch' : 'wave'; } while (kind === lastKind);
     lastKind = kind;
     if (kind === 'gaze') {      // 白目で左右を見る(look > 0 = 画面の左を見る)。左右、かならず かわりばんこに
       lastLook = -lastLook;
@@ -62,9 +63,9 @@ export function createMotion(model) {
       lastDir = -lastDir;       // 傾ける向きは、かならず かわりばんこ(左も右も)
       return { kind, t0: t, x, dir: lastDir, up: 0.5, hold: rnd(...x.hold), down: 0.5 };
     }
+    if (kind === 'mouth') return { kind, t0: t, up: 0.3, hold: rnd(1.4, 2.2), down: 0.3 };    // 口だけ、小さく ぱくぱく
     if (kind === 'stretch') return { kind, t0: t, up: 0.9, hold: 1.5, down: 0.9 };                          // つま先立ちで、両腕を上げて伸び
     if (kind === 'wave') { lastSide = -lastSide; return { kind, t0: t, side: lastSide > 0 ? 'R' : 'L', up: 0.5, hold: 1.9, down: 0.5 }; }   // 片手を上げて、振る(右手・左手、かわりばんこ)
-    return { kind, t0: t, up: 0.5, hold: 1.5, down: 0.5 };                                                   // わくわく:両手を顔の前へ(振らない)
   }
 
   // 見た目の動く量(ピクセル)をそろえる。画面の右を見る量は、右の目 25px・左の目 22px、左を見る量は、右の目 16px・左の目 25px
@@ -98,11 +99,14 @@ export function createMotion(model) {
     }
     const kind = ev ? ev.kind : '';
     // 表情:眉・口・傾き・視線を同じ強さで。眉が動くときは、かならず寄り目(眉と同じ強さ)
-    let brow = 0, tilt = 0, mouth = BASE_MOUTH, cross = 0;
+    // 口:ふだんから、小さく うごかす(ゆっくり ぱくぱく)。表情のときは、表情の口へ
+    const idleMouth = 0.09 * Math.sin(t * 2.2) + 0.05 * Math.sin(t * 3.7);
+    let brow = 0, tilt = 0, mouth = BASE_MOUTH + idleMouth, cross = 0;
+    if (kind === 'mouth') mouth = BASE_MOUTH + k * (0.3 + 0.25 * Math.sin(a * Math.PI * 2 * 3.2));   // 口だけ、小さく ぱくぱく(最大でも −0.3 まで)
     if (x) {
       // 顔の傾き:左右で見た目の角度をそろえる(顔 +1 = 右へ 9.6°、−1 = 左へ 12.4°)。傾き 1 = 11°
       const ang = x.tilt * (x.dir ? dir : 1) * e * 11;
-      brow = x.brow * e; tilt = ang > 0 ? ang / 9.6 : ang / 12.4; mouth = BASE_MOUTH + (x.mouth - BASE_MOUTH) * e;
+      brow = x.brow * e; tilt = ang > 0 ? ang / 9.6 : ang / 12.4; mouth = BASE_MOUTH + idleMouth * (1 - e) + (x.mouth - BASE_MOUTH) * e;
       cross = Math.abs(brow) * 1.4;
       if (x.look) gaze = -Math.sign(tilt) * x.look * e;     // 傾けた側を見る(+ は画面の右)
     }
@@ -111,18 +115,16 @@ export function createMotion(model) {
     vr = clamp1(vr); vl = clamp1(vl);
 
     // 腕と足
-    let banR = 0, banL = 0, fist = 0, foot = 0;
-    // ふだんの腕:ほんの少し、ゆれる(コブシの腕を、ごく小さく動かす。わくわく・手を振るときは、ゆらさない)
-    const swayR = 0.035 + 0.03 * Math.sin(t * 1.3), swayL = 0.035 + 0.03 * Math.sin(t * 1.1 + 1.7);   // 左右の手は、べつべつに ゆれる
+    let banR = 0, banL = 0, foot = 0;
+    // ふだんの腕:ほんの少し、ゆれる(コブシの腕を、ごく小さく動かす。呼吸のときは、ごく小さく)
+    const swayR = 0.02 + 0.012 * Math.sin(t * 1.3), swayL = 0.02 + 0.012 * Math.sin(t * 1.1 + 1.7);   // 左右の手は、べつべつに ゆれる
     if (kind === 'stretch') {   // つま先立ちで、両腕を真上へ(左右同じ)。からだも伸びる
       banR = banL = k; foot = 0.5 * k; bounce += k * 40;
     } else if (kind === 'wave') {   // 片手を上げて、振る(−0.64〜−1 を行き来)。もう片方の手は、ふつうにゆれる
       const w = k * (0.82 + 0.18 * Math.sin(Math.max(0, a - 0.4) * Math.PI * 2 * 2.2));
       if (ev.side === 'R') banR = w; else banL = w;
-    } else if (kind === 'fist') {   // わくわく:両手を顔の前へ(コブシ −1)。小さくふるえる
-      fist = k * 0.95;
     }
-    let fistR = fist || swayR, fistL = fist || swayL;
+    let fistR = swayR, fistL = swayL;
 
     if (hopping) {   // ぴょんのあいだは、表情・視線を、はじめの値から すっと ふだんにもどす
       if (!wasHop) { hold = { vr: V[I.gazeR], vl: V[I.gazeL], brow: V[I.browR], face: V[I.face], mouth: V[I.mouth] }; ev = null; waitUntil = t + HOP_SECONDS + 1; }
