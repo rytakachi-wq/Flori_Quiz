@@ -16,6 +16,9 @@ export async function loadModel(base) {
   const order = model.meshes.map((m, i) => i).reverse();
   const face = model.meshes.findIndex(m => m.name === '顔'), body = model.meshes.findIndex(m => m.name === '体');
   if (face >= 0 && body >= 0) { order.splice(order.indexOf(face), 1); order.splice(order.indexOf(body) + 1, 0, face); }
+  // 上唇は、顔の上(下唇と同じ層)に出す
+  const lip = model.meshes.findIndex(m => m.name === '上唇'), lower = model.meshes.findIndex(m => m.name === '下唇');
+  if (lip >= 0 && lower >= 0) { order.splice(order.indexOf(lip), 1); order.splice(order.indexOf(lower), 0, lip); }
   model.drawOrder = order;
   return model;
 }
@@ -74,7 +77,7 @@ export function evaluate(model) {
       const T = deformerTransform(model, m.parent, cache);
       for (let i = 0; i < n; i += 2) { const x = pos[i], y = pos[i + 1]; pos[i] = T.a * x + T.c * y + T.e; pos[i + 1] = T.b * x + T.d * y + T.f; }
     }
-    return { pos, op, order };
+    return { pos, op, order: Math.round(order) }; // 小数の誤差で、描く順番が入れかわる(ちらつく)のを防ぐ
   });
 }
 

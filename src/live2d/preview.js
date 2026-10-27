@@ -42,7 +42,7 @@ const tick = t => {
   const look = Math.sin(s * 0.9);                                                   // 顔・目の左右
   v['顔'] = v['顔パーツ'] = look * 0.8;
   v['右白目　左右'] = v['左白目　左右'] = Math.sin(s * 0.9 + 0.8) * 0.8;
-  v['右眉'] = Math.sin(s * 1.7) * 0.6; v['左眉'] = -Math.sin(s * 1.7) * 0.6;
+  v['右眉'] = v['左眉'] = Math.sin(s * 1.7) * 0.6;  // 左右とも同じ値で、左右対称
   v['下唇'] = Math.sin(s * 3) * 0.7;                                                // 口もごもご
   const cyc = s % 9;                                                                // 9秒で1周:右手バンザイ→左手バンザイ→コブシ
   const arm = (a, b) => -Math.sin(clamp01((cyc - a) / (b - a)) * Math.PI);
