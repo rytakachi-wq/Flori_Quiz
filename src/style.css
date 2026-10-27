@@ -3132,3 +3132,14 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 
 /* NEW のしるしは、見ていれば、ふわっと消える */
 .dress-new.is-fading, .dex-new.is-fading { opacity: 0; transition: opacity 0.45s ease; animation: none; }
+
+/* ===== 表紙の背景(色ごとの模様)を、ゲームモード以外の画面でも使う(その45) =====
+   ホーム以外のページ(その他・図鑑・着せ替え・成績・設定)。クイズ・結果・ルールなどのゲームの画面は、これまでどおり。 */
+:is(#screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen { position: relative; overflow: hidden; isolation: isolate; background: var(--bg); }
+:is(#screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::before,
+:is(#screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::after {
+  content: ""; position: absolute; left: 0; right: 0; z-index: -1; height: 50%; pointer-events: none;
+  background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), var(--cover-bg, url("../assets/bg/sky.webp")) 30% 50% / cover no-repeat;
+}
+:is(#screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::before { top: 0; }
+:is(#screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::after { bottom: 0; transform: scaleY(-1); }
