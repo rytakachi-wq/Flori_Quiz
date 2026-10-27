@@ -22,6 +22,10 @@
 - ふりがな:furigana-data.js の ENTRIES(後ろの項目が優先。形は `漢字{よみ}送りがな`)、KYOIKU(小学校で習う漢字)。
 - 画面の収まり:style.css 末尾の `@media screen` の層(`:is(#screen-…)` でID指定に勝つ)、小さい画面用の規則、固定高の `.screen-head`(46px)。
 
+## フロリを動かす(Live2D、作業中)
+- `hehehe.cmo3`(利用者のデスクトップ)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で、`src/live2d/model.json`・`tex/` を作る。描画は自作の `src/live2d/live2d.js`。試作ページ:`/src/live2d/preview.html`(スライダーで確認)。アプリ(index.html・main.js)には**まだ入れていない**。決めたこと・未決は decisions.md その49。
+- 開発用サーバー(python http.server)は、大きい画像で接続を切ることがある(live2d.js はやり直す)。
+
 ## 動かして確かめる方法
 - `python -m http.server 8766`(src を配信)をブラウザ画面で開き、resize_window で 320×568 / 375×667 / 390×844 / 768×1024 / 1024×768 を見る。サーバーが ERR_CONNECTION_RESET になったら再読みこみ。アニメーション中のスクショは薄く写る。
 - テスト用の状態は localStorage に直接書いて作る。
