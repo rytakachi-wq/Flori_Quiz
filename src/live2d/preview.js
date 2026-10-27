@@ -46,17 +46,21 @@ const tick = t => {
   const blink = (s % 3.2) < 0.18 ? Math.sin((s % 3.2) / 0.18 * Math.PI) : 0;      // 3.2秒ごと
   v['右上まぶた'] = v['左上まぶた'] = -blink; v['右下まぶた'] = v['左下まぶた'] = -blink;
   v['右白目　まばたき'] = v['左白目　まばたき'] = -blink;
-  // 12秒で1周。顔を傾けるのは 9〜12秒だけ(そのあいだ眉は動かさない)。それ以外は、顔を傾けないまま、目・眉・口を動かす
-  const cyc = s % 12, tiltOn = cyc >= 9;
-  const tilt = tiltOn ? Math.sin((cyc - 9) / 3 * Math.PI * 2) * 0.8 : 0;
+  // 15秒で1周。顔を傾けるのは 11.5〜14.5秒だけ(そのあいだ眉は動かさない)。それ以外は、顔を傾けないまま、目・眉・口を動かす
+  const cyc = s % 15, tiltOn = cyc >= 11.5;
+  const tilt = tiltOn ? Math.sin((cyc - 11.5) / 3 * Math.PI * 2) * 0.8 : 0;
   v['顔'] = v['顔パーツ'] = tilt;
-  v['右白目　左右'] = v['左白目　左右'] = Math.sin(s * 1.3) * 0.9;                    // 目は、いつも左右を見る
-  v['右眉'] = v['左眉'] = tiltOn ? 0 : Math.sin(s * 1.7) * 0.8;                      // 左右とも同じ値(ヽ／ ↔ ／ヽ)
-  v['下唇'] = Math.sin(s * 3) * 0.8;                                                // 口もごもご(上唇は追尾)
-  const arm = (a, b) => { const r = Math.round(-Math.sin(clamp01((cyc - a) / (b - a)) * Math.PI) * 1e4) / 1e4; return r || 0; };
-  v['右手バンザイ'] = arm(0.5, 2.5); v['左手バンザイ'] = arm(3, 5);
-  v['右手コブシ'] = arm(5.5, 7.5); v['左手コブシ'] = arm(6, 8);
-  v['右足'] = Math.max(0, Math.sin(s * 4)) * 0.4 * (cyc > 5.5 ? 1 : 0); v['左足'] = Math.max(0, -Math.sin(s * 4)) * 0.4 * (cyc > 5.5 ? 1 : 0);
+  // 白目:3秒ごとに、いったん 0 にして、少し待ってから(0.8秒)、左右どちらかへ動かし、しばらく見て、0 にもどす
+  const gc = s % 3, gdir = Math.floor(s / 3) % 2 ? 1 : -1;
+  const gaze = gc < 0.8 ? 0 : gc < 1.1 ? (gc - 0.8) / 0.3 : gc < 2.5 ? 1 : gc < 2.8 ? 1 - (gc - 2.5) / 0.3 : 0;
+  v['右白目　左右'] = v['左白目　左右'] = gaze * gdir * 0.9;
+  v['右眉'] = v['左眉'] = tiltOn ? 0 : Math.sin(s * 4.5) * 0.8;                      // 左右とも同じ値(ヽ／ ↔ ／ヽ)。はやめに動かす
+  v['下唇'] = Math.sin(s * 3) * 0.8;                                                // 口もごもご(上唇は逆に動く)
+  // 腕:0.4秒で上げて、しばらく上げたまま、0.4秒で下ろす
+  const arm = (a, b) => -Math.max(0, Math.min(1, (cyc - a) / 0.4, (b - cyc) / 0.4));
+  v['右手バンザイ'] = arm(0.5, 3.5); v['左手バンザイ'] = arm(4, 7);
+  v['右手コブシ'] = arm(7.5, 10.5); v['左手コブシ'] = arm(8, 11);
+  v['右足'] = Math.max(0, Math.sin(s * 4)) * 0.4 * (cyc > 7.5 && cyc < 11 ? 1 : 0); v['左足'] = Math.max(0, -Math.sin(s * 4)) * 0.4 * (cyc > 7.5 && cyc < 11 ? 1 : 0);
   model.params.forEach((p, i) => { if (p.name in v) inputs[i](Math.max(p.min, Math.min(p.max, v[p.name]))); });
   redraw();
   if (demo) demo = requestAnimationFrame(tick);
