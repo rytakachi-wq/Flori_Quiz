@@ -909,7 +909,7 @@ function showResult() {
   fitResult();
   setTimeout(fitResult, 150);
   setTimeout(fitResult, 700);
-  setTimeout(celebrateUnlocks, DRUMROLL_MS + 3300); // 着せ替えが、ふえていたら、お祝いの画面
+  resultTimers.push(setTimeout(celebrateUnlocks, DRUMROLL_MS + 3300)); // 着せ替えが、ふえていたら、お祝いの画面(結果の画面を出ると、取り消す)
 }
 
 // 結果の画面が、1画面に収まるように、大事でないものから順に、かくす
@@ -1934,6 +1934,7 @@ let unlockQueue = [];
 let unlockIndex = 0;
 function celebrateUnlocks() {
   if ($("dlg-unlock").open || announcing) return;
+  if (currentScreen !== "result" && currentScreen !== "relax") return; // 結果・お花畑の画面を出たあとは、出さない(クイズの画面に出てしまっていた)
   const base = noticeBase();
   const pending = openDressKeys(loadStats()).filter((key) => !base.celebrated.includes(key));
   if (pending.length === 0) return;
