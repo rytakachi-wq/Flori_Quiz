@@ -3124,7 +3124,8 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 .confirm-flori { height: clamp(60px, 11dvh, 100px); }
 @media (max-height: 640px) { .confirm-flori { height: 60px; } }
 @media screen {
-  #screen-settings .settings-flori { flex: none; min-height: 0; max-height: none; height: clamp(48px, 9dvh, 84px); max-width: 40%; margin-top: auto; }
+  /* 飾りをつけても全部映るよう、大きめに(あまりが足りない小さい画面では、84pxまで縮む) */
+  #screen-settings .settings-flori { flex: 0 1 auto; min-height: 84px; max-height: none; height: clamp(110px, 22dvh, 210px); max-width: 60%; margin-top: auto; }
 }
 #screen-question.is-answered .react-flori { height: clamp(56px, 11dvh, 100px); }
 #screen-result .screen-head + .flori-cover, #screen-result.is-versus .screen-head + .flori-cover { height: clamp(80px, 16dvh, 140px); max-width: 60%; }
