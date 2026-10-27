@@ -3,14 +3,17 @@
 export async function loadModel(base) {
   const model = await (await fetch(base + 'model.json')).json();
   const imgs = new Map();
-  // 開発用の簡易サーバーは、たまに接続を切るので、少しやり直す
+  // 接続が切れることがあるので、同時に読む数をしぼり、少しやり直す
   const load = (f, n = 0) => new Promise((ok, ng) => {
     const im = new Image(); im.onload = () => ok(im);
-    im.onerror = () => (n < 4 ? setTimeout(() => load(f, n + 1).then(ok, ng), 300) : ng(new Error(f)));
+    im.onerror = () => (n < 8 ? setTimeout(() => load(f, n + 1).then(ok, ng), 200 + n * 150) : ng(new Error(f)));
     im.src = base + 'tex/' + f;
   });
-  await Promise.all([...new Set(model.meshes.map(m => m.img))].map(async f => imgs.set(f, await load(f))));
+  const files = [...new Set(model.meshes.map(m => m.img))];
+  await Promise.all(Array.from({ length: 3 }, async () => { for (let f; (f = files.shift());) imgs.set(f, await load(f)); }));
   model.imgs = imgs;
+  // バンザイの腕は、ファイルでは非表示(コブシの腕とかさなるため)。出し分けは armHidden がするので、ここでは表示にしておく
+  for (const m of model.meshes) if (/^(右|左)手バンザイ$/.test(m.name)) m.visible = true;
   model.values = model.params.map(p => p.default);
   // 描画順は、ファイルの並びの逆(後ろから前)。顔は、体のすぐ上に重ねる
   const order = model.meshes.map((m, i) => i).reverse();
@@ -130,6 +133,8 @@ export function draw(model, ctx, view, opts = {}) {
   ctx.clearRect(0, 0, W, H);
   const k = Math.min(W / view.w, H / view.h);
   ctx.setTransform(k, 0, 0, k, (W - view.w * k) / 2 - view.x * k, (H - view.h * k) / 2 - view.y * k);
+  // つぶれ・のび(opts.squash = { sx, sy, px, py }。px,py はキャンバス座標の支点=足もと)
+  if (opts.squash) { const q = opts.squash; ctx.translate(q.px, q.py); ctx.scale(q.sx, q.sy); ctx.translate(-q.px, -q.py); }
   const order = model.meshes.map((m, i) => i).sort((i, j) => (ev[i].order - ev[j].order) || (model.drawOrder.indexOf(i) - model.drawOrder.indexOf(j)));
   for (const i of order) {
     const m = model.meshes[i], e = ev[i];

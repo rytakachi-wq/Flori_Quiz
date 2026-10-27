@@ -23,7 +23,7 @@
 - 画面の収まり:style.css 末尾の `@media screen` の層(`:is(#screen-…)` でID指定に勝つ)、小さい画面用の規則、固定高の `.screen-head`(46px)。
 
 ## フロリを動かす(Live2D、作業中)
-- `hehehe.cmo3`(利用者のデスクトップ)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で、`src/live2d/model.json`・`tex/` を作る。描画は自作の `src/live2d/live2d.js`。試作ページ:`/src/live2d/preview.html`(スライダーで確認)。アプリ(index.html・main.js)には**まだ入れていない**。決めたこと・未決は decisions.md その49。
+- `hehehe.cmo3`(利用者のデスクトップ)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で、`src/live2d/model.json`・`tex/` を作る。描画は自作の `src/live2d/live2d.js`。試作ページ:`/src/live2d/preview.html`(スライダーで確認)。表紙用の動き:`src/live2d/flori-motion.js`、確かめ用ページ `/src/live2d/cover.html`(クリックでぴょん)。アプリ(index.html・main.js)には**まだ入れていない**。決めたこと・未決は decisions.md その49。
 - 開発用サーバー:`python tools/serve.py [ポート]`(既定 8780。同じネットワークの別の端末・スマホからも見られる。待ち行列を大きくし、キャッシュしない設定)。標準の http.server は、画像を同時に読むと接続を切ることがある(live2d.js はやり直す)。
 
 ## 動かして確かめる方法
