@@ -4,7 +4,7 @@
 //  - 動きは「イベント」を1つずつ、順番に出す。イベントのあいだは、かならず 0 にもどして、少し待つ。
 //    イベント = 白目で左右を見る / 表情 / 眉だけ / 口だけ / 腕と足の動き(伸び・手を振る)。同時には、出さない。
 //  - 口は、ふだんから小さく、ゆっくり動く(BASE_MOUTH のまわり)。表情は、そこからの動き。
-//  - 表情は、眉・口・顔の傾き・寄り目・視線を、1つの強さ(0→1→0)でそろえて動かす。眉が動くときは、かならず寄り目(眉と同じ強さ)。
+//  - 表情は、眉・口・顔の傾き・寄り目・視線を、1つの強さ(0→1→0)でそろえて動かす。眉が動くときは、かならず目いっぱいの寄り目(デフォルメ)。
 //  - 左右の目は、いつも同じ向き。白目の動く量は、右の目と左の目、左向きと右向きで、ちがう(リグの作り)ので、見た目の量をそろえる。
 //  - 両腕を真上に上げるとき(伸び)は、左右同じ動き。手を振るのは、片手だけ。
 //  - まばたきは、まぶた4つ+白目2つを、いつもいっしょに動かす。
@@ -29,6 +29,7 @@ export const EXPRESSIONS = [
   { name: 'きりっ', brow: -1, tilt: 0, mouth: -0.7, hold: [0.9, 1.4] },
   { name: 'にっこり', brow: 0.5, tilt: 0.6, mouth: -0.1, hold: [1.0, 1.6], dir: true },
   { name: 'ぽかん', brow: 0.9, tilt: 0, mouth: -0.1, hold: [1.0, 1.5] },
+  { name: 'こまった', brow: 1, tilt: 0.8, mouth: -0.55, wobble: 0.3, hold: [1.4, 2.0], dir: true },   // 困り眉・首をかしげる・口がふるえる
   { name: 'ぷんぷん', brow: -1, tilt: 0.5, mouth: -0.9, hold: [1.0, 1.5], dir: true },
 ];
 
@@ -105,14 +106,15 @@ export function createMotion(model) {
     const kind = ev ? ev.kind : '';
     // 表情:眉・口・傾き・視線を同じ強さで。眉が動くときは、かならず寄り目(眉と同じ強さ)
     // 口:ふだんから、小さく うごかす(ゆっくり ぱくぱく)。表情のときは、表情の口へ
-    const idleMouth = 0.15 + 0.22 * Math.sin(t * Math.PI * 2 * 0.35) + 0.1 * Math.sin(t * Math.PI * 2 * 0.6);   // ゆっくり、大きく(ほぼ −1〜−0.4)
-    let brow = 0, tilt = 0, mouth = BASE_MOUTH + idleMouth, cross = 0;
-    if (kind === 'mouth') mouth = BASE_MOUTH + k * (0.4 + 0.35 * Math.sin(a * Math.PI * 2 * 1.6));   // 口だけ ゆっくり ぱくぱく(最大でも −0.1 まで)
+    // ふだんの口:ゆっくり、小さい(−1)〜ふつう(0 のあたり)を行き来する。大小の差を大きく
+    const idleAbs = Math.max(-1, Math.min(0.1, -0.55 + 0.45 * Math.sin(t * Math.PI * 2 * 0.35) + 0.12 * Math.sin(t * Math.PI * 2 * 0.6)));
+    let brow = 0, tilt = 0, mouth = idleAbs, cross = 0;
+    if (kind === 'mouth') mouth = idleAbs * (1 - k) + k * (-1 + 1.8 * (0.5 + 0.5 * Math.sin(a * Math.PI * 2 * 1.2 - Math.PI / 2)));   // 口だけ ゆっくり ぱくぱく(ちいさい −1 〜 おおきい +0.8)
     if (x) {
       // 顔の傾き:左右で見た目の角度をそろえる(顔 +1 = 右へ 9.6°、−1 = 左へ 12.4°)。傾き 1 = 9°(右の限界 9.6° 以内)
       const ang = x.tilt * (x.dir ? dir : 1) * e * 9;
-      brow = x.brow * e; tilt = ang > 0 ? ang / 9.6 : ang / 12.4; mouth = BASE_MOUTH + idleMouth * (1 - e) + (x.mouth - BASE_MOUTH) * e;
-      cross = Math.abs(brow) * 1.4;
+      brow = x.brow * e; tilt = ang > 0 ? ang / 9.6 : ang / 12.4; mouth = idleAbs * (1 - e) + x.mouth * e + (x.wobble ? x.wobble * e * Math.sin(a * Math.PI * 2 * 2.2) : 0);
+      cross = x.brow ? e : 0;               // 寄り目は、デフォルメ:眉が動くときは、いつも目いっぱい(±1)寄せる。強さは、眉と同じ動き(0→1→0)
       if (x.look) gaze = -Math.sign(tilt) * x.look * e;     // 傾けた側を見る(+ は画面の右)
     }
     let [vr, vl] = gazeValues(gaze);
@@ -138,7 +140,7 @@ export function createMotion(model) {
     if (hopping) {   // ぴょんのあいだは、表情・視線を、はじめの値から すっと ふだんにもどす
       if (!wasHop) { hold = { vr: V[I.gazeR], vl: V[I.gazeL], brow: V[I.browR], face: V[I.face], mouth: V[I.mouth] }; ev = null; waitUntil = t + HOP_SECONDS + 1; }
       const kk = 1 - ss(hs / 0.25);
-      vr = hold.vr * kk; vl = hold.vl * kk; brow = hold.brow * kk; tilt = hold.face * kk; mouth = BASE_MOUTH + (hold.mouth - BASE_MOUTH) * kk;
+      vr = hold.vr * kk; vl = hold.vl * kk; brow = hold.brow * kk; tilt = hold.face * kk; mouth = idleAbs + (hold.mouth - idleAbs) * kk;
       banR = banL = 0; fistR = fistL = 0; foot = 0;
       if (hs < 0.14) { const u = ss(hs / 0.14); sy = 1 - 0.06 * u; sx = 1 + 0.03 * u; bounce = 0; }                    // かがむ
       else if (hs < 0.54) { const u = (hs - 0.14) / 0.4, h = Math.sin(u * Math.PI / 2); bounce = 85 * h; sy = 1 + 0.04 * h; sx = 1 - 0.02 * h;   // のぼる
@@ -148,7 +150,7 @@ export function createMotion(model) {
       else { const u = (hs - 0.94) / 0.26; sy = 1 - 0.07 * Math.sin(u * Math.PI); sx = 1 + 0.035 * Math.sin(u * Math.PI); bounce = 0; }  // 着地
     }
     wasHop = hopping;
-    mouth = Math.max(-1, Math.min(0, mouth));
+    mouth = Math.max(-1, Math.min(1, mouth));
     V[I.gazeR] = vr; V[I.gazeL] = vl;
     V[I.browR] = V[I.browL] = brow;                         // 左右同じ値(ヽ／ ↔ ／ヽ)
     V[I.face] = V[I.facePart] = tilt; V[I.mouth] = mouth;   // 上唇は、live2d.js の followParams が追尾する
