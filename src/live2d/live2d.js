@@ -64,12 +64,13 @@ function deformerTransform(model, d, cache) {
   return (cache[d] = T);
 }
 
-// 上唇は、下唇と逆に動かす(下唇が開く〈0 より大きい〉ほど、上唇は −1 へ。下唇が 0 以下のときは、ふだんの形)
-// model.follow = false で、追尾しない
+// 上唇は、下唇に追尾させる(下唇が閉じる〈0 より小さい〉ときは、同じ値で同じ速さ。下唇が 0 以上のときは、上唇はふだんの形)
+// 下唇だけが大きく開いて、上唇が小さいままだと、口の両はしが とがって見える(下唇の絵の はし)ので、
+// 上唇と下唇が、ちぐはぐな組み合わせにならないようにしている。model.follow = false で、追尾しない
 function followParams(model) {
   if (model.follow === false) return;
   const u = model.params.findIndex(p => p.name === '上唇'), l = model.params.findIndex(p => p.name === '下唇');
-  if (u >= 0 && l >= 0) model.values[u] = Math.max(model.params[u].min, Math.min(model.params[u].default, -model.values[l]));
+  if (u >= 0 && l >= 0) model.values[u] = Math.max(model.params[u].min, Math.min(model.params[u].default, model.values[l]));
 }
 
 // 現在の値で、各メッシュの頂点(キャンバス座標)・不透明度・描画順を計算
