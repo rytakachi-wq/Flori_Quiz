@@ -7,14 +7,21 @@ const xs = bp.filter((_, i) => i % 2 === 0), ys = bp.filter((_, i) => i % 2 === 
 const view = { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
 cv.width = 560; cv.height = Math.round(560 * view.h / view.w);
 const hide = new Set([bg]);
-const redraw = () => draw(model, ctx, view, { hide });
+const upIdx = model.params.findIndex(p => p.name === '上唇');
+const redraw = () => { draw(model, ctx, view, { hide }); inputs[upIdx]?.(model.values[upIdx]); };  // 上唇は追尾するので、スライダーも合わせる
 const sl = document.getElementById('sl'), inputs = [];
 model.params.forEach((p, i) => {
   const l = document.createElement('label');
   l.innerHTML = `<span>${p.name}</span><input type="range" min="${p.min}" max="${p.max}" step="0.01" value="${p.default}"><output></output>`;
   const r = l.querySelector('input'), o = l.querySelector('output');
   const set = v => { model.values[i] = +v; o.textContent = (+v).toFixed(2); r.value = v; };
-  r.oninput = () => { set(r.value); redraw(); };
+  r.oninput = () => {
+    set(r.value);
+    // 眉は、左右いっしょに動かす(ヽ／ と ／ヽ だけ。// にならない)
+    const pair = { '右眉': '左眉', '左眉': '右眉' }[p.name];
+    if (pair) inputs[model.params.findIndex(q => q.name === pair)](r.value);
+    redraw();
+  };
   inputs.push(set); set(p.default); sl.appendChild(l);
 });
 const preset = (name, vals) => {
@@ -39,13 +46,14 @@ const tick = t => {
   const blink = (s % 3.2) < 0.18 ? Math.sin((s % 3.2) / 0.18 * Math.PI) : 0;      // 3.2秒ごと
   v['右上まぶた'] = v['左上まぶた'] = -blink; v['右下まぶた'] = v['左下まぶた'] = -blink;
   v['右白目　まばたき'] = v['左白目　まばたき'] = -blink;
-  const look = Math.sin(s * 0.9);                                                   // 顔・目の左右
-  v['顔'] = v['顔パーツ'] = look * 0.8;
-  v['右白目　左右'] = v['左白目　左右'] = Math.sin(s * 0.9 + 0.8) * 0.8;
-  v['右眉'] = v['左眉'] = Math.sin(s * 1.7) * 0.6;  // 左右とも同じ値で、左右対称
-  v['下唇'] = Math.sin(s * 3) * 0.7;                                                // 口もごもご
-  const cyc = s % 9;                                                                // 9秒で1周:右手バンザイ→左手バンザイ→コブシ
-  const arm = (a, b) => -Math.sin(clamp01((cyc - a) / (b - a)) * Math.PI);
+  // 12秒で1周。顔を傾けるのは 9〜12秒だけ(そのあいだ眉は動かさない)。それ以外は、顔を傾けないまま、目・眉・口を動かす
+  const cyc = s % 12, tiltOn = cyc >= 9;
+  const tilt = tiltOn ? Math.sin((cyc - 9) / 3 * Math.PI * 2) * 0.8 : 0;
+  v['顔'] = v['顔パーツ'] = tilt;
+  v['右白目　左右'] = v['左白目　左右'] = Math.sin(s * 1.3) * 0.9;                    // 目は、いつも左右を見る
+  v['右眉'] = v['左眉'] = tiltOn ? 0 : Math.sin(s * 1.7) * 0.8;                      // 左右とも同じ値(ヽ／ ↔ ／ヽ)
+  v['下唇'] = Math.sin(s * 3) * 0.8;                                                // 口もごもご(上唇は追尾)
+  const arm = (a, b) => { const r = Math.round(-Math.sin(clamp01((cyc - a) / (b - a)) * Math.PI) * 1e4) / 1e4; return r || 0; };
   v['右手バンザイ'] = arm(0.5, 2.5); v['左手バンザイ'] = arm(3, 5);
   v['右手コブシ'] = arm(5.5, 7.5); v['左手コブシ'] = arm(6, 8);
   v['右足'] = Math.max(0, Math.sin(s * 4)) * 0.4 * (cyc > 5.5 ? 1 : 0); v['左足'] = Math.max(0, -Math.sin(s * 4)) * 0.4 * (cyc > 5.5 ? 1 : 0);
@@ -69,5 +77,5 @@ model.meshes.forEach((m, i) => {
   parts.appendChild(l);
 });
 document.getElementById('ctl').appendChild(parts);
-window.model = model; window.redraw = redraw; window.hide = hide;
+window.model = model; window.redraw = redraw; window.hide = hide; window.tick = tick;
 redraw();

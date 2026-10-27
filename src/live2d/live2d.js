@@ -64,8 +64,17 @@ function deformerTransform(model, d, cache) {
   return (cache[d] = T);
 }
 
+// 上唇は、下唇に追尾させる(下唇が閉じる方〈0 より小さい〉へ動くとき、同じだけ上唇も閉じる。0 以上は、ふだんの形のまま)
+// model.follow = false で、追尾しない
+function followParams(model) {
+  if (model.follow === false) return;
+  const u = model.params.findIndex(p => p.name === '上唇'), l = model.params.findIndex(p => p.name === '下唇');
+  if (u >= 0 && l >= 0) model.values[u] = Math.max(model.params[u].min, Math.min(model.params[u].max, model.values[l], model.params[u].default));
+}
+
 // 現在の値で、各メッシュの頂点(キャンバス座標)・不透明度・描画順を計算
 export function evaluate(model) {
+  followParams(model);
   const cache = {};
   return model.meshes.map(m => {
     const w = weights(model, m.binds, m.idx);
@@ -108,7 +117,7 @@ function armHidden(model, m) {
   const mm = /^(右|左)手(バンザイ|コブシ)$/.exec(m.name);
   if (!mm) return false;
   const p = model.params.findIndex(q => q.name === mm[1] + '手バンザイ');
-  const up = model.values[p] !== model.params[p].default;
+  const up = Math.abs(model.values[p] - model.params[p].default) > 0.01; // 0 のまま動かさない(小数の誤差は無視)
   return up !== (mm[2] === 'バンザイ');
 }
 
