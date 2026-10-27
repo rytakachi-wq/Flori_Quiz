@@ -12,7 +12,11 @@ export async function loadModel(base) {
   await Promise.all([...new Set(model.meshes.map(m => m.img))].map(async f => imgs.set(f, await load(f))));
   model.imgs = imgs;
   model.values = model.params.map(p => p.default);
-  model.drawOrder = model.meshes.map((m, i) => i).reverse();
+  // 描画順は、ファイルの並びの逆(後ろから前)。顔は、体のすぐ上に重ねる
+  const order = model.meshes.map((m, i) => i).reverse();
+  const face = model.meshes.findIndex(m => m.name === '顔'), body = model.meshes.findIndex(m => m.name === '体');
+  if (face >= 0 && body >= 0) { order.splice(order.indexOf(face), 1); order.splice(order.indexOf(body) + 1, 0, face); }
+  model.drawOrder = order;
   return model;
 }
 
@@ -94,6 +98,17 @@ function drawTri(ctx, im, u, p, grow) {
   ctx.restore();
 }
 
+// 腕は、バンザイとコブシのどちらか一方だけ出す(バンザイの値が 0 でなければバンザイ、0 ならコブシ)。
+// model.armAuto = false で、ファイルの表示のままにする
+function armHidden(model, m) {
+  if (model.armAuto === false) return false;
+  const mm = /^(右|左)手(バンザイ|コブシ)$/.exec(m.name);
+  if (!mm) return false;
+  const p = model.params.findIndex(q => q.name === mm[1] + '手バンザイ');
+  const up = model.values[p] !== model.params[p].default;
+  return up !== (mm[2] === 'バンザイ');
+}
+
 // ctx に描く。view = { x, y, w, h }(キャンバス座標の見える範囲)を、ctx 全体に合わせる
 export function draw(model, ctx, view, opts = {}) {
   const W = ctx.canvas.width, H = ctx.canvas.height;
@@ -105,7 +120,7 @@ export function draw(model, ctx, view, opts = {}) {
   const order = model.meshes.map((m, i) => i).sort((i, j) => (ev[i].order - ev[j].order) || (model.drawOrder.indexOf(i) - model.drawOrder.indexOf(j)));
   for (const i of order) {
     const m = model.meshes[i], e = ev[i];
-    if (!m.visible || (opts.hide && opts.hide.has(i))) continue;
+    if (!m.visible || (opts.hide && opts.hide.has(i)) || armHidden(model, m)) continue;
     ctx.globalAlpha = e.op;
     const im = model.imgs.get(m.img);
     for (let t = 0; t < m.tri.length; t += 3) {

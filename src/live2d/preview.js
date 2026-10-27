@@ -34,8 +34,9 @@ const parts = document.createElement('details'); parts.innerHTML = '<summary>パ
 model.meshes.forEach((m, i) => {
   const l = document.createElement('label'); l.style.display = 'block';
   l.innerHTML = `<input type="checkbox"> ${m.name}${m.visible ? '' : '(ファイルでは非表示)'}`;
-  const c = l.querySelector('input'); c.checked = m.visible && i !== bg;
+  const c = l.querySelector('input'); c.checked = (m.visible || /手バンザイ/.test(m.name)) && i !== bg;
   c.onchange = () => { c.checked ? (m.visible = true, hide.delete(i)) : (m.visible = false); redraw(); };
+  if (/手バンザイ/.test(m.name)) m.visible = true; // 出し分けは、live2d.js の armHidden
   if (!c.checked && i === bg) hide.add(i);
   parts.appendChild(l);
 });
