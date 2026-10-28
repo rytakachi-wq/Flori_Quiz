@@ -45,7 +45,7 @@ const MAP = {
   "🎯": "target", "⚙": "gear", "🏠": "house", "📋": "clipboard", "📚": "books", "👑": "crown", "🏆": "trophy",
   "🎬": "clapper", "🎮": "gamepad", "🎨": "palette", "🎩": "tophat", "🎒": "backpack", "🖼": "frame",
   "🔊": "speaker", "🥁": "drum", "🏅": "medal", "🔬": "microscope", "⚗": "flask", "👹": "oni", "💎": "diamond",
-  "🔒": "key", "💾": "floppy", "🆕": "newtag", "🎈": "balloon", "🎊": "popper2", "💖": "heart",
+  "🔒": "key", "💮": "hanamaru.svg", "💾": "floppy", "🆕": "newtag", "🎈": "balloon", "🎊": "popper2", "💖": "heart",
   "🍀": "clover", "🎀": "ribbon", "🎵": "note", "🦋": "butterfly", "🌸": "sakura",
 };
 
@@ -60,7 +60,7 @@ function slugOf(seq) {
 }
 
 const SRC_CACHE = new Map();
-const srcOf = (slug) => IMG_BASE + slug + ".webp";
+const srcOf = (slug) => IMG_BASE + (slug.includes(".") ? slug : slug + ".webp"); // 名前に「.」があれば、そのままのファイル名(hanamaru.svg など)
 
 export function imgHtml(slug, cls = "") {
   return `<img class="emi ${cls}" src="${srcOf(slug)}" alt="" draggable="false">`;

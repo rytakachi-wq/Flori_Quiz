@@ -44,7 +44,7 @@ MANIFEST = {
                 "target", "back", "tri_r", "tri_l", "gear", "house", "clipboard", "books"],
     "sheet12": ["crown", "trophy", "clapper", "gamepad", "palette", "tophat", "backpack", "frame",
                 "speaker", "drum", "medal", "checkbox", "check", "circle_red", "cross_red", "hand_push"],
-    "sheet13": ["hand_point", "person_icon", "microscope", "globe", "flask", "oni", "diamond", "hanamaru",
+    "sheet13": ["hand_point", "person_icon", "microscope", "globe", "flask", "oni", "diamond", "hanamaru_old",
                 "key", "floppy", "newtag", "balloon", "popper2", "heart", "clover", "ribbon"],
     "sheet14": ["note", "butterfly", "sakura", "shine", "star_fill", "star_line", "egg", "hatch",
                 "chick", "bird", "fox", "dolphin", "owl", "unicorn"],
