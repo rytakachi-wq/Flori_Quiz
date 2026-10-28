@@ -450,7 +450,7 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 .board.big { flex-direction: column; width: min(420px, 100%); }
 .board.big li { flex: none; font-size: 22px; }
 .board.big li.is-winner { box-shadow: 0 0 0 5px var(--green); }
-.board.big li.is-winner::before { content: "👑 "; }
+.board.big li.is-winner::before { content: ""; display: inline-block; width: 1.1em; height: 1.1em; margin-right: 0.25em; vertical-align: -0.2em; background: url("../assets/illust/crown.webp") center / contain no-repeat; }
 
 /* リラックス:お花畑 */
 .btn-relax { background: var(--green); color: var(--text); }
@@ -1228,6 +1228,9 @@ body { overflow-x: hidden; }
 /* ===== 問題のイラスト(絵文字と、かんたんな図)。動きは、おだやかに ===== */
 .q-art { display: flex; align-items: center; justify-content: center; flex-wrap: nowrap; gap: clamp(4px, 1.4vw, 12px); width: 100%; min-height: clamp(64px, 13vh, 112px); padding: 4px 10px; font-size: clamp(30px, 6.6vh, 54px); line-height: 1; background: linear-gradient(180deg, #f4fbff, #e6f4fb); border: 3px solid var(--blue); border-color: var(--blue-bc, var(--blue)); border-radius: 18px; overflow: hidden; }
 .q-art[hidden], .is-answered .q-art { display: none; }
+/* 絵文字は絵(assets/illust/)にかわる。大きさは、まわりの文字(em)に合わせる */
+.emi { display: inline-block; height: 1.15em; width: auto; vertical-align: -0.22em; object-fit: contain; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.emi[data-e="★"], .emi[data-e="☆"] { height: 0.88em; margin: 0 -0.04em; vertical-align: -0.12em; } /* 難しさの星は、並べても はみ出さないように少し小さく */
 .q-art .ie { display: inline-block; flex: none; animation-delay: var(--d, 0s); }
 .q-art .it { flex: none; font-size: 0.5em; font-weight: bold; color: var(--blue-dark); }
 .ibox { display: inline-grid; place-items: center; flex: none; min-width: 1.15em; height: 1.15em; padding: 0 0.15em; font-size: 0.62em; font-weight: bold; background: #fff; border: 3px solid var(--line); border-radius: 10px; }
@@ -1376,7 +1379,7 @@ img.hero-hat[data-hat="scarf"] { left: 22%; top: 54%; width: 56%; }
 #screen-dress .dress-stage .spark.s1 { left: 14%; top: 16%; }
 #screen-dress .dress-stage .spark.s2 { right: 12%; top: 26%; animation-delay: 0.7s; }
 #screen-dress .dress-stage .spark.s3 { left: 22%; bottom: 22%; animation-delay: 1.4s; }
-#screen-dress .dress-stage.is-flash::after { content: "✨"; position: absolute; left: 50%; top: 38%; z-index: 3; font-size: 70px; transform: translate(-50%, -50%); pointer-events: none; animation: dressFlash 0.8s ease-out forwards; }
+#screen-dress .dress-stage.is-flash::after { content: ""; position: absolute; left: 50%; top: 38%; z-index: 3; width: 70px; height: 70px; background: url("../assets/illust/sparkle.webp") center / contain no-repeat; transform: translate(-50%, -50%); pointer-events: none; animation: dressFlash 0.8s ease-out forwards; }
 @keyframes dressFlash { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.4) rotate(0); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(2.2) rotate(40deg); } }
 #screen-dress .dress-caption { position: relative; z-index: 1; margin: 0; padding: 2px 14px; font-size: 16px; font-weight: bold; color: var(--text); background: rgba(255, 255, 255, 0.85); border-radius: 999px; }
 

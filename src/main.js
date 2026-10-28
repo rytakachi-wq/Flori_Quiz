@@ -1,3 +1,4 @@
+import "./emoji-img.js";
 import {
   HARD_LEVEL,
   HARD_MIN_LEVEL,

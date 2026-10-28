@@ -32,6 +32,12 @@ const SPEC = [
   ["total10", "総合10点", "total", 10], ["total20", "総合20点", "total", 20], ["total30", "総合30点", "total", 30], ["total40", "総合40点", "total", 40],
   ["total50", "総合50点", "total", 50], ["total60", "総合60点", "total", 60], ["total70", "総合70点", "total", 70], ["total80", "総合80点", "total", 80],
   ["total90", "総合90点", "total", 90], ["total100", "総合100点", "total", 100],
+  // あとから足した かざり15こ用(もらえる順の、いちばん後ろ。EXTRA_LADDER)
+  ["daily30", "毎日1問30日", "daily", 30], ["versus30", "30回対戦", "versus", 30], ["timed20", "時間チャレンジ20回", "timed", 20],
+  ["review10", "復習コンプリート10回", "review", 10], ["perfect30", "パーフェクト30回", "perfect", 30], ["garden10", "お花畑10回完成", "garden", 10],
+  ["timedPerfect5", "時間内パーフェクト5回", "timedPerfect", 5], ["hardPerfect10", "難しいパーフェクト10回", "perfectHard", 10],
+  ["play150", "150回プレイ", "plays", 150], ["streak50", "毎日1問50日連続", "streak", 50], ["timed30", "時間チャレンジ30回", "timed", 30],
+  ["daily50", "毎日1問50日", "daily", 50], ["versus50", "50回対戦", "versus", 50], ["play200", "200回プレイ", "plays", 200],
 ];
 
 const COUNT = {
@@ -75,7 +81,7 @@ export function earnedBadges(ctx) {
 
 // ---------------- もらえる順番(やさしい → むずかしい)----------------
 // きせかえは全部で90こ(色15・頭25・体26・顔9・背景15)。やさしいものから順に、この表のとおりに、わりあてる。
-// 条件の数(78)+星の数(12)で、ちょうど90。
+// 条件の数(78)+星の数(12)で、ちょうど90。そのあとに、あとから足した かざり15こ(EXTRA_LADDER)が続く(全部で105)。
 const LADDER = [
   "first", "play1", "right5", "garden", "streak2", "versus1", "timed1", "dex10", "total10", { stars: 5 },
   "play5", "right10", "review", "perfect", "streak3", "dex20", "total20", "oni1", "versus3", "daily5",
@@ -203,6 +209,43 @@ const heads = decorList("head", HEAD);
 const bodies = decorList("body", BODY);
 const faces = decorList("face", FACE);
 
+// あとから足した かざり15こ(頭4・体9・顔2)。絵は assets/illust/<名前>.webp(絵文字の置きかえと同じシート)。
+// 並びは、もらえる順(EXTRA_LADDER と同じ順)。場所 = フロリの絵に対する、中心(x, y)と はば(w)、かたむき(r)、左右反転(sx: -1)。
+// 手に持つもの(体)は、バンザイの手(左上)に合わせた。体の欄は1つしか付けられないので、ほかの手に持つもの(星のステッキなど)とは、どれか1つ。
+const EXTRA_DECOR = [
+  ["face", 11, "ハートマーク", "heart", { x: 72, y: 36, w: 13 }],
+  ["face", 12, "音符マーク", "note", { x: 77, y: 37, w: 13 }],
+  ["head", 26, "四つ葉のクローバー", "clover", { x: 73, y: 7, w: 21 }],
+  ["body", 39, "ダイヤのブローチ", "diamond", { x: 62, y: 64, w: 20 }],
+  ["head", 27, "さくらの花", "sakura", { x: 74, y: 8, w: 21 }],
+  ["body", 40, "ハートのブローチ", "heart", { x: 62, y: 64, w: 18 }],
+  ["head", 28, "三日月", "moon", { x: 68, y: 7, w: 23 }],
+  ["body", 41, "風船", "balloon", { x: 9.0, y: 17.9, w: 46 }],
+  ["body", 42, "かぎのキーホルダー", "key", { x: 52, y: 61, w: 17 }],
+  ["body", 43, "虫めがね", "magnifier", { x: 7.8, y: 23.3, w: 42, r: 45 }],
+  ["body", 44, "地球儀", "globe", { x: 9.0, y: 16.6, w: 48 }],
+  ["body", 45, "開いた本", "book", { x: 9.0, y: 31.2, w: 48 }],
+  ["body", 46, "ゴールのはた", "flag", { x: -8.6, y: 25.5, w: 44, sx: -1 }],
+  ["body", 47, "トロフィー", "trophy", { x: 9.0, y: 16.5, w: 58 }],
+  ["head", 29, "シルクハット", "tophat", { x: 52.5, y: 0.5, w: 44 }],
+];
+const EXTRA_LADDER = [
+  "daily30", "versus30", "timed20", "review10", "perfect30", "garden10", "timedPerfect5", "hardPerfect10",
+  "play150", "streak50", "timed30", "daily50", "versus50", "play200", { stars: 200 },
+];
+const extraOf = (slot) =>
+  EXTRA_DECOR.map((row, index) => ({ row, unlock: EXTRA_LADDER[index] }))
+    .filter(({ row }) => row[0] === slot)
+    .map(({ row: [, number, name, slug, pos], unlock }) => ({
+      id: `${slot}${String(number).padStart(2, "0")}`,
+      slot,
+      img: `../assets/illust/${slug}.webp`,
+      name,
+      tint: "#7ec3e0",
+      pos,
+      unlock,
+    }));
+
 // 色・背景・かざりの、もらえる条件を、やさしい順に、わりあてる(カテゴリごとに、なるべくまんべんなく)
 function assignUnlocks(groups) {
   const entries = [];
@@ -224,9 +267,9 @@ export const THEMES = [
   { id: "sky", name: "青空", tint: "#7ec3e0", preview: "linear-gradient(160deg, #eef8fd, #7ec3e0)", unlock: null },
   ...PALETTE.map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.swatch ?? `linear-gradient(160deg, ${p.bg}, ${p.blue})`, stage: p.stage, bg: p.bg, blue: p.blue, dark: p.dark, unlock: null })),
 ];
-export const HEADS = [{ id: "none", slot: "head", img: "", name: "なし", tint: "#46555e", unlock: null }, ...heads];
-export const BODIES = [{ id: "none", slot: "body", img: "", name: "なし", tint: "#46555e", unlock: null }, ...bodies];
-export const FACES = [{ id: "none", slot: "face", img: "", name: "なし", tint: "#46555e", unlock: null }, ...faces];
+export const HEADS = [{ id: "none", slot: "head", img: "", name: "なし", tint: "#46555e", unlock: null }, ...heads, ...extraOf("head")];
+export const BODIES = [{ id: "none", slot: "body", img: "", name: "なし", tint: "#46555e", unlock: null }, ...bodies, ...extraOf("body")];
+export const FACES = [{ id: "none", slot: "face", img: "", name: "なし", tint: "#46555e", unlock: null }, ...faces, ...extraOf("face")];
 
 assignUnlocks([
   [COLORS.slice(1), COLOR_ORDER],

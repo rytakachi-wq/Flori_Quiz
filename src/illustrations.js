@@ -2,6 +2,9 @@
 // 問題の uid(番号がつけなおされても変わらない)で、ひもづける。答えが分かってしまう絵には、しない。
 // 動きは、style.css の ia- ではじまるクラス(ゆれる・はねる・すべる など)。
 
+import { emojiHtml, imgHtml } from "./emoji-img.js";
+
+// 絵文字は、描かれた絵(assets/illust/)に置きかわる(emojiHtml)。同じ形の人が並ぶ問題は、A〜D のちがう子(stand_a〜d、walk_a〜d)を使う。
 const e = (emoji, cls = "", delay = 0) => `<span class="ie ${cls}"${delay ? ` style="--d:${delay}s"` : ""}>${emoji}</span>`;
 const t = (text, cls = "") => `<span class="it ${cls}">${text}</span>`;
 const row = (...parts) => parts.join("");
@@ -37,15 +40,17 @@ const ART = {
   // q12 地図記号「文」
   ua61836ee: row(e("🗺️", "ia-bob"), `<span class="imapsym">文</span>`, e("❓", "ia-pop")),
   // q13 青信号
-  u2995c8e4: row(e("🚦", "ia-blink"), e("🚶", "ia-run"), e("❓", "ia-pop")),
+  // (信号機の絵は、ともった色が答えの選択肢の「水色」に見えてしまうので、使わない)
+  u2995c8e4: row(e("🚶", "ia-run"), e("❓", "ia-pop")),
   // q14 ひもを切る
   u00a98518: row(e("🧵", "ia-bob"), e("✂️", "ia-snip"), t("×3"), e("❓", "ia-pop")),
   // q15 食べるの尊敬語
   u1c0bfc89: row(e("🧑‍🏫", "ia-bob"), e("🍙", "ia-pop"), e("🍵", "ia-bob", 0.3)),
   // q16 並ぶ4人
-  u406f9146: `<span class="iline">${["A", "B", "C", "D"].map((l, i) => `<span class="iperson ia-bob" style="--d:${i * 0.2}s">🚶<b>${l}</b></span>`).join("")}</span>`,
+  u406f9146: `<span class="iline">${["A", "B", "C", "D"].map((l, i) => `<span class="iperson ia-bob" style="--d:${i * 0.2}s">${imgHtml(`walk_${l.toLowerCase()}`)}<b>${l}</b></span>`).join("")}</span>`,
   // q17 硬貨2枚
-  u898cba24: row(e("🪙", "ia-roll"), e("🪙", "ia-roll", 0.3), t("＝"), box("60")),
+  // (硬貨の絵は、「100」と書いてあり、選択肢の「100円玉」と紛らわしいので、使わない)
+  u898cba24: row(box("?", "is-q"), t("＋"), box("?", "is-q"), t("＝60")),
   // q18 氷が溶ける
   u62e1e802: row(e("🥛", "ia-bob"), e("🧊", "ia-float"), e("💧", "ia-fall", 0.5)),
   // q19 数の並び(だんだん大きくなる)
@@ -107,13 +112,13 @@ const ART = {
   // q47 足して20、かけて91
   u4747ec11: `<span class="istack"><span class="irow">${row(box("?", "is-q"), t("＋"), box("?", "is-q"), t("＝20"))}</span><span class="irow">${row(box("?", "is-q"), t("×"), box("?", "is-q"), t("＝91"))}</span></span>`,
   // q48 4人の並び方
-  u056da16b: `<span class="iline">${["A", "B", "C", "D"].map((l, i) => `<span class="iperson ia-shuffle" style="--d:${i * 0.2}s">🧍<b>${l}</b></span>`).join("")}</span>${e("🚫", "ia-pop")}`,
+  u056da16b: `<span class="iline">${["A", "B", "C", "D"].map((l, i) => `<span class="iperson ia-shuffle" style="--d:${i * 0.2}s">${imgHtml(`stand_${l.toLowerCase()}`)}<b>${l}</b></span>`).join("")}</span>${e("🚫", "ia-pop")}`,
   // q49 あまりの数
   ua843ac76: row(e("🍬", "ia-bob"), e("🍬", "ia-bob", 0.1), e("🍬", "ia-bob", 0.2), e("🍬", "ia-bob", 0.3), e("➗", "ia-spin-slow"), e("❓", "ia-pop")),
   // q50 オオカミ・ヤギ・キャベツ
   uc95c222b: row(e("🐺", "ia-bob"), e("🐐", "ia-bob", 0.2), e("🥬", "ia-bob", 0.4), e("🌊", "ia-sway"), e("🛶", "ia-boat")),
   // o01 21本の棒
-  u15d2f312: row(e("🧑", "ia-bob"), e("🥢", "ia-pop"), e("🥢", "ia-pop", 0.1), e("🥢", "ia-pop", 0.2), e("🥢", "ia-pop", 0.3), e("🧑", "ia-bob", 0.3)),
+  u15d2f312: row(e(imgHtml("stand_a"), "ia-bob"), e("🥢", "ia-pop"), e("🥢", "ia-pop", 0.1), e("🥢", "ia-pop", 0.2), e("🥢", "ia-pop", 0.3), e(imgHtml("stand_b"), "ia-bob", 0.3)),
   // o02 100枚の扉
   uc0a74a66: `<span class="idoors">${Array.from({ length: 10 }, (_, i) => `<span class="idoor" style="--d:${(i % 5) * 0.2 + Math.floor(i / 5) * 0.1}s"></span>`).join("")}</span>${e("🔄", "ia-spin-slow")}`,
   // o03 5人のことば
@@ -121,7 +126,7 @@ const ART = {
   // o04 時計の針が重なる
   u1ba4bd48: `<svg class="iclock" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#46555e" stroke-width="4"/><g stroke="#46555e" stroke-width="3" stroke-linecap="round"><line x1="50" y1="8" x2="50" y2="14"/><line x1="92" y1="50" x2="86" y2="50"/><line x1="50" y1="92" x2="50" y2="86"/><line x1="8" y1="50" x2="14" y2="50"/></g><line class="ih-hour" x1="50" y1="50" x2="50" y2="26" stroke="#d8504a" stroke-width="6" stroke-linecap="round"/><line class="ih-min" x1="50" y1="50" x2="50" y2="14" stroke="#4a78d8" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="50" r="4" fill="#46555e"/></svg>`,
   // o05 夜に橋をわたる4人
-  u0222dcac: row(e("🧍", "ia-bob"), e("🧍", "ia-bob", 0.15), e("🧍", "ia-bob", 0.3), e("🧍", "ia-bob", 0.45), e("🔦", "ia-flicker"), e("🌉", "ia-sway")),
+  u0222dcac: row(e(imgHtml("stand_a"), "ia-bob"), e(imgHtml("stand_b"), "ia-bob", 0.15), e(imgHtml("stand_c"), "ia-bob", 0.3), e(imgHtml("stand_d"), "ia-bob", 0.45), e("🔦", "ia-flicker"), e("🌉", "ia-sway")),
 };
 
 
@@ -134,7 +139,7 @@ const AUTO_ART = {
   u5c5a026c: ["✏️", "📦"],
   ue5bf374f: ["🌙", "☀️"],
   ua62d15b1: ["🔢", "🔍"],
-  u513aec73: ["➕", "✖️", "6️⃣"],
+  u513aec73: ["➕", "✖️"], // (「6」の絵は、答え(どちらも6)が見えてしまうので、使わない)
   ua154b5bc: ["🔤", "6️⃣"],
   ub6d4d70d: ["😀", "🤝", "🤝"],
   u1bdb1b91: ["🌱", "☀️", "💨"],
@@ -180,5 +185,5 @@ const autoRow = (emojis) => row(...emojis.map((emoji, i) => e(emoji, AUTO_ANIM[i
 export function illustrationFor(question) {
   const uid = question.uid ?? question.id;
   const art = ART[uid] ?? (AUTO_ART[uid] ? autoRow(AUTO_ART[uid]) : "");
-  return art ? `<span class="qa-in">${art}</span>` : "";
+  return art ? `<span class="qa-in">${emojiHtml(art)}</span>` : "";
 }
