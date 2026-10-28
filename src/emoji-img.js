@@ -45,7 +45,7 @@ const MAP = {
   "🎯": "target", "⚙": "gear", "🏠": "house", "📋": "clipboard", "📚": "books", "👑": "crown", "🏆": "trophy",
   "🎬": "clapper", "🎮": "gamepad", "🎨": "palette", "🎩": "tophat", "🎒": "backpack", "🖼": "frame",
   "🔊": "speaker", "🥁": "drum", "🏅": "medal", "🔬": "microscope", "⚗": "flask", "👹": "oni", "💎": "diamond",
-  "💮": "hanamaru", "🔒": "key", "💾": "floppy", "🆕": "newtag", "🎈": "balloon", "🎊": "popper2", "💖": "heart",
+  "🔒": "key", "💾": "floppy", "🆕": "newtag", "🎈": "balloon", "🎊": "popper2", "💖": "heart",
   "🍀": "clover", "🎀": "ribbon", "🎵": "note", "🦋": "butterfly", "🌸": "sakura",
 };
 

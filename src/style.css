@@ -1232,6 +1232,8 @@ body { overflow-x: hidden; }
 .emi { display: inline-block; height: 1.15em; width: auto; vertical-align: -0.22em; object-fit: contain; pointer-events: none; user-select: none; -webkit-user-drag: none; }
 .emi[data-e="★"], .emi[data-e="☆"] { height: 0.88em; margin: 0 -0.04em; vertical-align: -0.12em; } /* 難しさの星は、並べても はみ出さないように少し小さく */
 .q-art .ie { display: inline-block; flex: none; animation-delay: var(--d, 0s); }
+/* 問題のイラストの絵(絵文字だった絵)は、動かさない(図や数のカードは、そのまま) */
+.q-art .ie, .q-art .iperson, .q-art .iface, .q-art .ibag { animation: none !important; }
 .q-art .it { flex: none; font-size: 0.5em; font-weight: bold; color: var(--blue-dark); }
 .ibox { display: inline-grid; place-items: center; flex: none; min-width: 1.15em; height: 1.15em; padding: 0 0.15em; font-size: 0.62em; font-weight: bold; background: #fff; border: 3px solid var(--line); border-radius: 10px; }
 .ibox.is-q { border-style: dashed; color: var(--blue-dark); }
@@ -3147,3 +3149,13 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 }
 :is(#screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::before { top: 0; }
 :is(#screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::after { bottom: 0; transform: scaleY(-1); }
+
+/* ===== ルール画面:絵文字が絵になって、少し大きくなったぶん、枠からはみ出さないように ===== */
+.rf-players { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.rf-pl b { font-size: clamp(9px, 1.5dvh, 12px); letter-spacing: -0.03em; }
+.rf-pl i .emi { height: 1em; }
+.rf-total, .rf-turn, .rf-crown { max-width: 94%; padding-left: 12px; padding-right: 12px; }
+.rf-total { font-size: clamp(15px, 2.6dvh, 22px); }
+.rf-crown, .rf-turn { font-size: clamp(14px, 2.4dvh, 20px); }
+.rf-total .emi, .rf-turn .emi, .rf-crown .emi, .rf-badge .emi, .rf-btn .emi, .rf-over .emi { height: 1em; vertical-align: -0.15em; }
+@media (max-width: 340px) { .rf-total, .rf-turn, .rf-crown { font-size: 12.5px; padding-left: 8px; padding-right: 8px; } }

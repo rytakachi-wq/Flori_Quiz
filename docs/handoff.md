@@ -1,6 +1,6 @@
 # 引きつぎメモ(別のセッションで作業を始める人は、最初にこれを読む)
 
-プロジェクトの全体の決まりは [CLAUDE.md](../CLAUDE.md) と [scheme.md](../scheme.md)。決めたことの記録は [decisions.md](decisions.md)(その1〜その56、新しいほど下)。
+プロジェクトの全体の決まりは [CLAUDE.md](../CLAUDE.md) と [scheme.md](../scheme.md)。決めたことの記録は [decisions.md](decisions.md)(その1〜その57、新しいほど下)。
 これまでのやり取りの全文は、前のセッションの記録(`~/.claude/projects/C--Users-rytak-Documents-Flori-Quiz/*.jsonl`)にある。細かい経緯が必要なときだけ、そこを検索する。
 
 ## 作業の約束(利用者の指示)
@@ -18,7 +18,7 @@
 - 流れ:表紙(ホーム)→ クイズ → ルール(`screen-rules`:動画+共通+1人/皆で)→ モード選択(`screen-setup`:人数選択・分類・難しさ/皆の人数・制限時間+おすすめ+続きのしるし)→ スタートの確認(`screen-confirm`)→ 出題。皆で対戦でもヒント(点が半分)・「分からない」が使える。オニ問題は 10 問続けて出る。
 - 表紙の背景は、`assets/bg/<背景id>.webp`(上半分そのまま+下半分上下反転、表紙の疑似要素)。着せ替えの背景を変えると、`--cover-bg` が変わる。
 - 画面は 6 つのページ(ホーム・図鑑・着せ替え・成績・その他・設定。その他=毎日1問・復習[時間なし]・リラックス[先にムービー]・遊び方)を、下のタブと横スワイプで移動(`show(name, direction)`)。表紙のクリックでは動かない。
-- ご褒美:条件 78+星 12=90 個を、色 15・背景 15・頭 25・体 26・顔 9 に割りあて(あとから、頭4・体9・顔2を、いちばん後ろに足した=105こ。`EXTRA_DECOR`・`EXTRA_LADDER`。そのあと「きらきらの目」を外して104こ。決めたことは decisions の その55・その56)(badges.js の SPEC/LADDER/assignUnlocks。表の並び=やさしい順)。かざりの画像は assets/dress/(head01〜25、body01〜38のうち26こ[番号は飛ぶ]、face 9こ)。位置・大きさは badges.js の表 `{x,y,w,r,sx,sy,back}`(sx/sy=横・縦の ふやし。CSS の scale で表す。利用者が赤丸・青丸で直した値)。作り方の記録:`docs/dress-request.md`(ChatGPT への依頼書)、元のシート・切り出し・見本は `assets/dress/new/`(コミットしていない作業用)。
+- ご褒美:条件 78+星 12=90 個を、色 15・背景 15・頭 25・体 26・顔 9 に割りあて(あとから、頭4・体9・顔2を、いちばん後ろに足した=105こ。`EXTRA_DECOR`・`EXTRA_LADDER`。そのあと「きらきらの目」を外して104こ。決めたことは decisions の その55〜その57。一覧の並びは系統順=`DISPLAY_ORDER`)(badges.js の SPEC/LADDER/assignUnlocks。表の並び=やさしい順)。かざりの画像は assets/dress/(head01〜25、body01〜38のうち26こ[番号は飛ぶ]、face 9こ)。位置・大きさは badges.js の表 `{x,y,w,r,sx,sy,back}`(sx/sy=横・縦の ふやし。CSS の scale で表す。利用者が赤丸・青丸で直した値)。作り方の記録:`docs/dress-request.md`(ChatGPT への依頼書)、元のシート・切り出し・見本は `assets/dress/new/`(コミットしていない作業用)。
 - 絵文字は、描いた絵(`assets/illust/*.webp`)に自動で置きかわる(`src/emoji-img.js`。しくみと例外は decisions の「その54」)。**文字に絵文字を入れるだけで、対応表にあれば絵になる**。新しい絵文字を使うときは、MAP に絵を足す(絵はシートから `tools/illust/export.py` で切り出す)。
 - ふりがな:furigana-data.js の ENTRIES(後ろの項目が優先。形は `漢字{よみ}送りがな`)、KYOIKU(小学校で習う漢字)。
 - 画面の収まり:style.css 末尾の `@media screen` の層(`:is(#screen-…)` でID指定に勝つ)、小さい画面用の規則、固定高の `.screen-head`(46px)。
