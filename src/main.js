@@ -2337,8 +2337,11 @@ function renderDress() {
     tab.classList.toggle("has-new", !seenTabs.has(kind) && [...freshKeys].some((key) => key.startsWith(`${kind}:`))); // 開いた種類の NEW は、消える
   }
   const kind = dressTab;
+  let lastGroup = null; // 系統(帽子・耳・冠…)が変わるごとに、改行する
   $("dress-list").replaceChildren(
-    ...DRESS_LISTS[kind].map((choice) => {
+    ...DRESS_LISTS[kind].flatMap((choice) => {
+      const breakHere = choice.group !== undefined && lastGroup !== null && choice.group !== lastGroup;
+      if (choice.group !== undefined) lastGroup = choice.group;
       const open = canWear(choice, ctx);
       const isNew = freshKeys.has(`${kind}:${choice.id}`);
       const button = document.createElement("button");
@@ -2403,7 +2406,13 @@ function renderDress() {
         renderDress();
         playSe("button");
       });
-      return button;
+      if (breakHere) {
+        const gap = document.createElement("span");
+        gap.className = "dress-break";
+        gap.setAttribute("aria-hidden", "true");
+        return [gap, button];
+      }
+      return [button];
     }),
   );
   // いま見ている種類の NEW は、見ていれば(さわらなくても)少しして消える。消えたら、つぎの描きなおしでも出さない

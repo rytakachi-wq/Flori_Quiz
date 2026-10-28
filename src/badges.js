@@ -275,23 +275,30 @@ export const THEMES = [
 // 顔:目のまわり(メガネ・涙・汗)→ ほっぺ(ハート・ぐるぐる・線・ばんそうこう)→ マーク(ハート・音符・怒り)
 const DISPLAY_ORDER = {
   head: [
-    "head04", "head05", "head06", "head22", "head25", "head07", "head17", "head09", "head10", "head29", // 帽子
-    "head11", "head12", "head13", // 耳
-    "head08", "head21", "head18", // 冠・輪
-    "head03", "head14", "head15", "head16", // 頭のてっぺん
-    "head01", "head02", "head19", "head20", "head23", "head24", "head26", "head27", "head28", // 右上の飾り
+    ["head04", "head05", "head06", "head22", "head25", "head07", "head17", "head09", "head10", "head29"], // 帽子
+    ["head11", "head12", "head13"], // 耳
+    ["head08", "head21", "head18"], // 冠・輪
+    ["head03", "head14", "head15", "head16"], // 頭のてっぺん
+    ["head01", "head02", "head19", "head20", "head23", "head24", "head26", "head27", "head28"], // 右上の飾り
   ],
   body: [
-    "body01", "body02", "body03", "body04", "body19", "body12", "body18", "body23", "body31", // 首まわり
-    "body15", "body14", "body13", "body38", "body39", "body40", "body42", "body26", "body30", // 胸
-    "body07", "body20", "body21", "body25", "body08", "body28", "body29", "body24", // ポーチ・バッグ
-    "body33", "body34", "body27", "body41", "body43", "body44", "body45", "body46", "body47", // 手に持つもの
+    ["body01", "body02", "body03", "body04", "body19", "body12", "body18", "body23", "body31"], // 首まわり
+    ["body15", "body14", "body13", "body38", "body39", "body40", "body42", "body26", "body30"], // 胸
+    ["body07", "body20", "body21", "body25", "body08", "body28", "body29", "body24"], // ポーチ・バッグ
+    ["body33", "body34", "body27", "body41", "body43", "body44", "body45", "body46", "body47"], // 手に持つもの
   ],
-  face: ["face09", "face05", "face04", "face01", "face03", "face08", "face06", "face11", "face12", "face10"],
+  face: [
+    ["face09", "face05", "face04"], // 目のまわり
+    ["face01", "face03", "face08", "face06"], // ほっぺ
+    ["face11", "face12", "face10"], // マーク
+  ],
 };
+// 系統ごとに並べる。item.group に、系統の番号を入れる(一覧で、系統が変わるごとに改行するため)
 const arrange = (slot, items) => {
-  const rank = new Map(DISPLAY_ORDER[slot].map((id, i) => [id, i]));
-  return [...items].sort((a, b) => (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999));
+  const rank = new Map();
+  DISPLAY_ORDER[slot].forEach((ids, group) => ids.forEach((id) => rank.set(id, { group, order: rank.size })));
+  for (const item of items) item.group = rank.get(item.id)?.group ?? DISPLAY_ORDER[slot].length;
+  return [...items].sort((x, y) => (rank.get(x.id)?.order ?? 999) - (rank.get(y.id)?.order ?? 999));
 };
 export const HEADS = [{ id: "none", slot: "head", img: "", name: "なし", tint: "#46555e", unlock: null }, ...arrange("head", [...heads, ...extraOf("head")])];
 export const BODIES = [{ id: "none", slot: "body", img: "", name: "なし", tint: "#46555e", unlock: null }, ...arrange("body", [...bodies, ...extraOf("body")])];

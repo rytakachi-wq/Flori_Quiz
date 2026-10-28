@@ -3159,3 +3159,15 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 .rf-crown, .rf-turn { font-size: clamp(14px, 2.4dvh, 20px); }
 .rf-total .emi, .rf-turn .emi, .rf-crown .emi, .rf-badge .emi, .rf-btn .emi, .rf-over .emi { height: 1em; vertical-align: -0.15em; }
 @media (max-width: 340px) { .rf-total, .rf-turn, .rf-crown { font-size: 12.5px; padding-left: 8px; padding-right: 8px; } }
+
+/* 着せ替えの一覧:系統(帽子・耳・冠…)が変わるところで、改行する */
+.dress-list .dress-break { grid-column: 1 / -1; flex-basis: 100%; width: 100%; height: 0; margin: -2px 0; padding: 0; }
+
+/* 設定画面のフロリを、少し大きく */
+@media screen {
+  #screen-settings .settings-flori { min-height: 100px; height: clamp(130px, 27dvh, 250px); max-width: 72%; }
+}
+@media screen and (max-height: 640px) {
+  /* 低い画面(320×568 など)は、前の大きさのまま(1画面に収めるため) */
+  #screen-settings .settings-flori { min-height: 84px; height: clamp(84px, 22dvh, 210px); max-width: 60%; }
+}
