@@ -54,6 +54,12 @@ DIL = {"sheet01": 5, "sheet02": 10, "sheet14": 10}  # 指定がなければ 14
 MARG = {"sheet01": (4, 32, 8, 8)}  # 上・下・左・右(スクリーンショットのふち)
 MERGE = {"redo01": [(0, 1)]}  # 2つの目は、左右を1つに
 HOLES = {"gear", "circle_red", "matchsq"}  # わの中も、透明にする
+HOLES_TOP = {"trophy"}  # 上の方(持ち手のあいだ)の白だけ、透明にする(下の名札は残す)
+# ふちの黒い線の、ざらざら(ノイズ)を、ならして けずる強さ(大きいほど、なめらか。指定がなければ 1.0)
+SMOOTH = {"trophy": 2.2, "tophat": 2.2, "globe": 2.2, "balloon": 2.0}
+CLEAN = {"trophy", "tophat", "globe", "balloon"}  # ふちの線を、なめらかな1本の線にひきなおす(もとの線の、ざらざらを、けずる)
+OUTLINE = (72, 94, 112)  # 青みのダークグレー(フロリと同じ線の色)
+BGTHR = {"trophy": 228, "tophat": 228, "globe": 228, "balloon": 228}  # 背景とみなす白さ(下げるほど、ふちのうすいノイズも、背景にする)
 THR = 244
 PAD = 10
 MAXSIDE = 160
@@ -90,29 +96,43 @@ def boxes_of(name, im):
     return [b for b in ordered if b is not None]
 
 
-def cut(im, box, holes=False):
+def cut(im, box, holes=False, holes_top=False, smooth=1.0, thr=THR, clean=False):
     a = np.array(im).astype(np.uint8)
     h, w, _ = a.shape
     y0, x0, y1, x1 = box
     y0 = max(0, y0 - PAD); x0 = max(0, x0 - PAD); y1 = min(h, y1 + PAD); x1 = min(w, x1 + PAD)
     c = a[y0:y1, x0:x1].astype(int)
-    bgish = c.min(2) >= THR
+    bgish = c.min(2) >= thr
     if holes:
         bg = c.min(2) >= 250
     else:
         lab, _ = ndi.label(bgish)
         border = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
         bg = np.isin(lab, list(border))
+    if holes_top:  # 持ち手のあいだ(絵の上の方の、中に閉じこめられた白)だけ、透明にする
+        lab2, n2 = ndi.label(c.min(2) >= THR)
+        for i in range(1, n2 + 1):
+            ys, xs = np.where(lab2 == i)
+            if len(ys) > 6 and ys.mean() < c.shape[0] * 0.62:
+                bg = bg | (lab2 == i)
     fg = ~bg
     fl, fn = ndi.label(ndi.binary_dilation(fg, iterations=12))
     if fn > 1:  # 隣の絵のはしっこを消す(大きいかたまりだけ残す)
         sizes = ndi.sum(fg, fl, range(1, fn + 1))
         main = int(np.argmax(sizes)) + 1
         fg = (fg & (fl == main)) | (fg & np.isin(fl, [i + 1 for i, s in enumerate(sizes) if s > 600]))
-    alpha = np.clip((ndi.gaussian_filter(fg.astype(float), 0.6) - 0.15) / 0.7, 0, 1)
+    # ふちのざらざらを、ならす: ぼかして、少し内がわで切りなおす(黒い線の、いちばん外がわを、けずる)
+    if smooth > 1.0:  # 1〜2px のぽつぽつ(ノイズ)を消す
+        fg = ndi.binary_opening(fg, structure=np.ones((3, 3)))
+    soft = ndi.gaussian_filter(fg.astype(float), smooth)
+    fg = soft > (0.5 if smooth <= 1.0 else 0.58)
+    alpha = np.clip((ndi.gaussian_filter(fg.astype(float), 0.8) - 0.12) / 0.76, 0, 1)
     inner = ndi.binary_erosion(fg, iterations=2)
     idx = ndi.distance_transform_edt(~inner, return_distances=False, return_indices=True)
     use = np.where(inner[..., None], c, c[idx[0], idx[1]])  # ふちの白いにじみを、内側の色でぬりかえる
+    if clean:  # 外がわ3pxを、線の色でぬりなおす(ざらざらの線を、1本の、なめらかな線に)
+        band = fg & ~ndi.binary_erosion(fg, iterations=3)
+        use = np.where(band[..., None], np.array(OUTLINE), use)
     rgba = np.dstack([use, (alpha * 255).astype(int)]).astype(np.uint8)
     out = Image.fromarray(rgba, "RGBA")
     bb = out.getchannel("A").point(lambda v: 255 if v > 8 else 0).getbbox()
@@ -127,7 +147,7 @@ def main():
         if len(boxes) != len(names):
             sys.exit(f"{name}: 絵が {len(boxes)} 個見つかったが、名前は {len(names)} 個(DIL を見直す)")
         for slug, box in zip(names, boxes):
-            it = cut(im, box, holes=slug in HOLES)
+            it = cut(im, box, holes=slug in HOLES, holes_top=slug in HOLES_TOP, smooth=SMOOTH.get(slug, 1.0), thr=BGTHR.get(slug, THR), clean=slug in CLEAN)
             it.thumbnail((MAXSIDE, MAXSIDE), Image.LANCZOS)
             path = os.path.join(OUT, slug + ".webp")
             it.save(path, "WEBP", quality=90, method=6)

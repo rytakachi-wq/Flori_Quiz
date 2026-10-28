@@ -208,6 +208,8 @@ const decorList = (slot, rows) =>
 const heads = decorList("head", HEAD);
 const bodies = decorList("body", BODY);
 const faces = decorList("face", FACE);
+// 一覧から外したかざり(利用者の指示)。もらえる順(assignUnlocks)は、いまの並びのまま変えないために、表には残して、見せないだけにする。
+const REMOVED = new Set(["face07"]); // きらきらの目
 
 // あとから足した かざり15こ(頭4・体9・顔2)。絵は assets/illust/<名前>.webp(絵文字の置きかえと同じシート)。
 // 並びは、もらえる順(EXTRA_LADDER と同じ順)。場所 = フロリの絵に対する、中心(x, y)と はば(w)、かたむき(r)、左右反転(sx: -1)。
@@ -269,7 +271,7 @@ export const THEMES = [
 ];
 export const HEADS = [{ id: "none", slot: "head", img: "", name: "なし", tint: "#46555e", unlock: null }, ...heads, ...extraOf("head")];
 export const BODIES = [{ id: "none", slot: "body", img: "", name: "なし", tint: "#46555e", unlock: null }, ...bodies, ...extraOf("body")];
-export const FACES = [{ id: "none", slot: "face", img: "", name: "なし", tint: "#46555e", unlock: null }, ...faces, ...extraOf("face")];
+export const FACES = [{ id: "none", slot: "face", img: "", name: "なし", tint: "#46555e", unlock: null }, ...faces.filter((item) => !REMOVED.has(item.id)), ...extraOf("face")];
 
 assignUnlocks([
   [COLORS.slice(1), COLOR_ORDER],
