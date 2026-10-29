@@ -3276,3 +3276,21 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 /* 着せ替えの一覧:5列にして、その分、1つずつを大きく */
 #screen-dress .dress-list { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; width: min(100%, 560px); align-self: center; }
 #screen-dress .dress-item { aspect-ratio: 1; height: auto; }
+
+/* RPG:上の絵を大きく(その分、選択肢を小さく)。ひとこと(あらわれた・こうげき など)は、絵の上ではなく、ウィンドウの中に出す */
+.rpg-screen { --rpg-field-h: clamp(132px, 28dvh, 300px); }
+.rpg-foe-icon { font-size: calc(var(--rpg-field-h) * 0.46); }
+.rpg-foe-name { font-size: 13px; }
+.rpg-foe-hp { font-size: 14px; }
+.rpg-fx { position: static; transform: none; max-width: none; align-self: flex-start; margin: 0; padding: 1px 10px; font-size: 13.5px; line-height: 1.4; text-align: left; color: #ffe58a; background: rgba(255, 229, 138, 0.16); border: 1px solid rgba(255, 229, 138, 0.55); border-radius: 10px; opacity: 1; z-index: auto; }
+.rpg-fx:empty { display: none; }
+.rpg-fx.is-on { animation: rpgFxPop 0.35s ease-out; }
+@keyframes rpgFxPop { 0% { opacity: 0; transform: translateY(4px); } 100% { opacity: 1; transform: none; } }
+.rpg-window > .rpg-choices { grid-auto-rows: minmax(36px, 62px); gap: 6px; align-content: start; }
+.rpg-choice { min-height: 36px; padding: 2px 10px; font-size: 14.5px; }
+.rpg-choice .rpg-no { width: 26px; height: 26px; font-size: 14px; }
+.rpg-text { font-size: 14.5px; }
+@media (max-height: 700px) {
+  .rpg-screen.is-answered { --rpg-field-h: 92px; }
+  .rpg-screen.is-answered .rpg-explain { font-size: 13px; line-height: 1.45; }
+}

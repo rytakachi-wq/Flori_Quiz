@@ -2465,6 +2465,7 @@ function showRpg() {
   rpgHinted = false;
   renderRpgStatus();
   const stage = play.current;
+  $("screen-rpg").classList.remove("is-answered");
   $("rpg-field").classList.remove("is-strike", "is-defeat", "is-hurt");
   rpgPose(stage.kind === "boss" ? IMG.surprised : "../assets/flori/m/body_wave.webp", "フロリ");
   $("rpg-text").textContent = question.text;
@@ -2488,6 +2489,7 @@ function showRpg() {
   );
   const intro = stage.kind === "chest" ? "🎁 たからばこだ! 正解で ハート回復!" : stage.kind === "boss" ? `🐉 ボス ${stage.name}が あらわれた!` : `${stage.icon} ${stage.name}が あらわれた!`;
   rpgFx(intro);
+  playSe("rpgAppear");
   $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
   show("rpg");
   setScene(stage.kind === "boss" ? "rpgboss" : "rpg"); // ボス戦は、BGMが変わる
@@ -2499,8 +2501,8 @@ function rpgAnswer(index) {
   const question = rpgQuestion;
   const foe = play.current; // 答える前の敵(たおすと、次のマスに進むので)
   const correct = play.answer(question, index, rpgHinted);
-  playSe(correct ? "correct" : "wrong");
   const event = play.event;
+  rpgSounds(event);
   const message = {
     hit: `⚔️ こうげき! ${foe.name}に ダメージ!`,
     defeat: `💥 ${foe.name}を たおした!`,
@@ -2508,7 +2510,7 @@ function rpgAnswer(index) {
     heal: "💖 たからばこが ひらいた! ハート +1",
     miss: "🎁 たからばこは あけられなかった…",
   }[event];
-  rpgFx(message, event === "damage" ? "is-hurt" : "is-strike");
+  rpgFx("", event === "damage" ? "is-hurt" : "is-strike"); // 動きだけ(文字は、下の正解/残念の行に出す。ウィンドウに収めるため)
   if (event === "defeat") setTimeout(() => $("rpg-field").classList.add("is-defeat"), 400);
   rpgPose(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
   renderRpgStatus(foe, event === "defeat" ? 0 : play.hp); // たおした敵(foe)を出したまま、HPを0に。次の敵は、次の問題で出る
@@ -2516,16 +2518,29 @@ function rpgAnswer(index) {
   $("rpg-hint").hidden = true;
   $("rpg-choices").hidden = true; // 答えたあとは、答えと解説だけ(問題文と選択肢は、かくす。1画面に収めるため)
   $("rpg-text").hidden = true;
-  $("rpg-verdict").textContent = correct ? (rpgHinted ? "正解! (ヒントを使ったヨ)" : "正解!") : "残念…";
+  $("rpg-verdict").textContent = `${correct ? "正解!" : "残念…"} ${message}${correct && rpgHinted ? "(ヒントを使ったヨ)" : ""}`;
   $("rpg-explain").textContent = `正解は「${question.choices[question.answer]}」\n${question.explanation}`;
   $("rpg-after").hidden = false;
+  $("screen-rpg").classList.add("is-answered"); // 低い画面では、答えたあと、上の絵を小さくして、解説の場所をあける
   $("btn-rpg-next").textContent = play.roundFinished ? "結果を見る ▶" : "次へ ▶";
   $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
   $("btn-rpg-next").focus({ preventScroll: true });
 }
 
+// RPGの効果音(こうげき=踏みこんで、当たる。ダメージ=受ける。宝箱=チーン。まちがえた宝箱=ふせいかいの音)
+function rpgSounds(event) {
+  if (event === "hit" || event === "defeat") {
+    playSe("rpgStep");
+    setTimeout(() => playSe("rpgPunch"), 280);
+    if (event === "defeat") setTimeout(() => playSe("correct"), 650);
+  } else if (event === "damage") playSe("rpgGuard");
+  else if (event === "heal") playSe("rpgDing", 2200);
+  else playSe("wrong");
+}
+
 function rpgNext() {
-  if (play.roundFinished) announce(play.cleared ? "クエスト クリア〜!" : "ゲームオーバー…", "result", showResult, "../assets/flori/m/wave_surprised.png");
+  if (play.roundFinished && !play.cleared) playSe("rpgSad", 2600); // ゲームオーバー(長い音なので、途中で消す)
+  if (play.roundFinished) announce(play.cleared ? "クエスト クリア〜!" : "ゲームオーバー…", play.cleared ? "result" : "none", showResult, "../assets/flori/m/wave_surprised.png");
   else showRpg();
 }
 

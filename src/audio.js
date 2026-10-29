@@ -36,6 +36,12 @@ const SE = {
   levelup: { file: "se-levelup.mp3", boost: 1 }, // 着せ替えなどの、アイテムをもらったとき(テッテレー)
   drumroll: { file: "se-drumroll.mp3", boost: 1 }, // 結果発表のドラムロール
   rollend: { file: "se-rollend.mp3", boost: 1 }, // ドラムロールの、しめ
+  rpgAppear: { file: "se-rpg-appear.mp3", boost: 1.5 }, // RPG:敵があらわれた
+  rpgStep: { file: "se-rpg-step.mp3", boost: 1.5 }, // RPG:こうげきに踏みこむ
+  rpgPunch: { file: "se-rpg-punch.mp3", boost: 1.8 }, // RPG:こうげきが当たった
+  rpgGuard: { file: "se-rpg-guard.mp3", boost: 1.8 }, // RPG:敵のこうげきを受けた
+  rpgDing: { file: "se-rpg-ding.mp3", boost: 1.5 }, // RPG:たからばこで回復
+  rpgSad: { file: "se-rpg-sad.mp3", boost: 1.2 }, // RPG:ゲームオーバー
 };
 
 const DEFAULTS = { bgm: 0.7, se: 0.8 };
