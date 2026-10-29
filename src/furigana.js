@@ -1,5 +1,5 @@
 // ふりがな。画面に出る文字の、漢字の上に、読みをつける。
-// 設定(全部 / おおめ[3年生以上の漢字] / すくなめ[5年生以上の漢字] / なし)は、端末内に保存する。
+// 設定(全部 / 多め[3年生以上の漢字] / 少なめ[5年生以上の漢字] / なし)は、端末内に保存する。
 //
 // しくみ:画面に文字が出るたびに(MutationObserver)、漢字をふくむ文字を <span class="rb"> に包んで、
 // 辞書(furigana-data.js)の読みで <ruby> をつける。設定が変わったら、包んだ文字を作りなおす。
@@ -228,7 +228,7 @@ export function rubyHtml(text, mode) {
 let mode = "all";
 try {
   let saved = localStorage.getItem(STORAGE_KEY);
-  if (saved === "chu") saved = "few"; // 前の「中学以降だけ」は、いちばん近い「すくなめ」へ
+  if (saved === "chu") saved = "few"; // 前の「中学以降だけ」は、いちばん近い「少なめ」へ
   if (MODES.includes(saved)) mode = saved;
 } catch {
   // 読めなければ、はじめの設定(すべての漢字)にする。
