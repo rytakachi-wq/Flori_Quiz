@@ -142,7 +142,24 @@
         <button id="btn-review" class="tile t-review" type="button"><span class="tile-icon" aria-hidden="true">📖</span><span class="tile-text"><span class="tile-label">復習</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-relax" class="tile t-relax" type="button"><span class="tile-icon" aria-hidden="true">🌸</span><span class="tile-text"><span class="tile-label">リラックス</span></span><span class="tile-dot" hidden></span></button>
         <button id="btn-tutorial-menu" class="tile t-tutorial" type="button"><span class="tile-icon" aria-hidden="true">🎬</span><span class="tile-text"><span class="tile-label">遊び方</span></span><span class="tile-dot" hidden></span></button>
+        <button id="btn-note" class="tile t-note" type="button"><span class="tile-icon" aria-hidden="true">📓</span><span class="tile-text"><span class="tile-label">まちがいノート</span></span><span class="tile-dot" hidden></span></button>
       </div>
+    </section>
+    <!-- まちがいノート -->
+    <section id="screen-note" class="screen note-screen" aria-label="まちがいノート" hidden>
+      <header class="screen-head">
+        <button id="btn-note-back" class="back-btn" type="button"><span aria-hidden="true">↩</span> 戻る</button>
+        <h2 class="title">📓 まちがいノート</h2>
+      </header>
+      <div class="dex-head-box">
+        <img class="flori dex-flori" src="../assets/flori/m/wave_nikkori.png" alt="">
+        <div class="dex-head-text">
+          <p id="note-count" class="dex-count"></p>
+          <p id="note-comment" class="note" role="status"></p>
+        </div>
+      </div>
+      <ul id="note-list" class="note-list"></ul>
+      <button id="btn-note-review" class="btn btn-review" type="button">📖 ぜんぶ 復習する</button>
     </section>
     <!-- 問題図鑑 -->
     <section id="screen-dex" class="screen dex-screen" aria-label="問題図鑑" hidden>
@@ -451,7 +468,11 @@
     <div id="dex-big" class="dex-big"></div>
     <p class="dex-back-hint">カードを押すと もどるヨ</p>
   </dialog>
-  <dialog id="dlg-ranks" class="dialog ranks-dialog" aria-labelledby="ranks-title">
+  <dialog id="dlg-note" class="dialog dex-dialog note-dialog" aria-labelledby="note-big">
+    <div id="note-big" class="dex-big"></div>
+    <p class="dex-back-hint">ノートを押すと もどるヨ</p>
+  </dialog>
+  <dialog id="dlg-ranks"class="dialog ranks-dialog" aria-labelledby="ranks-title">
     <h3 id="ranks-title" class="ranks-title">🏅 ランクの一覧</h3>
     <p class="ranks-howto"><b>ヒントなしで正解</b>=満点、<b>ヒントあり</b>=半分。<br>10点ごとに ランクアップ!<br>かくしステージは、</p>
     <ol id="ranks-list" class="ranks-list"></ol>

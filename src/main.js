@@ -59,7 +59,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
+const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "note", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問)
@@ -2172,6 +2172,81 @@ function closeDexCard() {
   }, 110);
 }
 $("dlg-dex").addEventListener("click", closeDexCard);
+
+// ================= まちがいノート =================
+// まちがえて、まだ正解していない問題(stats.wrong)を、答えと解説つきで並べる。記録は増やさない(復習と同じ印を使う)。
+function openNoteCard(question) {
+  const big = $("note-big");
+  big.className = `dex-big lv${question.level}`;
+  const head = document.createElement("div");
+  head.className = "dex-big-head";
+  head.textContent = `${CATEGORY_ICON[question.category] ?? "❓"} ${question.category}  ${RARITY[question.level] ?? ""}`;
+  const text = document.createElement("p");
+  text.className = "dex-q";
+  text.textContent = question.text.replace(/。(?=[^\n」)])/g, "。\n");
+  const list = document.createElement("ol");
+  list.className = "dex-choices";
+  list.type = "A";
+  question.choices.forEach((choice, index) => {
+    const item = document.createElement("li");
+    item.textContent = choice;
+    if (index === question.answer) item.className = "note-answer";
+    list.append(item);
+  });
+  const why = document.createElement("p");
+  why.className = "note-why";
+  why.textContent = `💡 ${question.explanation}`;
+  big.replaceChildren(head, text, list, why);
+  $("dlg-note").showModal();
+}
+$("dlg-note").addEventListener("click", () => $("dlg-note").close());
+
+function noteQuestions() {
+  const wrong = new Set(loadStats().wrong);
+  return playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
+}
+
+function showNote() {
+  const items = noteQuestions();
+  const rows = items.map((question) => {
+    const row = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `note-row lv${question.level}`;
+    const icon = document.createElement("span");
+    icon.className = "note-icon";
+    icon.textContent = CATEGORY_ICON[question.category] ?? "❓";
+    const label = document.createElement("span");
+    label.className = "note-text";
+    label.textContent = question.text.replace(/\n/g, "");
+    button.append(icon, label);
+    button.addEventListener("click", () => openNoteCard(question));
+    row.append(button);
+    return row;
+  });
+  $("note-list").replaceChildren(...rows);
+  $("note-list").scrollTop = 0;
+  $("note-count").textContent = items.length > 0 ? `ノートの問題 ${items.length}問` : "ノートは まっさら!";
+  const byGroup = GROUPS.map((name) => [name, items.filter((q) => groupOf(q) === name).length]);
+  const [top, topCount] = byGroup.reduce((a, b) => (b[1] > a[1] ? b : a));
+  $("note-comment").textContent =
+    items.length === 0
+      ? "まちがえた問題は ないヨ。すごい!"
+      : topCount >= 2 && topCount > items.length / 2
+        ? `${top}の問題が 多いヨ。押すと 答えと 解説が 見られるヨ!`
+        : "押すと 答えと 解説が 見られるヨ!";
+  $("btn-note-review").hidden = items.length === 0;
+  show("note");
+}
+$("btn-note").addEventListener("click", showNote);
+$("btn-note-back").addEventListener("click", () => openMenu());
+$("btn-note-review").addEventListener("click", () =>
+  guideOnce("review", () => {
+    reviewFromQuiz = false;
+    timeLimit = false;
+    startPlay("review");
+  }),
+);
 
 // ================= 着せ替え・背景 =================
 let dress = loadDress();
