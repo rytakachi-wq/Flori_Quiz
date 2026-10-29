@@ -115,6 +115,11 @@ export function playJingle(name) {
   return seconds * 1000;
 }
 
+// いま鳴っているBGMの曲名(なにも鳴っていないときは null。確かめるための関数)
+export function currentBgm() {
+  return music?.name ?? null;
+}
+
 // 場面が変わったら、その場面のBGMにする。
 export function setScene(name) {
   scene = name;

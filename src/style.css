@@ -1741,7 +1741,7 @@ body.has-pager { padding-bottom: 56px; }
   .app { height: calc(100dvh / (var(--ui-zoom) * var(--tablet-zoom))); max-width: 760px; margin: 0 auto; padding: 6px; display: flex; flex-direction: column; }
   .pager { bottom: 12px; }
   body.has-pager :is(#screen-cover, #screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen:not([hidden]) { padding-bottom: 58px; }
-  :is(#screen-cover, #screen-flow, #screen-menu, #screen-note, #screen-rpg, #screen-dex, #screen-dress, #screen-versus, #screen-relax, #screen-records, #screen-settings, #screen-question, #screen-result, #screen-error).screen:not([hidden]) {
+  :is(#screen-cover, #screen-flow, #screen-menu, #screen-note, #screen-rpg, #screen-gameover, #screen-dex, #screen-dress, #screen-versus, #screen-relax, #screen-records, #screen-settings, #screen-question, #screen-result, #screen-error).screen:not([hidden]) {
     flex: 1 1 0; min-height: 0; height: auto; overflow: hidden; padding: 8px 8px 10px; gap: 6px; justify-content: flex-start; border-radius: 22px;
   }
   .title { font-size: clamp(20px, 3.6dvh, 28px); line-height: 1.3; }
@@ -2081,7 +2081,7 @@ body.has-pager { padding-bottom: 56px; }
 #screen-setup .reward-card { flex: none; }
 #screen-cover .home-stage { flex: 1 1 0; min-height: 0; }
 #screen-cover .home-hero { width: min(68vw, 38dvh); }
-:is(#screen-menu, #screen-note, #screen-rpg, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { margin-bottom: 0; }
+:is(#screen-menu, #screen-note, #screen-rpg, #screen-gameover, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { margin-bottom: 0; }
 #screen-dress { gap: 5px; }
 #screen-dress .hero-small { flex: none; }
 #screen-dress .dress-banner-text { font-size: 13px; line-height: 1.45; }
@@ -2524,7 +2524,7 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
 /* 戻るボタンを大きく */
 .back-btn, #screen-question .back-btn, #screen-question .status .back-btn { height: 48px; min-height: 48px; padding: 0 18px; font-size: 20px; gap: 6px; }
 @media (max-width: 400px) { .back-btn, #screen-question .back-btn, #screen-question .status .back-btn { height: 44px; min-height: 44px; padding: 0 12px; font-size: 18px; } }
-.screen-head, :is(#screen-menu, #screen-note, #screen-rpg, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { min-height: 50px; height: 50px; grid-template-rows: 50px; }
+.screen-head, :is(#screen-menu, #screen-note, #screen-rpg, #screen-gameover, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { min-height: 50px; height: 50px; grid-template-rows: 50px; }
 
 /* =====================================================================
    追加(その45):ルールのフリップ(次へで進む。共通=青、1人=黄色、皆で=薄紫)・折り返し・結果のフロリ
@@ -3298,3 +3298,26 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 /* 着せ替えのタブ:「フロリの色」は、ほかより長いので、そのぶん広く */
 #screen-dress .dress-tabs { grid-template-columns: 1.7fr repeat(4, 1fr); }
 #screen-dress .dress-tab[data-dress-tab="color"] .tab-name { font-size: 13px; white-space: nowrap; }
+
+/* =====================================================================
+   ゲームオーバーの画面(#screen-gameover):しずんだ色。結果発表の画面とは別
+   ===================================================================== */
+.gameover-screen { --go-h: clamp(88px, 18dvh, 190px); gap: 7px; align-items: center; background: linear-gradient(180deg, #c9d3e0 0%, #e6ebf2 55%, #f3f5f9 100%) !important; }
+.go-stage { flex: none; width: 100%; height: var(--go-h); display: flex; justify-content: center; align-items: flex-end; }
+.go-flori { width: auto; height: var(--go-h); max-width: 70%; object-fit: contain; filter: grayscale(0.35) drop-shadow(0 4px 2px rgba(40, 50, 70, 0.25)); animation: goSag 2.4s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes goSag { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(3px) rotate(-1.5deg); } }
+.go-message { margin: 0; width: min(520px, 100%); padding: 4px 12px; font-size: 15px; font-weight: bold; line-height: 1.45; text-align: center; color: #34465c; background: #fff; border: 3px solid #8a9bb0; border-radius: 16px; }
+.go-path { list-style: none; margin: 0; padding: 0; display: flex; justify-content: center; gap: 10px; flex: none; }
+.go-path li { position: relative; display: grid; place-items: center; width: 44px; height: 40px; font-size: 22px; line-height: 1; background: #fff; border: 3px solid #b8c6d0; border-radius: 12px; opacity: 0.55; }
+.go-path li .emi { height: 1.1em; width: auto; }
+.go-path li.is-done { opacity: 0.8; border-color: #4aa86b; background: #e3f4dc; }
+.go-path li.is-fell { opacity: 1; border-color: #d9534f; background: #fde3e1; box-shadow: 0 0 0 3px #fff, 0 0 0 5px #d9534f; }
+.go-scores { margin: 0; width: min(420px, 100%); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.go-scores > div { padding: 4px 8px; text-align: center; background: #fff; border: 3px solid #8a9bb0; border-radius: 14px; }
+.go-scores dt { font-size: 12px; font-weight: bold; color: #5a6b80; }
+.go-scores dd { margin: 0; font-size: 20px; font-weight: bold; color: #34465c; }
+.go-note { margin: 0; font-size: 13px; font-weight: bold; text-align: center; color: #34465c; }
+.go-note[hidden] { display: none; }
+.go-buttons { width: min(420px, 100%); display: grid; gap: 8px; margin-top: auto; }
+.go-buttons .btn { min-height: 42px; font-size: 16px; }
+@media (prefers-reduced-motion: reduce) { .go-flori { animation: none; } }

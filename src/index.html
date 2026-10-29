@@ -391,6 +391,28 @@
       </div>
     </section>
 
+    <!-- ゲームオーバー(RPGで、ハートが0になったとき。結果発表の画面とは、別の専用の画面) -->
+    <section id="screen-gameover" class="screen gameover-screen" aria-label="ゲームオーバー" hidden>
+      <header class="screen-head">
+        <button id="btn-go-back" class="back-btn" type="button"><span aria-hidden="true">↩</span> 戻る</button>
+        <h2 class="title">ゲームオーバー</h2>
+      </header>
+      <div class="go-stage">
+        <img id="go-flori" class="flori go-flori" src="../assets/flori/m/wave_wrong.png" alt="目をつぶるフロリ">
+      </div>
+      <p id="go-message" class="go-message" role="status"></p>
+      <ol id="go-path" class="go-path" aria-label="すすんだ道"></ol>
+      <dl class="go-scores">
+        <div><dt>進んだ マス</dt><dd id="go-reach"></dd></div>
+        <div><dt>正解</dt><dd id="go-correct"></dd></div>
+      </dl>
+      <p id="go-note" class="go-note"></p>
+      <div class="go-buttons">
+        <button id="btn-go-again" class="btn btn-main" type="button">もう1度 挑戦</button>
+        <button id="btn-go-note" class="btn btn-review" type="button">まちがいノートを 見る</button>
+      </div>
+    </section>
+
     <section id="screen-result" class="screen" aria-label="結果" hidden>
       <header class="screen-head">
         <button id="btn-cover" class="back-btn" type="button"><span aria-hidden="true">↩</span> 戻る</button>

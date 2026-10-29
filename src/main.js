@@ -63,7 +63,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "note", "relax", "records", "settings", "dex", "dress", "question", "rpg", "result", "error"];
+const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "note", "relax", "records", "settings", "dex", "dress", "question", "rpg", "gameover", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問) "rpg"(RPGクエスト)
@@ -74,6 +74,7 @@ let versusPlayers = 2; // 皆で対戦する人数
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
   if (name === "rpg") return "rpg";
+  if (name === "gameover") return "gameover"; // BGMはなし(ゲームオーバーの音だけ)
   if (name === "question") {
     return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
   }
@@ -2019,7 +2020,7 @@ let unlockQueue = [];
 let unlockIndex = 0;
 function celebrateUnlocks() {
   if ($("dlg-unlock").open || announcing) return;
-  if (currentScreen !== "result" && currentScreen !== "relax") return; // 結果・お花畑の画面を出たあとは、出さない(クイズの画面に出てしまっていた)
+  if (currentScreen !== "result" && currentScreen !== "relax" && currentScreen !== "gameover") return; // 結果・お花畑の画面を出たあとは、出さない(クイズの画面に出てしまっていた)
   const base = noticeBase();
   const pending = openDressKeys(loadStats()).filter((key) => !base.celebrated.includes(key));
   if (pending.length === 0) return;
@@ -2489,7 +2490,7 @@ function showRpg() {
   );
   const intro = stage.kind === "chest" ? "🎁 たからばこだ! 正解で ハート回復!" : stage.kind === "boss" ? `🐉 ボス ${stage.name}が あらわれた!` : `${stage.icon} ${stage.name}が あらわれた!`;
   rpgFx(intro);
-  playSe("rpgAppear");
+  playSe("rpgStep"); // 敵があらわれた(踏みこむ音)
   $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
   show("rpg");
   setScene(stage.kind === "boss" ? "rpgboss" : "rpg"); // ボス戦は、BGMが変わる
@@ -2527,22 +2528,60 @@ function rpgAnswer(index) {
   $("btn-rpg-next").focus({ preventScroll: true });
 }
 
-// RPGの効果音(こうげき=踏みこんで、当たる。ダメージ=受ける。宝箱=チーン。まちがえた宝箱=ふせいかいの音)
+// RPGの効果音(敵があらわれた=踏みこむ音。こうげき=小パンチ、敵をたおしたときは、こうげきの音が鳴りおわってから、せいかいのチャイム。
+// ダメージ=パンチを受け止める。ハート回復=パパッ。まちがえた宝箱=ふせいかいの音)
 function rpgSounds(event) {
   if (event === "hit" || event === "defeat") {
-    playSe("rpgStep");
-    setTimeout(() => playSe("rpgPunch"), 280);
-    if (event === "defeat") setTimeout(() => playSe("correct"), 650);
+    playSe("rpgPunch");
+    if (event === "defeat") setTimeout(() => playSe("correct"), 560); // こうげきの音(約0.5秒)のあと
   } else if (event === "damage") playSe("rpgGuard");
-  else if (event === "heal") playSe("rpgDing", 2200);
+  else if (event === "heal") playSe("rpgAppear");
   else playSe("wrong");
 }
 
 function rpgNext() {
-  if (play.roundFinished && !play.cleared) playSe("rpgSad", 2600); // ゲームオーバー(長い音なので、途中で消す)
-  if (play.roundFinished) announce(play.cleared ? "クエスト クリア〜!" : "ゲームオーバー…", play.cleared ? "result" : "none", showResult, "../assets/flori/m/wave_surprised.png");
+  if (play.roundFinished && !play.cleared) showGameOver(); // ゲームオーバーは、専用の画面
+  else if (play.roundFinished) announce("クエスト クリア〜!", "result", showResult, "../assets/flori/m/wave_surprised.png");
   else showRpg();
 }
+
+// ゲームオーバーの画面:結果発表とは別。どこまで進んだか・まちがえた問題のこと・もう1度。BGMはなく、zannense(約7秒の音)を2.6秒で切って鳴らす
+function showGameOver() {
+  const result = play.finishRound();
+  recordDex(result.answers); // 図鑑
+  recordWrong(result.answers); // まちがえた問題は、まちがいノートへ
+  const wrongCount = result.answers.filter((a) => !a.correct).length;
+  const last = RPG_STAGES.length - 1;
+  $("go-message").textContent =
+    result.stage === 0
+      ? "さいしょの 敵に まけちゃった…。つぎは がんばろう!"
+      : result.stage >= last
+        ? "ドラゴンに やられちゃった…。あと少しだったヨ!"
+        : result.stage >= 3
+          ? "ボスの すぐ近くまで 来たのに…。くやしいネ!"
+          : "ここまで がんばったヨ。もう1度 いってみよう!";
+  $("go-path").replaceChildren(
+    ...RPG_STAGES.map((stage, index) => {
+      const item = document.createElement("li");
+      item.textContent = stage.icon;
+      item.title = stage.name;
+      if (index < result.stage) item.className = "is-done";
+      else if (index === result.stage) item.className = "is-fell"; // ここで たおれた
+      return item;
+    }),
+  );
+  $("go-reach").textContent = `${result.stage} / ${RPG_STAGES.length}`;
+  $("go-correct").textContent = `${result.correct} / ${result.total}問`;
+  $("go-note").textContent = wrongCount > 0 ? `まちがえた${wrongCount}問は、まちがいノートに 入ったヨ。` : "";
+  $("go-note").hidden = wrongCount === 0;
+  awardBadges();
+  show("gameover");
+  playSe("rpgSad", 2600); // zannense:約7秒の音を、2.6秒で切る
+  resultTimers.push(setTimeout(celebrateUnlocks, 3200)); // 着せ替えが ふえていたら、お祝いの画面
+}
+$("btn-go-again").addEventListener("click", () => startPlay("rpg"));
+$("btn-go-note").addEventListener("click", showNote);
+$("btn-go-back").addEventListener("click", () => show("cover", -1));
 
 // ヒント:1問に1回。見ると、ハートが半分(0.5)へる。ハートが半分しかのこっていないときは、見られない(ふつうモードと同じ確認つき)
 $("btn-rpg-hint").addEventListener("click", () => {

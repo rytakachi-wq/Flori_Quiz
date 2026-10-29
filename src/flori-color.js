@@ -73,15 +73,15 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
   }
   if (color.sakura) {
     // 桜:うすいピンクに、少しはなれた、大きめの花びら
-    const cx = (x + (Math.floor(y / 84) % 2 ? 42 : 0)) % 84 - 42;
-    const cy = (y % 84) - 42;
-    return (cx / 15) ** 2 + (cy / 10) ** 2 < 1 ? hslToRgb(350, 0.52, clamp01(l * 0.92)) : hslToRgb(345, 0.3, l);
+    const cx = (x + (Math.floor(y / 112) % 2 ? 56 : 0)) % 112 - 56;
+    const cy = (y % 112) - 56;
+    return (cx / 21) ** 2 + (cy / 14) ** 2 < 1 ? hslToRgb(350, 0.52, clamp01(l * 0.92)) : hslToRgb(345, 0.3, l);
   }
   if (color.dots) {
     // 水玉:白に、大きめのピンクの水玉(間をあけて)
-    const cx = (x + (Math.floor(y / 62) % 2 ? 31 : 0)) % 62;
-    const cy = y % 62;
-    return (cx - 31) ** 2 + (cy - 31) ** 2 < 144 ? hslToRgb(340, 0.68, clamp01(l * 0.9)) : whiteOf(l);
+    const cx = (x + (Math.floor(y / 88) % 2 ? 44 : 0)) % 88;
+    const cy = y % 88;
+    return (cx - 44) ** 2 + (cy - 44) ** 2 < 289 ? hslToRgb(340, 0.68, clamp01(l * 0.9)) : whiteOf(l);
   }
   if (color.stripes) {
     // ストライプ:太い、水色と白のよこしま
@@ -89,11 +89,17 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
   }
   if (color.snow) {
     // 雪の結晶:水色に、大きな白い結晶(間をあけて)
-    const dx = ((x + 42) % 84) - 42;
-    const dy = ((y + 42) % 84) - 42;
-    const flake = (Math.abs(dx) < 3.5 && Math.abs(dy) < 15) || (Math.abs(dy) < 3.5 && Math.abs(dx) < 15) || (Math.abs(dx - dy) < 4.5 && Math.abs(dx) < 10) || (Math.abs(dx + dy) < 4.5 && Math.abs(dx) < 10);
+    const dx = ((x + 58) % 116) - 58;
+    const dy = ((y + 58) % 116) - 58;
+    const flake = (Math.abs(dx) < 6 && Math.abs(dy) < 22) || (Math.abs(dy) < 6 && Math.abs(dx) < 22) || (Math.abs(dx - dy) < 7 && Math.abs(dx) < 15) || (Math.abs(dx + dy) < 7 && Math.abs(dx) < 15);
     return flake ? whiteOf(l) : hslToRgb(208, 0.55, clamp01(l * 0.95));
   }
+  if (color.grad) {
+    // グラデーション:上から下へ、色が変わる
+    const [h, s] = rgbToHsl(...mix3(color.grad.map(hexRgb), y / height));
+    return hslToRgb(h, s * (color.gsat ?? 1), clamp01(l * 0.97));
+  }
+  if (color.pat) return pattern(color.pat, x, y, l);
   if (color.rainbow) return hslToRgb(((x / width) * 320 + (y / height) * 120) % 360, 0.34, Math.min(0.9, l * 0.98 + 0.02));
   if (color.metal) {
     // 金属の光沢:もとの明るさを、暗い色→明るい色の段階に当てはめ、斜めに走る光の帯(つや)を重ねる
@@ -107,6 +113,59 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
   }
   const target = Math.min(0.9, Math.max(sTarget * color.gain, color.minSat)) * STRENGTH * (color.boost ?? 1);
   return hslToRgb(color.hue, Math.max(target, sKeep * 0.5), clamp01(l * (color.lmul ?? 1)));
+}
+
+// 柄(お試しの色):白っぽい地に、もようを付ける
+function pattern(name, x, y, l) {
+  const c = (h, s, m = 1) => hslToRgb(h, s, clamp01(l * m));
+  const cell = (n) => [((x % n) + n) % n - n / 2, ((y % n) + n) % n - n / 2];
+  switch (name) {
+    case "gingham": {
+      const a = Math.floor(x / 34) % 2;
+      const b = Math.floor(y / 34) % 2;
+      return a && b ? c(350, 0.6, 0.88) : a || b ? c(350, 0.5, 0.96) : whiteOf(l);
+    }
+    case "hearts": {
+      const [u0, v0] = cell(76);
+      const u = u0 / 17;
+      const v = -v0 / 17 + 0.15;
+      return (u * u + v * v - 1) ** 3 - u * u * v ** 3 < 0 ? c(345, 0.7, 0.9) : whiteOf(l);
+    }
+    case "stars": {
+      const [u, v] = cell(80);
+      const r = Math.hypot(u, v);
+      const a = Math.atan2(v, u) + Math.PI / 2;
+      return r < 20 * (0.42 + 0.58 * Math.abs(Math.cos(2.5 * a)) ** 2) ? c(46, 0.85, 0.92) : c(48, 0.5, 1.02);
+    }
+    case "border":
+      return Math.floor((x + y) / 34) % 2 ? c(160, 0.5, 0.92) : whiteOf(l);
+    case "checker":
+      return (Math.floor(x / 40) + Math.floor(y / 40)) % 2 ? c(225, 0.4, 0.86) : whiteOf(l);
+    case "wave":
+      return Math.floor((y + 12 * Math.sin(x / 16)) / 30) % 2 ? c(200, 0.62, 0.93) : whiteOf(l);
+    case "diamond": {
+      const [u, v] = cell(64);
+      return Math.abs(u) + Math.abs(v) < 20 ? c(280, 0.45, 0.92) : whiteOf(l);
+    }
+    case "leaves": {
+      const [u, v] = cell(70);
+      const p = (u + v) / 1.414;
+      const q = (u - v) / 1.414;
+      return (p / 20) ** 2 + (q / 8) ** 2 < 1 ? c(125, 0.45, 0.88) : c(60, 0.45, 1.02);
+    }
+    case "rainbowdots": {
+      const [u, v] = cell(62);
+      const n = Math.floor(x / 62) + Math.floor(y / 62) * 3;
+      return u * u + v * v < 150 ? c((n * 62) % 360, 0.65, 0.92) : whiteOf(l);
+    }
+    case "watercolor": {
+      const a = Math.sin(x * 0.045 + Math.sin(y * 0.03) * 2);
+      const b = Math.sin(y * 0.05 + Math.sin(x * 0.025) * 2);
+      return c(200 + 80 * a + 40 * b, 0.45, 0.97);
+    }
+    default:
+      return whiteOf(l);
+  }
 }
 
 // color = { hue, gain, minSat, gray }
