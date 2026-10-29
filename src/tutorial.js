@@ -176,7 +176,34 @@ PLAY_SCENES.push(
   },
 );
 
-const SCENE_SETS = { play: PLAY_SCENES, relax: RELAX_SCENES, daily: DAILY_SCENES, review: REVIEW_SCENES };
+const RPG_SCENES = [
+  {
+    title: "RPGクエスト",
+    caption: "5つのマスを 進んで ボスの ドラゴンを たおそう! ハートは 4つだよ。",
+    html: `<div class="tg">${seq([["🐭", "ザコ"], ["🎁", "たからばこ"], ["🦂", "つよい敵"], ["🐉", "ボス"]])}</div>`,
+  },
+  {
+    title: "たたかい",
+    caption: "正解すると 敵に こうげき! まちがえると ハートが 1つ へるよ。",
+    html: `<div class="tg">${seq([["✅", "正解"], ["⚔️", "こうげき"], ["❌", "まちがい"], ["💔", "ハート -1"]])}</div>`,
+  },
+  {
+    title: "ヒント",
+    caption: "ヒントを見ると ハートが 半分 へるよ。ハートが 半分しか ないときは 見られないよ。",
+    html: `<div class="tg">${seq([["💡", "ヒント"], ["💔", "ハート 半分"]], "wide")}</div>`,
+  },
+  {
+    title: "たからばこ・ボス",
+    caption: "たからばこは 正解で ハートが 1つ 回復! ボスは 2回 正解すると たおせるよ。",
+    html: `<div class="tg">${seq([["🎁", "回復"], ["🐉", "ボス"], ["⚔️", "2回 こうげき"]])}</div>`,
+  },
+  {
+    title: "まちがい・クリア",
+    caption: "まちがえた問題は まちがいノートに 入るよ。ハートが 0になる前に ドラゴンを たおそう!",
+    html: `<div class="tg">${seq([["❌", "まちがい"], ["📓", "ノート"], ["🏆", "クリア"]])}</div>`,
+  },
+];
+const SCENE_SETS = { play: PLAY_SCENES, relax: RELAX_SCENES, daily: DAILY_SCENES, review: REVIEW_SCENES, rpg: RPG_SCENES };
 let SCENES = PLAY_SCENES;
 
 let index = 0;

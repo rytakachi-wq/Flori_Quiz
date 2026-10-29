@@ -20,6 +20,7 @@ const BGM = {
   relax: "relax",
   oni: "oni",
   rpg: "quest",
+  rpgboss: "questboss", // RPGの、ボス戦
   result: "result",
   tutorial: "tutorial",
 };

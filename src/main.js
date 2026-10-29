@@ -465,7 +465,6 @@ function fitQuestion(screenId = "screen-question") {
   screen.classList.add("is-tight2");
 }
 window.addEventListener("resize", () => fitQuestion());
-window.addEventListener("resize", () => fitQuestion("screen-rpg"));
 
 // 問題の番号に合わせた、フロリのセリフと声(first=最初の問題、last=最後の問題)
 function coachLine(asked, total, leveledUp) {
@@ -1440,13 +1439,22 @@ $("btn-confirm-start").addEventListener("click", () => {
   if (pick.kind === "versus") {
     versusPlayers = Math.min(VERSUS_MAX_PLAYERS, Math.max(VERSUS_MIN_PLAYERS, pick.players));
     startPlay("versus");
-  } else startPlay(pick.level);
+  } else if (pick.level === "rpg") guideOnce("rpg", () => startPlay("rpg")); // RPGは、はじめてのときだけ、先にルール説明
+  else startPlay(pick.level);
 });
 
 // 戻るボタンは、どの画面でも、左上の同じ場所。表紙から、ひとつずつ戻る
-$("btn-rules-back").addEventListener("click", () => show("cover", -1));
+// クイズのルール説明の戻るは、モード選択の画面へ
+$("btn-rules-back").addEventListener("click", () => {
+  renderSetup();
+  show("setup", -1);
+});
 $("btn-flow-back").addEventListener("click", () => show("cover", -1));
 $("btn-show-rules").addEventListener("click", () => {
+  if (pick.level === "rpg" && pick.kind !== "versus") {
+    playTutorial("rpg"); // RPGを選んでいるときは、RPGのルール説明
+    return;
+  }
   resetRules();
   show("rules");
 });
@@ -1641,7 +1649,7 @@ function startGarden(size = gardenSize) {
 // リラックスを選ぶと、説明・遊び方・コツのムービーを見てから、お花畑へ進む
 // (ムービーは、はじめて選んだときだけ。あとは、「遊び方・コツ」ボタンで、いつでも見られる)
 // 毎日1問・復習・リラックスのムービーは、はじめて選んだときだけ、ゲームの前に流れる
-const GUIDE_SEEN_KEYS = ["daily", "review", "relax"].map((kind) => `floriQuiz.guideSeen.${kind}`);
+const GUIDE_SEEN_KEYS = ["daily", "review", "relax", "rpg"].map((kind) => `floriQuiz.guideSeen.${kind}`);
 function guideOnce(kind, then) {
   const key = `floriQuiz.guideSeen.${kind}`;
   let seen = false;
@@ -2381,8 +2389,8 @@ $("btn-note-review").addEventListener("click", () =>
 );
 
 // ================= RPGクエスト(専用の画面 screen-rpg) =================
-// ミニマップ+サバイバル。5つのマスを、ハート4つで進む(game.js の RpgRound)。クイズの画面(screen-question)は使わず、
-// 見た目と並びは、ふつうモードの問題画面にそろえてある(style.css で、問題画面の規則を #screen-rpg にも当てている)。
+// ミニマップ+サバイバル。5つのマスを、ハート4つで進む(game.js の RpgRound)。クイズの画面(screen-question)は使わない。
+// ふつうモードからは、ほどよく借りてある=「ヒントを見る」の確認、数字つきの選択肢、正解と解説、「次へ」。
 let rpgQuestion = null;
 let rpgAnswered = false;
 let rpgHinted = false;
@@ -2408,31 +2416,40 @@ function renderRpgHearts() {
   box.setAttribute("aria-label", `ハート ${play.lives}`);
 }
 
-function rpgFoeText(stage, hp) {
-  const name = stage.kind === "boss" ? `ボス${stage.name}` : stage.name;
-  const pips = stage.kind === "chest" ? "" : `${"💗".repeat(Math.max(0, hp))}${"🤍".repeat(stage.hp - Math.max(0, hp))}`;
-  return `${stage.icon}${name}${pips}`;
-}
-
 function renderRpgStatus(foeHp = play.hp) {
   renderRpgHearts();
-  const stage = play.current;
-  const foe = $("rpg-foe");
-  foe.replaceChildren();
-  const line = document.createElement("span");
-  line.className = "rpg-foe-line";
-  line.textContent = rpgFoeText(stage, foeHp);
-  foe.append(line);
-  $("rpg-path").classList.add("rpg-path");
   $("rpg-path").replaceChildren(
-    ...RPG_STAGES.map((item, index) => {
-      const cell = document.createElement("span");
-      cell.textContent = item.icon;
-      if (index < play.stage) cell.className = "is-done";
-      else if (index === play.stage) cell.className = "is-now";
-      return cell;
+    ...RPG_STAGES.map((stage, index) => {
+      const item = document.createElement("li");
+      item.textContent = stage.icon;
+      item.title = stage.name;
+      if (index < play.stage) item.className = "is-done";
+      else if (index === play.stage) item.className = "is-now";
+      return item;
     }),
   );
+  const stage = play.current;
+  $("rpg-foe-icon").textContent = stage.icon;
+  $("rpg-foe-name").textContent = stage.kind === "chest" ? "たからばこ" : stage.kind === "boss" ? `ボス ${stage.name}` : stage.name;
+  $("rpg-foe-hp").textContent = stage.kind === "chest" ? "正解で ハート回復" : `${"💗".repeat(Math.max(0, foeHp))}${"🤍".repeat(stage.hp - Math.max(0, foeHp))}`;
+}
+
+function rpgPose(src, alt) {
+  const img = $("rpg-flori");
+  applyFloriSrc(img, src);
+  img.alt = alt;
+}
+
+function rpgFx(text, ...classes) {
+  const field = $("rpg-field");
+  field.classList.remove("is-strike", "is-defeat", "is-hurt");
+  void field.offsetWidth;
+  field.classList.add(...classes);
+  const fx = $("rpg-fx");
+  fx.textContent = text;
+  fx.classList.remove("is-on");
+  void fx.offsetWidth;
+  fx.classList.add("is-on");
 }
 
 function updateRpgHintButton() {
@@ -2446,42 +2463,34 @@ function showRpg() {
   rpgQuestion = question;
   rpgAnswered = false;
   rpgHinted = false;
-  const stage = play.current;
-  const screen = $("screen-rpg");
-  screen.classList.remove("is-answered", "is-hinted", "is-tight", "is-tight1", "is-tight2", "is-tight3");
   renderRpgStatus();
-  const img = $("rpg-flori");
-  applyFloriSrc(img, stage.kind === "boss" ? IMG.surprised : IMG.think);
-  img.alt = "フロリ";
-  const message = $("rpg-message");
-  message.textContent =
-    stage.kind === "chest" ? "🎁 たからばこ! 正解で ハート回復!" : stage.kind === "boss" ? `ボス ${stage.name}が あらわれた!` : `${stage.name}が あらわれた!`;
-  message.hidden = false;
+  const stage = play.current;
+  $("rpg-field").classList.remove("is-strike", "is-defeat", "is-hurt");
+  rpgPose(stage.kind === "boss" ? IMG.surprised : "../assets/flori/m/body_wave.webp", "フロリ");
   $("rpg-text").textContent = question.text;
-  $("rpg-text").classList.toggle("long", question.text.length > 70);
-  screen.classList.toggle("is-long", question.text.length > 100);
+  $("rpg-text").hidden = false;
   $("rpg-hint").hidden = true;
-  $("rpg-hint-area").hidden = false;
   updateRpgHintButton();
-  $("rpg-feedback").hidden = true;
-  const list = $("rpg-choices");
-  list.replaceChildren(
+  $("rpg-after").hidden = true;
+  $("rpg-choices").hidden = false;
+  $("rpg-choices").replaceChildren(
     ...question.choices.map((text, index) => {
-      const item = document.createElement("li");
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "choice";
+      button.className = "rpg-choice";
       button.dataset.noSe = "1";
-      button.innerHTML = `<span class="choice-no">${index + 1}</span><span class="choice-text"></span>`;
-      button.querySelector(".choice-text").textContent = text;
+      button.innerHTML = '<span class="rpg-no"></span><span class="rpg-choice-text"></span>';
+      button.querySelector(".rpg-no").textContent = String(index + 1);
+      button.querySelector(".rpg-choice-text").textContent = text;
       button.addEventListener("click", () => rpgAnswer(index));
-      item.append(button);
-      return item;
+      return button;
     }),
   );
+  const intro = stage.kind === "chest" ? "🎁 たからばこだ! 正解で ハート回復!" : stage.kind === "boss" ? `🐉 ボス ${stage.name}が あらわれた!` : `${stage.icon} ${stage.name}が あらわれた!`;
+  rpgFx(intro);
+  $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
   show("rpg");
-  fitQuestion("screen-rpg");
-  setTimeout(() => fitQuestion("screen-rpg"), 120); // ふりがなが付いたあとに、もう1度
+  setScene(stage.kind === "boss" ? "rpgboss" : "rpg"); // ボス戦は、BGMが変わる
 }
 
 function rpgAnswer(index) {
@@ -2491,41 +2500,28 @@ function rpgAnswer(index) {
   const foe = play.current; // 答える前の敵(たおすと、次のマスに進むので)
   const correct = play.answer(question, index, rpgHinted);
   playSe(correct ? "correct" : "wrong");
-  [...$("rpg-choices").querySelectorAll(".choice")].forEach((button, i) => {
-    button.disabled = true;
-    if (i === question.answer) button.classList.add("is-right");
-    else if (i === index) button.classList.add("is-wrong");
-  });
   const event = play.event;
-  renderRpgStatus(event === "defeat" ? 0 : play.hp);
-  const shake = (id) => {
-    $(id).classList.remove("rpg-hit");
-    void $(id).offsetWidth;
-    $(id).classList.add("rpg-hit");
-  };
-  if (event === "damage") shake("rpg-hearts");
-  else if (event === "hit" || event === "defeat") shake("rpg-foe");
-  const verdict = {
-    hit: `正解! ${foe.name}に ダメージ!`,
-    defeat: `正解! ${foe.name}を たおした!`,
-    damage: `残念… ${foe.name}の こうげき! ハート -1`,
-    heal: "正解! 🎁 ハートが 1つ 回復!",
-    miss: "残念… たからばこは あけられなかった",
+  const message = {
+    hit: `⚔️ こうげき! ${foe.name}に ダメージ!`,
+    defeat: `💥 ${foe.name}を たおした!`,
+    damage: `💢 ${foe.name}の こうげき! ハート -1`,
+    heal: "💖 たからばこが ひらいた! ハート +1",
+    miss: "🎁 たからばこは あけられなかった…",
   }[event];
-  $("rpg-verdict").textContent = `${verdict}${correct && rpgHinted ? "(ヒントを使ったヨ)" : ""}`;
-  $("rpg-verdict").className = `verdict ${correct ? "is-right" : "is-wrong"}`;
-  $("rpg-explanation").textContent = `正解は「${question.choices[question.answer]}」\n${question.explanation}`;
-  $("btn-rpg-next").textContent = play.roundFinished ? "結果を見る" : "次へ";
-  $("screen-rpg").classList.add("is-answered"); // 答えたあとは、上のフロリや、ヒントを、かくして、場所をあける
-  applyFloriSrc($("rpg-react-flori"), correct ? IMG.correct : IMG.wrong);
-  $("rpg-react-flori").alt = correct ? "笑うフロリ" : "目をつぶるフロリ";
-  $("rpg-feedback").hidden = false;
+  rpgFx(message, event === "damage" ? "is-hurt" : "is-strike");
+  if (event === "defeat") setTimeout(() => $("rpg-field").classList.add("is-defeat"), 400);
+  rpgPose(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
+  renderRpgStatus(event === "defeat" ? 0 : play.hp);
+  $("btn-rpg-hint").hidden = true;
+  $("rpg-hint").hidden = true;
+  $("rpg-choices").hidden = true; // 答えたあとは、答えと解説だけ(問題文と選択肢は、かくす。1画面に収めるため)
+  $("rpg-text").hidden = true;
+  $("rpg-verdict").textContent = correct ? (rpgHinted ? "正解! (ヒントを使ったヨ)" : "正解!") : "残念…";
+  $("rpg-explain").textContent = `正解は「${question.choices[question.answer]}」\n${question.explanation}`;
+  $("rpg-after").hidden = false;
+  $("btn-rpg-next").textContent = play.roundFinished ? "結果を見る ▶" : "次へ ▶";
+  $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
   $("btn-rpg-next").focus({ preventScroll: true });
-  fitExplanation(RPG_IDS);
-  $("rpg-feedback").scrollIntoView({ block: "nearest", behavior: "instant" });
-  fitFeedback(RPG_IDS);
-  setTimeout(() => fitFeedback(RPG_IDS), 80);
-  setTimeout(() => fitFeedback(RPG_IDS), 400);
 }
 
 function rpgNext() {
@@ -2533,7 +2529,7 @@ function rpgNext() {
   else showRpg();
 }
 
-// ヒント:1問に1回。見ると、ハートが半分(0.5)へる。ハートが半分しかのこっていないときは、見られない
+// ヒント:1問に1回。見ると、ハートが半分(0.5)へる。ハートが半分しかのこっていないときは、見られない(ふつうモードと同じ確認つき)
 $("btn-rpg-hint").addEventListener("click", () => {
   if (rpgAnswered || rpgHinted || !rpgQuestion?.hint || !play.canHint) return;
   $("dlg-rpg-hint").showModal();
@@ -2545,15 +2541,10 @@ $("btn-rpg-hint-yes").addEventListener("click", () => {
   rpgHinted = true;
   play.useHint();
   renderRpgHearts();
-  $("rpg-hearts").classList.remove("rpg-hit");
-  void $("rpg-hearts").offsetWidth;
-  $("rpg-hearts").classList.add("rpg-hit");
-  $("rpg-hint").textContent = `ヒント:${rpgQuestion.hint}`;
+  rpgFx("💔 ヒントで ハートが 半分 へった");
+  $("rpg-hint").textContent = `💡 ${rpgQuestion.hint}`;
   $("rpg-hint").hidden = false;
-  $("screen-rpg").classList.add("is-hinted");
   updateRpgHintButton();
-  fitQuestion("screen-rpg");
-  setTimeout(() => fitQuestion("screen-rpg"), 120);
 });
 $("btn-rpg-next").addEventListener("click", rpgNext);
 $("btn-rpg-quit").addEventListener("click", () => $("dlg-quit").showModal());
