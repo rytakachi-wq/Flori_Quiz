@@ -3294,3 +3294,7 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
   .rpg-screen.is-answered { --rpg-field-h: 92px; }
   .rpg-screen.is-answered .rpg-explain { font-size: 13px; line-height: 1.45; }
 }
+
+/* 着せ替えのタブ:「フロリの色」は、ほかより長いので、そのぶん広く */
+#screen-dress .dress-tabs { grid-template-columns: 1.7fr repeat(4, 1fr); }
+#screen-dress .dress-tab[data-dress-tab="color"] .tab-name { font-size: 13px; white-space: nowrap; }
