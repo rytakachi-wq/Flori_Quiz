@@ -3194,3 +3194,12 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 #screen-note .dex-count { font-size: 18px; margin: 0; }
 .note-buttons { display: flex; gap: 8px; flex: none; width: min(560px, 100%); justify-content: center; }
 .note-buttons .btn { flex: 1 1 0; min-width: 0; }
+
+/* 遊び方(普通・難しい・マップ・ライフ)の4つが、せまい画面でも、はみ出さないように */
+#screen-setup #seg-third.is-four .seg-btn { font-size: 9px; letter-spacing: -0.06em; }
+#screen-setup #seg-third.is-four .seg-btn .si { font-size: 20px; }
+
+/* ミニマップの道(問題の画面の上の1行) */
+.q-trail { margin: 0; padding: 2px 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 20px; line-height: 1.3; letter-spacing: 0.2em; background: #e3f4dc; border: 2px solid var(--line); border-radius: 14px; box-shadow: 0 2px 0 rgba(70, 85, 94, 0.25); flex: none; }
+.q-trail[hidden] { display: none; }
+.q-trail .emi { height: 1.1em; width: auto; }

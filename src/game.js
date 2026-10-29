@@ -256,6 +256,139 @@ export class PracticeRound {
   }
 }
 
+// ライフ制「サバイバル」:ハート3つ。まちがえると1つへって、0になるまで続く。正解が3問ふえるごとに、問題が1段階むずかしくなる(最大で段階4)。
+export const SURVIVAL_LIVES = 3;
+// ステージ制「ミニマップ」:ゴールまで5マス。正解で1マス進み、まちがえるとその場で足ぶみ。出せる問題は8問まで。宝箱のマスは、正解でボーナス点。
+export const MAP_STAGES = 5;
+export const MAP_MAX_QUESTIONS = 8;
+export const MAP_LEVELS = [1, 1, 2, 3, 4]; // いまのマスから進むときの、問題の段階
+export const MAP_CHESTS = [3]; // 宝箱のマス(1〜MAP_STAGES。そのマスに進む問題が、ボーナス)
+export const MAP_CHEST_BONUS = POINTS_PER_CORRECT;
+
+// 段階がいちばん近い、まだ出していない問題を選ぶ(同じ近さなら、下の段階を先に)。
+function pickByLevel(questions, used, target, rng) {
+  const pool = questions.filter((q) => !used.has(q.id));
+  const distance = (q) => Math.abs(q.level - target) + (q.level > target ? 0.5 : 0);
+  const best = Math.min(...pool.map(distance));
+  const candidates = pool.filter((q) => distance(q) === best);
+  return candidates[Math.floor(rng() * candidates.length)];
+}
+
+// 「サバイバル」「ミニマップ」の、共通の部分。成績の回数・総合得点には入れない(自分たちの記録だけ)。
+class AdventureRound {
+  constructor(questions, rng = Math.random) {
+    this.questions = questions;
+    this.rng = rng;
+    this.startRound();
+  }
+
+  startRound() {
+    this.used = new Set();
+    this.asked = 0;
+    this.correct = 0;
+    this.lastLevel = null;
+    this.roundAnswers = [];
+    this.points = 0;
+  }
+
+  abandonRound() {
+    this.startRound();
+  }
+
+  nextQuestion() {
+    const question = pickByLevel(this.questions, this.used, this.level, this.rng);
+    const leveledUp = this.lastLevel !== null && question.level > this.lastLevel;
+    this.lastLevel = question.level;
+    return { question, leveledUp };
+  }
+
+  record(question, correct, hinted) {
+    const points = questionPoints(correct, hinted);
+    this.points += points;
+    this.used.add(question.id);
+    this.roundAnswers.push({ id: question.uid ?? question.id, correct, hinted: correct && hinted, points });
+    this.asked += 1;
+    if (correct) this.correct += 1;
+  }
+
+  get exhausted() {
+    return this.used.size >= this.questions.length;
+  }
+
+  finishRound() {
+    const result = { ...roundResult({ correct: this.correct, total: this.asked, points: this.points, roundAnswers: this.roundAnswers }), ...this.summary() };
+    this.startRound();
+    return result;
+  }
+}
+
+export class SurvivalRound extends AdventureRound {
+  startRound() {
+    super.startRound();
+    this.lives = SURVIVAL_LIVES;
+  }
+
+  get level() {
+    return Math.min(HARD_LEVEL, 1 + Math.floor(this.correct / COUNTER_PER_LEVEL));
+  }
+
+  answer(question, response, hinted = false) {
+    const correct = judge(question, response);
+    this.record(question, correct, hinted);
+    if (!correct) this.lives -= 1;
+    return correct;
+  }
+
+  get roundFinished() {
+    return this.lives <= 0 || this.exhausted;
+  }
+
+  summary() {
+    return { lives: this.lives };
+  }
+}
+
+export class MapRound extends AdventureRound {
+  startRound() {
+    super.startRound();
+    this.position = 0; // いまいるマス(0=スタート、MAP_STAGES=ゴール)
+    this.chestOpened = false; // いまの問題に正解して、宝箱が開いたか
+  }
+
+  get level() {
+    return MAP_LEVELS[Math.min(this.position, MAP_LEVELS.length - 1)];
+  }
+
+  // つぎに進むマスが、宝箱か
+  get chestAhead() {
+    return MAP_CHESTS.includes(this.position + 1);
+  }
+
+  answer(question, response, hinted = false) {
+    const correct = judge(question, response);
+    const chest = this.chestAhead;
+    this.record(question, correct, hinted);
+    this.chestOpened = correct && chest;
+    if (correct) {
+      this.position += 1;
+      if (chest) this.points += MAP_CHEST_BONUS;
+    }
+    return correct;
+  }
+
+  get goal() {
+    return this.position >= MAP_STAGES;
+  }
+
+  get roundFinished() {
+    return this.goal || this.asked >= MAP_MAX_QUESTIONS || this.exhausted;
+  }
+
+  summary() {
+    return { goal: this.goal, position: this.position };
+  }
+}
+
 // 問題の中から、count 問を、ランダムに選ぶ。
 export function pickRandom(pool, count, rng = Math.random) {
   const rest = [...pool];

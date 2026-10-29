@@ -3,6 +3,11 @@ import {
   HARD_LEVEL,
   HARD_MIN_LEVEL,
   HINT_COST,
+  MAP_CHEST_BONUS,
+  MAP_CHESTS,
+  MAP_MAX_QUESTIONS,
+  MAP_STAGES,
+  MapRound,
   MAX_LEVEL,
   levelFromCounter,
   MAX_SCORE,
@@ -13,6 +18,8 @@ import {
   TIMED_SECONDS,
   QUESTIONS_PER_ROUND,
   Session,
+  SURVIVAL_LIVES,
+  SurvivalRound,
   TOTAL_POINTS,
   VERSUS_MAX_PLAYERS,
   VERSUS_MIN_PLAYERS,
@@ -62,7 +69,7 @@ const $ = (id) => document.getElementById(id);
 const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "note", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
 
 let coverTaps = 0;
-let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問)
+let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問) "survival"(サバイバル) "map"(ミニマップ)
 let timeLimit = false; // この回に、制限時間を付けるか(普通・難しい・復習・毎日1問で、はじめに聞く)
 let hinted = false; // 今の問題で、ヒントを見たか
 let versusPlayers = 2; // 皆で対戦する人数
@@ -345,9 +352,32 @@ function startPlay(nextMode, startMessage = null) {
     play = new PracticeRound(pool); // 間違えた問題を、全部(正解すると、復習から消える)
   } else if (mode === "daily") {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
-  } else play = getSession(pick.group, "normal");
+  } else if (mode === "survival") play = new SurvivalRound(adventurePool());
+  else if (mode === "map") play = new MapRound(adventurePool());
+  else play = getSession(pick.group, "normal");
   const resume = (mode === "normal" || mode === "hard") && hasCourseKey(activeKey); // 続きから遊ぶときは、そう知らせる
   announce(startMessage ?? (resume ? "続きから スタート!" : "それでは スタート!"), "start", showQuestion, "../assets/flori/m/body_wave.webp");
+}
+
+// サバイバル・ミニマップの問題:選んだ分類の、普通・難しい問題(少ないときは、他の分類から足す)
+function adventurePool() {
+  const inGroup = pick.group === "ランダム" ? playableQuestions : playableQuestions.filter((q) => groupOf(q) === pick.group);
+  const others = playableQuestions.filter((q) => !inGroup.includes(q)).sort(() => Math.random() - 0.5);
+  return [...inGroup, ...others.slice(0, Math.max(0, 20 - inGroup.length))];
+}
+
+// 問題の画面の上の、しるし。サバイバル=ハート、ミニマップ=ゴールまでの道(🤖がいまいるマス)
+function adventureProgress() {
+  const n = Math.min(play.asked + (answered ? 0 : 1), 99);
+  if (mode === "survival") return `${"❤️".repeat(Math.max(0, play.lives))}${"🖤".repeat(SURVIVAL_LIVES - Math.max(0, play.lives))}`;
+  return `第${Math.min(n, MAP_MAX_QUESTIONS)}/${MAP_MAX_QUESTIONS}問`;
+}
+
+// ミニマップの道:🤖がいまいるマス(🚩スタート・🎁宝箱・🏆ゴール)。問題の画面の上に、1行で出す
+function mapTrail() {
+  const nodes = ["🚩", ...Array.from({ length: MAP_STAGES }, (_, i) => (i + 1 === MAP_STAGES ? "🏆" : MAP_CHESTS.includes(i + 1) ? "🎁" : "▫️"))];
+  nodes[play.position] = "🤖";
+  return nodes.join("");
 }
 
 // 対戦の問題:選んだ分類の問題。回戦ごとに、人数ぶんの問題がないときは、他の分類から足す
@@ -371,7 +401,7 @@ function showQuestion() {
   answered = false;
 
   const versus = mode === "versus";
-  const total = play.total ?? QUESTIONS_PER_ROUND;
+  const total = mode === "map" ? MAP_MAX_QUESTIONS : (play.total ?? (mode === "survival" ? 99 : QUESTIONS_PER_ROUND));
   const prefix = {
     normal: "",
     hard: "難しい ",
@@ -379,10 +409,15 @@ function showQuestion() {
     versus: "",
     review: "復習 ",
     daily: "毎日1問 ",
+    survival: "",
+    map: "",
   }[mode];
+  const adventure = mode === "survival" || mode === "map";
   $("q-progress").textContent = versus
     ? `${play.round} / ${VERSUS_ROUNDS}回戦`
-    : `${prefix}第${play.asked + 1}問 / ${total}問`;
+    : adventure
+      ? adventureProgress()
+      : `${prefix}第${play.asked + 1}問 / ${total}問`;
   renderTurn(versus);
   $("q-level").textContent =
     mode === "oni"
@@ -393,6 +428,8 @@ function showQuestion() {
   const art = illustrationFor(question);
   $("q-art").innerHTML = art;
   $("q-art").hidden = art === "";
+  $("q-trail").hidden = mode !== "map";
+  if (mode === "map") $("q-trail").textContent = mapTrail();
   $("q-text").textContent = question.text;
   $("q-text").classList.toggle("long", question.text.length > 70); // 長い問題は、文字を少し小さくして、画面に収める
   $("screen-question").classList.toggle("is-long", question.text.length > 100); // とても長い問題は、もっとぎゅっと
@@ -401,7 +438,7 @@ function showQuestion() {
 
   // フロリのセリフ(問題の番号によって変わる。皆で対戦では出さない)
   const message = $("q-message");
-  const coach = versus ? null : coachLine(play.asked, total, leveledUp);
+  const coach = versus ? null : mode === "map" && play.chestAhead ? { text: "🎁 宝箱マス! 正解で ボーナス点!" } : coachLine(play.asked, total, leveledUp);
   if (coach) {
     setFlori(coach.surprised ? IMG.surprised : IMG.think, coach.surprised ? "驚くフロリ" : "本とペンを持つフロリ");
     message.textContent = coach.text;
@@ -453,13 +490,15 @@ window.addEventListener("resize", () => fitQuestion());
 
 // 問題の番号に合わせた、フロリのセリフと声(first=最初の問題、last=最後の問題)
 function coachLine(asked, total, leveledUp) {
-  const last = total > 1 && asked === total - 1;
+  const last = total > 1 && asked === total - 1 && mode !== "survival";
   const base = (() => {
     if (asked === 0) {
       if (mode === "hard") return { text: "難しいモード! さぁ がんばるぞ!" };
       if (mode === "oni") return { text: "オニ問題! 頑張って!" };
       if (mode === "daily") return { text: "今日の 1問! 頑張って!" };
       if (mode === "review") return { text: "復習 さぁ がんばるぞ!" };
+      if (mode === "survival") return { text: "ハートは 3つ! どこまで いけるかな?" };
+      if (mode === "map") return { text: `ゴールまで ${MAP_STAGES}マス! ${MAP_MAX_QUESTIONS}問までに いこう!` };
       return { text: "さぁ がんばるぞ!" };
     }
     if (last) return { text: "ラスト 1問! がんばれー!" };
@@ -678,6 +717,10 @@ function answer(response) {
   renderers[current.type].mark(current, response, correct);
   playSe(correct ? "correct" : "wrong");
   lastCorrect = correct;
+  if (mode === "survival" || mode === "map") {
+    $("q-progress").textContent = adventureProgress(); // ハート・いまのマスを、すぐ変える
+    if (mode === "map") $("q-trail").textContent = mapTrail();
+  }
 
   setFlori(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
   $("q-message").hidden = true;
@@ -688,12 +731,16 @@ function answer(response) {
       : correct
         ? hinted
           ? `正解!(ヒントを使ったので 半分の${fmtPts(POINTS_PER_CORRECT - HINT_COST)}点)`
-          : "正解!"
+          : mode === "map" && play.chestOpened
+            ? `正解! 🎁 宝箱が ひらいた! ボーナス +${fmtPts(MAP_CHEST_BONUS)}点`
+            : "正解!"
         : wasTimedOut
           ? "時間切れ…"
           : wasGivenUp
             ? "答えを見ました…"
-            : "残念…";
+            : mode === "survival"
+              ? "残念… ハートが 1つ へった!"
+              : "残念…";
   verdict.className = `verdict ${correct ? "is-right" : "is-wrong"}`;
   const rightText = renderers[current.type].correctText(current);
   $("q-explanation").textContent = `正解は「${rightText}」\n${current.explanation}`;
@@ -808,6 +855,8 @@ function showResult() {
   const versus = mode === "versus";
   $("screen-result").classList.toggle("is-versus", versus);
   $("btn-again").hidden = false;
+  const adventure = mode === "survival" || mode === "map";
+  $("r-best-row").querySelector("dt").textContent = mode === "map" ? "最短記録" : adventure ? "最高記録" : "最高得点"; // ミニマップ=いちばん少ない問題数でゴール
   recordDex(result.answers); // 図鑑(どのモードでも)
   $("r-correct-row").hidden = versus;
   $("r-board").hidden = true;
@@ -816,11 +865,13 @@ function showResult() {
     $("r-score").textContent =
       mode === "oni"
         ? `${result.score}点(${result.total * ONI_POINTS_PER_CORRECT}点満点)`
-        : `${fmtPts(result.score)}点(${fmtPts(result.total * POINTS_PER_CORRECT)}点満点)`;
+        : adventure
+          ? `${fmtPts(result.score)}点`
+          : `${fmtPts(result.score)}点(${fmtPts(result.total * POINTS_PER_CORRECT)}点満点)`;
   }
   $("r-score-row").hidden = versus; // 対戦のときは、1人の得点は出さない
   $("r-comment").textContent =
-    mode === "oni" ? oniComment(result.correct, result.total) : versus ? versusComment(result) : comment(result.correct, result.total);
+    mode === "oni" ? oniComment(result.correct, result.total) : versus ? versusComment(result) : adventure ? adventureComment(result) : comment(result.correct, result.total);
   celebrateResult(result, versus);
 
   const setNote = $("r-set");
@@ -867,6 +918,18 @@ function showResult() {
     $("r-record").hidden = true;
     setNote.textContent = `オニ問題に正解したことがあるのは、${oniDone} / ${oniIds.size}問だヨ。`;
     $("btn-again").textContent = "もう1度挑戦";
+  } else if (adventure) {
+    // サバイバル・ミニマップは、成績の「遊んだ回数」「正解率」「総合得点」には入れない(この遊びだけの記録を、端末の中に残す)。
+    const saved = recordAdventure(mode, result);
+    $("r-title").textContent = mode === "map" ? (result.goal ? "ゴール! 🏆" : "ゴールまで あと少し!") : "サバイバルの結果!";
+    $("r-best-row").hidden = false;
+    $("r-best").textContent = adventureBestText(mode);
+    $("r-record").hidden = !saved.isRecord;
+    setNote.textContent =
+      mode === "map"
+        ? `${result.position} / ${MAP_STAGES}マスまで 進んだヨ。${MAP_MAX_QUESTIONS}問のうちに ゴールをめざそう!`
+        : `${result.correct}問 正解して ハートが なくなったヨ。もっと先まで いけるかな?`;
+    $("btn-again").textContent = "もう1度挑戦";
   } else if (mode === "hard") {
     const saved = recordRound({ ...result, mode: "hard", timed: timeLimit });
     persistHard(); // 「続きから」の記録
@@ -891,7 +954,7 @@ function showResult() {
   // 制限時間を付けたご褒美:正解した数ぶんの星。全問正解なら、さらに3つ(オニと対戦は、なし)
   const reward = $("r-reward");
   reward.hidden = true;
-  if (timeLimit && !versus && mode !== "oni") {
+  if (timeLimit && !versus && mode !== "oni" && !adventure) {
     const earned = result.correct + (result.correct === result.total ? 3 : 0);
     const stars = addStars(earned);
     reward.textContent = `制限時間のご褒美! ⭐ +${earned}(全部で ${stars}個)`;
@@ -1020,6 +1083,44 @@ function oniComment(correct, total) {
   if (correct >= total / 2) return "オニを相手にすごいヨ!";
   if (correct >= 1) return "オニ問題を解くなんてえらいヨ!";
   return "オニは難しいんだヨ。また挑戦してネ!";
+}
+
+function adventureComment(result) {
+  if (mode === "map") return result.goal ? "ゴール到着! すごいヨ!" : result.position >= 3 ? "惜しい! もう少しで ゴールだったヨ!" : "ナイスチャレンジ! また 道を進もう!";
+  return result.correct >= 10 ? "すごい! 最後まで 生きのこったヨ!" : result.correct >= 5 ? "いいね! まだまだ 進めるヨ!" : "ハートを 大事に! もう1度 いってみよう!";
+}
+
+// サバイバル・ミニマップの記録(端末の中だけ。成績のデータとは別に持つ)。サバイバル=いちばん多く正解した問題数、ミニマップ=いちばん少ない問題数でゴール(最短記録)
+const ADVENTURE_KEY = "floriQuiz.adventure";
+function loadAdventure() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ADVENTURE_KEY) ?? "{}");
+    return { survival: Math.max(0, Number(raw.survival) || 0), map: Math.max(0, Number(raw.map) || 0) };
+  } catch {
+    return { survival: 0, map: 0 };
+  }
+}
+function recordAdventure(kind, result) {
+  const best = loadAdventure();
+  let isRecord = false;
+  if (kind === "survival" && result.correct > best.survival) {
+    best.survival = result.correct;
+    isRecord = true;
+  } else if (kind === "map" && result.goal && (best.map === 0 || result.total < best.map)) {
+    best.map = result.total;
+    isRecord = true;
+  }
+  try {
+    localStorage.setItem(ADVENTURE_KEY, JSON.stringify(best));
+  } catch {
+    // 保存できなくても、遊べる
+  }
+  return { isRecord };
+}
+function adventureBestText(kind) {
+  const best = loadAdventure();
+  if (kind === "survival") return `${best.survival}問`;
+  return best.map > 0 ? `${best.map}問` : "なし";
 }
 
 // オニ問題を解放したか(オニの問題に、1度でも出会っている)
@@ -1202,7 +1303,7 @@ function renderSeg(el, options, value, onPick) {
   );
 }
 
-const LEVEL_TEXT = { normal: "普通", hard: "難しい" };
+const LEVEL_TEXT = { normal: "普通", hard: "難しい", map: "ミニマップ", survival: "サバイバル" };
 const courseKey = (group = pick.group, level = pick.level) => `${group}-${level}`;
 const anySavedCourse = () => [...GROUPS, "ランダム"].some((group) => ["normal", "hard"].some((level) => hasCourseKey(courseKey(group, level))));
 
@@ -1235,7 +1336,7 @@ function renderSetup() {
     },
   );
   // 3つめの行は、1人のときは「難しさ」、皆のときは「皆の人数」(場所と高さは、同じ)
-  $("set-label-3").innerHTML = versus ? '<span aria-hidden="true">🔢</span> 皆の人数' : '<span aria-hidden="true">🔥</span> 難しさ';
+  $("set-label-3").innerHTML = versus ? '<span aria-hidden="true">🔢</span> 皆の人数' : '<span aria-hidden="true">🎮</span> 遊び方';
   if (versus) {
     renderSeg(
       $("seg-third"),
@@ -1252,6 +1353,8 @@ function renderSetup() {
       [
         { value: "normal", icon: "🌱", text: "普通", color: "c-green" },
         { value: "hard", icon: "🔥", text: "難しい", color: "c-orange" },
+        { value: "map", icon: "🗺️", text: "マップ", color: "c-sky" },
+        { value: "survival", icon: "❤️", text: "ライフ", color: "c-red" },
       ].map((option) => ({ ...option, badge: hasCourseKey(courseKey(pick.group, option.value)) ? SAVE_MARK : "" })),
       pick.level,
       (value) => {
@@ -1260,6 +1363,7 @@ function renderSetup() {
       },
     );
   }
+  $("seg-third").classList.toggle("is-four", !versus); // 遊び方は4つ並ぶので、文字を少し小さく
   // 制限時間:「つける」を大きく、「なし」を小さく
   renderSeg(
     $("seg-time"),
@@ -1275,7 +1379,11 @@ function renderSetup() {
   );
   $("setup-note").textContent = versus
     ? "1台の画面で 順番に 答えるよ。毎回 はじめから。"
-    : hasCourseKey(courseKey())
+    : pick.level === "map"
+      ? `ゴールまで ${MAP_STAGES}マス! 正解で 進む。${MAP_MAX_QUESTIONS}問までに 🎁宝箱を ひらいて ゴールしよう!`
+      : pick.level === "survival"
+        ? "サバイバル:ハートは 3つ。まちがえると へるよ。どこまで 正解できるかな?"
+        : hasCourseKey(courseKey())
       ? "💾 続きから 始まるよ!"
       : anySavedCourse()
         ? "はじめから 始まるよ。(💾 = 続きあり)"
@@ -1307,7 +1415,7 @@ function renderConfirm() {
   const rows = [
     ["👥", "人数選択", versus ? `皆で(${pick.players}人)` : "1人", "c-blue"],
     ["📚", "分類", `${GROUP_ICON[pick.group]} ${pick.group}`, "c-tan"],
-    versus ? ["🏁", "進み方", "3回戦で 対戦", "c-green"] : ["🔥", "難しさ", LEVEL_TEXT[pick.level], "c-orange"],
+    versus ? ["🏁", "進み方", "3回戦で 対戦", "c-green"] : ["🎮", "遊び方", LEVEL_TEXT[pick.level], "c-orange"],
     ["⏱", "制限時間", pick.time ? "つける(30秒)" : "なし", pick.time ? "c-red" : "c-gray"],
     saved ? ["💾", "続き", "前の続きから 遊ぶ", "c-yellow"] : ["🆕", "続き", "はじめから 遊ぶ", "c-yellow"],
   ];

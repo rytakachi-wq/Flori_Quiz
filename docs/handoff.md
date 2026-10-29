@@ -1,6 +1,6 @@
 # 引きつぎメモ(別のセッションで作業を始める人は、最初にこれを読む)
 
-プロジェクトの全体の決まりは [CLAUDE.md](../CLAUDE.md) と [scheme.md](../scheme.md)。決めたことの記録は [decisions.md](decisions.md)(その1〜その62、新しいほど下)。
+プロジェクトの全体の決まりは [CLAUDE.md](../CLAUDE.md) と [scheme.md](../scheme.md)。決めたことの記録は [decisions.md](decisions.md)(その1〜その63、新しいほど下)。
 これまでのやり取りの全文は、前のセッションの記録(`~/.claude/projects/C--Users-rytak-Documents-Flori-Quiz/*.jsonl`)にある。細かい経緯が必要なときだけ、そこを検索する。
 
 ## 作業の約束(利用者の指示)
@@ -22,6 +22,8 @@
 - 絵文字は、描いた絵(`assets/illust/*.webp`)に自動で置きかわる(`src/emoji-img.js`。しくみと例外は decisions の「その54」)。**文字に絵文字を入れるだけで、対応表にあれば絵になる**。新しい絵文字を使うときは、MAP に絵を足す(絵はシートから `tools/illust/export.py` で切り出す)。
 - ふりがな:furigana-data.js の ENTRIES(後ろの項目が優先。形は `漢字{よみ}送りがな`)、KYOIKU_BY_GRADE(学年別の漢字)。設定は 全部・多め[3年生以上]・少なめ[5年生以上]・なし(decisions その61)。
 - 画面の収まり:style.css 末尾の `@media screen` の層(`:is(#screen-…)` でID指定に勝つ)、小さい画面用の規則、固定高の `.screen-head`(46px)。
+
+- ミニマップ・サバイバル(decisions その63):`game.js` の `MapRound`/`SurvivalRound`、`main.js` の `adventureProgress`/`mapTrail`/`recordAdventure`。モード選択の「遊び方」の行は4つ(`pick.level`=normal/hard/map/survival)。**公開は更新していない**(手元で確認。`python tools/serve.py` か、同じ内容を配る簡単なサーバーで開く)。
 
 ## フロリを動かす(Live2D、作業中)
 - `hehehe.cmo3`(利用者のデスクトップ)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で、`src/live2d/model.json`・`tex/` を作る。描画は自作の `src/live2d/live2d.js`。試作ページ:`/src/live2d/preview.html`(スライダーで確認)。表紙用の動き:`src/live2d/flori-motion.js`、確かめ用ページ `/src/live2d/cover.html`(クリックでぴょん)。アプリ(index.html・main.js)には**まだ入れていない**。決めたこと・未決は decisions.md その49。
