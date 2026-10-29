@@ -217,7 +217,7 @@ def strap_mask(img, reach=0.5):
     return canvas, (0.5, 0.5)
 
 
-def strap_eyepatch(img, left=1.75, right=0.9, rise=0.55, outline=None, inner=(240, 245, 249)):
+def strap_eyepatch(img, left=2.0, right=0.9, rise=1.1, outline=None, inner=(240, 245, 249)):
     """眼帯に、ひもを つける(線のように、1本ずつ。顔の画面から、はみ出さない長さ):右は、ほぼ水平に、画面のはしまで。左は、ななめに のぼって、画面の左上まで。
     戻り値の2つ目は、眼帯の中心が、絵のどこ(はば・高さの割合)にあるか"""
     k = 4
