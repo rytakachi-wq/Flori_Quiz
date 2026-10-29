@@ -20,7 +20,7 @@
 - 画面は 6 つのページ(ホーム・図鑑・着せ替え・成績・その他・設定。その他=毎日1問・復習[時間なし]・リラックス[先にムービー]・遊び方)を、下のタブと横スワイプで移動(`show(name, direction)`)。表紙のクリックでは動かない。
 - ご褒美:条件 78+星 12=90 個を、色 15・背景 15・頭 25・体 26・顔 9 に割りあて(あとから、頭4・体9・顔2を、いちばん後ろに足した=105こ。`EXTRA_DECOR`・`EXTRA_LADDER`。そのあと「きらきらの目」を外して104こ。決めたことは decisions の その55〜その57。一覧の並びは系統順=`DISPLAY_ORDER`)(badges.js の SPEC/LADDER/assignUnlocks。表の並び=やさしい順)。かざりの画像は assets/dress/(head01〜25、body01〜38のうち26こ[番号は飛ぶ]、face 9こ)。位置・大きさは badges.js の表 `{x,y,w,r,sx,sy,back}`(sx/sy=横・縦の ふやし。CSS の scale で表す。利用者が赤丸・青丸で直した値)。作り方の記録:`docs/dress-request.md`(ChatGPT への依頼書)、元のシート・切り出し・見本は `assets/dress/new/`(コミットしていない作業用)。
 - 絵文字は、描いた絵(`assets/illust/*.webp`)に自動で置きかわる(`src/emoji-img.js`。しくみと例外は decisions の「その54」)。**文字に絵文字を入れるだけで、対応表にあれば絵になる**。新しい絵文字を使うときは、MAP に絵を足す(絵はシートから `tools/illust/export.py` で切り出す)。
-- ふりがな:furigana-data.js の ENTRIES(後ろの項目が優先。形は `漢字{よみ}送りがな`)、KYOIKU(小学校で習う漢字)。
+- ふりがな:furigana-data.js の ENTRIES(後ろの項目が優先。形は `漢字{よみ}送りがな`)、KYOIKU_BY_GRADE(学年別の漢字)。設定は 全部・おおめ[3年生以上]・すくなめ[5年生以上]・なし(decisions その61)。
 - 画面の収まり:style.css 末尾の `@media screen` の層(`:is(#screen-…)` でID指定に勝つ)、小さい画面用の規則、固定高の `.screen-head`(46px)。
 
 ## フロリを動かす(Live2D、作業中)

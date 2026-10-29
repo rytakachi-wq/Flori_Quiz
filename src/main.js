@@ -1142,7 +1142,7 @@ for (const slider of document.querySelectorAll("[data-volume]")) {
   if (kind === "se") slider.addEventListener("change", () => playSe("correct"));
 }
 
-// ふりがな:3つから選ぶ(全ての漢字 / 中学以降に習う漢字だけ / なし)。設定の画面と、問題を解いているときの設定で、同じ設定を使う。
+// ふりがな:4つから選ぶ(全部 / おおめ / すくなめ / なし)。設定の画面と、問題を解いているときの設定で、同じ設定を使う。
 function showFurigana() {
   for (const radio of document.querySelectorAll('input[type="radio"][name^="furigana"]')) {
     radio.checked = radio.value === getFuriganaMode();

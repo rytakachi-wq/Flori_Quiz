@@ -421,6 +421,8 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 .furigana legend { padding: 0 8px; font-weight: bold; }
 .furigana label { display: block; padding: 4px 0; cursor: pointer; }
 .furigana input { accent-color: var(--blue-dark); margin-right: 6px; }
+/* ふりがなの4つの選びかた(全部・おおめ・すくなめ・なし)は、2×2に並べて高さをおさえる */
+.furigana:has(input[name^="furigana"]) { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; }
 
 /* プレイヤーの色(4人ぶん)。案内板、点数の表、結果で、同じ色を使う */
 :root {

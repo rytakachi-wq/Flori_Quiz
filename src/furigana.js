@@ -1,18 +1,22 @@
 // ふりがな。画面に出る文字の、漢字の上に、読みをつける。
-// 設定(すべての漢字 / 中学以降の漢字だけ / なし)は、端末内に保存する。
+// 設定(全部 / おおめ[3年生以上の漢字] / すくなめ[5年生以上の漢字] / なし)は、端末内に保存する。
 //
 // しくみ:画面に文字が出るたびに(MutationObserver)、漢字をふくむ文字を <span class="rb"> に包んで、
 // 辞書(furigana-data.js)の読みで <ruby> をつける。設定が変わったら、包んだ文字を作りなおす。
 // 辞書にない漢字は、ふりがながつかない(開発用の確認で、画面の文字は全部当てはまることを確かめてある)。
 
-import { ENTRIES, KYOIKU } from "./furigana-data.js";
+import { ENTRIES, KYOIKU_BY_GRADE } from "./furigana-data.js";
 
 const STORAGE_KEY = "floriQuiz.furigana";
-export const MODES = ["all", "chu", "none"]; // all=すべての漢字 / chu=中学以降に習う漢字だけ / none=なし
+export const MODES = ["all", "many", "few", "none"];
+// ふりがなをつけはじめる学年(その学年以上の漢字と、小学校で習わない漢字につける)。
+// all=全部 / many=3年生以上(1・2年はつけない) / few=5年生以上(1〜4年はつけない) / none=なし
+const FROM_GRADE = { all: 1, many: 3, few: 5 };
 const HOST_CLASS = "rb";
 
 const KANJI = /[一-鿿々〆]/;
-const kyoiku = new Set(KYOIKU);
+const gradeOf = new Map();
+KYOIKU_BY_GRADE.forEach((chars, i) => [...chars].forEach((c) => gradeOf.set(c, i + 1)));
 
 // ---- 辞書 ----
 // 辞書の1行(例「上{あ}がる」)を、[[文字, 読み or null], ...] に分ける。
@@ -128,7 +132,7 @@ function matchAt(text, i) {
   return longestMatch(text, i);
 }
 
-const hasUpperKanji = (text) => [...text].some((c) => KANJI.test(c) && !kyoiku.has(c));
+const hasUpperKanji = (text, from) => [...text].some((c) => KANJI.test(c) && (gradeOf.get(c) ?? 7) >= from);
 
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -214,7 +218,7 @@ export function rubyHtml(text, mode) {
   if (mode === "none") return escapeHtml(text);
   return segments(text)
     .map(({ text: t, reading }) => {
-      const show = reading && (mode === "all" || hasUpperKanji(t));
+      const show = reading && (mode === "all" || hasUpperKanji(t, FROM_GRADE[mode]));
       return show ? `<ruby>${escapeHtml(t)}<rp>(</rp><rt>${reading}</rt><rp>)</rp></ruby>` : escapeHtml(t);
     })
     .join("");
@@ -223,7 +227,8 @@ export function rubyHtml(text, mode) {
 // ---- 設定 ----
 let mode = "all";
 try {
-  const saved = localStorage.getItem(STORAGE_KEY);
+  let saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "chu") saved = "few"; // 前の「中学以降だけ」は、いちばん近い「すくなめ」へ
   if (MODES.includes(saved)) mode = saved;
 } catch {
   // 読めなければ、はじめの設定(すべての漢字)にする。
