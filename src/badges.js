@@ -308,8 +308,8 @@ const DISPLAY_ORDER = {
   ],
   face: [
     ["face09", "face23", "face24", "face25", "face21", "face22", "face05"], // 目のまわり(メガネ・サングラス・眼帯・ぐるぐる目・ハートの目・涙)
-    ["face01", "face03", "face08", "face06", "face16", "face15", "face14"], // ほっぺ
-    ["face13", "face19", "face20", "face18"], // 鼻・口のまわり(ねこの鼻・ちょびひげ・猫のひげ・舌ぺろ)
+    ["face01", "face03", "face08", "face06", "face16", "face15", "face14", "face20"], // ほっぺ(猫のひげも)
+    ["face13", "face19", "face18"], // 鼻・口のまわり(ねこの鼻・ちょびひげ・舌ぺろ)
     ["face11", "face12", "face10", "face17", "face04"], // マーク(ハート・音符・怒り・雪の結晶・汗)
   ],
 };
