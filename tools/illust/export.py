@@ -217,7 +217,7 @@ def strap_mask(img, reach=0.5):
     return canvas, (0.5, 0.5)
 
 
-def strap_eyepatch(img, left=1.75, right=0.25, rise=0.55, outline=None, inner=(240, 245, 249)):
+def strap_eyepatch(img, left=1.75, right=0.9, rise=0.55, outline=None, inner=(240, 245, 249)):
     """眼帯に、ひもを つける(線のように、1本ずつ。顔の画面から、はみ出さない長さ):右は、ほぼ水平に、画面のはしまで。左は、ななめに のぼって、画面の左上まで。
     戻り値の2つ目は、眼帯の中心が、絵のどこ(はば・高さの割合)にあるか"""
     k = 4
@@ -230,7 +230,7 @@ def strap_eyepatch(img, left=1.75, right=0.25, rise=0.55, outline=None, inner=(2
     px, py = Ll, Up
     paths = []
     sx, sy = (px + W - 6) * k, (py + H * 0.50) * k
-    paths.append(_bez((sx, sy), (sx + Lr * 0.4 * k, sy), (sx + Lr * 0.7 * k, sy + H * 0.02 * k), ((px + W + Lr - 6) * k, sy + H * 0.03 * k)))
+    paths.append(_bez((sx, sy), (sx + Lr * 0.4 * k, sy), (sx + Lr * 0.7 * k, sy + H * 0.04 * k), ((px + W + Lr - 6) * k, sy + H * 0.06 * k)))
     sx, sy = (px + 6) * k, (py + H * 0.30) * k
     paths.append(_bez((sx, sy), (sx - Ll * 0.33 * k, sy - Up * 0.30 * k), (sx - Ll * 0.66 * k, sy - Up * 0.64 * k), (6 * k, (H * 0.05) * k)))
     _strap_lines(canvas, paths, k, W, outline, inner)
@@ -248,6 +248,9 @@ def blacken(img):
     for c in range(3):
         a[..., c] = np.where(fill, new + (0, 2, 6)[c], a[..., c])
     return Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
+
+
+STRETCH = {"fp_sunglasses": 1.25}  # 横はばだけ のばす(高さは、そのまま)
 
 
 STRAPS = {"fp_mask": strap_mask, "fp_eyepatch": strap_eyepatch}  # ひもを つける
@@ -270,6 +273,8 @@ def main():
             it = cut(im, box, holes=slug in HOLES, holes_top=slug in HOLES_TOP, smooth=SMOOTH.get(slug, 1.0), thr=BGTHR.get(slug, THR), clean=slug in CLEAN)
             if slug in GAPS:
                 it = respace(it, GAPS[slug])
+            if slug in STRETCH:
+                it = it.resize((int(it.width * STRETCH[slug]), it.height), Image.LANCZOS)
             if slug == "fp_eyepatch":  # 黒い眼帯(fp_eyepatch_black)も作る
                 black, ANCHORS["fp_eyepatch_black"] = strap_eyepatch(blacken(it), outline=(40, 45, 55), inner=(72, 76, 86))
                 black.thumbnail((MAXSIDE_WIDE["fp_eyepatch"],) * 2, Image.LANCZOS)
