@@ -2407,9 +2407,11 @@ function renderDress() {
   const kind = dressTab;
   let lastGroup = null; // 系統(帽子・耳・冠…)が変わるごとに、線と説明を入れて、改行する
   $("dress-list").replaceChildren(
-    ...DRESS_LISTS[kind].flatMap((choice) => {
-      const newGroup = choice.group !== undefined && choice.group !== lastGroup;
-      if (choice.group !== undefined) lastGroup = choice.group;
+    ...DRESS_LISTS[kind].flatMap((choice, index) => {
+      // 「なし」は、さいしょの系統の行に入れる(1行だけ、むだにしない)
+      const groupNo = choice.group ?? (index === 0 ? DRESS_LISTS[kind][1]?.group : undefined);
+      const newGroup = groupNo !== undefined && groupNo !== lastGroup;
+      if (groupNo !== undefined) lastGroup = groupNo;
       const open = canWear(choice, ctx);
       const isNew = freshKeys.has(`${kind}:${choice.id}`);
       const button = document.createElement("button");
@@ -2474,7 +2476,7 @@ function renderDress() {
         renderDress();
         playSe("button");
       });
-      const label = newGroup ? groupLabel(kind, choice.group) : "";
+      const label = newGroup ? groupLabel(kind, groupNo) : "";
       if (label) {
         // 系統が変わるところに、線と文字を入れて、どのあたりに着けるものかを、説明する
         const head = document.createElement("div");
