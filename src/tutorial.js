@@ -1,7 +1,16 @@
 // 遊び方の、チュートリアルムービー。絵と動きで、6つの場面を見せる(動画ファイルではなく、画面の中で動かす)。
 // 場面は、「次へ」ボタンを押したときだけ進む(自動では進まない)。「戻る」「閉じる」も、ボタンで。
 
+import { HEADS } from "./badges.js";
+
 const FLORI = "../assets/flori/m/body_wave.webp";
+
+// 「ご褒美」の場面でかぶせる帽子(キャップ)。場所と大きさは、着せ替えの表(badges.js)と同じものを使う(表を直すと、ここも合う)
+const DEMO_HAT = HEADS.find((item) => item.img.endsWith("/head04.png"));
+function demoHatStyle() {
+  const { x, y, w, r = 0, sx = 1, sy = 1 } = DEMO_HAT.pos;
+  return `left:${x}%;top:${y}%;width:${w}%;--hat-r:${r}deg;--hat-sx:${sx};--hat-sy:${sy}`;
+}
 
 const PLAY_SCENES = [
   {
@@ -57,7 +66,7 @@ const PLAY_SCENES = [
     html: `
       <div class="tm-reward">
         <span class="tm-gift">🎁</span>
-        <span class="tm-flori-wrap"><img class="tm-flori" src="${FLORI}" alt=""><img class="tm-hat" src="../assets/dress/head04.png" alt=""></span>
+        <span class="tm-flori-wrap"><img class="tm-flori" src="${FLORI}" alt=""><img class="tm-hat" src="${DEMO_HAT.img}" alt="" style="${demoHatStyle()}"></span>
         <span class="tm-star s1">⭐</span><span class="tm-star s2">⭐</span><span class="tm-star s3">⭐</span>
       </div>`,
   },
