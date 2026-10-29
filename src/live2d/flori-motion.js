@@ -49,9 +49,9 @@ export function createMotion(model) {
 
   function nextEvent(t) {
     let r, kind;
-    // 表情 50%、眉だけ 8%、白目 8%、口 12%、腕と足 22%(伸び 4・手を振る 7・ぱたぱた 5・ばんざい 6)。おなじ種類を、続けて出さない。
+    // 表情 55%、眉だけ 8%、白目 8%、口 5%(へらした)、腕と足 24%(伸び 4・手を振る 7・ぱたぱた 5・ばんざい 6)。おなじ種類を、続けて出さない。
     // ※両手を顔の前に上げる「わくわく」は、やめた(利用者の指示)
-    do { r = Math.random(); kind = r < 0.5 ? 'expr' : r < 0.58 ? 'brow' : r < 0.66 ? 'gaze' : r < 0.78 ? 'mouth' : r < 0.82 ? 'stretch' : r < 0.89 ? 'wave' : r < 0.94 ? 'flap' : 'cheer'; } while (kind === lastKind);
+    do { r = Math.random(); kind = r < 0.55 ? 'expr' : r < 0.63 ? 'brow' : r < 0.71 ? 'gaze' : r < 0.76 ? 'mouth' : r < 0.80 ? 'stretch' : r < 0.87 ? 'wave' : r < 0.92 ? 'flap' : 'cheer'; } while (kind === lastKind);
     lastKind = kind;
     if (kind === 'gaze') {      // 白目で左右を見る(look > 0 = 画面の左を見る)。左右、かならず かわりばんこに
       lastLook = -lastLook;
@@ -107,14 +107,14 @@ export function createMotion(model) {
     // 表情:眉・口・傾き・視線を同じ強さで。眉が動くときは、かならず寄り目(眉と同じ強さ)
     // 口:ふだんから、小さく うごかす(ゆっくり ぱくぱく)。表情のときは、表情の口へ
     // ふだんの口:ゆっくり、小さい(−1)〜ふつう(0 のあたり)を行き来する。大小の差を大きく
-    const idleAbs = Math.max(-1, Math.min(0.1, -0.55 + 0.45 * Math.sin(t * Math.PI * 2 * 0.35) + 0.12 * Math.sin(t * Math.PI * 2 * 0.6)));
+    const idleAbs = -0.6 + 0.35 * Math.sin(t * Math.PI * 2 * 0.1);   // 口の動く回数をへらした:10秒で1往復だけ、ゆっくり
     let brow = 0, tilt = 0, mouth = idleAbs, cross = 0;
-    if (kind === 'mouth') mouth = idleAbs * (1 - k) + k * (-1 + 1.8 * (0.5 + 0.5 * Math.sin(a * Math.PI * 2 * 1.2 - Math.PI / 2)));   // 口だけ ゆっくり ぱくぱく(ちいさい −1 〜 おおきい +0.8)
+    if (kind === 'mouth') mouth = idleAbs * (1 - k) + k * (-1 + 1.8 * (0.5 + 0.5 * Math.sin(a * Math.PI * 2 * 0.8 - Math.PI / 2)));   // 口だけ ゆっくり ぱくぱく(ちいさい −1 〜 おおきい +0.8)
     if (x) {
       // 顔の傾き:左右で見た目の角度をそろえる(顔 +1 = 右へ 9.6°、−1 = 左へ 12.4°)。傾き 1 = 9°(右の限界 9.6° 以内)
       const ang = x.tilt * (x.dir ? dir : 1) * e * 9;
       brow = x.brow * e; tilt = ang > 0 ? ang / 9.6 : ang / 12.4; mouth = idleAbs * (1 - e) + x.mouth * e + (x.wobble ? x.wobble * e * Math.sin(a * Math.PI * 2 * 2.2) : 0);
-      cross = x.brow ? e : 0;               // 寄り目は、デフォルメ:眉が動くときは、いつも目いっぱい(±1)寄せる。強さは、眉と同じ動き(0→1→0)
+      cross = x.brow ? ss(e * 3) : 0;       // 寄り目は、デフォルメ:眉が動いたら、すぐ目いっぱい(±1)に寄せて、そのまま保つ(中途半端な寄りをなくす)
       if (x.look) gaze = -Math.sign(tilt) * x.look * e;     // 傾けた側を見る(+ は画面の右)
     }
     let [vr, vl] = gazeValues(gaze);
