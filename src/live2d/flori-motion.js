@@ -15,6 +15,7 @@ const clamp1 = x => Math.max(-1, Math.min(1, x));
 const env = (a, up, hold, down) => ss(a / up) * (1 - ss((a - up - hold) / down));       // 上がる → 保つ → 下がる(0→1→0)
 
 export const HOP_SECONDS = 1.2;
+export const CROSS_EXTRA = 28;        // 寄り目のデフォルメ:白目(ひとみ)を、リグの範囲(約25px)に足して、さらに内側へよせる量(キャンバス座標)
 export const BASE_MOUTH = -0.85;      // ふだんの口(下唇。小さい。−1 がいちばん小さい)
 
 // 表情(強さ e: 0→1 のとき、各部分がどこまで動くか)。dir:true のものは、傾く向きを、ときどき かえる
@@ -120,6 +121,7 @@ export function createMotion(model) {
     let [vr, vl] = gazeValues(gaze);
     if (cross) { vr -= cross; vl += cross; }   // 寄り目:右の目は 画面の右(−)へ、左の目は 画面の左(+)へ = 両目とも真ん中へ
     vr = clamp1(vr); vl = clamp1(vl);
+    let crossPx = cross * CROSS_EXTRA;   // パラメーターの範囲をこえて、さらに内側へ(白目だけ。live2d.js の model.extra)
 
     // 腕と足
     let banR = 0, banL = 0, foot = 0, swing = 0;
@@ -138,9 +140,9 @@ export function createMotion(model) {
     let fistR = swing || swayR, fistL = swing || swayL;
 
     if (hopping) {   // ぴょんのあいだは、表情・視線を、はじめの値から すっと ふだんにもどす
-      if (!wasHop) { hold = { vr: V[I.gazeR], vl: V[I.gazeL], brow: V[I.browR], face: V[I.face], mouth: V[I.mouth] }; ev = null; waitUntil = t + HOP_SECONDS + 1; }
+      if (!wasHop) { hold = { crossPx: model.extra ? model.extra['右白目'][0] : 0, vr: V[I.gazeR], vl: V[I.gazeL], brow: V[I.browR], face: V[I.face], mouth: V[I.mouth] }; ev = null; waitUntil = t + HOP_SECONDS + 1; }
       const kk = 1 - ss(hs / 0.25);
-      vr = hold.vr * kk; vl = hold.vl * kk; brow = hold.brow * kk; tilt = hold.face * kk; mouth = idleAbs + (hold.mouth - idleAbs) * kk;
+      crossPx = hold.crossPx * kk; vr = hold.vr * kk; vl = hold.vl * kk; brow = hold.brow * kk; tilt = hold.face * kk; mouth = idleAbs + (hold.mouth - idleAbs) * kk;
       banR = banL = 0; fistR = fistL = 0; foot = 0;
       if (hs < 0.14) { const u = ss(hs / 0.14); sy = 1 - 0.06 * u; sx = 1 + 0.03 * u; bounce = 0; }                    // かがむ
       else if (hs < 0.54) { const u = (hs - 0.14) / 0.4, h = Math.sin(u * Math.PI / 2); bounce = 85 * h; sy = 1 + 0.04 * h; sx = 1 - 0.02 * h;   // のぼる
@@ -151,6 +153,7 @@ export function createMotion(model) {
     }
     wasHop = hopping;
     mouth = Math.max(-1, Math.min(1, mouth));
+    model.extra = { '右白目': [crossPx, 0], '左白目': [-crossPx, 0] };
     V[I.gazeR] = vr; V[I.gazeL] = vl;
     V[I.browR] = V[I.browL] = brow;                         // 左右同じ値(ヽ／ ↔ ／ヽ)
     V[I.face] = V[I.facePart] = tilt; V[I.mouth] = mouth;   // 上唇は、live2d.js の followParams が追尾する

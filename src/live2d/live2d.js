@@ -86,6 +86,9 @@ export function evaluate(model) {
     const pos = new Array(n).fill(0); let op = 0, order = 0, tot = 0;
     for (const [f, k] of w) { const F = m.forms[f]; for (let i = 0; i < n; i++) pos[i] += F.pos[i] * k; op += F.opacity * k; order += F.order * k; tot += k; }
     if (!tot) { const F = m.forms[0]; for (let i = 0; i < n; i++) pos[i] = F.pos[i]; op = F.opacity; order = F.order; }
+    // model.extra[メッシュ名] = [dx, dy]: パラメーターの範囲をこえて、ずらす(寄り目のデフォルメなど。親の座標のまま足すので、顔の傾きにも ついていく)
+    const ex = model.extra && model.extra[m.name];
+    if (ex) for (let i = 0; i < n; i += 2) { pos[i] += ex[0]; pos[i + 1] += ex[1]; }
     if (m.parent >= 0) {
       const T = deformerTransform(model, m.parent, cache);
       for (let i = 0; i < n; i += 2) { const x = pos[i], y = pos[i + 1]; pos[i] = T.a * x + T.c * y + T.e; pos[i + 1] = T.b * x + T.d * y + T.f; }
