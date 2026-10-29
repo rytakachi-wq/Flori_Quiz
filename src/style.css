@@ -3272,3 +3272,7 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 .rpg-choice .rpg-no { width: 28px; height: 28px; font-size: 15px; }
 .rpg-text { font-size: 15.5px; }
 .rpg-window > .rpg-hint-btn { align-self: center; min-height: 36px; font-size: 14px; }
+
+/* 着せ替えの一覧:5列にして、その分、1つずつを大きく */
+#screen-dress .dress-list { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; width: min(100%, 560px); align-self: center; }
+#screen-dress .dress-item { aspect-ratio: 1; height: auto; }
