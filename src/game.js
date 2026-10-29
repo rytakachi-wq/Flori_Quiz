@@ -296,6 +296,8 @@ export class RpgRound {
     this.stage = 0; // いまいるマス(RPG_STAGES.length で、クリア)
     this.hp = RPG_STAGES[0].hp; // いまの敵の、のこりHP
     this.event = null; // 直前の答えで、何が起きたか
+    this.pending = null; // まちがえた問題(正解するまで、同じ問題を出す)
+    this.retries = 0; // いまの問題で、まちがえた回数
   }
 
   abandonRound() {
@@ -310,7 +312,9 @@ export class RpgRound {
     return this.stage >= RPG_STAGES.length;
   }
 
+  // 敵の問題は、まちがえたら、正解するまで、同じ問題をもう1度出す(宝箱は、まちがえても、次へ進む)
   nextQuestion() {
+    if (this.pending) return { question: this.pending, leveledUp: false };
     return { question: pickByLevel(this.questions, this.used, this.current.level, this.rng), leveledUp: false };
   }
 
@@ -327,8 +331,12 @@ export class RpgRound {
     if (chest) {
       this.event = correct ? "heal" : "miss";
       if (correct) this.lives = Math.min(RPG_LIVES, this.lives + 1);
+      this.pending = null;
+      this.retries = 0;
       this.advance();
     } else if (correct) {
+      this.pending = null;
+      this.retries = 0;
       this.hp -= 1;
       if (this.hp <= 0) {
         this.event = "defeat";
@@ -337,6 +345,8 @@ export class RpgRound {
     } else {
       this.event = "damage";
       this.lives -= 1;
+      this.pending = question;
+      this.retries += 1;
     }
     return correct;
   }

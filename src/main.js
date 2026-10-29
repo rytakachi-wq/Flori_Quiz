@@ -354,6 +354,7 @@ function startPlay(nextMode, startMessage = null) {
   } else if (mode === "rpg") {
     timeLimit = false; // RPGには、制限時間はない
     play = new RpgRound(adventurePool());
+    rpgShownStage = -1;
     announce("クエスト スタート!", "start", showRpg, "../assets/flori/m/body_wave.webp");
     return;
   } else play = getSession(pick.group, "normal");
@@ -899,7 +900,7 @@ function showResult() {
     $("r-best-row").hidden = false;
     $("r-best").textContent = adventureBestText();
     $("r-record").hidden = !saved.isRecord;
-    const wrongCount = result.answers.filter((a) => !a.correct || a.hinted).length;
+    const wrongCount = new Set(result.answers.filter((a) => !a.correct || a.hinted).map((a) => a.id)).size; // 同じ問題は、1問と数える
     setNote.textContent = result.cleared
       ? `ハート${heartsText(result.lives)} のこして クリア!${wrongCount > 0 ? `まちがえた${wrongCount}問は まちがいノートに 入ったヨ。` : ""}`
       : `${result.stage}マス目まで 進んだヨ。${wrongCount > 0 ? `まちがえた${wrongCount}問は まちがいノートに 入ったヨ。` : ""}`;
@@ -2393,6 +2394,7 @@ $("btn-note-review").addEventListener("click", () =>
 // ミニマップ+サバイバル。5つのマスを、ハート4つで進む(game.js の RpgRound)。クイズの画面(screen-question)は使わない。
 // ふつうモードからは、ほどよく借りてある=「ヒントを見る」の確認、数字つきの選択肢、正解と解説、「次へ」。
 let rpgQuestion = null;
+let rpgShownStage = -1; // いま画面に出している敵のマス(あたらしい敵かどうかを知るため)
 let rpgAnswered = false;
 let rpgHinted = false;
 
@@ -2443,7 +2445,7 @@ function rpgPose(src, alt) {
 
 function rpgFx(text, ...classes) {
   const field = $("rpg-field");
-  field.classList.remove("is-strike", "is-defeat", "is-hurt");
+  field.classList.remove("is-strike", "is-defeat", "is-hurt", "is-enter-hero", "is-enter-foe");
   void field.offsetWidth;
   field.classList.add(...classes);
   const fx = $("rpg-fx");
@@ -2457,6 +2459,31 @@ function updateRpgHintButton() {
   const button = $("btn-rpg-hint");
   button.hidden = !rpgQuestion?.hint;
   button.disabled = rpgHinted || rpgAnswered || !play.canHint;
+}
+
+// ウィンドウに収まらないとき(長い問題・長い解説)は、文字と選択肢を、少しずつ小さくして収める(6割まで)
+function fitRpgWindow() {
+  const win = $("screen-rpg").querySelector(".rpg-window");
+  win.style.removeProperty("--rpg-scale");
+  let scale = 1;
+  while (win.scrollHeight > win.clientHeight + 1 && scale > 0.6) {
+    scale -= 0.05;
+    win.style.setProperty("--rpg-scale", scale.toFixed(2));
+  }
+}
+
+// 「あらわれた!」の文。同じ敵に、まちがえるたびに、ちがう文にする
+function rpgIntro(stage, retries) {
+  const name = stage.kind === "boss" ? `ボス ${stage.name}` : stage.name;
+  if (stage.kind === "chest") return "たからばこだ! 正解で ハート回復!";
+  if (retries === 0) return `${stage.icon} ${name}が あらわれた!`;
+  const lines = [
+    `${name}が にやりと わらった! もう1度!`,
+    `${name}は まだ 立ちはだかっている!`,
+    `${name}の いかりが 高まっている!`,
+    `${name}が おそいかかってくる! あきらめるな!`,
+  ];
+  return lines[(retries - 1) % lines.length];
 }
 
 function showRpg() {
@@ -2488,12 +2515,28 @@ function showRpg() {
       return button;
     }),
   );
-  const intro = stage.kind === "chest" ? "🎁 たからばこだ! 正解で ハート回復!" : stage.kind === "boss" ? `🐉 ボス ${stage.name}が あらわれた!` : `${stage.icon} ${stage.name}が あらわれた!`;
-  rpgFx(intro);
-  playSe("rpgStep"); // 敵があらわれた(踏みこむ音)
+  rpgFx(rpgIntro(stage, play.retries));
+  // 動き:フロリは、問題が出るたびに、左から。敵は、あたらしい敵のときだけ、右から(同じ敵の、やりなおしでは、動かさない)
+  const newFoe = play.stage !== rpgShownStage;
+  rpgShownStage = play.stage;
+  const field = $("rpg-field");
+  field.classList.remove("is-enter-hero", "is-enter-foe");
+  void field.offsetWidth;
+  field.classList.add("is-enter-hero");
+  if (newFoe) {
+    field.classList.add("is-enter-foe");
+    playSe("rpgStep"); // 次の敵があらわれた(踏みこむ音)
+  }
+  // ボスの1つ前のマスから、警告
+  const warn = $("rpg-warn");
+  const beforeBoss = RPG_STAGES.length - 2;
+  warn.hidden = play.stage < beforeBoss;
+  warn.textContent = stage.kind === "boss" ? "警告! ボス戦だ!" : "警告! つぎは ボスが まっているぞ!";
   $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
   show("rpg");
   setScene(stage.kind === "boss" ? "rpgboss" : "rpg"); // ボス戦は、BGMが変わる
+  fitRpgWindow();
+  setTimeout(fitRpgWindow, 150); // ふりがなが付いたあとに、もう1度
 }
 
 function rpgAnswer(index) {
@@ -2526,6 +2569,8 @@ function rpgAnswer(index) {
   $("btn-rpg-next").textContent = play.roundFinished ? "結果を見る ▶" : "次へ ▶";
   $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
   $("btn-rpg-next").focus({ preventScroll: true });
+  fitRpgWindow();
+  setTimeout(fitRpgWindow, 150);
 }
 
 // RPGの効果音(敵があらわれた=踏みこむ音。こうげき=小パンチ、敵をたおしたときは、こうげきの音が鳴りおわってから、せいかいのチャイム。
@@ -2550,7 +2595,7 @@ function showGameOver() {
   const result = play.finishRound();
   recordDex(result.answers); // 図鑑
   recordWrong(result.answers); // まちがえた問題は、まちがいノートへ
-  const wrongCount = result.answers.filter((a) => !a.correct).length;
+  const wrongCount = new Set(result.answers.filter((a) => !a.correct).map((a) => a.id)).size; // 同じ問題は、1問と数える
   const last = RPG_STAGES.length - 1;
   $("go-message").textContent =
     result.stage === 0
