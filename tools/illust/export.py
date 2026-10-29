@@ -181,19 +181,20 @@ def _bez(p0, c1, c2, p3, n=40):
     return pts
 
 
-def _strap_lines(canvas, paths, k, W):
+def _strap_lines(canvas, paths, k, W, outline=None, inner=(240, 245, 249)):
     """ひも(線の色のふち+うすい色の中)を、paths(点の列)にそって、描く。太さは、絵の はば(W)に合わせる"""
     from PIL import ImageDraw
+    outline = outline or OUTLINE
     d = ImageDraw.Draw(canvas)
     wo, wi = 0.06 * W * k, 0.032 * W * k
     for path in paths:
-        d.line(path, fill=OUTLINE + (255,), width=int(wo), joint="curve")
+        d.line(path, fill=tuple(outline) + (255,), width=int(wo), joint="curve")
     for path in paths:
-        d.line(path, fill=(240, 245, 249, 255), width=int(wi), joint="curve")
+        d.line(path, fill=tuple(inner) + (255,), width=int(wi), joint="curve")
     for path in paths:  # 先を丸く
         for x, y in (path[0], path[-1]):
-            d.ellipse((x - wo / 2, y - wo / 2, x + wo / 2, y + wo / 2), fill=OUTLINE + (255,))
-            d.ellipse((x - wi / 2, y - wi / 2, x + wi / 2, y + wi / 2), fill=(240, 245, 249, 255))
+            d.ellipse((x - wo / 2, y - wo / 2, x + wo / 2, y + wo / 2), fill=tuple(outline) + (255,))
+            d.ellipse((x - wi / 2, y - wi / 2, x + wi / 2, y + wi / 2), fill=tuple(inner) + (255,))
 
 
 def strap_mask(img, reach=0.5):
@@ -216,27 +217,37 @@ def strap_mask(img, reach=0.5):
     return canvas, (0.5, 0.5)
 
 
-def strap_eyepatch(img, left=2.0, right=0.9, rise=1.1):
-    """眼帯に、ひもを つける(線のように、1本ずつ):右は、ほぼ水平に、耳へ。左は、ななめに のぼって、ヘルメットの左上へ。
+def strap_eyepatch(img, left=1.75, right=0.25, rise=0.55, outline=None, inner=(240, 245, 249)):
+    """眼帯に、ひもを つける(線のように、1本ずつ。顔の画面から、はみ出さない長さ):右は、ほぼ水平に、画面のはしまで。左は、ななめに のぼって、画面の左上まで。
     戻り値の2つ目は、眼帯の中心が、絵のどこ(はば・高さの割合)にあるか"""
     k = 4
     W, H = img.size
-    Ll, Lr, Up = int(W * left), int(W * right), int(W * rise)
+    Ll, Lr = int(W * left), int(W * right)
+    Up = int(W * max(0.05, rise - 0.24))
     Dn = int(H * 0.15)
     Wc, Hc = W + Ll + Lr, H + Up + Dn
     canvas = Image.new("RGBA", (Wc * k, Hc * k), (0, 0, 0, 0))
     px, py = Ll, Up
     paths = []
-    # 右: 眼帯の右がわから、ほぼ水平に
     sx, sy = (px + W - 6) * k, (py + H * 0.50) * k
-    paths.append(_bez((sx, sy), (sx + Lr * 0.4 * k, sy), (sx + Lr * 0.7 * k, sy + H * 0.04 * k), ((px + W + Lr - 6) * k, sy + H * 0.06 * k)))
-    # 左: 眼帯の左上から、ななめに(ほぼ まっすぐ)、左上へ
+    paths.append(_bez((sx, sy), (sx + Lr * 0.4 * k, sy), (sx + Lr * 0.7 * k, sy + H * 0.02 * k), ((px + W + Lr - 6) * k, sy + H * 0.03 * k)))
     sx, sy = (px + 6) * k, (py + H * 0.30) * k
     paths.append(_bez((sx, sy), (sx - Ll * 0.33 * k, sy - Up * 0.30 * k), (sx - Ll * 0.66 * k, sy - Up * 0.64 * k), (6 * k, (H * 0.05) * k)))
-    _strap_lines(canvas, paths, k, W)
+    _strap_lines(canvas, paths, k, W, outline, inner)
     canvas = canvas.resize((Wc, Hc), Image.LANCZOS)
     canvas.alpha_composite(img, (px, py))
     return canvas, ((px + W / 2) / Wc, (py + H / 2) / Hc)
+
+
+def blacken(img):
+    """白い眼帯を、黒い眼帯にする(線は、そのまま。中のぬりを、くらくする。十字のテープも、くらい色)"""
+    a = np.array(img).astype(float)
+    L = a[..., :3].mean(2)
+    fill = L > 150
+    new = 28 + (L - 150) * 0.35
+    for c in range(3):
+        a[..., c] = np.where(fill, new + (0, 2, 6)[c], a[..., c])
+    return Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
 
 
 STRAPS = {"fp_mask": strap_mask, "fp_eyepatch": strap_eyepatch}  # ひもを つける
@@ -259,6 +270,12 @@ def main():
             it = cut(im, box, holes=slug in HOLES, holes_top=slug in HOLES_TOP, smooth=SMOOTH.get(slug, 1.0), thr=BGTHR.get(slug, THR), clean=slug in CLEAN)
             if slug in GAPS:
                 it = respace(it, GAPS[slug])
+            if slug == "fp_eyepatch":  # 黒い眼帯(fp_eyepatch_black)も作る
+                black, ANCHORS["fp_eyepatch_black"] = strap_eyepatch(blacken(it), outline=(40, 45, 55), inner=(72, 76, 86))
+                black.thumbnail((MAXSIDE_WIDE["fp_eyepatch"],) * 2, Image.LANCZOS)
+                bpath = os.path.join(OUT, "fp_eyepatch_black.webp")
+                black.save(bpath, "WEBP", quality=90, method=6)
+                total += os.path.getsize(bpath)
             if slug in STRAPS:
                 it, ANCHORS[slug] = STRAPS[slug](it)
             side = MAXSIDE_WIDE.get(slug, MAXSIDE_FACE if slug.startswith("fp_") else MAXSIDE)
