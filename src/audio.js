@@ -62,9 +62,20 @@ try {
   // 読めなければ、はじめの大きさにする。
 }
 
-// 開発中(自分のパソコンで動かしているとき)は、音を出さない。音を聞きたいときは、アドレスの最後に「?sound」をつける。
-if (["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) && !location.search.includes("sound")) {
-  for (const kind of Object.keys(DEFAULTS)) volumes[kind] = 0;
+// 開発中(自分のパソコンで動かしているとき)は、音を出さない。音を聞きたいときは、アドレスの最後に「?sound」をつける
+// (つけると、その端末では、おぼえて、以後ずっと音が出る。止めるときは「?sound=0」)。
+if (["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) {
+  const SOUND_KEY = "floriQuiz.devSound";
+  let devSound = false;
+  try {
+    const param = new URLSearchParams(location.search).get("sound");
+    if (param === "0") localStorage.removeItem(SOUND_KEY);
+    else if (param !== null) localStorage.setItem(SOUND_KEY, "1");
+    devSound = localStorage.getItem(SOUND_KEY) === "1";
+  } catch {
+    devSound = location.search.includes("sound") && !location.search.includes("sound=0");
+  }
+  if (!devSound) for (const kind of Object.keys(DEFAULTS)) volumes[kind] = 0;
 }
 
 let scene = null;

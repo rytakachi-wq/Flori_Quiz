@@ -3265,3 +3265,11 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 .rpg-heart > span { position: absolute; inset: 0; display: block; }
 .rpg-heart .emi { height: 1.15em; width: auto; display: block; }
 .rpg-heart .rpg-heart-on.is-half { clip-path: inset(0 50% 0 0); }
+
+/* モード選択:行の名前を上に(1行で小さく)、ボタンを下に。ボタンが、細長くならないよう、横に広げる */
+#screen-setup .set-row { grid-template-columns: minmax(0, 1fr); gap: 1px; padding: 3px 8px 5px; align-content: center; }
+#screen-setup .set-label { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 5px; text-align: left; font-size: 12.5px; line-height: 1.25; }
+#screen-setup .set-label > span:first-child { display: inline-block; font-size: 15px; line-height: 1.1; }
+#screen-setup .seg-btn { height: 100%; min-height: 44px; padding: 1px 1px; }
+#screen-setup .seg-btn .si { font-size: 18px; line-height: 1.05; }
+#screen-setup .seg-btn .sb { top: -7px; }

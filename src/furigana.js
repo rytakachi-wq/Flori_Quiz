@@ -132,7 +132,9 @@ function matchAt(text, i) {
   return longestMatch(text, i);
 }
 
-const hasUpperKanji = (text, from) => [...text].some((c) => KANJI.test(c) && (gradeOf.get(c) ?? 7) >= from);
+// 「々」「〆」は漢字の学年を持たないので、数えない(「人々」は、「人」の学年だけで決まる)。
+const hasUpperKanji = (text, from) =>
+  [...text].some((c) => KANJI.test(c) && !"々〆".includes(c) && (gradeOf.get(c) ?? 7) >= from);
 
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
