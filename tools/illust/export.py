@@ -66,7 +66,7 @@ BGTHR = {"trophy": 228, "tophat": 228, "globe": 228, "balloon": 228}  # 背景�
 THR = 244
 PAD = 10
 # 左右1組の かざりの、2つの間のあき(1つの はば に対する割合)。目や ほっぺの位置に合わせて、あけなおす
-GAPS = {"fp_spiral": 0.82, "fp_hearteyes": 0.75, "fp_lashes": 0.75, "fp_freckles": 1.8, "fp_whiskers": 1.53}
+GAPS = {"fp_spiral": 0.82, "fp_hearteyes": 0.75, "fp_lashes": 0.75, "fp_freckles": 1.8, "fp_whiskers": 2.1}
 ANCHORS = {}  # ひもを つけた絵の、「もとの絵の中心」の場所(割合)。ゲームで位置をきめるとき使う(assets/illust/fp_anchor.json)
 MAXSIDE = 160
 MAXSIDE_FACE = 480
@@ -185,7 +185,7 @@ def _strap_lines(canvas, paths, k, W):
     """ひも(線の色のふち+うすい色の中)を、paths(点の列)にそって、描く。太さは、絵の はば(W)に合わせる"""
     from PIL import ImageDraw
     d = ImageDraw.Draw(canvas)
-    wo, wi = 0.075 * W * k, 0.04 * W * k
+    wo, wi = 0.06 * W * k, 0.032 * W * k
     for path in paths:
         d.line(path, fill=OUTLINE + (255,), width=int(wo), joint="curve")
     for path in paths:
@@ -197,44 +197,42 @@ def _strap_lines(canvas, paths, k, W):
 
 
 def strap_mask(img, reach=0.5):
-    """マスクの両わきに、耳(ヘルメットのわき)まで のびる、耳ひもを つける(上と下の角から、耳の1点へ。「<」の形)。本体は、ひもの上"""
+    """マスクの両わきに、耳(ヘルメットのわき)まで のびる、耳ひもを つける。上と下に、1本ずつ(線のように、外へ すこし ひらく)。本体は、ひもの上"""
     k = 4
     W, H = img.size
     L = int(W * reach)
-    canvas = Image.new("RGBA", ((W + 2 * L) * k, H * k), (0, 0, 0, 0))
+    M = int(H * 0.25)  # 上下の、ひもの はみ出し分
+    canvas = Image.new("RGBA", ((W + 2 * L) * k, (H + 2 * M) * k), (0, 0, 0, 0))
     paths = []
     for sign in (-1, 1):
-        edge = (L + (W - 8 if sign > 0 else 8)) * k
-        ear = (edge + sign * (L - 8) * k + sign * 8 * k, H * 0.5 * k)
-        top, bot = (edge, H * 0.27 * k), (edge, H * 0.73 * k)
-        paths.append(_bez(top, (edge + sign * L * 0.35 * k, H * 0.24 * k), (edge + sign * L * 0.7 * k, H * 0.36 * k), ear))
-        paths.append(_bez(bot, (edge + sign * L * 0.35 * k, H * 0.76 * k), (edge + sign * L * 0.7 * k, H * 0.64 * k), ear))
+        edge = (L + (W - 6 if sign > 0 else 6)) * k
+        end_x = edge + sign * (L - 6) * k
+        for y0, y1 in ((0.30, -0.10), (0.70, 1.10)):  # 上のひも・下のひも(マスクの角から、外へ)
+            ys, ye = (M + H * y0) * k, (M + H * y1) * k
+            paths.append(_bez((edge, ys), (edge + sign * L * 0.35 * k, ys + (ye - ys) * 0.1), (edge + sign * L * 0.7 * k, ys + (ye - ys) * 0.6), (end_x, ye)))
     _strap_lines(canvas, paths, k, W)
-    canvas = canvas.resize((W + 2 * L, H), Image.LANCZOS)
-    canvas.alpha_composite(img, (L, 0))
+    canvas = canvas.resize((W + 2 * L, H + 2 * M), Image.LANCZOS)
+    canvas.alpha_composite(img, (L, M))
     return canvas, (0.5, 0.5)
 
 
-def strap_eyepatch(img, left=2.4, right=0.6, rise=0.75):
-    """眼帯に、ひもを つける:右(画面の右がわ)は、耳へ。左は、ひたいを ななめに わたって、反対がわの耳へ。
+def strap_eyepatch(img, left=2.0, right=0.9, rise=1.1):
+    """眼帯に、ひもを つける(線のように、1本ずつ):右は、ほぼ水平に、耳へ。左は、ななめに のぼって、ヘルメットの左上へ。
     戻り値の2つ目は、眼帯の中心が、絵のどこ(はば・高さの割合)にあるか"""
     k = 4
     W, H = img.size
     Ll, Lr, Up = int(W * left), int(W * right), int(W * rise)
-    Wc, Hc = W + Ll + Lr, H + Up
+    Dn = int(H * 0.15)
+    Wc, Hc = W + Ll + Lr, H + Up + Dn
     canvas = Image.new("RGBA", (Wc * k, Hc * k), (0, 0, 0, 0))
-    px, py = Ll, Up  # 眼帯のおき場所(左上)
-    cx, cy = (px + W / 2) * k, (py + H / 2) * k
+    px, py = Ll, Up
     paths = []
-    # 右: 眼帯の右上と右下から、耳へ(1点)
-    ex = (px + W + Lr - 6) * k
-    ey = cy
-    paths.append(_bez(((px + W - 6) * k, (py + H * 0.30) * k), ((px + W + Lr * 0.4) * k, (py + H * 0.24) * k), ((px + W + Lr * 0.7) * k, cy - H * 0.06 * k), (ex, ey)))
-    paths.append(_bez(((px + W - 6) * k, (py + H * 0.70) * k), ((px + W + Lr * 0.4) * k, (py + H * 0.76) * k), ((px + W + Lr * 0.7) * k, cy + H * 0.06 * k), (ex, ey)))
-    # 左: 眼帯の左上から、ひたい(まゆげの上)を とおって、左の耳へ(はじめ ななめに のぼって、そのあと、ほぼ水平)
-    sx, sy = (px + 6) * k, (py + H * 0.22) * k
-    tx, ty = 6 * k, (Up * 0.30) * k
-    paths.append(_bez((sx, sy), (sx - Ll * 0.12 * k, sy - Up * 0.75 * k), (tx + Ll * 0.55 * k, ty - Up * 0.05 * k), (tx, ty), n=60))
+    # 右: 眼帯の右がわから、ほぼ水平に
+    sx, sy = (px + W - 6) * k, (py + H * 0.50) * k
+    paths.append(_bez((sx, sy), (sx + Lr * 0.4 * k, sy), (sx + Lr * 0.7 * k, sy + H * 0.04 * k), ((px + W + Lr - 6) * k, sy + H * 0.06 * k)))
+    # 左: 眼帯の左上から、ななめに(ほぼ まっすぐ)、左上へ
+    sx, sy = (px + 6) * k, (py + H * 0.30) * k
+    paths.append(_bez((sx, sy), (sx - Ll * 0.33 * k, sy - Up * 0.30 * k), (sx - Ll * 0.66 * k, sy - Up * 0.64 * k), (6 * k, (H * 0.05) * k)))
     _strap_lines(canvas, paths, k, W)
     canvas = canvas.resize((Wc, Hc), Image.LANCZOS)
     canvas.alpha_composite(img, (px, py))
