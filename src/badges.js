@@ -291,35 +291,33 @@ export const THEMES = [
   ...PALETTE.map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.swatch ?? `linear-gradient(160deg, ${p.bg}, ${p.blue})`, stage: p.stage, bg: p.bg, blue: p.blue, dark: p.dark, unlock: null })),
 ];
 // 着せ替えの一覧は、系統ごとにまとめて並べる(もらえる順とは別。もらえる順は、assignUnlocks の表のまま)。
-// 頭:帽子 → 耳 → 冠・輪 → 頭のてっぺん(ふたば・小鳥・ひよこ・アンテナ)→ 右上の飾り(花・リボンなど)
+// 頭:帽子 → 頭の上(耳・冠・輪・ふたば・小鳥・ひよこ・アンテナ)→ 右上の飾り(花・リボンなど)
 // 体:首まわり → 胸(ブローチ・バッジ)→ ポーチ・バッグ → 手に持つもの
 // 顔:目のまわり(メガネ・涙・汗)→ ほっぺ(ハート・ぐるぐる・線・ばんそうこう)→ マーク(ハート・音符・怒り)
 const DISPLAY_ORDER = {
   head: [
     ["head04", "head05", "head06", "head22", "head25", "head07", "head17", "head09", "head10", "head29"], // 帽子
-    ["head11", "head12", "head13"], // 耳
-    ["head08", "head21", "head18"], // 冠・輪
-    ["head03", "head14", "head15", "head16"], // 頭のてっぺん
+    ["head11", "head12", "head13", "head08", "head21", "head18", "head03", "head14", "head15", "head16"], // 頭の上(耳・冠・輪・のせるもの)
     ["head01", "head02", "head19", "head20", "head23", "head24", "head26", "head27", "head28"], // 右上の飾り
   ],
   body: [
-    ["body01", "body02", "body03", "body04", "body19", "body12", "body18", "body23", "body31"], // 首まわり
-    ["body15", "body14", "body13", "body38", "body39", "body40", "body42", "body26", "body30"], // 胸
+    ["body01", "body02", "body03", "body04", "body19", "body12", "body18", "body23", "body31", "body42"], // 首まわり(かぎのキーホルダーも)
+    ["body15", "body14", "body13", "body38", "body39", "body40", "body26", "body30"], // 胸
     ["body07", "body20", "body21", "body25", "body08", "body28", "body29", "body24"], // ポーチ・バッグ
     ["body33", "body34", "body27", "body41", "body43", "body44", "body45", "body46", "body47"], // 手に持つもの
   ],
   face: [
-    ["face09", "face23", "face24", "face25", "face21", "face22", "face05", "face04"], // 目のまわり(メガネ・サングラス・眼帯・ぐるぐる目・ハートの目・涙・汗)
+    ["face09", "face23", "face24", "face25", "face21", "face22", "face05"], // 目のまわり(メガネ・サングラス・眼帯・ぐるぐる目・ハートの目・涙)
     ["face01", "face03", "face08", "face06", "face16", "face15", "face14"], // ほっぺ
     ["face13", "face19", "face20", "face18"], // 鼻・口のまわり(ねこの鼻・ちょびひげ・猫のひげ・舌ぺろ)
-    ["face11", "face12", "face10", "face17"], // マーク(ハート・音符・怒り・雪の結晶)
+    ["face11", "face12", "face10", "face17", "face04"], // マーク(ハート・音符・怒り・雪の結晶・汗)
   ],
 };
 // 系統ごとの、見出し(一覧に、線と文字で出す。どのあたりに着けるものかの説明)
 const GROUP_LABELS = {
-  head: ["帽子(頭にかぶる)", "耳(頭の上)", "冠・輪(頭の上)", "頭のてっぺん(のせる)", "頭の右上(かざる)"],
+  head: ["帽子(頭にかぶる)", "頭の上(耳・冠・のせるもの)", "頭の右上(かざる)"],
   body: ["首まわり", "胸(ブローチ・バッジ)", "おなか・腰(ポーチ・バッグ)", "手に持つ(左手)"],
-  face: ["目のまわり", "ほっぺ", "顔のマーク"],
+  face: ["目のまわり", "ほっぺ", "鼻・口のまわり", "マーク(顔のすみ)"],
 };
 export const groupLabel = (slot, group) => GROUP_LABELS[slot]?.[group] ?? "";
 // 系統ごとに並べる。item.group に、系統の番号を入れる(一覧で、系統が変わるごとに改行するため)
