@@ -2416,7 +2416,8 @@ function renderRpgHearts() {
   box.setAttribute("aria-label", `ハート ${play.lives}`);
 }
 
-function renderRpgStatus(foeHp = play.hp) {
+// stage:画面に出す敵のマス(答えた直後は、たおした敵を出したいので、答える前のマスを渡す)
+function renderRpgStatus(stage = play.current, foeHp = play.hp) {
   renderRpgHearts();
   $("rpg-path").replaceChildren(
     ...RPG_STAGES.map((stage, index) => {
@@ -2428,7 +2429,6 @@ function renderRpgStatus(foeHp = play.hp) {
       return item;
     }),
   );
-  const stage = play.current;
   $("rpg-foe-icon").textContent = stage.icon;
   $("rpg-foe-name").textContent = stage.kind === "chest" ? "たからばこ" : stage.kind === "boss" ? `ボス ${stage.name}` : stage.name;
   $("rpg-foe-hp").textContent = stage.kind === "chest" ? "正解で ハート回復" : `${"💗".repeat(Math.max(0, foeHp))}${"🤍".repeat(stage.hp - Math.max(0, foeHp))}`;
@@ -2511,7 +2511,7 @@ function rpgAnswer(index) {
   rpgFx(message, event === "damage" ? "is-hurt" : "is-strike");
   if (event === "defeat") setTimeout(() => $("rpg-field").classList.add("is-defeat"), 400);
   rpgPose(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
-  renderRpgStatus(event === "defeat" ? 0 : play.hp);
+  renderRpgStatus(foe, event === "defeat" ? 0 : play.hp); // たおした敵(foe)を出したまま、HPを0に。次の敵は、次の問題で出る
   $("btn-rpg-hint").hidden = true;
   $("rpg-hint").hidden = true;
   $("rpg-choices").hidden = true; // 答えたあとは、答えと解説だけ(問題文と選択肢は、かくす。1画面に収めるため)
