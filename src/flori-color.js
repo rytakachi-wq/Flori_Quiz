@@ -72,25 +72,26 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
     return hslToRgb(228, 0.3, clamp01(0.3 + (l - 0.55) * 0.5));
   }
   if (color.sakura) {
-    // 桜:うすいピンクに、ところどころ、こい花びら
-    const v = (Math.sin(x * 0.13) + Math.sin(y * 0.11 + 1) + Math.sin((x + y) * 0.07)) / 3;
-    return v > 0.5 ? hslToRgb(350, 0.5, clamp01(l * 0.92)) : hslToRgb(345, 0.34, l);
+    // 桜:うすいピンクに、少しはなれた、大きめの花びら
+    const cx = (x + (Math.floor(y / 84) % 2 ? 42 : 0)) % 84 - 42;
+    const cy = (y % 84) - 42;
+    return (cx / 15) ** 2 + (cy / 10) ** 2 < 1 ? hslToRgb(350, 0.52, clamp01(l * 0.92)) : hslToRgb(345, 0.3, l);
   }
   if (color.dots) {
-    // 水玉:白に、ピンクの水玉
-    const cx = (x + (Math.floor(y / 38) % 2 ? 19 : 0)) % 38;
-    const cy = y % 38;
-    return (cx - 19) ** 2 + (cy - 19) ** 2 < 64 ? hslToRgb(340, 0.68, clamp01(l * 0.9)) : whiteOf(l);
+    // 水玉:白に、大きめのピンクの水玉(間をあけて)
+    const cx = (x + (Math.floor(y / 62) % 2 ? 31 : 0)) % 62;
+    const cy = y % 62;
+    return (cx - 31) ** 2 + (cy - 31) ** 2 < 144 ? hslToRgb(340, 0.68, clamp01(l * 0.9)) : whiteOf(l);
   }
   if (color.stripes) {
-    // ストライプ:水色と白のよこしま
-    return Math.floor(y / 22) % 2 ? hslToRgb(205, 0.6, clamp01(l * 0.92)) : whiteOf(l);
+    // ストライプ:太い、水色と白のよこしま
+    return Math.floor(y / 36) % 2 ? hslToRgb(205, 0.6, clamp01(l * 0.92)) : whiteOf(l);
   }
   if (color.snow) {
-    // 雪の結晶:水色に、白い結晶
-    const dx = ((x + 26) % 52) - 26;
-    const dy = ((y + 26) % 52) - 26;
-    const flake = (Math.abs(dx) < 2 && Math.abs(dy) < 9) || (Math.abs(dy) < 2 && Math.abs(dx) < 9) || (Math.abs(dx - dy) < 3 && Math.abs(dx) < 6) || (Math.abs(dx + dy) < 3 && Math.abs(dx) < 6);
+    // 雪の結晶:水色に、大きな白い結晶(間をあけて)
+    const dx = ((x + 42) % 84) - 42;
+    const dy = ((y + 42) % 84) - 42;
+    const flake = (Math.abs(dx) < 3.5 && Math.abs(dy) < 15) || (Math.abs(dy) < 3.5 && Math.abs(dx) < 15) || (Math.abs(dx - dy) < 4.5 && Math.abs(dx) < 10) || (Math.abs(dx + dy) < 4.5 && Math.abs(dx) < 10);
     return flake ? whiteOf(l) : hslToRgb(208, 0.55, clamp01(l * 0.95));
   }
   if (color.rainbow) return hslToRgb(((x / width) * 320 + (y / height) * 120) % 360, 0.34, Math.min(0.9, l * 0.98 + 0.02));

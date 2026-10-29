@@ -284,29 +284,26 @@ function assignUnlocks(groups) {
 
 // お試しの色・背景12こ(このへんは、まだ、ご褒美の条件なし。いつでも選べる。背景は、着せ替えの画面の枠だけで、ほかの画面は、かわらない)
 const TRIAL = [
-  { id: "mint", name: "ミントソーダ", tint: "#5cc9a7", color: { hue: 160, gain: 2.6, minSat: 0.65, boost: 1.25 }, stage: "linear-gradient(160deg, #e6faf1, #8fdcc0)" },
-  { id: "skyblue", name: "そらいろ", tint: "#4aa8ea", color: { hue: 202, gain: 3, minSat: 0.95, boost: 1.5 }, stage: "linear-gradient(160deg, #e9f6ff, #6ab9f2)" },
-  { id: "lavender", name: "ラベンダー", tint: "#a58fe0", color: { hue: 258, gain: 2, minSat: 0.55, boost: 1.2 }, stage: "linear-gradient(160deg, #f1ebfc, #b9a2ec)" },
-  { id: "brown", name: "チョコブラウン", tint: "#8a5a3c", color: { hue: 25, gain: 2, minSat: 0.55, lmul: 0.72 }, stage: "linear-gradient(160deg, #f4e6d8, #b98a62)" },
-  { id: "coral", name: "コーラル", tint: "#f0806e", color: { hue: 8, gain: 3, minSat: 0.75, boost: 1.2 }, stage: "linear-gradient(160deg, #ffeae4, #f59a88)" },
+  { id: "skyblue", name: "そらいろ", tint: "#4aa8ea", noTheme: true, color: { hue: 202, gain: 3, minSat: 0.95, boost: 1.5 }, stage: "linear-gradient(160deg, #e9f6ff, #6ab9f2)" },
+  { id: "brown", name: "チョコブラウン", tint: "#8a5a3c", noColor: true, stage: "linear-gradient(160deg, #f4e6d8, #b98a62)" },
   { id: "wine", name: "ワインレッド", tint: "#a8405c", color: { hue: 344, gain: 2.4, minSat: 0.6, lmul: 0.7 }, stage: "linear-gradient(160deg, #f6e0e6, #b35a72)" },
   { id: "sunset", name: "夕焼け", tint: "#f59a7a", color: { sunset: true }, stage: "linear-gradient(180deg, #ffb3c8 0%, #ffc58a 45%, #c9a2f0 100%)" },
-  { id: "starry", name: "星空", tint: "#34408a", color: { starry: true }, stage: "radial-gradient(circle at 18% 22%, #fff 0 1.4px, transparent 2.2px), radial-gradient(circle at 72% 14%, #fff 0 1.8px, transparent 2.6px), radial-gradient(circle at 44% 46%, #fff 0 1.2px, transparent 2px), radial-gradient(circle at 86% 58%, #fff 0 1.6px, transparent 2.4px), radial-gradient(circle at 28% 76%, #fff 0 1.4px, transparent 2.2px), radial-gradient(circle at 62% 84%, #fff 0 1.2px, transparent 2px), linear-gradient(160deg, #1d2a55, #4a3d8f)" },
-  { id: "sakura", name: "桜", tint: "#f3a7bd", color: { sakura: true }, stage: "radial-gradient(ellipse 14px 8px at 20% 25%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 14px 8px at 70% 18%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 14px 8px at 45% 55%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 14px 8px at 85% 62%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 14px 8px at 28% 80%, #f7b6c9 0 100%, transparent 100%), linear-gradient(160deg, #fff4f7, #fbd3df)" },
-  { id: "dots", name: "水玉", tint: "#f27fa6", color: { dots: true }, stage: "radial-gradient(circle, #ffb3c8 0 6px, transparent 7px) 0 0 / 30px 30px, #fff7fa" },
-  { id: "stripes", name: "ストライプ", tint: "#5aa9e6", color: { stripes: true }, stage: "repeating-linear-gradient(0deg, #cfe8fb 0 18px, #ffffff 18px 36px)" },
-  { id: "snow", name: "雪の結晶", tint: "#9ccdf0", color: { snow: true }, stage: "radial-gradient(circle, #ffffff 0 3px, transparent 4px) 0 0 / 34px 34px, radial-gradient(circle, #ffffff 0 2px, transparent 3px) 17px 17px / 34px 34px, linear-gradient(160deg, #dff0fb, #a9d3f2)" },
+  { id: "starry", name: "星空", tint: "#34408a", noColor: true, stage: "radial-gradient(circle at 12% 18%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 31% 9%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 52% 21%, #fff 0 1.2px, transparent 1.8px), radial-gradient(circle at 74% 11%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 91% 24%, #fff 0 1.1px, transparent 1.7px), radial-gradient(circle at 6% 42%, #fff 0 1.1px, transparent 1.7px), radial-gradient(circle at 24% 38%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 44% 47%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 63% 39%, #fff 0 1.2px, transparent 1.8px), radial-gradient(circle at 82% 49%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 96% 62%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 15% 66%, #fff 0 1.2px, transparent 1.8px), radial-gradient(circle at 36% 74%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 57% 69%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 78% 78%, #fff 0 1.2px, transparent 1.8px), radial-gradient(circle at 9% 88%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 48% 91%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 90% 90%, #fff 0 1px, transparent 1.6px), linear-gradient(160deg, #1d2a55, #4a3d8f)" },
+  { id: "sakura", name: "桜", tint: "#f3a7bd", color: { sakura: true }, stage: "radial-gradient(ellipse 9px 5px at 10% 14%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 28% 30%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 47% 12%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 66% 28%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 86% 14%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 18% 52%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 40% 60%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 62% 50%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 90% 58%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 8% 82%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 30% 90%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 54% 80%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 9px 5px at 76% 90%, #f7b6c9 0 100%, transparent 100%), linear-gradient(160deg, #fff4f7, #fbd3df)" },
+  { id: "dots", name: "水玉", tint: "#f27fa6", color: { dots: true }, stage: "radial-gradient(circle, #ffb3c8 0 10px, transparent 11px) 0 0 / 54px 54px, #fff7fa" },
+  { id: "stripes", name: "ストライプ", tint: "#5aa9e6", color: { stripes: true }, stage: "repeating-linear-gradient(0deg, #cfe8fb 0 30px, #ffffff 30px 60px)" },
+  { id: "snow", name: "雪の結晶", tint: "#9ccdf0", color: { snow: true }, stage: "radial-gradient(circle, #ffffff 0 5px, transparent 6px) 0 0 / 60px 60px, radial-gradient(circle, #ffffff 0 3px, transparent 4px) 30px 30px / 60px 60px, linear-gradient(160deg, #dff0fb, #a9d3f2)" },
 ];
 
 export const COLORS = [
   { id: "original", name: "ミルキーブルー", original: true, tint: "#7ec3e0", swatch: "linear-gradient(135deg, #f4fbff, #7ec3e0)", unlock: null },
   ...PALETTE.map((p) => ({ id: p.id, name: p.name, tint: p.tint, swatch: p.swatch ?? soften(p.tint), ...p.color, unlock: null })),
-  ...TRIAL.map((p) => ({ id: p.id, name: p.name, tint: p.tint, swatch: p.color.hue === undefined ? p.stage : soften(p.tint), ...p.color, unlock: null, trial: true })),
+  ...TRIAL.filter((p) => !p.noColor).map((p) => ({ id: p.id, name: p.name, tint: p.tint, swatch: p.color.hue === undefined ? p.stage : soften(p.tint), ...p.color, unlock: null, trial: true })),
 ];
 export const THEMES = [
   { id: "sky", name: "青空", tint: "#7ec3e0", preview: "linear-gradient(160deg, #eef8fd, #7ec3e0)", unlock: null },
   ...PALETTE.map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.swatch ?? `linear-gradient(160deg, ${p.bg}, ${p.blue})`, stage: p.stage, bg: p.bg, blue: p.blue, dark: p.dark, unlock: null })),
-  ...TRIAL.map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.stage, stage: p.stage, stageOnly: true, unlock: null, trial: true })),
+  ...TRIAL.filter((p) => !p.noTheme).map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.stage, stage: p.stage, stageOnly: true, unlock: null, trial: true })),
 ];
 // 着せ替えの一覧は、系統ごとにまとめて並べる(もらえる順とは別。もらえる順は、assignUnlocks の表のまま)。
 // 頭:帽子 → 頭の上(耳・冠・輪・ふたば・小鳥・ひよこ・アンテナ)→ 右上の飾り(花・リボンなど)
