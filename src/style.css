@@ -892,20 +892,32 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 
 /* ===== クイズ画面:1画面に収まるように ===== */
 #screen-question { gap: 8px; padding: 12px 14px 14px; }
+#screen-rpg { gap: 8px; padding: 12px 14px 14px; }
 #screen-question .flori-small { height: clamp(64px, 11vh, 110px); }
+#screen-rpg .flori-small { height: clamp(64px, 11vh, 110px); }
 #screen-question .stage { min-height: 0; }
+#screen-rpg .stage { min-height: 0; }
 #screen-question .question { padding: 8px 14px; font-size: clamp(16px, 2.9vh, 20px); line-height: 1.6; }
+#screen-rpg .question { padding: 8px 14px; font-size: clamp(16px, 2.9vh, 20px); line-height: 1.6; }
 #screen-question .question.long { padding: 6px 12px; font-size: clamp(14px, 2.4vh, 17px); line-height: 1.5; }
+#screen-rpg .question.long { padding: 6px 12px; font-size: clamp(14px, 2.4vh, 17px); line-height: 1.5; }
 #screen-question .choices { gap: 6px; }
+#screen-rpg .choices { gap: 6px; }
 #screen-question .choice { min-height: clamp(40px, 6.6vh, 56px); padding: 4px 12px; }
+#screen-rpg .choice { min-height: clamp(40px, 6.6vh, 56px); padding: 4px 12px; }
 #screen-question .bubble { padding: 4px 14px; line-height: 1.5; }
+#screen-rpg .bubble { padding: 4px 14px; line-height: 1.5; }
 #screen-question .btn { min-height: 44px; }
+#screen-rpg .btn { min-height: 44px; }
 #screen-question.is-answered .stage, #screen-question.is-answered #q-hint-area, #screen-question.is-answered #q-message { display: none; }
+#screen-rpg.is-answered .stage, #screen-rpg.is-answered #rpg-hint-area, #screen-rpg.is-answered #rpg-message { display: none; }
 #screen-question .feedback { padding: 8px 12px; gap: 6px; }
+#screen-rpg .feedback { padding: 8px 12px; gap: 6px; }
 .q-react { display: flex; align-items: center; justify-content: center; gap: 14px; }
 .react-flori { height: clamp(90px, 17vh, 150px); }
 .q-react .verdict { font-size: clamp(20px, 3.6vh, 26px); }
 #screen-question .explanation { font-size: clamp(14px, 2.4vh, 17px); line-height: 1.55; }
+#screen-rpg .explanation { font-size: clamp(14px, 2.4vh, 17px); line-height: 1.55; }
 .q-detail { gap: 6px; }
 
 /* 成績・きせかえを、1画面におさめるための、さいごの調整 */
@@ -922,11 +934,17 @@ rt { font-size: 0.52em; font-weight: normal; line-height: 1; color: var(--blue-d
 
 /* 答えたあとは、選択肢をかくす(正解は、解説に書いてある)。とても長い問題は、さらにぎゅっと */
 #screen-question.is-answered #q-choices { display: none; }
+#screen-rpg.is-answered #rpg-choices { display: none; }
 #screen-question.is-long .flori-small { height: 52px; }
+#screen-rpg.is-long .flori-small { height: 52px; }
 #screen-question.is-long .question { font-size: 14px; line-height: 1.4; padding: 4px 10px; }
+#screen-rpg.is-long .question { font-size: 14px; line-height: 1.4; padding: 4px 10px; }
 #screen-question.is-long .choices { gap: 4px; }
+#screen-rpg.is-long .choices { gap: 4px; }
 #screen-question.is-long .choice { min-height: 34px; padding: 2px 10px; }
+#screen-rpg.is-long .choice { min-height: 34px; padding: 2px 10px; }
 #screen-question.is-long .status { gap: 4px; }
+#screen-rpg.is-long .status { gap: 4px; }
 
 /* ===== 文字の大きさの見直し:ふりがな以外は、できるだけ 14px 以上に ===== */
 .t-small .tile-label { font-size: 14px; letter-spacing: 0; }
@@ -995,10 +1013,13 @@ rt { font-size: max(0.55em, 9.5px); }
 .q-row { display: flex; align-items: center; gap: 12px; width: 100%; }
 .q-row .stage { flex: none; flex-direction: column; gap: 4px; min-height: 0; max-width: 34%; }
 #screen-question .q-row .flori-small { height: clamp(104px, 19vh, 176px); }
+#screen-rpg .q-row .flori-small { height: clamp(104px, 19vh, 176px); }
 .q-row .question { flex: 1; width: auto; min-width: 0; }
 .q-row .stage .bubble { font-size: 14px; padding: 2px 8px; line-height: 1.4; }
 #screen-question.is-long .q-row .flori-small { height: clamp(80px, 13vh, 120px); }
+#screen-rpg.is-long .q-row .flori-small { height: clamp(80px, 13vh, 120px); }
 @media (max-width: 520px) { .q-row { flex-direction: column; } .q-row .stage { max-width: none; } #screen-question .q-row .flori-small { height: clamp(80px, 14vh, 110px); } }
+@media (max-width: 520px) { .q-row { flex-direction: column; } .q-row .stage { max-width: none; } #screen-rpg .q-row .flori-small { height: clamp(80px, 14vh, 110px); } }
 .q-detail { animation: none; }
 
 /* ===== きせかえのタブ:どれを選んでいるか、はっきり ===== */
@@ -1859,24 +1880,43 @@ body.has-pager { padding-bottom: 56px; }
 
   /* 問題 */
   #screen-question { gap: 5px; padding: 6px 8px 8px; }
+  #screen-rpg { gap: 5px; padding: 6px 8px 8px; }
   #screen-question .status { flex-wrap: wrap; gap: 3px 4px; }
+  #screen-rpg .status { flex-wrap: wrap; gap: 3px 4px; }
   #screen-question .board { gap: 4px; }
+  #screen-rpg .board { gap: 4px; }
   #screen-question .board li { flex: 1 1 20%; padding: 0 6px; font-size: 13px; line-height: 1.7; white-space: nowrap; border-radius: 10px; }
+  #screen-rpg .board li { flex: 1 1 20%; padding: 0 6px; font-size: 13px; line-height: 1.7; white-space: nowrap; border-radius: 10px; }
   #screen-question .turn { padding: 1px 8px; font-size: 14px; line-height: 1.6; border-width: 2px; border-radius: 10px; }
+  #screen-rpg .turn { padding: 1px 8px; font-size: 14px; line-height: 1.6; border-width: 2px; border-radius: 10px; }
   #screen-question .chip { padding: 0 8px; font-size: 13px; line-height: 1.7; white-space: nowrap; }
+  #screen-rpg .chip { padding: 0 8px; font-size: 13px; line-height: 1.7; white-space: nowrap; }
   #screen-question .q-row { flex-direction: row; align-items: center; gap: 8px; }
+  #screen-rpg .q-row { flex-direction: row; align-items: center; gap: 8px; }
   #screen-question .q-row .stage { flex: none; max-width: 32%; }
+  #screen-rpg .q-row .stage { flex: none; max-width: 32%; }
   #screen-question .q-row .flori-small { height: clamp(66px, 11dvh, 96px); }
+  #screen-rpg .q-row .flori-small { height: clamp(66px, 11dvh, 96px); }
   #screen-question .q-row .stage .bubble { font-size: 12px; }
+  #screen-rpg .q-row .stage .bubble { font-size: 12px; }
   #screen-question .hint-buttons { display: flex; justify-content: center; gap: 8px; }
+  #screen-rpg .hint-buttons { display: flex; justify-content: center; gap: 8px; }
   #screen-question .hint-buttons .btn { min-height: 38px; padding: 2px 14px; font-size: 15px; }
+  #screen-rpg .hint-buttons .btn { min-height: 38px; padding: 2px 14px; font-size: 15px; }
   #screen-question .hint { padding: 4px 10px; font-size: 14px; line-height: 1.55; }
+  #screen-rpg .hint { padding: 4px 10px; font-size: 14px; line-height: 1.55; }
   #screen-question .hint-area { gap: 4px; }
+  #screen-rpg .hint-area { gap: 4px; }
   #screen-question .choices { gap: 5px; }
+  #screen-rpg .choices { gap: 5px; }
   #screen-question .choice { min-height: 44px; padding: 2px 10px; }
+  #screen-rpg .choice { min-height: 44px; padding: 2px 10px; }
   #screen-question .q-art { flex: 1 1 0; min-height: 0; max-height: 104px; }
+  #screen-rpg .q-art { flex: 1 1 0; min-height: 0; max-height: 104px; }
   #screen-question .q-row, #screen-question .choices, #screen-question .hint-area, #screen-question .timer, #screen-question .status { flex: none; }
+  #screen-rpg .q-row, #screen-rpg .choices, #screen-rpg .hint-area, #screen-rpg .timer, #screen-rpg .status { flex: none; }
   #screen-question .feedback { flex: 1 1 0; min-height: 0; overflow-y: auto; }
+  #screen-rpg .feedback { flex: 1 1 0; min-height: 0; overflow-y: auto; }
 
   /* 結果 */
   #screen-result { gap: 5px; }
@@ -1906,14 +1946,23 @@ body.has-pager { padding-bottom: 56px; }
   :is(#screen-records, #screen-settings, #screen-dex, #screen-versus) > .title { font-size: 19px; }
   #screen-records .total-bar { display: none; }
   #screen-question .q-art { display: none; }
+  #screen-rpg .q-art { display: none; }
   #screen-question .q-row .flori-small { height: 60px; }
+  #screen-rpg .q-row .flori-small { height: 60px; }
   #screen-question { gap: 3px; }
+  #screen-rpg { gap: 3px; }
   #screen-question .choice { min-height: 34px; padding-top: 0; padding-bottom: 0; }
+  #screen-rpg .choice { min-height: 34px; padding-top: 0; padding-bottom: 0; }
   #screen-question .timer-track { height: 12px; }
+  #screen-rpg .timer-track { height: 12px; }
   #screen-question .timer-text { line-height: 1.4; }
+  #screen-rpg .timer-text { line-height: 1.4; }
   #screen-question .question { font-size: 15px; line-height: 1.5; padding: 4px 10px; }
+  #screen-rpg .question { font-size: 15px; line-height: 1.5; padding: 4px 10px; }
   #screen-question .hint { font-size: 13px; padding: 3px 8px; }
+  #screen-rpg .hint { font-size: 13px; padding: 3px 8px; }
   #screen-question .hint-buttons .btn { min-height: 34px; }
+  #screen-rpg .hint-buttons .btn { min-height: 34px; }
   #screen-settings .setting-box legend { font-size: 14px; }
   #screen-settings .setting-box { padding: 0 10px 2px; }
 }
@@ -1925,6 +1974,7 @@ body.has-pager { padding-bottom: 56px; }
 /* 万が一、問題や結果が画面より長くなっても、切れないように(その画面の中だけ、動かせる) */
 @media screen {
   #screen-question.screen:not([hidden]), #screen-result.screen:not([hidden]) { overflow-y: auto; overscroll-behavior: contain; }
+  #screen-rpg.screen:not([hidden]), #screen-result.screen:not([hidden]) { overflow-y: auto; overscroll-behavior: contain; }
 }
 
 @media (min-width: 700px) {
@@ -1957,6 +2007,7 @@ body.has-pager { padding-bottom: 56px; }
 .back-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(53, 95, 140, 0.4); }
 .back-btn:focus-visible { outline: 4px solid var(--green); outline-offset: 2px; }
 #screen-question .back-btn { min-height: 34px; padding: 0 10px; font-size: 14px; box-shadow: 0 3px 0 rgba(53, 95, 140, 0.4); }
+#screen-rpg .back-btn { min-height: 34px; padding: 0 10px; font-size: 14px; box-shadow: 0 3px 0 rgba(53, 95, 140, 0.4); }
 
 /* ---- 表紙:ゲームのホーム画面ふう(上に記録、まん中にフロリ、下に大きなボタンと、メニュー) ---- */
 .hud { display: flex; gap: 5px; justify-content: center; width: 100%; flex: none; }
@@ -2082,6 +2133,7 @@ body.has-pager { padding-bottom: 56px; }
 #screen-cover .home-stage { flex: 1 1 0; min-height: 0; }
 #screen-cover .home-hero { width: min(68vw, 38dvh); }
 :is(#screen-menu, #screen-note, #screen-rpg, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { margin-bottom: 0; }
+:is(#screen-menu, #screen-note, #screen-rpg, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-rpg) > .screen-head { margin-bottom: 0; }
 #screen-dress { gap: 5px; }
 #screen-dress .hero-small { flex: none; }
 #screen-dress .dress-banner-text { font-size: 13px; line-height: 1.45; }
@@ -2140,17 +2192,24 @@ body.has-pager { padding-bottom: 56px; }
 
 /* 問題の画面も、戻る(やめる)ボタンを、ほかの画面と同じ場所・同じ大きさに */
 #screen-question .back-btn { min-height: 36px; padding: 2px 12px; font-size: 16px; box-shadow: 0 4px 0 rgba(53, 95, 140, 0.4); }
+#screen-rpg .back-btn { min-height: 36px; padding: 2px 12px; font-size: 16px; box-shadow: 0 4px 0 rgba(53, 95, 140, 0.4); }
 #screen-question .status { min-height: 44px; align-items: center; }
+#screen-rpg .status { min-height: 44px; align-items: center; }
 #screen-question.screen:not([hidden]) { padding-top: 8px; }
+#screen-rpg.screen:not([hidden]) { padding-top: 8px; }
 :is(#screen-result, #screen-records, #screen-settings, #screen-relax, #screen-dex, #screen-dress, #screen-menu, #screen-note, #screen-rules, #screen-setup).screen:not([hidden]) { padding-top: 8px; }
 .screen-head { min-height: 0; height: 46px; }
 #screen-question .status { min-height: 46px; }
+#screen-rpg .status { min-height: 46px; }
 .dex-tab { font-size: 12px; letter-spacing: -0.03em; padding: 1px 0; }
 .dex-tab .dt-name { overflow: hidden; text-overflow: clip; }
 .screen-head { grid-template-rows: 46px; }
 .back-btn, #screen-question .back-btn { height: 38px; min-height: 38px; padding-top: 0; padding-bottom: 0; line-height: 1.1; box-sizing: border-box; }
+.back-btn, #screen-rpg .back-btn { height: 38px; min-height: 38px; padding-top: 0; padding-bottom: 0; line-height: 1.1; box-sizing: border-box; }
 #screen-question .status { align-items: center; }
+#screen-rpg .status { align-items: center; }
 #screen-question .status { align-content: center; }
+#screen-rpg .status { align-content: center; }
 
 /* とても背の低い画面(高さ620px以下):成績の「分類ごとの正解」は、かくす */
 @media (max-height: 660px) {
@@ -2160,6 +2219,7 @@ body.has-pager { padding-bottom: 56px; }
   #screen-settings .settings-grid { gap: 4px; }
 }
 #screen-question .status { margin-top: 4px; }
+#screen-rpg .status { margin-top: 4px; }
 
 /* =====================================================================
    追加(その43):表紙の背景の模様・クイズボタンの色/場所・記録のラベル・ルールの動画・
@@ -2297,6 +2357,7 @@ body.has-pager { padding-bottom: 56px; }
 
 /* ---- 問題の画面:「第何問」と「難しさ」を、大きく ---- */
 #screen-question .status { justify-content: space-between; flex-wrap: nowrap; min-height: 44px; }
+#screen-rpg .status { justify-content: space-between; flex-wrap: nowrap; min-height: 44px; }
 .q-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: none; width: 100%; }
 .q-chip { display: flex; align-items: center; justify-content: center; min-width: 0; padding: 2px 8px; font-size: clamp(17px, 2.7dvh, 22px); font-weight: bold; line-height: 1.35; text-align: center; border: 3px solid var(--line); border-radius: 16px; box-shadow: 0 3px 0 rgba(70, 85, 94, 0.25); }
 .q-chip-no { background: #fff3c4; }
@@ -2305,24 +2366,40 @@ body.has-pager { padding-bottom: 56px; }
 
 /* ---- 問題の画面:あまった下の場所ぶん、フロリと問題文を大きく ---- */
 #screen-question .q-row .flori-small { height: clamp(104px, 21dvh, 230px); }
+#screen-rpg .q-row .flori-small { height: clamp(104px, 21dvh, 230px); }
 #screen-question .question { font-size: clamp(17px, 3.1dvh, 26px); }
+#screen-rpg .question { font-size: clamp(17px, 3.1dvh, 26px); }
 #screen-question .question.long { font-size: clamp(14px, 2.5dvh, 20px); }
+#screen-rpg .question.long { font-size: clamp(14px, 2.5dvh, 20px); }
 #screen-question .choice { min-height: clamp(42px, 7.4dvh, 66px); }
+#screen-rpg .choice { min-height: clamp(42px, 7.4dvh, 66px); }
 #screen-question.is-long .q-row .flori-small { height: clamp(80px, 13dvh, 130px); }
+#screen-rpg.is-long .q-row .flori-small { height: clamp(80px, 13dvh, 130px); }
 
 /* ---- 皆で対戦:だれの番かを、はっきり。ふち・案内板・点数が、その人の色 ---- */
 #screen-question .turn { font-size: clamp(20px, 3.3dvh, 28px); line-height: 1.3; padding: 4px 10px; border-width: 4px; box-shadow: 0 4px 0 rgba(70, 85, 94, 0.3); animation: turnPop 0.4s ease-out; }
+#screen-rpg .turn { font-size: clamp(20px, 3.3dvh, 28px); line-height: 1.3; padding: 4px 10px; border-width: 4px; box-shadow: 0 4px 0 rgba(70, 85, 94, 0.3); animation: turnPop 0.4s ease-out; }
 @keyframes turnPop { 0% { transform: scale(0.92); } 60% { transform: scale(1.04); } 100% { transform: none; } }
 #screen-question[data-player="1"] { border-color: var(--p1); box-shadow: 0 0 0 5px var(--p1); }
+#screen-rpg[data-player="1"] { border-color: var(--p1); box-shadow: 0 0 0 5px var(--p1); }
 #screen-question[data-player="2"] { border-color: var(--p2); box-shadow: 0 0 0 5px var(--p2); }
+#screen-rpg[data-player="2"] { border-color: var(--p2); box-shadow: 0 0 0 5px var(--p2); }
 #screen-question[data-player="3"] { border-color: var(--p3); box-shadow: 0 0 0 5px var(--p3); }
+#screen-rpg[data-player="3"] { border-color: var(--p3); box-shadow: 0 0 0 5px var(--p3); }
 #screen-question[data-player="4"] { border-color: var(--p4); box-shadow: 0 0 0 5px var(--p4); }
+#screen-rpg[data-player="4"] { border-color: var(--p4); box-shadow: 0 0 0 5px var(--p4); }
 #screen-question[data-player="1"] .q-row .question { border-color: var(--p1); }
+#screen-rpg[data-player="1"] .q-row .question { border-color: var(--p1); }
 #screen-question[data-player="2"] .q-row .question { border-color: var(--p2); }
+#screen-rpg[data-player="2"] .q-row .question { border-color: var(--p2); }
 #screen-question[data-player="3"] .q-row .question { border-color: var(--p3); }
+#screen-rpg[data-player="3"] .q-row .question { border-color: var(--p3); }
 #screen-question[data-player="4"] .q-row .question { border-color: var(--p4); }
+#screen-rpg[data-player="4"] .q-row .question { border-color: var(--p4); }
 #screen-question .board li { font-size: 15px; }
+#screen-rpg .board li { font-size: 15px; }
 #screen-question .board li.is-active { transform: scale(1.06); }
+#screen-rpg .board li.is-active { transform: scale(1.06); }
 
 /* ---- 対戦の結果:負けた方は、色をうすく ---- */
 #r-board.big li:not(.is-winner) { opacity: 0.4; filter: saturate(0.5); }
@@ -2342,61 +2419,101 @@ body.has-pager { padding-bottom: 56px; }
 /* 問題の画面:フロリの場所をひろげて、大きく */
 .q-row .stage { max-width: 42%; }
 #screen-question .q-row .flori-small { height: clamp(112px, 23dvh, 250px); }
+#screen-rpg .q-row .flori-small { height: clamp(112px, 23dvh, 250px); }
 #screen-question .question { font-size: clamp(17px, 3.2dvh, 28px); }
+#screen-rpg .question { font-size: clamp(17px, 3.2dvh, 28px); }
 #screen-question.is-long .q-row .stage { max-width: 34%; }
+#screen-rpg.is-long .q-row .stage { max-width: 34%; }
 #screen-question .q-chip, #screen-question .chip-button { flex: none; }
+#screen-rpg .q-chip, #screen-rpg .chip-button { flex: none; }
 #screen-question .chip-button { min-height: 36px; padding: 2px 12px; font-size: 16px; line-height: 1.3; }
+#screen-rpg .chip-button { min-height: 36px; padding: 2px 12px; font-size: 16px; line-height: 1.3; }
 #screen-question:not([data-player=""]) #q-art { display: none; }
+#screen-rpg:not([data-player=""]) #q-art { display: none; }
 #screen-question .turn { padding: 2px 10px; }
+#screen-rpg .turn { padding: 2px 10px; }
 
 /* 背の低い画面(高さ700px以下):問題の画面を、ぎゅっと。対戦(情報が多い)でも、1画面に収まるように */
 @media (max-height: 700px) {
   #screen-question .q-info { gap: 6px; }
+  #screen-rpg .q-info { gap: 6px; }
   #screen-question .q-chip { min-height: 30px; padding: 0 6px; font-size: 14px; line-height: 1.25; border-width: 2px; border-radius: 12px; }
+  #screen-rpg .q-chip { min-height: 30px; padding: 0 6px; font-size: 14px; line-height: 1.25; border-width: 2px; border-radius: 12px; }
   #screen-question .chip-button { min-height: 32px; font-size: 14px; }
+  #screen-rpg .chip-button { min-height: 32px; font-size: 14px; }
   #screen-question .board li { padding: 0 8px; font-size: 13px; line-height: 1.5; }
+  #screen-rpg .board li { padding: 0 8px; font-size: 13px; line-height: 1.5; }
   #screen-question .turn { font-size: 17px; line-height: 1.3; padding: 0 8px; border-width: 3px; }
+  #screen-rpg .turn { font-size: 17px; line-height: 1.3; padding: 0 8px; border-width: 3px; }
   #screen-question .hint-buttons { flex-wrap: nowrap; gap: 6px; }
+  #screen-rpg .hint-buttons { flex-wrap: nowrap; gap: 6px; }
   #screen-question .hint-buttons .btn { min-height: 34px; padding: 2px 10px; font-size: 13px; }
+  #screen-rpg .hint-buttons .btn { min-height: 34px; padding: 2px 10px; font-size: 13px; }
   #screen-question[data-player] .q-row .flori-small, #screen-question .q-row .flori-small { height: clamp(84px, 17dvh, 120px); }
+  #screen-rpg[data-player] .q-row .flori-small, #screen-rpg .q-row .flori-small { height: clamp(84px, 17dvh, 120px); }
   #screen-question .choice { min-height: 38px; }
+  #screen-rpg .choice { min-height: 38px; }
 }
 @media (max-height: 700px) {
   #screen-question.is-hinted .q-row .flori-small { height: 62px; }
+  #screen-rpg.is-hinted .q-row .flori-small { height: 62px; }
   #screen-question.is-hinted .hint { padding: 3px 10px; font-size: 13px; line-height: 1.45; }
+  #screen-rpg.is-hinted .hint { padding: 3px 10px; font-size: 13px; line-height: 1.45; }
   #screen-question.is-answered .turn { display: none; }
+  #screen-rpg.is-answered .turn { display: none; }
   #screen-question .react-flori { height: 72px; }
+  #screen-rpg .react-flori { height: 72px; }
 }
 @media (max-height: 700px) {
   #screen-question .board { flex-wrap: nowrap; gap: 4px; }
+  #screen-rpg .board { flex-wrap: nowrap; gap: 4px; }
   #screen-question .board li { flex: 1 1 0; min-width: 0; padding: 0 2px; font-size: 12px; white-space: nowrap; }
+  #screen-rpg .board li { flex: 1 1 0; min-width: 0; padding: 0 2px; font-size: 12px; white-space: nowrap; }
   #screen-question.is-hinted .q-row .flori-small { height: 50px; }
+  #screen-rpg.is-hinted .q-row .flori-small { height: 50px; }
   #screen-question.is-hinted .hint { font-size: 12.5px; line-height: 1.4; }
+  #screen-rpg.is-hinted .hint { font-size: 12.5px; line-height: 1.4; }
 }
 
 /* 問題の画面の上:戻る・設定と、第何問・難しさ。背が高いときは2段、低いときは1段 */
 #screen-question .status { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "back . set" "info info info"; align-items: center; gap: 6px 8px; min-height: 0; height: auto; }
+#screen-rpg .status { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "back . set" "info info info"; align-items: center; gap: 6px 8px; min-height: 0; height: auto; }
 #screen-question .status .back-btn { grid-area: back; }
+#screen-rpg .status .back-btn { grid-area: back; }
 #screen-question .status .chip-button { grid-area: set; justify-self: end; }
+#screen-rpg .status .chip-button { grid-area: set; justify-self: end; }
 #screen-question .status .q-info { grid-area: info; }
+#screen-rpg .status .q-info { grid-area: info; }
 @media (max-height: 700px) {
   #screen-question .status { grid-template-areas: "back info set"; gap: 6px; }
+  #screen-rpg .status { grid-template-areas: "back info set"; gap: 6px; }
   #screen-question .status .q-info { min-width: 0; }
+  #screen-rpg .status .q-info { min-width: 0; }
   #screen-question .q-chip { min-height: 36px; font-size: 13px; line-height: 1.2; padding: 0 3px; }
+  #screen-rpg .q-chip { min-height: 36px; font-size: 13px; line-height: 1.2; padding: 0 3px; }
   #screen-question .status .back-btn { padding: 0 8px; font-size: 14px; }
+  #screen-rpg .status .back-btn { padding: 0 8px; font-size: 14px; }
   #screen-question .status .chip-button { padding: 2px 8px; font-size: 13px; }
+  #screen-rpg .status .chip-button { padding: 2px 8px; font-size: 13px; }
 }
 @media (max-height: 700px) {
   #screen-question .status .q-info { grid-template-columns: 0.8fr 1.2fr; gap: 4px; }
+  #screen-rpg .status .q-info { grid-template-columns: 0.8fr 1.2fr; gap: 4px; }
   #screen-question .q-chip { white-space: normal; }
+  #screen-rpg .q-chip { white-space: normal; }
 }
 /* 1人用は、対戦ほど情報が多くないので、背の低い画面でも、フロリ・選択肢を、できるだけ大きく */
 @media (max-height: 700px) {
   #screen-question[data-player=""] .q-row .flori-small { height: clamp(100px, 21dvh, 200px); }
+  #screen-rpg[data-player=""] .q-row .flori-small { height: clamp(100px, 21dvh, 200px); }
   #screen-question[data-player=""].is-hinted .q-row .flori-small { height: clamp(70px, 14dvh, 130px); }
+  #screen-rpg[data-player=""].is-hinted .q-row .flori-small { height: clamp(70px, 14dvh, 130px); }
   #screen-question[data-player=""] .choice { min-height: clamp(38px, 6.4dvh, 56px); }
+  #screen-rpg[data-player=""] .choice { min-height: clamp(38px, 6.4dvh, 56px); }
   #screen-question[data-player=""] .hint-buttons .btn { min-height: 38px; font-size: 14px; }
+  #screen-rpg[data-player=""] .hint-buttons .btn { min-height: 38px; font-size: 14px; }
   #screen-question[data-player=""] .turn { display: none; }
+  #screen-rpg[data-player=""] .turn { display: none; }
 }
 
 /* 確認の画面:せまい画面でも、文字が折れないように */
@@ -2477,10 +2594,14 @@ body.has-pager { padding-bottom: 56px; }
 
 /* ---- 対戦中の得点の札:点数だけ。よこは短く、たては高く ---- */
 #screen-question .board { gap: 8px; }
+#screen-rpg .board { gap: 8px; }
 #screen-question .board li { flex: 0 1 76px; min-width: 0; padding: 6px 4px; font-size: 20px; line-height: 1.2; border-radius: 14px; }
+#screen-rpg .board li { flex: 0 1 76px; min-width: 0; padding: 6px 4px; font-size: 20px; line-height: 1.2; border-radius: 14px; }
 @media (max-height: 700px) {
   #screen-question .board { flex-wrap: nowrap; gap: 5px; }
+  #screen-rpg .board { flex-wrap: nowrap; gap: 5px; }
   #screen-question .board li { flex: 0 1 68px; padding: 3px 2px; font-size: 17px; line-height: 1.15; }
+  #screen-rpg .board li { flex: 0 1 68px; padding: 3px 2px; font-size: 17px; line-height: 1.15; }
 }
 
 /* ---- 対戦の結果:フロリを大きく ---- */
@@ -2510,7 +2631,9 @@ body.has-pager { padding-bottom: 56px; }
 .setup-actions .go-btn .ga { text-align: center; }
 @media (max-height: 700px) {
   #screen-question .board li { flex: 0 1 62px; padding: 2px 1px; font-size: 16px; }
+  #screen-rpg .board li { flex: 0 1 62px; padding: 2px 1px; font-size: 16px; }
   #screen-question .btn-read { min-height: 30px; padding: 0 12px; font-size: 13px; }
+  #screen-rpg .btn-read { min-height: 30px; padding: 0 12px; font-size: 13px; }
 }
 
 /* ===== 全画面の共通ルール(その45) ===== */
@@ -2523,8 +2646,11 @@ button::selection, button *::selection { background: transparent; }
 button:not(:disabled):active { transform: translateY(3px) !important; filter: none !important; }
 /* 戻るボタンを大きく */
 .back-btn, #screen-question .back-btn, #screen-question .status .back-btn { height: 48px; min-height: 48px; padding: 0 18px; font-size: 20px; gap: 6px; }
+.back-btn, #screen-rpg .back-btn, #screen-rpg .status .back-btn { height: 48px; min-height: 48px; padding: 0 18px; font-size: 20px; gap: 6px; }
 @media (max-width: 400px) { .back-btn, #screen-question .back-btn, #screen-question .status .back-btn { height: 44px; min-height: 44px; padding: 0 12px; font-size: 18px; } }
+@media (max-width: 400px) { .back-btn, #screen-rpg .back-btn, #screen-rpg .status .back-btn { height: 44px; min-height: 44px; padding: 0 12px; font-size: 18px; } }
 .screen-head, :is(#screen-menu, #screen-note, #screen-rpg, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { min-height: 50px; height: 50px; grid-template-rows: 50px; }
+.screen-head, :is(#screen-menu, #screen-note, #screen-rpg, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-rpg) > .screen-head { min-height: 50px; height: 50px; grid-template-rows: 50px; }
 
 /* =====================================================================
    追加(その45):ルールのフリップ(次へで進む。共通=青、1人=黄色、皆で=薄紫)・折り返し・結果のフロリ
@@ -2824,20 +2950,33 @@ button:focus:not(:focus-visible) { outline: none; }
 
 /* ---- 皆で対戦:色は、プレイヤーの色だけ。ほかは、白と灰色 ---- */
 #screen-question[data-player]:not([data-player=""]) .q-chip { background: #fff; }
+#screen-rpg[data-player]:not([data-player=""]) .q-chip { background: #fff; }
 #screen-question[data-player]:not([data-player=""]) .q-chip-level { color: #55646e; }
+#screen-rpg[data-player]:not([data-player=""]) .q-chip-level { color: #55646e; }
 #screen-question[data-player]:not([data-player=""]) .chip-button { background: #fff; }
+#screen-rpg[data-player]:not([data-player=""]) .chip-button { background: #fff; }
 #screen-question[data-player]:not([data-player=""]) .btn-sub { background: #fff; }
+#screen-rpg[data-player]:not([data-player=""]) .btn-sub { background: #fff; }
 #screen-question[data-player]:not([data-player=""]) .choice-no { background: #e4eaee; }
+#screen-rpg[data-player]:not([data-player=""]) .choice-no { background: #e4eaee; }
 #screen-question[data-player]:not([data-player=""]) .choice { border-color: #c3ced5; }
+#screen-rpg[data-player]:not([data-player=""]) .choice { border-color: #c3ced5; }
 #screen-question[data-player]:not([data-player=""]) .question { background: #fff; border-left-color: inherit; }
+#screen-rpg[data-player]:not([data-player=""]) .question { background: #fff; border-left-color: inherit; }
 #screen-question[data-player]:not([data-player=""]) .hint { background: #fff; border-color: #c3ced5; }
+#screen-rpg[data-player]:not([data-player=""]) .hint { background: #fff; border-color: #c3ced5; }
 #screen-question[data-player]:not([data-player=""]) .feedback { background: #fff; border-color: #c3ced5; }
+#screen-rpg[data-player]:not([data-player=""]) .feedback { background: #fff; border-color: #c3ced5; }
 #screen-question[data-player]:not([data-player=""]) { background: #fff; }
+#screen-rpg[data-player]:not([data-player=""]) { background: #fff; }
 
 /* ---- 問題のイラスト:ヒントを見ても、つぶれない(場所がたりないときは、ほかを小さく) ---- */
 #screen-question .q-art { flex: none; min-height: 64px; max-height: 104px; overflow: hidden; }
+#screen-rpg .q-art { flex: none; min-height: 64px; max-height: 104px; overflow: hidden; }
 #screen-question.is-hinted .q-art { min-height: 52px; max-height: 70px; }
+#screen-rpg.is-hinted .q-art { min-height: 52px; max-height: 70px; }
 @media (max-height: 700px) { #screen-question.is-hinted .q-art { display: none; } }
+@media (max-height: 700px) { #screen-rpg.is-hinted .q-art { display: none; } }
 
 /* ---- 問題のフロリのセリフ(問題の番号で変わる) ---- */
 .q-row .stage .bubble { font-size: 13.5px; line-height: 1.35; padding: 3px 8px; font-weight: bold; }
@@ -2875,29 +3014,46 @@ button:focus:not(:focus-visible) { outline: none; }
 .btn-review { background: linear-gradient(180deg, #e4f7e4, #b8e6b8); border: 3px solid #5aa860; color: #1f5a28; font-weight: bold; }
 #screen-result .buttons { flex-wrap: wrap; justify-content: center; }
 #screen-question .question { font-size: clamp(16px, 2.5dvh, 22px); }
+#screen-rpg .question { font-size: clamp(16px, 2.5dvh, 22px); }
 #screen-question .question.long { font-size: clamp(14px, 2.2dvh, 18px); }
+#screen-rpg .question.long { font-size: clamp(14px, 2.2dvh, 18px); }
 .q-row .stage { max-width: 40%; }
 .confirm-list { max-height: 420px; }
 #screen-question .q-row .flori-small { height: clamp(96px, 16dvh, 190px); }
+#screen-rpg .q-row .flori-small { height: clamp(96px, 16dvh, 190px); }
 @media (max-height: 700px) {
   #screen-question[data-player=""] .q-row .flori-small { height: clamp(84px, 15dvh, 120px); }
+  #screen-rpg[data-player=""] .q-row .flori-small { height: clamp(84px, 15dvh, 120px); }
   #screen-question[data-player=""].is-hinted .q-row .flori-small { height: clamp(64px, 11dvh, 96px); }
+  #screen-rpg[data-player=""].is-hinted .q-row .flori-small { height: clamp(64px, 11dvh, 96px); }
   .q-row .stage .bubble { font-size: 12px; padding: 2px 6px; }
 }
 @media (max-height: 600px) { #screen-question[data-player=""] #q-message { display: none; } }
+@media (max-height: 600px) { #screen-rpg[data-player=""] #rpg-message { display: none; } }
 #screen-question.is-tight1 .q-art { display: none; }
+#screen-rpg.is-tight1 .q-art { display: none; }
 #screen-question.is-tight2 .q-row .flori-small { height: 64px; }
+#screen-rpg.is-tight2 .q-row .flori-small { height: 64px; }
 #screen-question.is-tight2 #q-message { display: none; }
+#screen-rpg.is-tight2 #rpg-message { display: none; }
 #screen-question.is-tight3 .q-row, #screen-question.is-tight3 #q-timer, #screen-question.is-tight3 .q-art { display: none; }
+#screen-rpg.is-tight3 .q-row, #screen-rpg.is-tight3 #q-timer, #screen-rpg.is-tight3 .q-art { display: none; }
 @media (max-height: 700px) {
   #screen-question.is-answered .q-timer, #screen-question.is-answered #q-timer { display: none; }
+  #screen-rpg.is-answered .q-timer, #screen-rpg.is-answered #q-timer { display: none; }
   #screen-question .q-react .verdict { font-size: 17px; line-height: 1.3; }
+  #screen-rpg .q-react .verdict { font-size: 17px; line-height: 1.3; }
 }
 #screen-question.is-tight2 .choice { min-height: 32px; padding: 0 10px; }
+#screen-rpg.is-tight2 .choice { min-height: 32px; padding: 0 10px; }
 #screen-question.is-tight2 .choices { gap: 3px; }
+#screen-rpg.is-tight2 .choices { gap: 3px; }
 #screen-question.is-tight2 .question { line-height: 1.35; padding: 3px 8px; }
+#screen-rpg.is-tight2 .question { line-height: 1.35; padding: 3px 8px; }
 #screen-question.is-tight2 .hint { padding: 2px 8px; line-height: 1.3; }
+#screen-rpg.is-tight2 .hint { padding: 2px 8px; line-height: 1.3; }
 #screen-question.is-tight2 .hint-buttons .btn { min-height: 30px; }
+#screen-rpg.is-tight2 .hint-buttons .btn { min-height: 30px; }
 .fit-hide { display: none !important; }
 @media (max-height: 700px) {
   #screen-result .scores { gap: 4px; }
@@ -2963,9 +3119,13 @@ button:focus:not(:focus-visible) { outline: none; }
 
 /* 答えたあと:解説が長くても、全部見えるように(はみ出すときは、問題のイラストと、フロリを小さく。それでも足りないときは、問題文をかくす) */
 #screen-question.is-answered #q-art { display: none; }
+#screen-rpg.is-answered #q-art { display: none; }
 #screen-question.is-answered .react-flori { height: clamp(56px, 11dvh, 110px); }
+#screen-rpg.is-answered .react-flori { height: clamp(56px, 11dvh, 110px); }
 #screen-question.is-answered.is-tight .q-row { display: none; }
+#screen-rpg.is-answered.is-tight .q-row { display: none; }
 #screen-question.is-answered .explanation { word-break: auto-phrase; }
+#screen-rpg.is-answered .explanation { word-break: auto-phrase; }
 
 /* 読み上げの速さ */
 .setting-box .rate-row { grid-template-columns: 2.6em 1fr 3.2em; margin-top: 2px; }
@@ -3022,20 +3182,31 @@ rt { text-shadow: none; -webkit-text-stroke: 0; paint-order: normal; font-weight
 /* ---- 皆で対戦:プレイヤー2は紫(水色は、戻るボタンと同じ、ふちの色に使う) ---- */
 :root { --p2: #b9a0e8; }
 #screen-question[data-player]:not([data-player=""]) { --line: #4a7fb3; }
+#screen-rpg[data-player]:not([data-player=""]) { --line: #4a7fb3; }
 #screen-question[data-player]:not([data-player=""]) .q-chip { background: #eaf5fd; }
+#screen-rpg[data-player]:not([data-player=""]) .q-chip { background: #eaf5fd; }
 #screen-question[data-player]:not([data-player=""]) .chip-button, #screen-question[data-player]:not([data-player=""]) .btn-sub { background: #eaf5fd; border-color: #4a7fb3; color: #1f3f66; }
+#screen-rpg[data-player]:not([data-player=""]) .chip-button, #screen-rpg[data-player]:not([data-player=""]) .btn-sub { background: #eaf5fd; border-color: #4a7fb3; color: #1f3f66; }
 #screen-question[data-player]:not([data-player=""]) .choice-no { background: #9fd0f5; }
+#screen-rpg[data-player]:not([data-player=""]) .choice-no { background: #9fd0f5; }
 #screen-question[data-player]:not([data-player=""]) .choice { border-color: #9fd0f5; }
+#screen-rpg[data-player]:not([data-player=""]) .choice { border-color: #9fd0f5; }
 #screen-question[data-player]:not([data-player=""]) .q-chip-level { color: #1f3f66; }
+#screen-rpg[data-player]:not([data-player=""]) .q-chip-level { color: #1f3f66; }
 
 /* ---- 読み上げボタンは、ヒントのならびに(場所をとらない) ---- */
 .hint-buttons .btn-read { min-height: 38px; padding: 2px 12px; font-size: 14px; }
 #screen-question .hint-buttons { gap: 6px; flex-wrap: wrap; }
+#screen-rpg .hint-buttons { gap: 6px; flex-wrap: wrap; }
 .rate-row { margin-top: 6px; }
 #screen-question.is-tight2 .timer { transform: scaleY(0.8); margin: -3px 0; }
+#screen-rpg.is-tight2 .timer { transform: scaleY(0.8); margin: -3px 0; }
 #screen-question.is-tight2 .hint-buttons { gap: 4px; }
+#screen-rpg.is-tight2 .hint-buttons { gap: 4px; }
 #screen-question.is-tight2 .hint-buttons .btn { min-height: 28px; padding: 0 10px; font-size: 13px; }
+#screen-rpg.is-tight2 .hint-buttons .btn { min-height: 28px; padding: 0 10px; font-size: 13px; }
 @media (max-width: 340px) { #screen-question .status .q-info { grid-template-columns: 1fr 1fr; } #screen-question .q-chip { font-size: 12px; } }
+@media (max-width: 340px) { #screen-rpg .status .q-info { grid-template-columns: 1fr 1fr; } #screen-rpg .q-chip { font-size: 12px; } }
 
 /* 設定画面:スクロールしないで、全部が見える。フロリは小さく */
 @media screen {
@@ -3079,7 +3250,9 @@ rt { text-shadow: none; -webkit-text-stroke: 0; paint-order: normal; font-weight
 
 /* 皆で対戦の問題文は、1人のときと同じ色 */
 #screen-question[data-player]:not([data-player=""]) .question { background: var(--body, #dfe8ee); border-left-color: var(--blue); }
+#screen-rpg[data-player]:not([data-player=""]) .question { background: var(--body, #dfe8ee); border-left-color: var(--blue); }
 #screen-question[data-player]:not([data-player=""]) .q-row .question { border-color: transparent; border-left: 8px solid var(--blue); }
+#screen-rpg[data-player]:not([data-player=""]) .q-row .question { border-color: transparent; border-left: 8px solid var(--blue); }
 
 /* クイズボタンは、下側。色は、選んだ背景と同じ色 */
 .play-btn { margin-top: auto; background: linear-gradient(180deg, color-mix(in srgb, var(--blue) 35%, #fff), var(--blue)); border-color: var(--blue-dark); box-shadow: 0 7px 0 var(--blue-dark), 0 10px 18px rgba(60, 80, 100, 0.22); }
@@ -3107,6 +3280,7 @@ button:not(:disabled):active { transition: none !important; }
    追加(その50):解説のはみ出し(横)・かざりの取り残し・表紙のすみのフロリ・ふきだし/ボタンの位置
    ===================================================================== */
 #screen-question .feedback { overflow-x: hidden; }
+#screen-rpg .feedback { overflow-x: hidden; }
 .q-detail, .q-react, .explanation { min-width: 0; max-width: 100%; }
 .explanation { overflow-wrap: anywhere; }
 .q-react { position: relative; }
@@ -3155,6 +3329,7 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
   #screen-settings .settings-flori { flex: 0 1 auto; min-height: 84px; max-height: none; height: clamp(110px, 22dvh, 210px); max-width: 60%; margin-top: auto; }
 }
 #screen-question.is-answered .react-flori { height: clamp(56px, 11dvh, 100px); }
+#screen-rpg.is-answered .react-flori { height: clamp(56px, 11dvh, 100px); }
 #screen-result .screen-head + .flori-cover, #screen-result.is-versus .screen-head + .flori-cover { height: clamp(80px, 16dvh, 140px); max-width: 60%; }
 @media (max-height: 700px) { #screen-result .screen-head + .flori-cover, #screen-result.is-versus .screen-head + .flori-cover { height: clamp(60px, 12dvh, 90px); } }
 
@@ -3205,56 +3380,29 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 .note-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: none; width: min(560px, 100%); }
 .note-buttons .btn { min-width: 0; min-height: 44px; padding: 4px 6px; font-size: 14px; white-space: nowrap; }
 
+
 /* =====================================================================
-   RPGクエスト(専用の画面 #screen-rpg)
+   RPGクエスト(#screen-rpg):ふつうモードの規則を、上でそのまま複製してある。ここは、RPGだけの部分
    ===================================================================== */
-.rpg-screen { gap: 6px; --rpg-field-h: clamp(96px, 18dvh, 140px); }
-.rpg-hearts { font-size: 24px; letter-spacing: 0.12em; text-align: center; line-height: 1.2; }
-.rpg-hearts .emi { height: 1.1em; width: auto; vertical-align: -0.15em; }
-.rpg-path { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; flex: none; }
-.rpg-path li { position: relative; display: grid; place-items: center; width: 44px; height: 38px; font-size: 22px; line-height: 1; background: #fff; border: 3px solid #b8c6d0; border-radius: 12px; opacity: 0.6; }
-.rpg-path li + li::before { content: "›"; position: absolute; left: -10px; top: 50%; transform: translateY(-55%); font-size: 18px; font-weight: bold; color: #6a7c88; }
-.rpg-path li .emi { height: 1.1em; width: auto; }
-.rpg-path li.is-now { opacity: 1; border-color: #e0a526; background: #fff3c4; box-shadow: 0 0 0 3px #fff, 0 0 0 5px #e0a526; }
-.rpg-path li.is-done { opacity: 0.55; border-color: #4aa86b; background: #e3f4dc; }
-.rpg-path li.is-done::after { content: "✔"; position: absolute; right: -5px; bottom: -6px; width: 17px; height: 17px; display: grid; place-items: center; font-size: 12px; font-weight: bold; line-height: 1; color: #2f8a52; background: #fff; border-radius: 50%; }
-.rpg-field { position: relative; flex: none; width: 100%; height: var(--rpg-field-h); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr); align-items: end; padding: 4px 10px 6px; overflow: hidden; border: 3px solid var(--line); border-radius: 16px; background: linear-gradient(180deg, #bfe6ff 0%, #e6f6ff 58%, #a9dc8e 58%, #8ccb74 100%); }
-.rpg-hero, .rpg-foe { position: relative; display: grid; justify-items: center; align-content: end; min-width: 0; min-height: 0; height: 100%; }
-.rpg-flori { width: auto; height: calc(var(--rpg-field-h) - 16px); max-width: 100%; object-fit: contain; filter: drop-shadow(0 4px 2px rgba(40, 60, 40, 0.25)); }
-.rpg-foe { align-content: center; }
-.rpg-foe-icon { font-size: clamp(40px, 7.5dvh, 60px); line-height: 1; filter: drop-shadow(0 4px 2px rgba(40, 60, 40, 0.25)); animation: rpgBob 1.8s ease-in-out infinite; }
-.rpg-foe-icon .emi { height: 1em; width: auto; }
-.rpg-foe-name { margin-top: 2px; padding: 0 8px; font-size: 12px; font-weight: bold; line-height: 1.4; color: #fff; background: rgba(39, 64, 122, 0.85); border-radius: 999px; }
-.rpg-foe-hp { margin-top: 2px; font-size: 12px; letter-spacing: 0.1em; line-height: 1.2; }
-@keyframes rpgBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-.rpg-fx { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); max-width: 94%; padding: 2px 10px; font-size: 13px; font-weight: bold; line-height: 1.35; text-align: center; color: #fff; background: rgba(39, 64, 122, 0.92); border: 2px solid #fff; border-radius: 12px; opacity: 0; pointer-events: none; z-index: 3; }
-.rpg-fx.is-on { animation: rpgFx 2.4s ease-out forwards; }
-@keyframes rpgFx { 0% { opacity: 0; transform: translate(-50%, 6px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
-.rpg-field.is-strike .rpg-flori { animation: rpgLunge 0.5s ease-out; }
-.rpg-field.is-strike .rpg-foe-icon { animation: rpgShake 0.5s ease-out; }
-.rpg-field.is-defeat .rpg-foe-icon { animation: rpgFade 0.8s ease-in forwards; }
-.rpg-field.is-hurt .rpg-flori { animation: rpgShake 0.5s ease-out; }
-.rpg-field.is-hurt { box-shadow: inset 0 0 0 999px rgba(220, 60, 60, 0.18); }
-@keyframes rpgLunge { 0% { transform: translateX(0); } 40% { transform: translateX(36%) scale(1.05); } 100% { transform: translateX(0); } }
-@keyframes rpgShake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(3px); } }
-@keyframes rpgFade { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.3) rotate(25deg); } }
-.rpg-window { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 5px; padding: 6px 10px; overflow-y: auto; overscroll-behavior: contain; color: #fff; background: linear-gradient(180deg, #2f4d94, #223a78); border: 3px solid #fff; border-radius: 14px; box-shadow: 0 0 0 3px #223a78, 0 4px 0 3px rgba(34, 58, 120, 0.4); }
-.rpg-window > * { flex: none; }
-.rpg-text { margin: 0; font-size: 14.5px; font-weight: bold; line-height: 1.5; white-space: pre-line; overflow-wrap: normal; word-break: auto-phrase; line-break: strict; text-wrap: pretty; }
-.rpg-hint { margin: 0; padding: 4px 8px; font-size: 13px; line-height: 1.45; color: #4a3a00; background: #fff3c4; border-radius: 8px; }
-.rpg-choices { display: grid; gap: 5px; }
-.rpg-choice { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 2px 10px; font: inherit; font-size: 13.5px; font-weight: bold; line-height: 1.3; text-align: left; color: #fff; background: rgba(255, 255, 255, 0.12); border: 2px solid rgba(255, 255, 255, 0.6); border-radius: 10px; cursor: pointer; touch-action: manipulation; }
-.rpg-choice .rpg-no { flex: none; display: grid; place-items: center; width: 22px; height: 22px; font-size: 13px; color: #223a78; background: #ffe58a; border-radius: 50%; }
-.rpg-choice:hover:not(:disabled), .rpg-choice:focus-visible { background: rgba(255, 229, 138, 0.28); border-color: #ffe58a; }
-.rpg-choice:disabled { cursor: default; opacity: 0.55; }
-.rpg-choice.is-right { opacity: 1; background: rgba(90, 200, 120, 0.5); border-color: #9bf0b3; }
-.rpg-choice.is-wrong { opacity: 1; background: rgba(230, 90, 90, 0.5); border-color: #ffb0b0; }
-.rpg-hint-btn { align-self: flex-start; padding: 2px 12px; min-height: 30px; font: inherit; font-size: 13px; font-weight: bold; color: #223a78; background: #fff3c4; border: 2px solid #ffe58a; border-radius: 999px; cursor: pointer; }
-.rpg-hint-btn:disabled { opacity: 0.45; cursor: default; }
-.rpg-hint-btn[hidden], .rpg-after[hidden], .rpg-hint[hidden], .rpg-text[hidden], .rpg-choices[hidden] { display: none; }
-.rpg-after { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
-.rpg-window, .rpg-window > * { min-width: 0; max-width: 100%; }
-.rpg-verdict { margin: 0; font-size: 17px; font-weight: bold; line-height: 1.4; color: #ffe58a; }
-.rpg-explain { margin: 0; font-size: 13.5px; line-height: 1.5; white-space: pre-line; overflow-wrap: normal; word-break: auto-phrase; line-break: strict; text-wrap: pretty; }
-.rpg-next { justify-self: center; min-height: 42px; padding: 4px 28px; font: inherit; font-size: 17px; font-weight: bold; color: #223a78; background: linear-gradient(180deg, #fff3b0, #ffd45a); border: 3px solid #fff; border-radius: 999px; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3); cursor: pointer; }
-@media (prefers-reduced-motion: reduce) { .rpg-foe-icon, .rpg-field * { animation: none !important; } .rpg-fx.is-on { animation: none; opacity: 1; } }
+.rpg-hearts { display: inline-flex; align-items: center; gap: 2px; padding: 0 8px; font-size: 20px; line-height: 1.2; }
+.rpg-heart { position: relative; display: inline-block; width: 1.15em; height: 1.15em; }
+.rpg-heart > span { position: absolute; inset: 0; display: block; }
+.rpg-heart .emi { height: 1.1em; width: auto; display: block; }
+.rpg-heart .rpg-heart-on.is-half { clip-path: inset(0 50% 0 0); }
+.rpg-foe-line { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.rpg-foe-line .emi { height: 1.15em; width: auto; }
+.rpg-path { display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
+.rpg-path > span { position: relative; display: grid; place-items: center; width: 24px; height: 24px; font-size: 16px; line-height: 1; border-radius: 8px; opacity: 0.45; }
+.rpg-path > span .emi { height: 1.1em; width: auto; }
+.rpg-path > .is-now { opacity: 1; background: #fff3c4; box-shadow: 0 0 0 2px #e0a526; }
+.rpg-path > .is-done { opacity: 0.45; background: #cfeec4; }
+.rpg-path > .is-done::after { content: "✔"; position: absolute; right: -3px; bottom: -4px; font-size: 10px; font-weight: bold; color: #2f8a52; }
+#screen-rpg .q-chip { flex-wrap: nowrap; }
+.rpg-hit { animation: rpgHit 0.5s ease-out; }
+@keyframes rpgHit { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } }
+@media (prefers-reduced-motion: reduce) { .rpg-hit { animation: none; } }
+/* RPGの上の帯:1行目=戻る+ハート、2行目=いまの敵+すすむ道(ふつうモードは「第○問」「難しさ」)。低い画面でも、2段にする */
+#screen-rpg .status { grid-template-columns: auto 1fr; grid-template-areas: "back set" "info info"; gap: 4px 8px; align-items: center; }
+#screen-rpg .status .rpg-hearts { grid-area: set; justify-self: end; margin: 0; min-height: 34px; }
+#screen-rpg .status .q-info { grid-area: info; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 6px; }
+#screen-rpg .q-chip { min-height: 32px; padding: 0 6px; font-size: 13px; }

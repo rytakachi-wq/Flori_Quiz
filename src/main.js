@@ -73,7 +73,7 @@ let versusPlayers = 2; // 皆で対戦する人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
-  if (name === "rpg") return "question";
+  if (name === "rpg") return "rpg";
   if (name === "question") {
     return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
   }
@@ -455,8 +455,8 @@ function showQuestion() {
 
 
 // 問題の画面が、はみ出すときは、イラスト → フロリ・セリフの順に、小さくして、1画面に収める
-function fitQuestion() {
-  const screen = $("screen-question");
+function fitQuestion(screenId = "screen-question") {
+  const screen = $(screenId);
   if (screen.hidden || screen.classList.contains("is-answered")) return;
   screen.classList.remove("is-tight1", "is-tight2");
   if (screen.scrollHeight <= screen.clientHeight + 1) return;
@@ -465,6 +465,7 @@ function fitQuestion() {
   screen.classList.add("is-tight2");
 }
 window.addEventListener("resize", () => fitQuestion());
+window.addEventListener("resize", () => fitQuestion("screen-rpg"));
 
 // 問題の番号に合わせた、フロリのセリフと声(first=最初の問題、last=最後の問題)
 function coachLine(asked, total, leveledUp) {
@@ -731,14 +732,17 @@ function answer(response) {
 }
 
 // 解説が、スクロールしなくても、全部見えるように、文字の大きさを調整する(小さくしても、11px まで)
-function fitFeedback() {
-  const box = $("q-feedback");
+// 解説の画面の部品の名前(ふつうの問題画面と、RPGの画面で、同じ関数を使うため)
+const QUIZ_IDS = { box: "q-feedback", text: "q-explanation", flori: "q-react-flori", screen: "screen-question" };
+const RPG_IDS = { box: "rpg-feedback", text: "rpg-explanation", flori: "rpg-react-flori", screen: "screen-rpg" };
+function fitFeedback(ids = QUIZ_IDS) {
+  const box = $(ids.box);
   if (box.hidden) return;
-  const screen = $("screen-question");
+  const screen = $(ids.screen);
   screen.classList.remove("is-tight3");
   const pass = () => {
-    const text = $("q-explanation");
-    const flori = $("q-react-flori");
+    const text = $(ids.text);
+    const flori = $(ids.flori);
     text.style.fontSize = "";
     text.style.lineHeight = "";
     flori.style.height = "";
@@ -785,10 +789,10 @@ if (window.ResizeObserver) {
 }
 
 // 解説の文字の大きさを、枠に収まるまで、少しずつ小さくする。それでも収まらないときは、上の問題文をかくす
-function fitExplanation() {
-  const box = $("q-feedback");
-  const text = $("q-explanation");
-  const screen = $("screen-question");
+function fitExplanation(ids = QUIZ_IDS) {
+  const box = $(ids.box);
+  const text = $(ids.text);
+  const screen = $(ids.screen);
   screen.classList.remove("is-tight");
   text.style.fontSize = "";
   let size = parseFloat(getComputedStyle(text).fontSize);
@@ -897,7 +901,7 @@ function showResult() {
     $("r-record").hidden = !saved.isRecord;
     const wrongCount = result.answers.filter((a) => !a.correct || a.hinted).length;
     setNote.textContent = result.cleared
-      ? `ハート${result.lives}つ のこして クリア!${wrongCount > 0 ? `まちがえた${wrongCount}問は まちがいノートに 入ったヨ。` : ""}`
+      ? `ハート${heartsText(result.lives)} のこして クリア!${wrongCount > 0 ? `まちがえた${wrongCount}問は まちがいノートに 入ったヨ。` : ""}`
       : `${result.stage}マス目まで 進んだヨ。${wrongCount > 0 ? `まちがえた${wrongCount}問は まちがいノートに 入ったヨ。` : ""}`;
     $("btn-again").textContent = "もう1度挑戦";
   } else if (mode === "hard") {
@@ -1055,8 +1059,13 @@ function oniComment(correct, total) {
   return "オニは難しいんだヨ。また挑戦してネ!";
 }
 
+// ハートの数の言いかた(半分のハートがあるときは、「3つと半分」)
+function heartsText(n) {
+  return Number.isInteger(n) ? `${n}つ` : `${Math.floor(n)}つと半分`;
+}
+
 function adventureComment(result) {
-  if (result.cleared) return result.lives === 3 ? "ノーダメージ クリア! すごいヨ!" : "ドラゴンを たおした! おめでとう!";
+  if (result.cleared) return result.lives === RPG_LIVES ? "ノーダメージ クリア! すごいヨ!" : "ドラゴンを たおした! おめでとう!";
   return result.stage >= 3 ? "惜しい! ボスの すぐ近くまで 来たヨ!" : "ナイスチャレンジ! また 冒険に 出よう!";
 }
 
@@ -1347,7 +1356,7 @@ function renderSetup() {
   $("setup-note").textContent = versus
     ? "1台の画面で 順番に 答えるよ。毎回 はじめから。"
     : pick.level === "rpg"
-      ? "5つのマスを ハート3つで 進もう! ボスの ドラゴンを たおせ!"
+      ? "5つのマスを ハート4つで 進もう! ボスの ドラゴンを たおせ!"
       : hasCourseKey(courseKey())
         ? "💾 続きから 始まるよ!"
         : anySavedCourse()
@@ -2372,50 +2381,64 @@ $("btn-note-review").addEventListener("click", () =>
 );
 
 // ================= RPGクエスト(専用の画面 screen-rpg) =================
-// ミニマップ+サバイバル。5つのマスを、ハート3つで進む(game.js の RpgRound)。クイズの画面(screen-question)は、使わない。
+// ミニマップ+サバイバル。5つのマスを、ハート4つで進む(game.js の RpgRound)。クイズの画面(screen-question)は使わず、
+// 見た目と並びは、ふつうモードの問題画面にそろえてある(style.css で、問題画面の規則を #screen-rpg にも当てている)。
 let rpgQuestion = null;
 let rpgAnswered = false;
 let rpgHinted = false;
 
-const hearts = (lives) => `${"❤️".repeat(Math.max(0, lives))}${"🖤".repeat(RPG_LIVES - Math.max(0, lives))}`;
+// ハート:1つ=❤️。半分へったハートは、左の半分だけ赤く(ヒントを見ると、半分へる)
+function renderRpgHearts() {
+  const box = $("rpg-hearts");
+  box.replaceChildren(
+    ...Array.from({ length: RPG_LIVES }, (_, i) => {
+      const value = play.lives - i;
+      const heart = document.createElement("span");
+      heart.className = "rpg-heart";
+      heart.innerHTML = '<span class="rpg-heart-off">🖤</span>';
+      if (value >= 0.5) {
+        const on = document.createElement("span");
+        on.className = `rpg-heart-on${value < 1 ? " is-half" : ""}`;
+        on.textContent = "❤️";
+        heart.append(on);
+      }
+      return heart;
+    }),
+  );
+  box.setAttribute("aria-label", `ハート ${play.lives}`);
+}
 
-function renderRpgStatus() {
-  $("rpg-hearts").textContent = hearts(play.lives);
+function rpgFoeText(stage, hp) {
+  const name = stage.kind === "boss" ? `ボス${stage.name}` : stage.name;
+  const pips = stage.kind === "chest" ? "" : `${"💗".repeat(Math.max(0, hp))}${"🤍".repeat(stage.hp - Math.max(0, hp))}`;
+  return `${stage.icon}${name}${pips}`;
+}
+
+function renderRpgStatus(foeHp = play.hp) {
+  renderRpgHearts();
+  const stage = play.current;
+  const foe = $("rpg-foe");
+  foe.replaceChildren();
+  const line = document.createElement("span");
+  line.className = "rpg-foe-line";
+  line.textContent = rpgFoeText(stage, foeHp);
+  foe.append(line);
+  $("rpg-path").classList.add("rpg-path");
   $("rpg-path").replaceChildren(
-    ...RPG_STAGES.map((stage, index) => {
-      const item = document.createElement("li");
-      item.textContent = stage.icon;
-      item.title = stage.name;
-      if (index < play.stage) item.className = "is-done";
-      else if (index === play.stage) item.className = "is-now";
-      return item;
+    ...RPG_STAGES.map((item, index) => {
+      const cell = document.createElement("span");
+      cell.textContent = item.icon;
+      if (index < play.stage) cell.className = "is-done";
+      else if (index === play.stage) cell.className = "is-now";
+      return cell;
     }),
   );
 }
 
-function renderRpgFoe() {
-  const stage = play.current;
-  $("rpg-foe-icon").textContent = stage.icon;
-  $("rpg-foe-name").textContent = stage.kind === "chest" ? "たからばこ(正解でハート回復)" : stage.kind === "boss" ? `ボス ${stage.name}` : stage.name;
-  $("rpg-foe-hp").textContent = stage.kind === "chest" ? "" : `${"💗".repeat(play.hp)}${"🤍".repeat(stage.hp - play.hp)}`;
-}
-
-function rpgPose(src, alt) {
-  const img = $("rpg-flori");
-  applyFloriSrc(img, src);
-  img.alt = alt;
-}
-
-function rpgFx(text, ...classes) {
-  const field = $("rpg-field");
-  field.classList.remove("is-strike", "is-defeat", "is-hurt");
-  void field.offsetWidth;
-  field.classList.add(...classes);
-  const fx = $("rpg-fx");
-  fx.textContent = text;
-  fx.classList.remove("is-on");
-  void fx.offsetWidth;
-  fx.classList.add("is-on");
+function updateRpgHintButton() {
+  const button = $("btn-rpg-hint");
+  button.hidden = !rpgQuestion?.hint;
+  button.disabled = rpgHinted || rpgAnswered || !play.canHint;
 }
 
 function showRpg() {
@@ -2423,36 +2446,42 @@ function showRpg() {
   rpgQuestion = question;
   rpgAnswered = false;
   rpgHinted = false;
-  renderRpgStatus();
-  renderRpgFoe();
   const stage = play.current;
-  $("rpg-field").classList.remove("is-strike", "is-defeat", "is-hurt");
-  $("rpg-fx").classList.remove("is-on");
-  rpgPose(stage.kind === "boss" ? IMG.surprised : "../assets/flori/m/body_wave.webp", "フロリ");
+  const screen = $("screen-rpg");
+  screen.classList.remove("is-answered", "is-hinted", "is-tight", "is-tight1", "is-tight2", "is-tight3");
+  renderRpgStatus();
+  const img = $("rpg-flori");
+  applyFloriSrc(img, stage.kind === "boss" ? IMG.surprised : IMG.think);
+  img.alt = "フロリ";
+  const message = $("rpg-message");
+  message.textContent =
+    stage.kind === "chest" ? "🎁 たからばこ! 正解で ハート回復!" : stage.kind === "boss" ? `ボス ${stage.name}が あらわれた!` : `${stage.name}が あらわれた!`;
+  message.hidden = false;
   $("rpg-text").textContent = question.text;
-  $("rpg-text").hidden = false;
+  $("rpg-text").classList.toggle("long", question.text.length > 70);
+  screen.classList.toggle("is-long", question.text.length > 100);
   $("rpg-hint").hidden = true;
-  $("btn-rpg-hint").hidden = !question.hint;
-  $("btn-rpg-hint").disabled = false;
-  $("rpg-after").hidden = true;
-  $("rpg-choices").hidden = false;
-  $("rpg-choices").replaceChildren(
+  $("rpg-hint-area").hidden = false;
+  updateRpgHintButton();
+  $("rpg-feedback").hidden = true;
+  const list = $("rpg-choices");
+  list.replaceChildren(
     ...question.choices.map((text, index) => {
+      const item = document.createElement("li");
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "rpg-choice";
-      button.innerHTML = '<span class="rpg-no"></span><span class="rpg-choice-text"></span>';
-      button.querySelector(".rpg-no").textContent = String(index + 1);
-      button.querySelector(".rpg-choice-text").textContent = text;
+      button.className = "choice";
+      button.dataset.noSe = "1";
+      button.innerHTML = `<span class="choice-no">${index + 1}</span><span class="choice-text"></span>`;
+      button.querySelector(".choice-text").textContent = text;
       button.addEventListener("click", () => rpgAnswer(index));
-      return button;
+      item.append(button);
+      return item;
     }),
   );
-  $("rpg-fx").textContent = "";
-  const intro = stage.kind === "chest" ? "🎁 たからばこだ! 正解で ハート回復!" : stage.kind === "boss" ? `🐉 ボス ${stage.name}が あらわれた!` : `${stage.icon} ${stage.name}が あらわれた!`;
-  rpgFx(intro);
-  $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
   show("rpg");
+  fitQuestion("screen-rpg");
+  setTimeout(() => fitQuestion("screen-rpg"), 120); // ふりがなが付いたあとに、もう1度
 }
 
 function rpgAnswer(index) {
@@ -2462,35 +2491,41 @@ function rpgAnswer(index) {
   const foe = play.current; // 答える前の敵(たおすと、次のマスに進むので)
   const correct = play.answer(question, index, rpgHinted);
   playSe(correct ? "correct" : "wrong");
-  [...$("rpg-choices").querySelectorAll(".rpg-choice")].forEach((button, i) => {
+  [...$("rpg-choices").querySelectorAll(".choice")].forEach((button, i) => {
     button.disabled = true;
     if (i === question.answer) button.classList.add("is-right");
     else if (i === index) button.classList.add("is-wrong");
   });
   const event = play.event;
-  const message = {
-    hit: `⚔️ こうげき! ${foe.name}に ダメージ!`,
-    defeat: `💥 ${foe.name}を たおした!`,
-    damage: `💢 ${foe.name}の こうげき! ハート -1`,
-    heal: "💖 たからばこが ひらいた! ハート +1",
-    miss: "🎁 たからばこは あけられなかった…",
+  renderRpgStatus(event === "defeat" ? 0 : play.hp);
+  const shake = (id) => {
+    $(id).classList.remove("rpg-hit");
+    void $(id).offsetWidth;
+    $(id).classList.add("rpg-hit");
+  };
+  if (event === "damage") shake("rpg-hearts");
+  else if (event === "hit" || event === "defeat") shake("rpg-foe");
+  const verdict = {
+    hit: `正解! ${foe.name}に ダメージ!`,
+    defeat: `正解! ${foe.name}を たおした!`,
+    damage: `残念… ${foe.name}の こうげき! ハート -1`,
+    heal: "正解! 🎁 ハートが 1つ 回復!",
+    miss: "残念… たからばこは あけられなかった",
   }[event];
-  rpgFx(message, event === "damage" ? "is-hurt" : event === "defeat" ? "is-strike" : event === "hit" ? "is-strike" : "is-strike");
-  if (event === "defeat") setTimeout(() => $("rpg-field").classList.add("is-defeat"), 400);
-  rpgPose(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
-  $("rpg-hearts").textContent = hearts(play.lives);
-  renderRpgStatus();
-  $("rpg-foe-hp").textContent = foe.kind === "chest" ? "" : `${"💗".repeat(Math.max(0, event === "defeat" ? 0 : play.hp))}${"🤍".repeat(foe.hp - (event === "defeat" ? 0 : play.hp))}`;
-  $("btn-rpg-hint").hidden = true;
-  $("rpg-hint").hidden = true;
-  $("rpg-choices").hidden = true; // 答えたあとは、答えと解説だけ(問題文と選択肢は、かくす。1画面に収めるため)
-  $("rpg-text").hidden = true;
-  $("rpg-verdict").textContent = correct ? (rpgHinted ? "正解! (ヒントを使ったヨ)" : "正解!") : "残念…";
-  $("rpg-explain").textContent = `正解は「${question.choices[question.answer]}」\n${question.explanation}`;
-  $("rpg-after").hidden = false;
-  $("btn-rpg-next").textContent = play.roundFinished ? "結果を見る ▶" : "つぎへ ▶";
-  $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
+  $("rpg-verdict").textContent = `${verdict}${correct && rpgHinted ? "(ヒントを使ったヨ)" : ""}`;
+  $("rpg-verdict").className = `verdict ${correct ? "is-right" : "is-wrong"}`;
+  $("rpg-explanation").textContent = `正解は「${question.choices[question.answer]}」\n${question.explanation}`;
+  $("btn-rpg-next").textContent = play.roundFinished ? "結果を見る" : "次へ";
+  $("screen-rpg").classList.add("is-answered"); // 答えたあとは、上のフロリや、ヒントを、かくして、場所をあける
+  applyFloriSrc($("rpg-react-flori"), correct ? IMG.correct : IMG.wrong);
+  $("rpg-react-flori").alt = correct ? "笑うフロリ" : "目をつぶるフロリ";
+  $("rpg-feedback").hidden = false;
   $("btn-rpg-next").focus({ preventScroll: true });
+  fitExplanation(RPG_IDS);
+  $("rpg-feedback").scrollIntoView({ block: "nearest", behavior: "instant" });
+  fitFeedback(RPG_IDS);
+  setTimeout(() => fitFeedback(RPG_IDS), 80);
+  setTimeout(() => fitFeedback(RPG_IDS), 400);
 }
 
 function rpgNext() {
@@ -2498,19 +2533,34 @@ function rpgNext() {
   else showRpg();
 }
 
+// ヒント:1問に1回。見ると、ハートが半分(0.5)へる。ハートが半分しかのこっていないときは、見られない
 $("btn-rpg-hint").addEventListener("click", () => {
-  if (rpgAnswered || !rpgQuestion?.hint) return;
+  if (rpgAnswered || rpgHinted || !rpgQuestion?.hint || !play.canHint) return;
+  $("dlg-rpg-hint").showModal();
+});
+$("btn-rpg-hint-no").addEventListener("click", () => $("dlg-rpg-hint").close());
+$("btn-rpg-hint-yes").addEventListener("click", () => {
+  $("dlg-rpg-hint").close();
+  if (rpgAnswered || rpgHinted || !rpgQuestion?.hint || !play.canHint) return;
   rpgHinted = true;
-  $("rpg-hint").textContent = `💡 ${rpgQuestion.hint}`;
+  play.useHint();
+  renderRpgHearts();
+  $("rpg-hearts").classList.remove("rpg-hit");
+  void $("rpg-hearts").offsetWidth;
+  $("rpg-hearts").classList.add("rpg-hit");
+  $("rpg-hint").textContent = `ヒント:${rpgQuestion.hint}`;
   $("rpg-hint").hidden = false;
-  $("btn-rpg-hint").disabled = true;
+  $("screen-rpg").classList.add("is-hinted");
+  updateRpgHintButton();
+  fitQuestion("screen-rpg");
+  setTimeout(() => fitQuestion("screen-rpg"), 120);
 });
 $("btn-rpg-next").addEventListener("click", rpgNext);
 $("btn-rpg-quit").addEventListener("click", () => $("dlg-quit").showModal());
 document.addEventListener("keydown", (event) => {
-  if ($("screen-rpg").hidden || rpgAnswered || event.ctrlKey || event.metaKey || event.altKey || $("dlg-quit").open) return;
+  if ($("screen-rpg").hidden || rpgAnswered || event.ctrlKey || event.metaKey || event.altKey || $("dlg-quit").open || $("dlg-rpg-hint").open) return;
   const index = Number(event.key) - 1;
-  if (Number.isInteger(index) && index >= 0 && index < rpgQuestion.choices.length) rpgAnswer(index);
+  if (Number.isInteger(index) && index >= 0 && rpgQuestion && index < rpgQuestion.choices.length) rpgAnswer(index);
 });
 
 // ================= 着せ替え・背景 =================

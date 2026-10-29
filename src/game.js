@@ -256,10 +256,11 @@ export class PracticeRound {
   }
 }
 
-// RPG「クエスト」(ミニマップ+サバイバルを、1つにしたもの)。5つのマスを、ハート3つで進む。
+// RPG「クエスト」(ミニマップ+サバイバルを、1つにしたもの)。5つのマスを、ハート4つで進む。
 // 敵のマスは、正解で たおして、次のマスへ。まちがえると、ハートが1つへって、同じ敵に、もう1問。
 // 宝箱のマスは、正解で ハートが1つ回復(まちがえても、ハートはへらない。回復なしで、次へ進む)。ボスは、2回 正解で たおせる。
-export const RPG_LIVES = 3;
+export const RPG_LIVES = 4;
+export const RPG_HINT_COST = 0.5; // ヒントを見ると、ハートが半分へる
 export const RPG_STAGES = [
   { kind: "enemy", icon: "🐭", name: "ネズミ", level: 1, hp: 1 },
   { kind: "enemy", icon: "🐸", name: "カエル", level: 1, hp: 1 },
@@ -338,6 +339,15 @@ export class RpgRound {
       this.lives -= 1;
     }
     return correct;
+  }
+
+  // ヒントを見る:ハートが半分へる(のこりが半分しかないときは、見られない)
+  get canHint() {
+    return this.lives > RPG_HINT_COST;
+  }
+
+  useHint() {
+    if (this.canHint) this.lives -= RPG_HINT_COST;
   }
 
   advance() {

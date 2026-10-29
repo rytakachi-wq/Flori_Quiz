@@ -23,7 +23,7 @@
 - ふりがな:furigana-data.js の ENTRIES(後ろの項目が優先。形は `漢字{よみ}送りがな`)、KYOIKU_BY_GRADE(学年別の漢字)。設定は 全部・多め[3年生以上]・少なめ[5年生以上]・なし(decisions その61)。
 - 画面の収まり:style.css 末尾の `@media screen` の層(`:is(#screen-…)` でID指定に勝つ)、小さい画面用の規則、固定高の `.screen-head`(46px)。
 
-- RPGクエスト(decisions その63):`game.js` の `RpgRound`、専用の画面 `screen-rpg`(`main.js` の `showRpg`/`rpgAnswer`/`rpgNext`、見た目は style.css 末尾)。モード選択の「遊び方」の行は、普通・難しい・RPG(`pick.level`=normal/hard/rpg)。**公開は更新していない**(手元で確認)。
+- RPGクエスト(decisions その63):`game.js` の `RpgRound`、専用の画面 `screen-rpg`(`main.js` の `showRpg`/`rpgAnswer`/`rpgNext`、見た目は style.css 末尾)。ふつうモードの問題画面と同じ見た目(style.css は `#screen-question` の規則を `#screen-rpg` に複製)。ヒントでハートが半分へる・ハート4つ・BGM=`TRACKS.quest`。モード選択の「遊び方」の行は、普通・難しい・RPG(`pick.level`=normal/hard/rpg)。**公開は更新していない**(手元で確認)。
 
 ## フロリを動かす(Live2D、作業中)
 - `hehehe.cmo3`(利用者のデスクトップ)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で、`src/live2d/model.json`・`tex/` を作る。描画は自作の `src/live2d/live2d.js`。試作ページ:`/src/live2d/preview.html`(スライダーで確認)。表紙用の動き:`src/live2d/flori-motion.js`、確かめ用ページ `/src/live2d/cover.html`(クリックでぴょん)。アプリ(index.html・main.js)には**まだ入れていない**。決めたこと・未決は decisions.md その49。
