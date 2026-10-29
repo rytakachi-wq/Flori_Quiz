@@ -216,6 +216,15 @@ export function recordReview(answers = []) {
   return stats.wrong.length;
 }
 
+// RPGの結果:まちがえた問題(ヒントを見た問題)を、まちがいノートに入れる。ほかの記録(回数・正解率・総合得点・正解した問題)は、変えない。
+export function recordWrong(answers = []) {
+  const stats = loadStats();
+  const wrong = new Set(stats.wrong);
+  for (const answer of answers) if (!answer.correct) wrong.add(answer.id);
+  stats.wrong = [...wrong];
+  save(stats);
+}
+
 // 毎日1問の結果を記録する。1日1回だけ(その日の2回目からは、記録しない)。続けた日数を数える。
 // 戻り値:{ already: その日は、記録ずみか, streak: 続けている日数, days: やった日数(ぜんぶで) }
 export function recordDaily({ date, previous, answer }) {

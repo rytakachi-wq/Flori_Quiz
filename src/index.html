@@ -328,7 +328,6 @@
           <span id="q-level" class="q-chip q-chip-level"></span>
         </div>
       </header>
-      <p id="q-trail" class="q-trail" hidden aria-live="polite"></p>
       <ol id="q-board" class="board" hidden></ol>
       <p id="q-player" class="turn" hidden></p>
 
@@ -363,6 +362,35 @@
     </section>
 
     <!-- 結果画面 -->
+    <!-- RPGクエスト(クイズの画面とは、別の専用の画面) -->
+    <section id="screen-rpg" class="screen rpg-screen" aria-label="RPGクエスト" hidden>
+      <header class="screen-head">
+        <button id="btn-rpg-quit" class="back-btn" type="button"><span aria-hidden="true">↩</span> 戻る</button>
+        <div id="rpg-hearts" class="title rpg-hearts" role="img" aria-label="ハート"></div>
+      </header>
+      <ol id="rpg-path" class="rpg-path" aria-label="すすむ道"></ol>
+      <div id="rpg-field" class="rpg-field">
+        <div class="rpg-hero"><img id="rpg-flori" class="flori rpg-flori" src="../assets/flori/m/body_wave.webp" alt="フロリ"></div>
+        <div class="rpg-foe">
+          <span id="rpg-foe-icon" class="rpg-foe-icon" aria-hidden="true"></span>
+          <span id="rpg-foe-name" class="rpg-foe-name"></span>
+          <span id="rpg-foe-hp" class="rpg-foe-hp" aria-hidden="true"></span>
+        </div>
+        <span id="rpg-fx" class="rpg-fx" role="status"></span>
+      </div>
+      <div class="rpg-window">
+        <p id="rpg-text" class="rpg-text"></p>
+        <p id="rpg-hint" class="rpg-hint" hidden></p>
+        <div id="rpg-choices" class="rpg-choices"></div>
+        <button id="btn-rpg-hint" class="rpg-hint-btn" type="button">💡 ヒント</button>
+        <div id="rpg-after" class="rpg-after" hidden>
+          <p id="rpg-verdict" class="rpg-verdict"></p>
+          <p id="rpg-explain" class="rpg-explain"></p>
+          <button id="btn-rpg-next" class="rpg-next" type="button">つぎへ ▶</button>
+        </div>
+      </div>
+    </section>
+
     <section id="screen-result" class="screen" aria-label="結果" hidden>
       <header class="screen-head">
         <button id="btn-cover" class="back-btn" type="button"><span aria-hidden="true">↩</span> 戻る</button>

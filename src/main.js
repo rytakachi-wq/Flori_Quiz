@@ -3,11 +3,6 @@ import {
   HARD_LEVEL,
   HARD_MIN_LEVEL,
   HINT_COST,
-  MAP_CHEST_BONUS,
-  MAP_CHESTS,
-  MAP_MAX_QUESTIONS,
-  MAP_STAGES,
-  MapRound,
   MAX_LEVEL,
   levelFromCounter,
   MAX_SCORE,
@@ -18,8 +13,9 @@ import {
   TIMED_SECONDS,
   QUESTIONS_PER_ROUND,
   Session,
-  SURVIVAL_LIVES,
-  SurvivalRound,
+  RPG_LIVES,
+  RPG_STAGES,
+  RpgRound,
   TOTAL_POINTS,
   VERSUS_MAX_PLAYERS,
   VERSUS_MIN_PLAYERS,
@@ -42,6 +38,7 @@ import {
   saveCourseKey,
   recordOni,
   recordReview,
+  recordWrong,
   recordRound,
   recordVersus,
 } from "./storage.js";
@@ -66,16 +63,17 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "note", "relax", "records", "settings", "dex", "dress", "question", "result", "error"];
+const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "note", "relax", "records", "settings", "dex", "dress", "question", "rpg", "result", "error"];
 
 let coverTaps = 0;
-let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問) "survival"(サバイバル) "map"(ミニマップ)
+let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問) "rpg"(RPGクエスト)
 let timeLimit = false; // この回に、制限時間を付けるか(普通・難しい・復習・毎日1問で、はじめに聞く)
 let hinted = false; // 今の問題で、ヒントを見たか
 let versusPlayers = 2; // 皆で対戦する人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
+  if (name === "rpg") return "question";
   if (name === "question") {
     return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
   }
@@ -352,32 +350,21 @@ function startPlay(nextMode, startMessage = null) {
     play = new PracticeRound(pool); // 間違えた問題を、全部(正解すると、復習から消える)
   } else if (mode === "daily") {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
-  } else if (mode === "survival") play = new SurvivalRound(adventurePool());
-  else if (mode === "map") play = new MapRound(adventurePool());
-  else play = getSession(pick.group, "normal");
+  } else if (mode === "rpg") {
+    timeLimit = false; // RPGには、制限時間はない
+    play = new RpgRound(adventurePool());
+    announce("クエスト スタート!", "start", showRpg, "../assets/flori/m/body_wave.webp");
+    return;
+  } else play = getSession(pick.group, "normal");
   const resume = (mode === "normal" || mode === "hard") && hasCourseKey(activeKey); // 続きから遊ぶときは、そう知らせる
   announce(startMessage ?? (resume ? "続きから スタート!" : "それでは スタート!"), "start", showQuestion, "../assets/flori/m/body_wave.webp");
 }
 
-// サバイバル・ミニマップの問題:選んだ分類の、普通・難しい問題(少ないときは、他の分類から足す)
+// RPGの問題:選んだ分類の、普通・難しい問題(少ないときは、他の分類から足す)
 function adventurePool() {
   const inGroup = pick.group === "ランダム" ? playableQuestions : playableQuestions.filter((q) => groupOf(q) === pick.group);
   const others = playableQuestions.filter((q) => !inGroup.includes(q)).sort(() => Math.random() - 0.5);
   return [...inGroup, ...others.slice(0, Math.max(0, 20 - inGroup.length))];
-}
-
-// 問題の画面の上の、しるし。サバイバル=ハート、ミニマップ=ゴールまでの道(🤖がいまいるマス)
-function adventureProgress() {
-  const n = Math.min(play.asked + (answered ? 0 : 1), 99);
-  if (mode === "survival") return `${"❤️".repeat(Math.max(0, play.lives))}${"🖤".repeat(SURVIVAL_LIVES - Math.max(0, play.lives))}`;
-  return `第${Math.min(n, MAP_MAX_QUESTIONS)}/${MAP_MAX_QUESTIONS}問`;
-}
-
-// ミニマップの道:🤖がいまいるマス(🚩スタート・🎁宝箱・🏆ゴール)。問題の画面の上に、1行で出す
-function mapTrail() {
-  const nodes = ["🚩", ...Array.from({ length: MAP_STAGES }, (_, i) => (i + 1 === MAP_STAGES ? "🏆" : MAP_CHESTS.includes(i + 1) ? "🎁" : "▫️"))];
-  nodes[play.position] = "🤖";
-  return nodes.join("");
 }
 
 // 対戦の問題:選んだ分類の問題。回戦ごとに、人数ぶんの問題がないときは、他の分類から足す
@@ -401,7 +388,7 @@ function showQuestion() {
   answered = false;
 
   const versus = mode === "versus";
-  const total = mode === "map" ? MAP_MAX_QUESTIONS : (play.total ?? (mode === "survival" ? 99 : QUESTIONS_PER_ROUND));
+  const total = play.total ?? QUESTIONS_PER_ROUND;
   const prefix = {
     normal: "",
     hard: "難しい ",
@@ -409,15 +396,8 @@ function showQuestion() {
     versus: "",
     review: "復習 ",
     daily: "毎日1問 ",
-    survival: "",
-    map: "",
   }[mode];
-  const adventure = mode === "survival" || mode === "map";
-  $("q-progress").textContent = versus
-    ? `${play.round} / ${VERSUS_ROUNDS}回戦`
-    : adventure
-      ? adventureProgress()
-      : `${prefix}第${play.asked + 1}問 / ${total}問`;
+  $("q-progress").textContent = versus ? `${play.round} / ${VERSUS_ROUNDS}回戦` : `${prefix}第${play.asked + 1}問 / ${total}問`;
   renderTurn(versus);
   $("q-level").textContent =
     mode === "oni"
@@ -428,8 +408,6 @@ function showQuestion() {
   const art = illustrationFor(question);
   $("q-art").innerHTML = art;
   $("q-art").hidden = art === "";
-  $("q-trail").hidden = mode !== "map";
-  if (mode === "map") $("q-trail").textContent = mapTrail();
   $("q-text").textContent = question.text;
   $("q-text").classList.toggle("long", question.text.length > 70); // 長い問題は、文字を少し小さくして、画面に収める
   $("screen-question").classList.toggle("is-long", question.text.length > 100); // とても長い問題は、もっとぎゅっと
@@ -438,7 +416,7 @@ function showQuestion() {
 
   // フロリのセリフ(問題の番号によって変わる。皆で対戦では出さない)
   const message = $("q-message");
-  const coach = versus ? null : mode === "map" && play.chestAhead ? { text: "🎁 宝箱マス! 正解で ボーナス点!" } : coachLine(play.asked, total, leveledUp);
+  const coach = versus ? null : coachLine(play.asked, total, leveledUp);
   if (coach) {
     setFlori(coach.surprised ? IMG.surprised : IMG.think, coach.surprised ? "驚くフロリ" : "本とペンを持つフロリ");
     message.textContent = coach.text;
@@ -490,15 +468,13 @@ window.addEventListener("resize", () => fitQuestion());
 
 // 問題の番号に合わせた、フロリのセリフと声(first=最初の問題、last=最後の問題)
 function coachLine(asked, total, leveledUp) {
-  const last = total > 1 && asked === total - 1 && mode !== "survival";
+  const last = total > 1 && asked === total - 1;
   const base = (() => {
     if (asked === 0) {
       if (mode === "hard") return { text: "難しいモード! さぁ がんばるぞ!" };
       if (mode === "oni") return { text: "オニ問題! 頑張って!" };
       if (mode === "daily") return { text: "今日の 1問! 頑張って!" };
       if (mode === "review") return { text: "復習 さぁ がんばるぞ!" };
-      if (mode === "survival") return { text: "ハートは 3つ! どこまで いけるかな?" };
-      if (mode === "map") return { text: `ゴールまで ${MAP_STAGES}マス! ${MAP_MAX_QUESTIONS}問までに いこう!` };
       return { text: "さぁ がんばるぞ!" };
     }
     if (last) return { text: "ラスト 1問! がんばれー!" };
@@ -717,10 +693,7 @@ function answer(response) {
   renderers[current.type].mark(current, response, correct);
   playSe(correct ? "correct" : "wrong");
   lastCorrect = correct;
-  if (mode === "survival" || mode === "map") {
-    $("q-progress").textContent = adventureProgress(); // ハート・いまのマスを、すぐ変える
-    if (mode === "map") $("q-trail").textContent = mapTrail();
-  }
+
 
   setFlori(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
   $("q-message").hidden = true;
@@ -731,16 +704,12 @@ function answer(response) {
       : correct
         ? hinted
           ? `正解!(ヒントを使ったので 半分の${fmtPts(POINTS_PER_CORRECT - HINT_COST)}点)`
-          : mode === "map" && play.chestOpened
-            ? `正解! 🎁 宝箱が ひらいた! ボーナス +${fmtPts(MAP_CHEST_BONUS)}点`
-            : "正解!"
+          : "正解!"
         : wasTimedOut
           ? "時間切れ…"
           : wasGivenUp
             ? "答えを見ました…"
-            : mode === "survival"
-              ? "残念… ハートが 1つ へった!"
-              : "残念…";
+            : "残念…";
   verdict.className = `verdict ${correct ? "is-right" : "is-wrong"}`;
   const rightText = renderers[current.type].correctText(current);
   $("q-explanation").textContent = `正解は「${rightText}」\n${current.explanation}`;
@@ -855,8 +824,8 @@ function showResult() {
   const versus = mode === "versus";
   $("screen-result").classList.toggle("is-versus", versus);
   $("btn-again").hidden = false;
-  const adventure = mode === "survival" || mode === "map";
-  $("r-best-row").querySelector("dt").textContent = mode === "map" ? "最短記録" : adventure ? "最高記録" : "最高得点"; // ミニマップ=いちばん少ない問題数でゴール
+  const adventure = mode === "rpg";
+  $("r-best-row").querySelector("dt").textContent = adventure ? "最短記録" : "最高得点"; // RPG=いちばん少ない問題数でクリア
   recordDex(result.answers); // 図鑑(どのモードでも)
   $("r-correct-row").hidden = versus;
   $("r-board").hidden = true;
@@ -919,16 +888,17 @@ function showResult() {
     setNote.textContent = `オニ問題に正解したことがあるのは、${oniDone} / ${oniIds.size}問だヨ。`;
     $("btn-again").textContent = "もう1度挑戦";
   } else if (adventure) {
-    // サバイバル・ミニマップは、成績の「遊んだ回数」「正解率」「総合得点」には入れない(この遊びだけの記録を、端末の中に残す)。
-    const saved = recordAdventure(mode, result);
-    $("r-title").textContent = mode === "map" ? (result.goal ? "ゴール! 🏆" : "ゴールまで あと少し!") : "サバイバルの結果!";
+    // RPGは、成績の「遊んだ回数」「正解率」「総合得点」には入れない(この遊びだけの記録を、端末の中に残す)。まちがえた問題は、まちがいノートに入る。
+    recordWrong(result.answers);
+    const saved = recordAdventure(result);
+    $("r-title").textContent = result.cleared ? "クエスト クリア! 🏆" : "ざんねん… ゲームオーバー";
     $("r-best-row").hidden = false;
-    $("r-best").textContent = adventureBestText(mode);
+    $("r-best").textContent = adventureBestText();
     $("r-record").hidden = !saved.isRecord;
-    setNote.textContent =
-      mode === "map"
-        ? `${result.position} / ${MAP_STAGES}マスまで 進んだヨ。${MAP_MAX_QUESTIONS}問のうちに ゴールをめざそう!`
-        : `${result.correct}問 正解して ハートが なくなったヨ。もっと先まで いけるかな?`;
+    const wrongCount = result.answers.filter((a) => !a.correct || a.hinted).length;
+    setNote.textContent = result.cleared
+      ? `ハート${result.lives}つ のこして クリア!${wrongCount > 0 ? `まちがえた${wrongCount}問は まちがいノートに 入ったヨ。` : ""}`
+      : `${result.stage}マス目まで 進んだヨ。${wrongCount > 0 ? `まちがえた${wrongCount}問は まちがいノートに 入ったヨ。` : ""}`;
     $("btn-again").textContent = "もう1度挑戦";
   } else if (mode === "hard") {
     const saved = recordRound({ ...result, mode: "hard", timed: timeLimit });
@@ -1086,29 +1056,29 @@ function oniComment(correct, total) {
 }
 
 function adventureComment(result) {
-  if (mode === "map") return result.goal ? "ゴール到着! すごいヨ!" : result.position >= 3 ? "惜しい! もう少しで ゴールだったヨ!" : "ナイスチャレンジ! また 道を進もう!";
-  return result.correct >= 10 ? "すごい! 最後まで 生きのこったヨ!" : result.correct >= 5 ? "いいね! まだまだ 進めるヨ!" : "ハートを 大事に! もう1度 いってみよう!";
+  if (result.cleared) return result.lives === 3 ? "ノーダメージ クリア! すごいヨ!" : "ドラゴンを たおした! おめでとう!";
+  return result.stage >= 3 ? "惜しい! ボスの すぐ近くまで 来たヨ!" : "ナイスチャレンジ! また 冒険に 出よう!";
 }
 
-// サバイバル・ミニマップの記録(端末の中だけ。成績のデータとは別に持つ)。サバイバル=いちばん多く正解した問題数、ミニマップ=いちばん少ない問題数でゴール(最短記録)
+// RPGの記録(端末の中だけ。成績のデータとは別に持つ):クリアした回数と、いちばん少ない問題数でクリアした記録(最短記録)
 const ADVENTURE_KEY = "floriQuiz.adventure";
 function loadAdventure() {
   try {
     const raw = JSON.parse(localStorage.getItem(ADVENTURE_KEY) ?? "{}");
-    return { survival: Math.max(0, Number(raw.survival) || 0), map: Math.max(0, Number(raw.map) || 0) };
+    return { clears: Math.max(0, Number(raw.clears) || 0), fastest: Math.max(0, Number(raw.fastest) || 0) };
   } catch {
-    return { survival: 0, map: 0 };
+    return { clears: 0, fastest: 0 };
   }
 }
-function recordAdventure(kind, result) {
+function recordAdventure(result) {
   const best = loadAdventure();
   let isRecord = false;
-  if (kind === "survival" && result.correct > best.survival) {
-    best.survival = result.correct;
-    isRecord = true;
-  } else if (kind === "map" && result.goal && (best.map === 0 || result.total < best.map)) {
-    best.map = result.total;
-    isRecord = true;
+  if (result.cleared) {
+    best.clears += 1;
+    if (best.fastest === 0 || result.total < best.fastest) {
+      best.fastest = result.total;
+      isRecord = true;
+    }
   }
   try {
     localStorage.setItem(ADVENTURE_KEY, JSON.stringify(best));
@@ -1117,10 +1087,9 @@ function recordAdventure(kind, result) {
   }
   return { isRecord };
 }
-function adventureBestText(kind) {
+function adventureBestText() {
   const best = loadAdventure();
-  if (kind === "survival") return `${best.survival}問`;
-  return best.map > 0 ? `${best.map}問` : "なし";
+  return best.fastest > 0 ? `${best.fastest}問` : "なし";
 }
 
 // オニ問題を解放したか(オニの問題に、1度でも出会っている)
@@ -1303,7 +1272,7 @@ function renderSeg(el, options, value, onPick) {
   );
 }
 
-const LEVEL_TEXT = { normal: "普通", hard: "難しい", map: "ミニマップ", survival: "サバイバル" };
+const LEVEL_TEXT = { normal: "普通", hard: "難しい", rpg: "RPGクエスト" };
 const courseKey = (group = pick.group, level = pick.level) => `${group}-${level}`;
 const anySavedCourse = () => [...GROUPS, "ランダム"].some((group) => ["normal", "hard"].some((level) => hasCourseKey(courseKey(group, level))));
 
@@ -1353,8 +1322,7 @@ function renderSetup() {
       [
         { value: "normal", icon: "🌱", text: "普通", color: "c-green" },
         { value: "hard", icon: "🔥", text: "難しい", color: "c-orange" },
-        { value: "map", icon: "🗺️", text: "マップ", color: "c-sky" },
-        { value: "survival", icon: "❤️", text: "ライフ", color: "c-red" },
+        { value: "rpg", icon: "🗡️", text: "RPG", color: "c-red" },
       ].map((option) => ({ ...option, badge: hasCourseKey(courseKey(pick.group, option.value)) ? SAVE_MARK : "" })),
       pick.level,
       (value) => {
@@ -1363,7 +1331,6 @@ function renderSetup() {
       },
     );
   }
-  $("seg-third").classList.toggle("is-four", !versus); // 遊び方は4つ並ぶので、文字を少し小さく
   // 制限時間:「つける」を大きく、「なし」を小さく
   renderSeg(
     $("seg-time"),
@@ -1379,14 +1346,12 @@ function renderSetup() {
   );
   $("setup-note").textContent = versus
     ? "1台の画面で 順番に 答えるよ。毎回 はじめから。"
-    : pick.level === "map"
-      ? `ゴールまで ${MAP_STAGES}マス! 正解で 進む。${MAP_MAX_QUESTIONS}問までに 🎁宝箱を ひらいて ゴールしよう!`
-      : pick.level === "survival"
-        ? "サバイバル:ハートは 3つ。まちがえると へるよ。どこまで 正解できるかな?"
-        : hasCourseKey(courseKey())
-      ? "💾 続きから 始まるよ!"
-      : anySavedCourse()
-        ? "はじめから 始まるよ。(💾 = 続きあり)"
+    : pick.level === "rpg"
+      ? "5つのマスを ハート3つで 進もう! ボスの ドラゴンを たおせ!"
+      : hasCourseKey(courseKey())
+        ? "💾 続きから 始まるよ!"
+        : anySavedCourse()
+          ? "はじめから 始まるよ。(💾 = 続きあり)"
         : "はじめから 始まるよ。じっくり 考えよう!";
   renderRewardCard($("flow-reward"));
 }
@@ -2405,6 +2370,148 @@ $("btn-note-review").addEventListener("click", () =>
     startPlay("review");
   }),
 );
+
+// ================= RPGクエスト(専用の画面 screen-rpg) =================
+// ミニマップ+サバイバル。5つのマスを、ハート3つで進む(game.js の RpgRound)。クイズの画面(screen-question)は、使わない。
+let rpgQuestion = null;
+let rpgAnswered = false;
+let rpgHinted = false;
+
+const hearts = (lives) => `${"❤️".repeat(Math.max(0, lives))}${"🖤".repeat(RPG_LIVES - Math.max(0, lives))}`;
+
+function renderRpgStatus() {
+  $("rpg-hearts").textContent = hearts(play.lives);
+  $("rpg-path").replaceChildren(
+    ...RPG_STAGES.map((stage, index) => {
+      const item = document.createElement("li");
+      item.textContent = stage.icon;
+      item.title = stage.name;
+      if (index < play.stage) item.className = "is-done";
+      else if (index === play.stage) item.className = "is-now";
+      return item;
+    }),
+  );
+}
+
+function renderRpgFoe() {
+  const stage = play.current;
+  $("rpg-foe-icon").textContent = stage.icon;
+  $("rpg-foe-name").textContent = stage.kind === "chest" ? "たからばこ(正解でハート回復)" : stage.kind === "boss" ? `ボス ${stage.name}` : stage.name;
+  $("rpg-foe-hp").textContent = stage.kind === "chest" ? "" : `${"💗".repeat(play.hp)}${"🤍".repeat(stage.hp - play.hp)}`;
+}
+
+function rpgPose(src, alt) {
+  const img = $("rpg-flori");
+  applyFloriSrc(img, src);
+  img.alt = alt;
+}
+
+function rpgFx(text, ...classes) {
+  const field = $("rpg-field");
+  field.classList.remove("is-strike", "is-defeat", "is-hurt");
+  void field.offsetWidth;
+  field.classList.add(...classes);
+  const fx = $("rpg-fx");
+  fx.textContent = text;
+  fx.classList.remove("is-on");
+  void fx.offsetWidth;
+  fx.classList.add("is-on");
+}
+
+function showRpg() {
+  const { question } = play.nextQuestion();
+  rpgQuestion = question;
+  rpgAnswered = false;
+  rpgHinted = false;
+  renderRpgStatus();
+  renderRpgFoe();
+  const stage = play.current;
+  $("rpg-field").classList.remove("is-strike", "is-defeat", "is-hurt");
+  $("rpg-fx").classList.remove("is-on");
+  rpgPose(stage.kind === "boss" ? IMG.surprised : "../assets/flori/m/body_wave.webp", "フロリ");
+  $("rpg-text").textContent = question.text;
+  $("rpg-text").hidden = false;
+  $("rpg-hint").hidden = true;
+  $("btn-rpg-hint").hidden = !question.hint;
+  $("btn-rpg-hint").disabled = false;
+  $("rpg-after").hidden = true;
+  $("rpg-choices").hidden = false;
+  $("rpg-choices").replaceChildren(
+    ...question.choices.map((text, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "rpg-choice";
+      button.innerHTML = '<span class="rpg-no"></span><span class="rpg-choice-text"></span>';
+      button.querySelector(".rpg-no").textContent = String(index + 1);
+      button.querySelector(".rpg-choice-text").textContent = text;
+      button.addEventListener("click", () => rpgAnswer(index));
+      return button;
+    }),
+  );
+  $("rpg-fx").textContent = "";
+  const intro = stage.kind === "chest" ? "🎁 たからばこだ! 正解で ハート回復!" : stage.kind === "boss" ? `🐉 ボス ${stage.name}が あらわれた!` : `${stage.icon} ${stage.name}が あらわれた!`;
+  rpgFx(intro);
+  $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
+  show("rpg");
+}
+
+function rpgAnswer(index) {
+  if (rpgAnswered) return;
+  rpgAnswered = true;
+  const question = rpgQuestion;
+  const foe = play.current; // 答える前の敵(たおすと、次のマスに進むので)
+  const correct = play.answer(question, index, rpgHinted);
+  playSe(correct ? "correct" : "wrong");
+  [...$("rpg-choices").querySelectorAll(".rpg-choice")].forEach((button, i) => {
+    button.disabled = true;
+    if (i === question.answer) button.classList.add("is-right");
+    else if (i === index) button.classList.add("is-wrong");
+  });
+  const event = play.event;
+  const message = {
+    hit: `⚔️ こうげき! ${foe.name}に ダメージ!`,
+    defeat: `💥 ${foe.name}を たおした!`,
+    damage: `💢 ${foe.name}の こうげき! ハート -1`,
+    heal: "💖 たからばこが ひらいた! ハート +1",
+    miss: "🎁 たからばこは あけられなかった…",
+  }[event];
+  rpgFx(message, event === "damage" ? "is-hurt" : event === "defeat" ? "is-strike" : event === "hit" ? "is-strike" : "is-strike");
+  if (event === "defeat") setTimeout(() => $("rpg-field").classList.add("is-defeat"), 400);
+  rpgPose(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
+  $("rpg-hearts").textContent = hearts(play.lives);
+  renderRpgStatus();
+  $("rpg-foe-hp").textContent = foe.kind === "chest" ? "" : `${"💗".repeat(Math.max(0, event === "defeat" ? 0 : play.hp))}${"🤍".repeat(foe.hp - (event === "defeat" ? 0 : play.hp))}`;
+  $("btn-rpg-hint").hidden = true;
+  $("rpg-hint").hidden = true;
+  $("rpg-choices").hidden = true; // 答えたあとは、答えと解説だけ(問題文と選択肢は、かくす。1画面に収めるため)
+  $("rpg-text").hidden = true;
+  $("rpg-verdict").textContent = correct ? (rpgHinted ? "正解! (ヒントを使ったヨ)" : "正解!") : "残念…";
+  $("rpg-explain").textContent = `正解は「${question.choices[question.answer]}」\n${question.explanation}`;
+  $("rpg-after").hidden = false;
+  $("btn-rpg-next").textContent = play.roundFinished ? "結果を見る ▶" : "つぎへ ▶";
+  $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
+  $("btn-rpg-next").focus({ preventScroll: true });
+}
+
+function rpgNext() {
+  if (play.roundFinished) announce(play.cleared ? "クエスト クリア〜!" : "ゲームオーバー…", "result", showResult, "../assets/flori/m/wave_surprised.png");
+  else showRpg();
+}
+
+$("btn-rpg-hint").addEventListener("click", () => {
+  if (rpgAnswered || !rpgQuestion?.hint) return;
+  rpgHinted = true;
+  $("rpg-hint").textContent = `💡 ${rpgQuestion.hint}`;
+  $("rpg-hint").hidden = false;
+  $("btn-rpg-hint").disabled = true;
+});
+$("btn-rpg-next").addEventListener("click", rpgNext);
+$("btn-rpg-quit").addEventListener("click", () => $("dlg-quit").showModal());
+document.addEventListener("keydown", (event) => {
+  if ($("screen-rpg").hidden || rpgAnswered || event.ctrlKey || event.metaKey || event.altKey || $("dlg-quit").open) return;
+  const index = Number(event.key) - 1;
+  if (Number.isInteger(index) && index >= 0 && index < rpgQuestion.choices.length) rpgAnswer(index);
+});
 
 // ================= 着せ替え・背景 =================
 let dress = loadDress();
