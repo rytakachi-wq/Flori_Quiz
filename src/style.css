@@ -1776,12 +1776,19 @@ body.has-pager { padding-bottom: 56px; }
 
   /* 問題図鑑:カードの一覧だけ、枠の中で動かす */
   #screen-dex.dex-screen { gap: 6px; }
+  #screen-note.dex-screen { gap: 6px; }
   #screen-dex .dex-head-box { gap: 2px; }
+  #screen-note .dex-head-box { gap: 2px; }
   #screen-dex .dex-count { font-size: 18px; }
+  #screen-note .dex-count { font-size: 18px; }
   #screen-dex .dex-meter { height: 14px; }
+  #screen-note .dex-meter { height: 14px; }
   #screen-dex .dex-grid { flex: 1 1 0; min-height: 0; overflow-y: auto; align-content: start; width: 100%; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; padding: 4px; overscroll-behavior: contain; }
+  #screen-note .dex-grid { flex: 1 1 0; min-height: 0; overflow-y: auto; align-content: start; width: 100%; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; padding: 4px; overscroll-behavior: contain; }
   #screen-dex .dex-card { min-height: 96px; }
+  #screen-note .dex-card { min-height: 96px; }
   #screen-dex .dex-icon { font-size: 34px; }
+  #screen-note .dex-icon { font-size: 34px; }
 
   /* 着せ替え */
   #screen-dress { gap: 5px; }
@@ -2079,6 +2086,7 @@ body.has-pager { padding-bottom: 56px; }
 #screen-dress .hero-small { flex: none; }
 #screen-dress .dress-banner-text { font-size: 13px; line-height: 1.45; }
 #screen-dex .dex-filter { margin-top: 0; }
+#screen-note .dex-filter { margin-top: 0; }
 #screen-menu.menu-screen { gap: 8px; }
 #screen-menu .menu-grid { margin-top: 2px; }
 #screen-result .screen-head + .flori-cover { height: clamp(60px, 10dvh, 110px); }
@@ -2692,11 +2700,17 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
 
 /* 問題図鑑:フロリを置く。「すべて」は他より大きく。文章は、読みやすい所で折り返す */
 #screen-dex .dex-head-box { display: flex; align-items: center; justify-content: center; gap: 8px; width: min(520px, 100%); }
+#screen-note .dex-head-box { display: flex; align-items: center; justify-content: center; gap: 8px; width: min(520px, 100%); }
 #screen-dex .dex-flori { flex: none; width: auto; height: clamp(56px, 10dvh, 96px); max-width: 28%; object-fit: contain; }
+#screen-note .dex-flori { flex: none; width: auto; height: clamp(56px, 10dvh, 96px); max-width: 28%; object-fit: contain; }
 #screen-dex .dex-head-text { flex: 1 1 0; min-width: 0; display: grid; gap: 3px; justify-items: center; }
+#screen-note .dex-head-text { flex: 1 1 0; min-width: 0; display: grid; gap: 3px; justify-items: center; }
 #screen-dex .dex-head-text .note { margin: 0; text-align: center; text-wrap: pretty; }
+#screen-note .dex-head-text .note { margin: 0; text-align: center; text-wrap: pretty; }
 #screen-dex .dex-filter .dex-tab { flex: 1 1 0; font-size: 12px; letter-spacing: -0.06em; padding: 3px 0; }
+#screen-note .dex-filter .dex-tab { flex: 1 1 0; font-size: 12px; letter-spacing: -0.06em; padding: 3px 0; }
 #screen-dex .dex-card:has(.dex-new) .dex-cat { margin-bottom: 13px; }
+#screen-note .dex-card:has(.dex-new) .dex-cat { margin-bottom: 13px; }
 .dex-big .dex-q, .dex-big .dex-choices li, .dex-big .dex-owned, .dex-head-box .note { overflow-wrap: normal; word-break: auto-phrase; line-break: strict; text-wrap: pretty; }
 .rf-rd strong { font-size: clamp(18px, 3.2dvh, 26px); }
 .rf-crown { bottom: 6%; }
@@ -2906,16 +2920,20 @@ button:focus:not(:focus-visible) { outline: none; }
 .dex-card.is-flip { animation: dexFlipOut 0.26s ease-in forwards; }
 @keyframes dexFlipOut { 0% { transform: perspective(500px) rotateY(0) scale(1); } 100% { transform: perspective(500px) rotateY(90deg) scale(1.08); } }
 #dlg-dex[open] .dex-big { animation: dexFlipIn 0.3s ease-out; }
+#dlg-note[open] .dex-big { animation: dexFlipIn 0.3s ease-out; }
 @keyframes dexFlipIn { 0% { transform: perspective(600px) rotateY(-90deg); } 100% { transform: perspective(600px) rotateY(0); } }
-@media (prefers-reduced-motion: reduce) { .dex-card.is-flip, #dlg-dex[open] .dex-big { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .dex-card.is-flip, #dlg-dex[open] .dex-big, #dlg-note[open] .dex-big { animation: none; } }
 .dex-star { right: 2px; bottom: 0; font-size: 30px; line-height: 1; text-shadow: none; filter: drop-shadow(0 1px 1px rgba(70, 85, 94, 0.35)); }
 #screen-dex .dex-card:has(.dex-star) .dex-cat { padding-right: 18px; }
+#screen-note .dex-card:has(.dex-star) .dex-cat { padding-right: 18px; }
 .dex-owned { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
 .dex-owned .dex-hana { font-size: 56px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(70, 85, 94, 0.3)); }
 .dex-owned .dex-owned-text { font-size: 16px; }
 #screen-dex .dex-filter .dex-tab { font-size: 11px; }
+#screen-note .dex-filter .dex-tab { font-size: 11px; }
 .dex-star { right: 1px; bottom: auto; top: 22px; font-size: 28px; z-index: 2; }
 #screen-dex .dex-card:has(.dex-star) .dex-cat { padding-right: 0; }
+#screen-note .dex-card:has(.dex-star) .dex-cat { padding-right: 0; }
 
 /* 着せ替え:フロリをかなり大きく。枠の中に、まわりの空きを持たせる */
 #screen-dress .dress-stage { padding: clamp(10px, 2.2dvh, 22px) 0; }
@@ -2928,7 +2946,9 @@ button:focus:not(:focus-visible) { outline: none; }
 /* 図鑑:めくるのは ぱっと(0.11秒)。カード(□)を押すと めくって閉じる */
 .dex-card.is-flip { animation-duration: 0.11s; }
 #dlg-dex[open] .dex-big { animation-duration: 0.14s; cursor: pointer; }
+#dlg-note[open] .dex-big { animation-duration: 0.14s; cursor: pointer; }
 #dlg-dex[open] .dex-big.is-flip-out { animation: dexFlipOut 0.11s ease-in forwards; }
+#dlg-note[open] .dex-big.is-flip-out { animation: dexFlipOut 0.11s ease-in forwards; }
 .dex-back-hint { margin: 6px 0 0; font-size: 13px; font-weight: bold; color: var(--blue-dark); }
 .dex-dialog .buttons { display: none; }
 @media (max-height: 700px) { #screen-records { gap: 2px; } .group-box { padding: 1px 8px; } }
@@ -3178,22 +3198,10 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 }
 
 /* =====================================================================
-   まちがいノート
+   まちがいノート(一覧は、図鑑と同じ カード。#screen-note は、図鑑の規則を、そのまま使う)
    ===================================================================== */
-.note-screen { gap: 8px; }
-.note-list { list-style: none; margin: 0; padding: 4px; display: grid; gap: 6px; align-content: start; width: min(560px, 100%); flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-.note-row { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: 2px solid #ffd27a; border-radius: 14px; background: #fffaf0; font: inherit; text-align: left; cursor: pointer; }
-.note-icon { font-size: 22px; flex: none; }
-.note-text { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
 .note-why { margin: 8px 0 0; padding: 8px 10px; border-radius: 12px; background: #fff3c4; line-height: 1.5; overflow-wrap: normal; word-break: auto-phrase; line-break: strict; }
 .note-dialog .buttons { display: none; }
-#screen-note .dex-head-box { display: flex; align-items: center; justify-content: center; gap: 8px; width: min(520px, 100%); }
-#screen-note .dex-flori { flex: none; width: auto; height: clamp(56px, 10dvh, 96px); max-width: 28%; object-fit: contain; }
-#screen-note .dex-head-text { flex: 1 1 0; min-width: 0; display: grid; gap: 3px; justify-items: center; }
-#screen-note .dex-head-text .note { margin: 0; text-align: center; text-wrap: pretty; }
-#screen-note .dex-count { font-size: 18px; margin: 0; }
-.note-buttons { display: flex; gap: 8px; flex: none; width: min(560px, 100%); justify-content: center; }
-.note-buttons .btn { flex: 1 1 0; min-width: 0; }
 
 /* 遊び方(普通・難しい・マップ・ライフ)の4つが、せまい画面でも、はみ出さないように */
 #screen-setup #seg-third.is-four .seg-btn { font-size: 9px; letter-spacing: -0.06em; }
@@ -3203,3 +3211,6 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 .q-trail { margin: 0; padding: 2px 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 20px; line-height: 1.3; letter-spacing: 0.2em; background: #e3f4dc; border: 2px solid var(--line); border-radius: 14px; box-shadow: 0 2px 0 rgba(70, 85, 94, 0.25); flex: none; }
 .q-trail[hidden] { display: none; }
 .q-trail .emi { height: 1.1em; width: auto; }
+
+.note-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: none; width: min(560px, 100%); }
+.note-buttons .btn { min-width: 0; min-height: 44px; padding: 4px 6px; font-size: 14px; white-space: nowrap; }

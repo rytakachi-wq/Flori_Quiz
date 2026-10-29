@@ -2300,33 +2300,75 @@ function openNoteCard(question) {
   big.replaceChildren(head, text, list, why);
   $("dlg-note").showModal();
 }
-$("dlg-note").addEventListener("click", () => $("dlg-note").close());
+$("dlg-note").addEventListener("click", () => closeNoteCard());
 
 function noteQuestions() {
   const wrong = new Set(loadStats().wrong);
   return playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
 }
 
+let noteFilter = "すべて"; // ノートで、いま見ている分類
+
+// 一覧は、問題図鑑と同じ作り(カードを押すと めくれて、問題・解説が開く。上に分類のボタン)。No.は、図鑑と同じ番号
 function showNote() {
   const items = noteQuestions();
-  const rows = items.map((question) => {
-    const row = document.createElement("li");
+  const sorted = [...allQuestions].sort((a, b) => a.id.localeCompare(b.id));
+  const numberOf = new Map(sorted.filter((q) => q.level <= HARD_LEVEL).map((q, i) => [q.uid ?? q.id, i + 1]));
+  const inFilter = (q) => noteFilter === "すべて" || groupOf(q) === noteFilter;
+  if (noteFilter !== "すべて" && !items.some(inFilter)) noteFilter = "すべて"; // 見ていた分類が空になったら、すべてに戻す
+  const cards = items
+    .filter(inFilter)
+    .sort((a, b) => numberOf.get(a.uid ?? a.id) - numberOf.get(b.uid ?? b.id))
+    .map((question) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `dex-card lv${question.level}`;
+      button.dataset.noSe = "";
+      const no = document.createElement("span");
+      no.className = "dex-no";
+      no.textContent = `No.${numberOf.get(question.uid ?? question.id)}`;
+      const rarity = document.createElement("span");
+      rarity.className = "dex-rarity";
+      rarity.textContent = RARITY[question.level];
+      const icon = document.createElement("span");
+      icon.className = "dex-icon";
+      icon.textContent = CATEGORY_ICON[question.category] ?? "❓";
+      const cat = document.createElement("span");
+      cat.className = "dex-cat";
+      cat.textContent = question.category;
+      button.append(no, rarity, icon, cat);
+      button.addEventListener("click", () => {
+        // カードを めくる動き(めくってから、問題を開く)
+        if (button.classList.contains("is-flip") || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          openNoteCard(question);
+          return;
+        }
+        button.classList.add("is-flip");
+        setTimeout(() => {
+          openNoteCard(question);
+          button.classList.remove("is-flip");
+        }, 110);
+      });
+      return button;
+    });
+  $("note-grid").replaceChildren(...cards);
+  $("note-grid").scrollTop = 0;
+  const tabs = ["すべて", ...GROUPS].map((name) => {
+    const count = name === "すべて" ? items.length : items.filter((q) => groupOf(q) === name).length;
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `note-row lv${question.level}`;
-    const icon = document.createElement("span");
-    icon.className = "note-icon";
-    icon.textContent = CATEGORY_ICON[question.category] ?? "❓";
-    const label = document.createElement("span");
-    label.className = "note-text";
-    label.textContent = question.text.replace(/\n/g, "");
-    button.append(icon, label);
-    button.addEventListener("click", () => openNoteCard(question));
-    row.append(button);
-    return row;
+    button.className = `dex-tab${name === noteFilter ? " is-on" : ""}`;
+    button.dataset.noSe = "";
+    button.innerHTML = '<span class="dt-name"></span><small></small>';
+    button.querySelector(".dt-name").textContent = `${DEX_FILTER_ICON[name]} ${name}`;
+    button.querySelector("small").textContent = `${count}`;
+    button.addEventListener("click", () => {
+      noteFilter = name;
+      showNote();
+    });
+    return button;
   });
-  $("note-list").replaceChildren(...rows);
-  $("note-list").scrollTop = 0;
+  $("note-filter").replaceChildren(...tabs);
   $("note-count").textContent = items.length > 0 ? `ノートの問題 ${items.length}問` : "ノートは まっさら!";
   const byGroup = GROUPS.map((name) => [name, items.filter((q) => groupOf(q) === name).length]);
   const [top, topCount] = byGroup.reduce((a, b) => (b[1] > a[1] ? b : a));
@@ -2334,10 +2376,25 @@ function showNote() {
     items.length === 0
       ? "まちがえた問題は ないヨ。すごい!"
       : topCount >= 2 && topCount > items.length / 2
-        ? `${top}の問題が 多いヨ。押すと 答えと 解説が 見られるヨ!`
-        : "押すと 答えと 解説が 見られるヨ!";
+        ? `${top}の問題が 多いヨ。押すと 解説が 見られるヨ!`
+        : "押すと 解説が 見られるヨ!";
   $("btn-note-review").disabled = items.length === 0;
   show("note");
+}
+// めくって閉じる:カードを押すと、ぱっとめくって閉じる(図鑑と同じ)
+function closeNoteCard() {
+  const dialog = $("dlg-note");
+  const big = $("note-big");
+  if (!dialog.open) return;
+  if (big.classList.contains("is-flip-out") || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    dialog.close();
+    return;
+  }
+  big.classList.add("is-flip-out");
+  setTimeout(() => {
+    dialog.close();
+    big.classList.remove("is-flip-out");
+  }, 110);
 }
 $("btn-note-back").addEventListener("click", () => openMenu());
 $("btn-note-guide").addEventListener("click", () => playTutorial("review")); // 復習の説明ムービー(いつでも)

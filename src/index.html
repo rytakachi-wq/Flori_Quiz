@@ -145,7 +145,7 @@
       </div>
     </section>
     <!-- まちがいノート -->
-    <section id="screen-note" class="screen note-screen" aria-label="まちがいノート" hidden>
+    <section id="screen-note" class="screen dex-screen note-screen" aria-label="まちがいノート" hidden>
       <header class="screen-head">
         <button id="btn-note-back" class="back-btn" type="button"><span aria-hidden="true">↩</span> 戻る</button>
         <h2 class="title">📓 まちがいノート</h2>
@@ -157,8 +157,12 @@
           <p id="note-comment" class="note" role="status"></p>
         </div>
       </div>
-      <ul id="note-list" class="note-list"></ul>
-      <div class="note-buttons"><button id="btn-note-review" class="btn btn-review" type="button">📖 ぜんぶ 復習する</button><button id="btn-note-guide" class="btn btn-plain" type="button">🎬 ムービー</button></div>
+      <div id="note-filter" class="dex-filter" role="tablist" aria-label="分類"></div>
+      <div id="note-grid" class="dex-grid"></div>
+      <div class="note-buttons">
+        <button id="btn-note-review" class="btn btn-review" type="button">📖 ぜんぶ 復習する</button>
+        <button id="btn-note-guide" class="btn btn-plain" type="button">📘 ルール説明</button>
+      </div>
     </section>
     <!-- 問題図鑑 -->
     <section id="screen-dex" class="screen dex-screen" aria-label="問題図鑑" hidden>
