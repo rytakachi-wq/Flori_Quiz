@@ -46,6 +46,14 @@ const STRENGTH = 0.62;
 
 const hexRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
+const mix3 = (stops, t) => {
+  const v = clamp01(t) * (stops.length - 1);
+  const i = Math.min(stops.length - 2, Math.floor(v));
+  return stops[i].map((c, k) => c + (stops[i + 1][k] - c) * (v - i));
+};
+const SUNSET = ["#ff9fbd", "#ffbf86", "#b9a0f0"].map(hexRgb);
+const whiteOf = (l) => hslToRgb(200, 0.04, Math.min(1, 0.9 + (l - 0.55) * 0.26));
+const noise = (x, y) => (Math.imul(x, 73856093) ^ Math.imul(y, 19349663)) >>> 0;
 
 // 体の色の画素1つの、新しい色(r,g,b は 0〜1)。h,l:もとの色あい・明るさ  sTarget:色のこさの基準  sKeep:もとのこさ  (x,y):場所
 function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
@@ -53,6 +61,38 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
   if (color.tone === "white") return hslToRgb(0, 0, Math.min(1, 0.9 + (l - 0.55) * 0.26));
   if (color.tone === "black") return hslToRgb(0, 0, clamp01(0.34 + (l - 0.55) * 0.3));
   if (color.tone === "navy") return hslToRgb(224, 0.18, clamp01(0.38 + (l - 0.55) * 0.5));
+  if (color.sunset) {
+    // 夕焼け:上から下へ、ピンク → オレンジ → 紫
+    const [h, s] = rgbToHsl(...mix3(SUNSET, y / height));
+    return hslToRgb(h, Math.min(1, s * 1.0), clamp01(l * 0.97));
+  }
+  if (color.starry) {
+    // 星空:こい紺色に、小さな星
+    if (noise(x >> 2, y >> 2) % 260 < 2) return [1, 0.96, 0.7];
+    return hslToRgb(228, 0.3, clamp01(0.3 + (l - 0.55) * 0.5));
+  }
+  if (color.sakura) {
+    // 桜:うすいピンクに、ところどころ、こい花びら
+    const v = (Math.sin(x * 0.13) + Math.sin(y * 0.11 + 1) + Math.sin((x + y) * 0.07)) / 3;
+    return v > 0.5 ? hslToRgb(350, 0.5, clamp01(l * 0.92)) : hslToRgb(345, 0.34, l);
+  }
+  if (color.dots) {
+    // 水玉:白に、ピンクの水玉
+    const cx = (x + (Math.floor(y / 38) % 2 ? 19 : 0)) % 38;
+    const cy = y % 38;
+    return (cx - 19) ** 2 + (cy - 19) ** 2 < 64 ? hslToRgb(340, 0.68, clamp01(l * 0.9)) : whiteOf(l);
+  }
+  if (color.stripes) {
+    // ストライプ:水色と白のよこしま
+    return Math.floor(y / 22) % 2 ? hslToRgb(205, 0.6, clamp01(l * 0.92)) : whiteOf(l);
+  }
+  if (color.snow) {
+    // 雪の結晶:水色に、白い結晶
+    const dx = ((x + 26) % 52) - 26;
+    const dy = ((y + 26) % 52) - 26;
+    const flake = (Math.abs(dx) < 2 && Math.abs(dy) < 9) || (Math.abs(dy) < 2 && Math.abs(dx) < 9) || (Math.abs(dx - dy) < 3 && Math.abs(dx) < 6) || (Math.abs(dx + dy) < 3 && Math.abs(dx) < 6);
+    return flake ? whiteOf(l) : hslToRgb(208, 0.55, clamp01(l * 0.95));
+  }
   if (color.rainbow) return hslToRgb(((x / width) * 320 + (y / height) * 120) % 360, 0.34, Math.min(0.9, l * 0.98 + 0.02));
   if (color.metal) {
     // 金属の光沢:もとの明るさを、暗い色→明るい色の段階に当てはめ、斜めに走る光の帯(つや)を重ねる
@@ -65,7 +105,7 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
     return stops[i].map((c, k) => c + (stops[i + 1][k] - c) * f);
   }
   const target = Math.min(0.9, Math.max(sTarget * color.gain, color.minSat)) * STRENGTH * (color.boost ?? 1);
-  return hslToRgb(color.hue, Math.max(target, sKeep * 0.5), l);
+  return hslToRgb(color.hue, Math.max(target, sKeep * 0.5), clamp01(l * (color.lmul ?? 1)));
 }
 
 // color = { hue, gain, minSat, gray }

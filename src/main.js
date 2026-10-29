@@ -2600,9 +2600,10 @@ function wornItems(over = {}) {
 }
 
 function applyDress() {
-  document.documentElement.dataset.theme = dress.theme;
-  document.documentElement.style.setProperty("--cover-bg", `url("../assets/bg/${dress.theme}.webp")`); // 表紙の背景の模様(色ごと)
-  const theme = THEMES.find((item) => item.id === dress.theme);
+  const picked = THEMES.find((item) => item.id === dress.theme);
+  const theme = picked?.stageOnly ? THEMES[0] : picked; // お試しの背景は、着せ替えの枠だけ(ほかの画面は、青空のまま)
+  document.documentElement.dataset.theme = theme.id;
+  document.documentElement.style.setProperty("--cover-bg", `url("../assets/bg/${theme.id}.webp")`); // 表紙の背景の模様(色ごと)
   const root = document.documentElement.style;
   for (const [name, key] of [["--bg", "bg"], ["--blue", "blue"], ["--blue-dark", "dark"]]) {
     if (theme?.[key]) root.setProperty(name, theme[key]);

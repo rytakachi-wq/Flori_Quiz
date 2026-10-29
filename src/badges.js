@@ -282,13 +282,31 @@ function assignUnlocks(groups) {
   });
 }
 
+// お試しの色・背景12こ(このへんは、まだ、ご褒美の条件なし。いつでも選べる。背景は、着せ替えの画面の枠だけで、ほかの画面は、かわらない)
+const TRIAL = [
+  { id: "mint", name: "ミントソーダ", tint: "#5cc9a7", color: { hue: 160, gain: 2.6, minSat: 0.65, boost: 1.25 }, stage: "linear-gradient(160deg, #e6faf1, #8fdcc0)" },
+  { id: "skyblue", name: "そらいろ", tint: "#4aa8ea", color: { hue: 202, gain: 3, minSat: 0.95, boost: 1.5 }, stage: "linear-gradient(160deg, #e9f6ff, #6ab9f2)" },
+  { id: "lavender", name: "ラベンダー", tint: "#a58fe0", color: { hue: 258, gain: 2, minSat: 0.55, boost: 1.2 }, stage: "linear-gradient(160deg, #f1ebfc, #b9a2ec)" },
+  { id: "brown", name: "チョコブラウン", tint: "#8a5a3c", color: { hue: 25, gain: 2, minSat: 0.55, lmul: 0.72 }, stage: "linear-gradient(160deg, #f4e6d8, #b98a62)" },
+  { id: "coral", name: "コーラル", tint: "#f0806e", color: { hue: 8, gain: 3, minSat: 0.75, boost: 1.2 }, stage: "linear-gradient(160deg, #ffeae4, #f59a88)" },
+  { id: "wine", name: "ワインレッド", tint: "#a8405c", color: { hue: 344, gain: 2.4, minSat: 0.6, lmul: 0.7 }, stage: "linear-gradient(160deg, #f6e0e6, #b35a72)" },
+  { id: "sunset", name: "夕焼け", tint: "#f59a7a", color: { sunset: true }, stage: "linear-gradient(180deg, #ffb3c8 0%, #ffc58a 45%, #c9a2f0 100%)" },
+  { id: "starry", name: "星空", tint: "#34408a", color: { starry: true }, stage: "radial-gradient(circle at 18% 22%, #fff 0 1.4px, transparent 2.2px), radial-gradient(circle at 72% 14%, #fff 0 1.8px, transparent 2.6px), radial-gradient(circle at 44% 46%, #fff 0 1.2px, transparent 2px), radial-gradient(circle at 86% 58%, #fff 0 1.6px, transparent 2.4px), radial-gradient(circle at 28% 76%, #fff 0 1.4px, transparent 2.2px), radial-gradient(circle at 62% 84%, #fff 0 1.2px, transparent 2px), linear-gradient(160deg, #1d2a55, #4a3d8f)" },
+  { id: "sakura", name: "桜", tint: "#f3a7bd", color: { sakura: true }, stage: "radial-gradient(ellipse 14px 8px at 20% 25%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 14px 8px at 70% 18%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 14px 8px at 45% 55%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 14px 8px at 85% 62%, #f7b6c9 0 100%, transparent 100%), radial-gradient(ellipse 14px 8px at 28% 80%, #f7b6c9 0 100%, transparent 100%), linear-gradient(160deg, #fff4f7, #fbd3df)" },
+  { id: "dots", name: "水玉", tint: "#f27fa6", color: { dots: true }, stage: "radial-gradient(circle, #ffb3c8 0 6px, transparent 7px) 0 0 / 30px 30px, #fff7fa" },
+  { id: "stripes", name: "ストライプ", tint: "#5aa9e6", color: { stripes: true }, stage: "repeating-linear-gradient(0deg, #cfe8fb 0 18px, #ffffff 18px 36px)" },
+  { id: "snow", name: "雪の結晶", tint: "#9ccdf0", color: { snow: true }, stage: "radial-gradient(circle, #ffffff 0 3px, transparent 4px) 0 0 / 34px 34px, radial-gradient(circle, #ffffff 0 2px, transparent 3px) 17px 17px / 34px 34px, linear-gradient(160deg, #dff0fb, #a9d3f2)" },
+];
+
 export const COLORS = [
   { id: "original", name: "ミルキーブルー", original: true, tint: "#7ec3e0", swatch: "linear-gradient(135deg, #f4fbff, #7ec3e0)", unlock: null },
   ...PALETTE.map((p) => ({ id: p.id, name: p.name, tint: p.tint, swatch: p.swatch ?? soften(p.tint), ...p.color, unlock: null })),
+  ...TRIAL.map((p) => ({ id: p.id, name: p.name, tint: p.tint, swatch: p.color.hue === undefined ? p.stage : soften(p.tint), ...p.color, unlock: null, trial: true })),
 ];
 export const THEMES = [
   { id: "sky", name: "青空", tint: "#7ec3e0", preview: "linear-gradient(160deg, #eef8fd, #7ec3e0)", unlock: null },
   ...PALETTE.map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.swatch ?? `linear-gradient(160deg, ${p.bg}, ${p.blue})`, stage: p.stage, bg: p.bg, blue: p.blue, dark: p.dark, unlock: null })),
+  ...TRIAL.map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.stage, stage: p.stage, stageOnly: true, unlock: null, trial: true })),
 ];
 // 着せ替えの一覧は、系統ごとにまとめて並べる(もらえる順とは別。もらえる順は、assignUnlocks の表のまま)。
 // 頭:帽子 → 頭の上(耳・冠・輪・ふたば・小鳥・ひよこ・アンテナ)→ 右上の飾り(花・リボンなど)
