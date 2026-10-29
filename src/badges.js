@@ -38,6 +38,11 @@ const SPEC = [
   ["timedPerfect5", "時間内パーフェクト5回", "timedPerfect", 5], ["hardPerfect10", "難しいパーフェクト10回", "perfectHard", 10],
   ["play150", "150回プレイ", "plays", 150], ["streak50", "毎日1問50日連続", "streak", 50], ["timed30", "時間チャレンジ30回", "timed", 30],
   ["daily50", "毎日1問50日", "daily", 50], ["versus50", "50回対戦", "versus", 50], ["play200", "200回プレイ", "plays", 200],
+  // あとから足した 顔のかざり13こ用(そのまた後ろ。EXTRA_LADDER の おわり)
+  ["perfect40", "パーフェクト40回", "perfect", 40], ["review15", "復習コンプリート15回", "review", 15], ["garden15", "お花畑15回完成", "garden", 15],
+  ["timedPerfect8", "時間内パーフェクト8回", "timedPerfect", 8], ["daily70", "毎日1問70日", "daily", 70], ["hardPerfect15", "難しいパーフェクト15回", "perfectHard", 15],
+  ["versus70", "70回対戦", "versus", 70], ["timed40", "時間チャレンジ40回", "timed", 40], ["play250", "250回プレイ", "plays", 250],
+  ["streak70", "毎日1問70日連続", "streak", 70], ["perfect60", "パーフェクト60回", "perfect", 60], ["play300", "300回プレイ", "plays", 300],
 ];
 
 const COUNT = {
@@ -230,10 +235,26 @@ const EXTRA_DECOR = [
   ["body", 46, "ゴールのはた", "flag", { x: -8.6, y: 25.5, w: 44, sx: -1 }],
   ["body", 47, "トロフィー", "trophy", { x: 9.0, y: 16.5, w: 58 }],
   ["head", 29, "シルクハット", "tophat", { x: 52.5, y: 0.5, w: 44 }],
+  // 顔のかざり13こ(ChatGPT。位置は、顔の画面に合わせた。目:x≈33%・69%、y≈29%)
+  ["face", 13, "ねこの鼻", "fp_nose", { x: 51.0, y: 32.0, w: 7 }],
+  ["face", 14, "ほっぺの花", "fp_flowercheek", { x: 51.0, y: 36.0, w: 52 }],
+  ["face", 15, "ほっぺの星", "fp_starcheek", { x: 51.0, y: 36.0, w: 52 }],
+  ["face", 16, "そばかす", "fp_freckles", { x: 51.0, y: 35.5, w: 57 }],
+  ["face", 17, "雪の結晶", "fp_snow", { x: 72.0, y: 37.0, w: 13 }],
+  ["face", 18, "舌ぺろ", "fp_tongue", { x: 51.5, y: 43.0, w: 12 }],
+  ["face", 19, "ちょびひげ", "fp_mustache", { x: 51.0, y: 34.2, w: 26 }],
+  ["face", 20, "猫のひげ", "fp_whiskers", { x: 51.0, y: 35.8, w: 61.5 }],
+  ["face", 21, "ぐるぐる目", "fp_spiral", { x: 51.0, y: 29.0, w: 55.2 }],
+  ["face", 22, "ハートの目", "fp_hearteyes", { x: 51.0, y: 29.0, w: 55.9 }],
+  ["face", 23, "サングラス", "fp_sunglasses", { x: 51.0, y: 29.5, w: 62.7 }],
+  ["face", 24, "眼帯(白)", "fp_eyepatch", { x: 58.2, y: 23.5, w: 74.1 }],
+  ["face", 25, "眼帯(黒)", "fp_eyepatch_black", { x: 58.2, y: 23.5, w: 74.1 }],
 ];
 const EXTRA_LADDER = [
   "daily30", "versus30", "timed20", "review10", "perfect30", "garden10", "timedPerfect5", "hardPerfect10",
   "play150", "streak50", "timed30", "daily50", "versus50", "play200", { stars: 200 },
+  // 顔のかざり13こ(やさしい順)
+  "perfect40", "review15", "garden15", "timedPerfect8", "daily70", "hardPerfect15", "versus70", "timed40", "play250", "streak70", { stars: 250 }, "perfect60", "play300",
 ];
 const extraOf = (slot) =>
   EXTRA_DECOR.map((row, index) => ({ row, unlock: EXTRA_LADDER[index] }))
@@ -288,9 +309,10 @@ const DISPLAY_ORDER = {
     ["body33", "body34", "body27", "body41", "body43", "body44", "body45", "body46", "body47"], // 手に持つもの
   ],
   face: [
-    ["face09", "face05", "face04"], // 目のまわり
-    ["face01", "face03", "face08", "face06"], // ほっぺ
-    ["face11", "face12", "face10"], // マーク
+    ["face09", "face23", "face24", "face25", "face21", "face22", "face05", "face04"], // 目のまわり(メガネ・サングラス・眼帯・ぐるぐる目・ハートの目・涙・汗)
+    ["face01", "face03", "face08", "face06", "face16", "face15", "face14"], // ほっぺ
+    ["face13", "face19", "face20", "face18"], // 鼻・口のまわり(ねこの鼻・ちょびひげ・猫のひげ・舌ぺろ)
+    ["face11", "face12", "face10", "face17"], // マーク(ハート・音符・怒り・雪の結晶)
   ],
 };
 // 系統ごとの、見出し(一覧に、線と文字で出す。どのあたりに着けるものかの説明)
