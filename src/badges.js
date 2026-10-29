@@ -293,6 +293,13 @@ const DISPLAY_ORDER = {
     ["face11", "face12", "face10"], // マーク
   ],
 };
+// 系統ごとの、見出し(一覧に、線と文字で出す。どのあたりに着けるものかの説明)
+const GROUP_LABELS = {
+  head: ["帽子(頭にかぶる)", "耳(頭の上)", "冠・輪(頭の上)", "頭のてっぺん(のせる)", "頭の右上(かざる)"],
+  body: ["首まわり", "胸(ブローチ・バッジ)", "おなか・腰(ポーチ・バッグ)", "手に持つ(左手)"],
+  face: ["目のまわり", "ほっぺ", "顔のマーク"],
+};
+export const groupLabel = (slot, group) => GROUP_LABELS[slot]?.[group] ?? "";
 // 系統ごとに並べる。item.group に、系統の番号を入れる(一覧で、系統が変わるごとに改行するため)
 const arrange = (slot, items) => {
   const rank = new Map();

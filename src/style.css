@@ -3162,8 +3162,11 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 .rf-total .emi, .rf-turn .emi, .rf-crown .emi, .rf-badge .emi, .rf-btn .emi, .rf-over .emi { height: 1em; vertical-align: -0.15em; }
 @media (max-width: 340px) { .rf-total, .rf-turn, .rf-crown { font-size: 12.5px; padding-left: 8px; padding-right: 8px; } }
 
-/* 着せ替えの一覧:系統(帽子・耳・冠…)が変わるところで、改行する */
-.dress-list .dress-break { grid-column: 1 / -1; flex-basis: 100%; width: 100%; height: 0; margin: -2px 0; padding: 0; }
+/* 着せ替えの一覧:系統(帽子・耳・冠…)が変わるところで、線と説明を入れて、改行する */
+.dress-list .dress-sec { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 6px 2px 0; font-size: 13px; font-weight: bold; line-height: 1.3; color: var(--blue-dark); }
+.dress-list .dress-sec::before { content: ""; flex: none; width: 14px; height: 3px; border-radius: 2px; background: var(--blue-dark); }
+.dress-list .dress-sec::after { content: ""; flex: 1; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--blue) 70%, #fff); }
+.dress-list .dress-sec:first-child { margin-top: 0; }
 
 /* 設定画面のフロリを、少し大きく */
 @media screen {
@@ -3177,16 +3180,11 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 /* =====================================================================
    まちがいノート
    ===================================================================== */
-.t-note { --tile: #ffe9a8; }
-.menu-grid .t-note { grid-column: span 2; flex-direction: row; }
-#screen-menu .menu-grid { grid-template-rows: repeat(3, clamp(52px, 9dvh, 84px)); }
 .note-screen { gap: 8px; }
 .note-list { list-style: none; margin: 0; padding: 4px; display: grid; gap: 6px; align-content: start; width: min(560px, 100%); flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .note-row { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: 2px solid #ffd27a; border-radius: 14px; background: #fffaf0; font: inherit; text-align: left; cursor: pointer; }
 .note-icon { font-size: 22px; flex: none; }
 .note-text { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
-.note-answer { font-weight: 700; color: #1a7f4b; }
-.note-answer::after { content: " ✅ 正解"; font-size: 0.85em; }
 .note-why { margin: 8px 0 0; padding: 8px 10px; border-radius: 12px; background: #fff3c4; line-height: 1.5; overflow-wrap: normal; word-break: auto-phrase; line-break: strict; }
 .note-dialog .buttons { display: none; }
 #screen-note .dex-head-box { display: flex; align-items: center; justify-content: center; gap: 8px; width: min(520px, 100%); }
@@ -3194,4 +3192,5 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 #screen-note .dex-head-text { flex: 1 1 0; min-width: 0; display: grid; gap: 3px; justify-items: center; }
 #screen-note .dex-head-text .note { margin: 0; text-align: center; text-wrap: pretty; }
 #screen-note .dex-count { font-size: 18px; margin: 0; }
-#screen-note .btn-review { flex: none; }
+.note-buttons { display: flex; gap: 8px; flex: none; width: min(560px, 100%); justify-content: center; }
+.note-buttons .btn { flex: 1 1 0; min-width: 0; }

@@ -42,7 +42,7 @@ import { illustrationFor } from "./illustrations.js";
 import { createTalker } from "./talk.js";
 import { initTutorial, openTutorial } from "./tutorial.js";
 import { initRules, openRules as resetRules } from "./rules.js";
-import { BODIES, COLORS, FACES, HEADS, RANKS, THEMES, earnedBadges, getText, canWear, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
+import { BODIES, COLORS, FACES, HEADS, RANKS, THEMES, earnedBadges, getText, groupLabel, canWear, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { refreshDecor, setAutoDecor } from "./decor-overlay.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
@@ -308,7 +308,6 @@ function refreshCover() {
   $("btn-daily").classList.toggle("is-done", dailyDone);
   const left = stats.wrong.filter((id) => playableIds().has(id)).length;
   $("btn-review").querySelector(".tile-label").textContent = left > 0 ? `復習(${left}問)` : "復習(なし)";
-  $("btn-review").disabled = left === 0;
   refreshNoticeDots();
 }
 
@@ -1511,13 +1510,7 @@ function openDaily() {
 $("btn-daily").addEventListener("click", openDaily);
 $("btn-info-close").addEventListener("click", () => $("dlg-info").close());
 // 復習には制限時間は付けない(ムービーで説明してから始める)
-$("btn-review").addEventListener("click", () =>
-  guideOnce("review", () => {
-    reviewFromQuiz = false;
-    timeLimit = false;
-    startPlay("review");
-  }),
-);
+$("btn-review").addEventListener("click", showNote); // 復習は、まちがいノートの画面から始める
 // ヒント:1問に1回。見ると、その問題の点が半分になる。
 $("btn-hint").addEventListener("click", () => {
   if (answered || hinted || !current?.hint) return;
@@ -1612,7 +1605,8 @@ const leaveGame = () => {
   if (mode === "review" && reviewFromQuiz) {
     renderSetup();
     show("setup", -1); // クイズから来た復習は、クイズのモード選択へ戻る
-  } else if (mode === "daily" || mode === "review") openMenu();
+  } else if (mode === "review") showNote();
+  else if (mode === "daily") openMenu();
   else show("cover", -1);
 };
 $("btn-cover").addEventListener("click", leaveGame);
@@ -2190,7 +2184,6 @@ function openNoteCard(question) {
   question.choices.forEach((choice, index) => {
     const item = document.createElement("li");
     item.textContent = choice;
-    if (index === question.answer) item.className = "note-answer";
     list.append(item);
   });
   const why = document.createElement("p");
@@ -2235,11 +2228,11 @@ function showNote() {
       : topCount >= 2 && topCount > items.length / 2
         ? `${top}の問題が 多いヨ。押すと 答えと 解説が 見られるヨ!`
         : "押すと 答えと 解説が 見られるヨ!";
-  $("btn-note-review").hidden = items.length === 0;
+  $("btn-note-review").disabled = items.length === 0;
   show("note");
 }
-$("btn-note").addEventListener("click", showNote);
 $("btn-note-back").addEventListener("click", () => openMenu());
+$("btn-note-guide").addEventListener("click", () => playTutorial("review")); // 復習の説明ムービー(いつでも)
 $("btn-note-review").addEventListener("click", () =>
   guideOnce("review", () => {
     reviewFromQuiz = false;
@@ -2412,10 +2405,10 @@ function renderDress() {
     tab.classList.toggle("has-new", !seenTabs.has(kind) && [...freshKeys].some((key) => key.startsWith(`${kind}:`))); // 開いた種類の NEW は、消える
   }
   const kind = dressTab;
-  let lastGroup = null; // 系統(帽子・耳・冠…)が変わるごとに、改行する
+  let lastGroup = null; // 系統(帽子・耳・冠…)が変わるごとに、線と説明を入れて、改行する
   $("dress-list").replaceChildren(
     ...DRESS_LISTS[kind].flatMap((choice) => {
-      const breakHere = choice.group !== undefined && lastGroup !== null && choice.group !== lastGroup;
+      const newGroup = choice.group !== undefined && choice.group !== lastGroup;
       if (choice.group !== undefined) lastGroup = choice.group;
       const open = canWear(choice, ctx);
       const isNew = freshKeys.has(`${kind}:${choice.id}`);
@@ -2481,11 +2474,13 @@ function renderDress() {
         renderDress();
         playSe("button");
       });
-      if (breakHere) {
-        const gap = document.createElement("span");
-        gap.className = "dress-break";
-        gap.setAttribute("aria-hidden", "true");
-        return [gap, button];
+      const label = newGroup ? groupLabel(kind, choice.group) : "";
+      if (label) {
+        // 系統が変わるところに、線と文字を入れて、どのあたりに着けるものかを、説明する
+        const head = document.createElement("div");
+        head.className = "dress-sec";
+        head.textContent = label;
+        return [head, button];
       }
       return [button];
     }),
