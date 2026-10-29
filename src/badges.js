@@ -117,7 +117,7 @@ const PALETTE = [
   { id: "green", name: "森のエメラルド", tint: "#4fae6a", bg: "#e4f3e1", blue: "#6fc088", dark: "#2f7d4c", color: { hue: 130, gain: 2.4, minSat: 0.5 } },
   { id: "purple", name: "魔法のパープル", tint: "#9a6ad0", bg: "#f0e6fb", blue: "#b08be0", dark: "#6a43a8", color: { hue: 272, gain: 2.2, minSat: 0.5 } },
   { id: "pink", name: "ときめきピンク", tint: "#e0709c", bg: "#fdeaf0", blue: "#f0a8bd", dark: "#c0587a", color: { hue: 338, gain: 2.6, minSat: 0.65 } },
-  { id: "white", name: "雪だるまホワイト", tint: "#f4f6f8", bg: "#ffffff", blue: "#cfd6dc", dark: "#6b7a84", color: { tone: "white" } },
+  { id: "white", name: "雪だるまホワイト", tint: "#9fabb4", swatch: "linear-gradient(135deg, #ffffff 0%, #ffffff 55%, #dfe5ea 100%)", bg: "#ffffff", blue: "#cfd6dc", dark: "#6b7a84", color: { tone: "white" } },
   { id: "black", name: "真夜中ブラック", tint: "#2c3038", bg: "#1b1d22", blue: "#9aa0ab", dark: "#2c3038", color: { tone: "black" } },
   { id: "navy", name: "深海ネイビー", tint: "#24367a", bg: "#1d2a55", blue: "#7f93d4", dark: "#24367a", color: { tone: "navy" } },
   { id: "gold", name: "ゴージャスゴールド", tint: "#d9a21c", bg: SWATCH.gold, blue: "#e6b422", dark: "#8a5a0c", swatch: SWATCH.gold, color: { metal: ["#6e5e3a", "#a8935a", "#cdb878", "#e8dba8", "#faf4dc"] } },
@@ -309,15 +309,14 @@ const DISPLAY_ORDER = {
   face: [
     ["face09", "face23", "face24", "face25", "face21", "face22", "face05"], // 目のまわり(メガネ・サングラス・眼帯・ぐるぐる目・ハートの目・涙)
     ["face01", "face03", "face08", "face06", "face16", "face15", "face14", "face20"], // ほっぺ(猫のひげも)
-    ["face13", "face19", "face18"], // 鼻・口のまわり(ねこの鼻・ちょびひげ・舌ぺろ)
-    ["face11", "face12", "face10", "face17", "face04"], // マーク(ハート・音符・怒り・雪の結晶・汗)
+    ["face13", "face19", "face18", "face11", "face12", "face10", "face17", "face04"], // 顔まわり(ねこの鼻・ちょびひげ・舌ぺろ・マーク類・汗)
   ],
 };
 // 系統ごとの、見出し(一覧に、線と文字で出す。どのあたりに着けるものかの説明)
 const GROUP_LABELS = {
-  head: ["帽子(頭にかぶる)", "頭の上(耳・冠・のせるもの)", "頭の右上(かざる)"],
+  head: ["帽子(頭にかぶる)", "頭の上", "頭の右上(かざる)"],
   body: ["首まわり", "胸(ブローチ・バッジ)", "おなか・腰(ポーチ・バッグ)", "手に持つ(左手)"],
-  face: ["目のまわり", "ほっぺ", "鼻・口のまわり", "マーク(顔のすみ)"],
+  face: ["目のまわり", "ほっぺ", "顔まわり"],
 };
 export const groupLabel = (slot, group) => GROUP_LABELS[slot]?.[group] ?? "";
 // 系統ごとに並べる。item.group に、系統の番号を入れる(一覧で、系統が変わるごとに改行するため)
