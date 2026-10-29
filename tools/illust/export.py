@@ -67,9 +67,10 @@ THR = 244
 PAD = 10
 # 左右1組の かざりの、2つの間のあき(1つの はば に対する割合)。目や ほっぺの位置に合わせて、あけなおす
 GAPS = {"fp_spiral": 0.82, "fp_hearteyes": 0.75, "fp_lashes": 0.75, "fp_freckles": 1.8, "fp_whiskers": 1.53}
-STRAPS = {"fp_mask"}  # マスクに、耳ひもを つける
+ANCHORS = {}  # ひもを つけた絵の、「もとの絵の中心」の場所(割合)。ゲームで位置をきめるとき使う(assets/illust/fp_anchor.json)
 MAXSIDE = 160
-MAXSIDE_FACE = 480  # 顔のかざり(fp_)は、横長の組もあるので、大きめに
+MAXSIDE_FACE = 480
+MAXSIDE_WIDE = {"fp_eyepatch": 900}  # ひもで、横に長い絵  # 顔のかざり(fp_)は、横長の組もあるので、大きめに
 
 
 def boxes_of(name, im):
@@ -172,44 +173,75 @@ def respace(img, gap_ratio):
     return out
 
 
-def add_straps(img, spread=0.30):
-    """マスクの両わきに、耳ひも(ふくらんだ輪)を つける。マスクの本体は、ひもの上にのせる"""
+def _bez(p0, c1, c2, p3, n=40):
+    pts = []
+    for i in range(n + 1):
+        t = i / n
+        pts.append(tuple((1 - t) ** 3 * p0[j] + 3 * (1 - t) ** 2 * t * c1[j] + 3 * (1 - t) * t * t * c2[j] + t ** 3 * p3[j] for j in range(2)))
+    return pts
+
+
+def _strap_lines(canvas, paths, k, W):
+    """ひも(線の色のふち+うすい色の中)を、paths(点の列)にそって、描く。太さは、絵の はば(W)に合わせる"""
     from PIL import ImageDraw
-    k = 4  # 大きく描いて、縮める(なめらかに)
-    W, H = img.size
-    side = int(W * spread)
-    canvas = Image.new("RGBA", ((W + 2 * side) * k, H * k), (0, 0, 0, 0))
     d = ImageDraw.Draw(canvas)
+    wo, wi = 0.075 * W * k, 0.04 * W * k
+    for path in paths:
+        d.line(path, fill=OUTLINE + (255,), width=int(wo), joint="curve")
+    for path in paths:
+        d.line(path, fill=(240, 245, 249, 255), width=int(wi), joint="curve")
+    for path in paths:  # 先を丸く
+        for x, y in (path[0], path[-1]):
+            d.ellipse((x - wo / 2, y - wo / 2, x + wo / 2, y + wo / 2), fill=OUTLINE + (255,))
+            d.ellipse((x - wi / 2, y - wi / 2, x + wi / 2, y + wi / 2), fill=(240, 245, 249, 255))
 
-    def bez(p0, c1, c2, p3, n=40):
-        pts = []
-        for i in range(n + 1):
-            t = i / n
-            pts.append(tuple((1 - t) ** 3 * p0[j] + 3 * (1 - t) ** 2 * t * c1[j] + 3 * (1 - t) * t * t * c2[j] + t ** 3 * p3[j] for j in range(2)))
-        return pts
 
+def strap_mask(img, reach=0.5):
+    """マスクの両わきに、耳(ヘルメットのわき)まで のびる、耳ひもを つける(上と下の角から、耳の1点へ。「<」の形)。本体は、ひもの上"""
+    k = 4
+    W, H = img.size
+    L = int(W * reach)
+    canvas = Image.new("RGBA", ((W + 2 * L) * k, H * k), (0, 0, 0, 0))
+    paths = []
     for sign in (-1, 1):
-        ex = (side + (W if sign > 0 else 0) + (-6 if sign > 0 else 6)) * k  # マスクのふちの すこし内がわから出る
-        sx = sign
-        top, bot, mid = H * 0.24 * k, H * 0.76 * k, H * 0.5 * k
-        out = side * k * 0.98
-        path = bez((ex, top), (ex + sx * out * 0.55, top - H * 0.10 * k), (ex + sx * out, mid - H * 0.30 * k), (ex + sx * out, mid))
-        path += bez((ex + sx * out, mid), (ex + sx * out, mid + H * 0.30 * k), (ex + sx * out * 0.55, bot + H * 0.10 * k), (ex, bot))
-        d.line(path, fill=OUTLINE + (255,), width=int(15 * k), joint="curve")
-    for sign in (-1, 1):
-        pass
-    # 中のしろい線(ひもの色)を、同じ道すじで、細く かさねる
-    for sign in (-1, 1):
-        ex = (side + (W if sign > 0 else 0) + (-6 if sign > 0 else 6)) * k
-        sx = sign
-        top, bot, mid = H * 0.24 * k, H * 0.76 * k, H * 0.5 * k
-        out = side * k * 0.98
-        path = bez((ex, top), (ex + sx * out * 0.55, top - H * 0.10 * k), (ex + sx * out, mid - H * 0.30 * k), (ex + sx * out, mid))
-        path += bez((ex + sx * out, mid), (ex + sx * out, mid + H * 0.30 * k), (ex + sx * out * 0.55, bot + H * 0.10 * k), (ex, bot))
-        d.line(path, fill=(240, 245, 249, 255), width=int(8 * k), joint="curve")
-    canvas = canvas.resize((W + 2 * side, H), Image.LANCZOS)
-    canvas.alpha_composite(img, (side, 0))
-    return canvas
+        edge = (L + (W - 8 if sign > 0 else 8)) * k
+        ear = (edge + sign * (L - 8) * k + sign * 8 * k, H * 0.5 * k)
+        top, bot = (edge, H * 0.27 * k), (edge, H * 0.73 * k)
+        paths.append(_bez(top, (edge + sign * L * 0.35 * k, H * 0.24 * k), (edge + sign * L * 0.7 * k, H * 0.36 * k), ear))
+        paths.append(_bez(bot, (edge + sign * L * 0.35 * k, H * 0.76 * k), (edge + sign * L * 0.7 * k, H * 0.64 * k), ear))
+    _strap_lines(canvas, paths, k, W)
+    canvas = canvas.resize((W + 2 * L, H), Image.LANCZOS)
+    canvas.alpha_composite(img, (L, 0))
+    return canvas, (0.5, 0.5)
+
+
+def strap_eyepatch(img, left=2.4, right=0.6, rise=0.75):
+    """眼帯に、ひもを つける:右(画面の右がわ)は、耳へ。左は、ひたいを ななめに わたって、反対がわの耳へ。
+    戻り値の2つ目は、眼帯の中心が、絵のどこ(はば・高さの割合)にあるか"""
+    k = 4
+    W, H = img.size
+    Ll, Lr, Up = int(W * left), int(W * right), int(W * rise)
+    Wc, Hc = W + Ll + Lr, H + Up
+    canvas = Image.new("RGBA", (Wc * k, Hc * k), (0, 0, 0, 0))
+    px, py = Ll, Up  # 眼帯のおき場所(左上)
+    cx, cy = (px + W / 2) * k, (py + H / 2) * k
+    paths = []
+    # 右: 眼帯の右上と右下から、耳へ(1点)
+    ex = (px + W + Lr - 6) * k
+    ey = cy
+    paths.append(_bez(((px + W - 6) * k, (py + H * 0.30) * k), ((px + W + Lr * 0.4) * k, (py + H * 0.24) * k), ((px + W + Lr * 0.7) * k, cy - H * 0.06 * k), (ex, ey)))
+    paths.append(_bez(((px + W - 6) * k, (py + H * 0.70) * k), ((px + W + Lr * 0.4) * k, (py + H * 0.76) * k), ((px + W + Lr * 0.7) * k, cy + H * 0.06 * k), (ex, ey)))
+    # 左: 眼帯の左上から、ひたい(まゆげの上)を とおって、左の耳へ(はじめ ななめに のぼって、そのあと、ほぼ水平)
+    sx, sy = (px + 6) * k, (py + H * 0.22) * k
+    tx, ty = 6 * k, (Up * 0.30) * k
+    paths.append(_bez((sx, sy), (sx - Ll * 0.12 * k, sy - Up * 0.75 * k), (tx + Ll * 0.55 * k, ty - Up * 0.05 * k), (tx, ty), n=60))
+    _strap_lines(canvas, paths, k, W)
+    canvas = canvas.resize((Wc, Hc), Image.LANCZOS)
+    canvas.alpha_composite(img, (px, py))
+    return canvas, ((px + W / 2) / Wc, (py + H / 2) / Hc)
+
+
+STRAPS = {"fp_mask": strap_mask, "fp_eyepatch": strap_eyepatch}  # ひもを つける
 
 
 def main():
@@ -230,12 +262,18 @@ def main():
             if slug in GAPS:
                 it = respace(it, GAPS[slug])
             if slug in STRAPS:
-                it = add_straps(it)
-            side = MAXSIDE_FACE if slug.startswith("fp_") else MAXSIDE
+                it, ANCHORS[slug] = STRAPS[slug](it)
+            side = MAXSIDE_WIDE.get(slug, MAXSIDE_FACE if slug.startswith("fp_") else MAXSIDE)
             it.thumbnail((side, side), Image.LANCZOS)
             path = os.path.join(OUT, slug + ".webp")
             it.save(path, "WEBP", quality=90, method=6)
             total += os.path.getsize(path)
+    if ANCHORS:
+        import json
+        meta = os.path.join(OUT, "fp_anchor.json")
+        old = json.load(open(meta, encoding="utf8")) if os.path.exists(meta) else {}
+        old.update({k: [round(v[0], 4), round(v[1], 4)] for k, v in ANCHORS.items()})
+        json.dump(old, open(meta, "w", encoding="utf8"), ensure_ascii=False, indent=1)
     print("書き出し", sum(len(v) for v in MANIFEST.values()), "個,", round(total / 1024), "KB")
 
 
