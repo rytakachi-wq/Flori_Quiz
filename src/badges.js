@@ -383,25 +383,17 @@ export function rankOf(total) {
 }
 
 // ---------------- 選びかたの保存 ----------------
-// 頭・体・顔は、いくつでも重ねて付けられる(ちがう かざり なら)。選んだ id の配列。なにもなし=[]
-const DEFAULT_DRESS = { head: [], body: [], face: [], theme: "sky", color: "original" };
-const SLOTS = ["head", "body", "face"];
+const DEFAULT_DRESS = { head: "none", body: "none", face: "none", theme: "sky", color: "original" };
 const LISTS = { head: HEADS, body: BODIES, face: FACES, theme: THEMES, color: COLORS };
 
 export function loadDress() {
   try {
     const saved = JSON.parse(localStorage.getItem(DRESS_KEY) ?? "{}");
     const out = {};
-    for (const [kind, list] of Object.entries(LISTS)) {
-      if (SLOTS.includes(kind)) {
-        // 前の保存(1つだけの文字)も、読める
-        const ids = Array.isArray(saved[kind]) ? saved[kind] : [saved[kind]];
-        out[kind] = [...new Set(ids)].filter((id) => id !== "none" && list.some((item) => item.id === id));
-      } else out[kind] = list.some((item) => item.id === saved[kind]) ? saved[kind] : DEFAULT_DRESS[kind];
-    }
+    for (const [kind, list] of Object.entries(LISTS)) out[kind] = list.some((item) => item.id === saved[kind]) ? saved[kind] : DEFAULT_DRESS[kind];
     return out;
   } catch {
-    return { ...DEFAULT_DRESS, head: [], body: [], face: [] };
+    return { ...DEFAULT_DRESS };
   }
 }
 
@@ -414,7 +406,6 @@ export function saveDress(dress) {
 }
 
 export function resetDress() {
-  const fresh = { ...DEFAULT_DRESS, head: [], body: [], face: [] };
-  saveDress(fresh);
-  return fresh;
+  saveDress(DEFAULT_DRESS);
+  return { ...DEFAULT_DRESS };
 }

@@ -2079,7 +2079,7 @@ async function showUnlock() {
   wear.disabled = false;
   wear.textContent = "付けてみる";
   wear.onclick = () => {
-    dress = { ...dress, [kind]: SLOT_KINDS.includes(kind) ? [...new Set([...dress[kind], id])] : id };
+    dress = { ...dress, [kind]: id };
     saveDress(dress);
     applyDress();
     wear.textContent = "✔ 付けたよ!";
@@ -2431,16 +2431,9 @@ function setDecor(containerId, items) {
   );
 }
 // いまの着せ替え(over:ためしに、ほかのものに入れかえるとき)
-// 頭・体・顔は、ちがう かざり なら、いくつでも重ねて付けられる(over:ためしに足す 1つ)
-const SLOT_KINDS = ["head", "body", "face"];
-const isWorn = (kind, id) => (SLOT_KINDS.includes(kind) ? (id === "none" ? dress[kind].length === 0 : dress[kind].includes(id)) : dress[kind] === id);
 function wornItems(over = {}) {
-  const pick = (kind, list) => {
-    const ids = [...dress[kind]];
-    if (over[kind] && over[kind] !== "none" && !ids.includes(over[kind])) ids.push(over[kind]);
-    return ids.map((id) => list.find((i) => i.id === id));
-  };
-  return [...pick("body", BODIES), ...pick("head", HEADS), ...pick("face", FACES)];
+  const now = { ...dress, ...over };
+  return [BODIES.find((i) => i.id === now.body), HEADS.find((i) => i.id === now.head), FACES.find((i) => i.id === now.face)];
 }
 
 function applyDress() {
@@ -2588,7 +2581,7 @@ function renderDress() {
       const isNew = freshKeys.has(`${kind}:${choice.id}`);
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `dress-item${isWorn(kind, choice.id) ? " is-on" : ""}${open ? "" : " is-locked"}${isNew ? " is-new" : ""}`;
+      button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}${open ? "" : " is-locked"}${isNew ? " is-new" : ""}`;
       button.style.setProperty("--tint", choice.tint);
       // 絵だけを見せる(名前や、もらいかたは、押したときや、マウスをのせたときに出す)
       const art = document.createElement("span");
@@ -2604,7 +2597,7 @@ function renderDress() {
         if (pic.complete) fitIcon(pic);
       } else art.textContent = "🚫";
       button.append(art);
-      if (isWorn(kind, choice.id)) {
+      if (dress[kind] === choice.id) {
         const check = document.createElement("span");
         check.className = "dress-check";
         check.textContent = "✔";
@@ -2642,12 +2635,7 @@ function renderDress() {
           showTip(button, tipText); // まだ使えないもの:もらい方を、吹き出しで知らせる(指で押したときにも見える)
           return;
         }
-        if (SLOT_KINDS.includes(kind)) {
-          // ちがう かざり なら、いくつでも付けられる。もういちど押すと、はずす。「なし」は、ぜんぶはずす
-          const now = dress[kind];
-          const next = choice.id === "none" ? [] : now.includes(choice.id) ? now.filter((id) => id !== choice.id) : [...now, choice.id];
-          dress = { ...dress, [kind]: next };
-        } else dress = { ...dress, [kind]: choice.id };
+        dress = { ...dress, [kind]: choice.id };
         saveDress(dress);
         applyDress();
         renderDress();
