@@ -46,13 +46,16 @@ MANIFEST = {
                 "speaker", "drum", "medal", "checkbox", "check", "circle_red", "cross_red", "hand_push"],
     "sheet13": ["hand_point", "person_icon", "microscope", "globe", "flask", "oni", "diamond", "hanamaru_old",
                 "key", "floppy", "newtag", "balloon", "popper2", "heart", "clover", "ribbon"],
+    # 顔のかざり(ChatGPT。docs/illustration-prompts/face_parts*.txt)。左右1組は、1つの絵にまとめる(MERGE)
+    "face1": ["fp_sunglasses", "fp_eyepatch", "fp_spiral", "fp_hearteyes", "fp_lashes", "fp_freckles", "fp_whiskers"],
+    "face2": ["fp_mustache", "fp_mask", "fp_snow", "fp_tongue", "fp_starcheek", "fp_flowercheek", "fp_nose"],
     "sheet14": ["note", "butterfly", "sakura", "shine", "star_fill", "star_line", "egg", "hatch",
                 "chick", "bird", "fox", "dolphin", "owl", "unicorn"],
 }
 # 絵のまとまりの数が、絵の数と食いちがう絵(まとめる)
 DIL = {"sheet01": 5, "sheet02": 10, "sheet14": 10}  # 指定がなければ 14
 MARG = {"sheet01": (4, 32, 8, 8)}  # 上・下・左・右(スクリーンショットのふち)
-MERGE = {"redo01": [(0, 1)]}  # 2つの目は、左右を1つに
+MERGE = {"redo01": [(0, 1)], "face1": [(2, 3), (4, 5), (6, 7), (8, 9), (10, 11)], "face2": [(4, 5), (6, 7)]}  # 2つの目は、左右を1つに
 HOLES = {"gear", "circle_red", "matchsq"}  # わの中も、透明にする
 HOLES_TOP = {"trophy"}  # 上の方(持ち手のあいだ)の白だけ、透明にする(下の名札は残す)
 # ふちの黒い線の、ざらざら(ノイズ)を、ならして けずる強さ(大きいほど、なめらか。指定がなければ 1.0)
@@ -62,7 +65,11 @@ OUTLINE = (72, 94, 112)  # 青みのダークグレー(フロリと同じ線の�
 BGTHR = {"trophy": 228, "tophat": 228, "globe": 228, "balloon": 228}  # 背景とみなす白さ(下げるほど、ふちのうすいノイズも、背景にする)
 THR = 244
 PAD = 10
+# 左右1組の かざりの、2つの間のあき(1つの はば に対する割合)。目や ほっぺの位置に合わせて、あけなおす
+GAPS = {"fp_spiral": 0.82, "fp_hearteyes": 0.75, "fp_lashes": 0.75, "fp_freckles": 1.8, "fp_whiskers": 1.53}
+STRAPS = {"fp_mask"}  # マスクに、耳ひもを つける
 MAXSIDE = 160
+MAXSIDE_FACE = 480  # 顔のかざり(fp_)は、横長の組もあるので、大きめに
 
 
 def boxes_of(name, im):
@@ -139,16 +146,93 @@ def cut(im, box, holes=False, holes_top=False, smooth=1.0, thr=THR, clean=False)
     return out.crop(bb) if bb else out
 
 
+def respace(img, gap_ratio):
+    """左右1組の絵を、まん中のいちばん広い空きで、左右に分けて、あきを gap_ratio(1つの はば に対する割合)にして、くっつけなおす"""
+    al = np.array(img.getchannel("A")) > 20
+    cols = al.any(0)
+    xs = np.where(cols)[0]
+    x0, x1 = xs.min(), xs.max()
+    best, run, start = (0, 0, 0), 0, 0
+    for x in range(int((x0 + x1) * 0.3), int((x0 + x1) * 0.7)):
+        if not cols[x]:
+            if run == 0:
+                start = x
+            run += 1
+            if run > best[0]:
+                best = (run, start, x)
+        else:
+            run = 0
+    _, gs, ge = best
+    left, right = img.crop((x0, 0, gs, img.height)), img.crop((ge + 1, 0, x1 + 1, img.height))
+    piece = (left.width + right.width) / 2
+    gap = int(round(gap_ratio * piece))
+    out = Image.new("RGBA", (left.width + gap + right.width, img.height), (0, 0, 0, 0))
+    out.paste(left, (0, 0))
+    out.paste(right, (left.width + gap, 0))
+    return out
+
+
+def add_straps(img, spread=0.30):
+    """マスクの両わきに、耳ひも(ふくらんだ輪)を つける。マスクの本体は、ひもの上にのせる"""
+    from PIL import ImageDraw
+    k = 4  # 大きく描いて、縮める(なめらかに)
+    W, H = img.size
+    side = int(W * spread)
+    canvas = Image.new("RGBA", ((W + 2 * side) * k, H * k), (0, 0, 0, 0))
+    d = ImageDraw.Draw(canvas)
+
+    def bez(p0, c1, c2, p3, n=40):
+        pts = []
+        for i in range(n + 1):
+            t = i / n
+            pts.append(tuple((1 - t) ** 3 * p0[j] + 3 * (1 - t) ** 2 * t * c1[j] + 3 * (1 - t) * t * t * c2[j] + t ** 3 * p3[j] for j in range(2)))
+        return pts
+
+    for sign in (-1, 1):
+        ex = (side + (W if sign > 0 else 0) + (-6 if sign > 0 else 6)) * k  # マスクのふちの すこし内がわから出る
+        sx = sign
+        top, bot, mid = H * 0.24 * k, H * 0.76 * k, H * 0.5 * k
+        out = side * k * 0.98
+        path = bez((ex, top), (ex + sx * out * 0.55, top - H * 0.10 * k), (ex + sx * out, mid - H * 0.30 * k), (ex + sx * out, mid))
+        path += bez((ex + sx * out, mid), (ex + sx * out, mid + H * 0.30 * k), (ex + sx * out * 0.55, bot + H * 0.10 * k), (ex, bot))
+        d.line(path, fill=OUTLINE + (255,), width=int(15 * k), joint="curve")
+    for sign in (-1, 1):
+        pass
+    # 中のしろい線(ひもの色)を、同じ道すじで、細く かさねる
+    for sign in (-1, 1):
+        ex = (side + (W if sign > 0 else 0) + (-6 if sign > 0 else 6)) * k
+        sx = sign
+        top, bot, mid = H * 0.24 * k, H * 0.76 * k, H * 0.5 * k
+        out = side * k * 0.98
+        path = bez((ex, top), (ex + sx * out * 0.55, top - H * 0.10 * k), (ex + sx * out, mid - H * 0.30 * k), (ex + sx * out, mid))
+        path += bez((ex + sx * out, mid), (ex + sx * out, mid + H * 0.30 * k), (ex + sx * out * 0.55, bot + H * 0.10 * k), (ex, bot))
+        d.line(path, fill=(240, 245, 249, 255), width=int(8 * k), joint="curve")
+    canvas = canvas.resize((W + 2 * side, H), Image.LANCZOS)
+    canvas.alpha_composite(img, (side, 0))
+    return canvas
+
+
 def main():
     total = 0
+    only = sys.argv[1:]  # 例: python -I tools/illust/export.py face1 face2(指定がなければ、全部)
     for name, names in MANIFEST.items():
-        im = Image.open(os.path.join(SHEETS, name + ".webp")).convert("RGB")
+        if only and name not in only:
+            continue
+        path = os.path.join(SHEETS, name + ".webp")
+        if not os.path.exists(path):
+            path = os.path.join(SHEETS, name + ".png")
+        im = Image.open(path).convert("RGB")
         boxes = boxes_of(name, im)
         if len(boxes) != len(names):
             sys.exit(f"{name}: 絵が {len(boxes)} 個見つかったが、名前は {len(names)} 個(DIL を見直す)")
         for slug, box in zip(names, boxes):
             it = cut(im, box, holes=slug in HOLES, holes_top=slug in HOLES_TOP, smooth=SMOOTH.get(slug, 1.0), thr=BGTHR.get(slug, THR), clean=slug in CLEAN)
-            it.thumbnail((MAXSIDE, MAXSIDE), Image.LANCZOS)
+            if slug in GAPS:
+                it = respace(it, GAPS[slug])
+            if slug in STRAPS:
+                it = add_straps(it)
+            side = MAXSIDE_FACE if slug.startswith("fp_") else MAXSIDE
+            it.thumbnail((side, side), Image.LANCZOS)
             path = os.path.join(OUT, slug + ".webp")
             it.save(path, "WEBP", quality=90, method=6)
             total += os.path.getsize(path)
