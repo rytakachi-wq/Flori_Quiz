@@ -15,6 +15,7 @@ const clamp1 = x => Math.max(-1, Math.min(1, x));
 const env = (a, up, hold, down) => ss(a / up) * (1 - ss((a - up - hold) / down));       // 上がる → 保つ → 下がる(0→1→0)
 
 export const HOP_SECONDS = 1.2;
+export const CROSS_PX = 9;             // いつもの寄り目の量(ピクセル)。リグの最大(約25px)だと、ひとみが目のふちまで行って寄りすぎ
 export const BASE_MOUTH = -0.85;      // ふだんの口(下唇。小さい。−1 がいちばん小さい)
 
 // 表情(強さ e: 0→1 のとき、各部分がどこまで動くか)。dir:true のものは、傾く向きを、ときどき かえる
@@ -136,7 +137,7 @@ export function createMotion(model) {
     }
     if (x && x.lid) for (const i of I.lids) V[i] = -Math.max(b, x.lid * e);   // ねむい・うっとり:まぶたを、半分おろす
     let [vr, vl] = gazeValues(gaze);
-    if (cross) { vr -= cross; vl += cross; }   // 寄り目:右の目は 画面の右(−)へ、左の目は 画面の左(+)へ = 両目とも真ん中へ
+    if (cross) { vr -= cross * CROSS_PX / 25; vl += cross * CROSS_PX / 26; }   // 内側へ CROSS_PX ピクセル(左右とも同じ量。右の目は −1 で 25px、左の目は +1 で 26px 動く)   // 寄り目:右の目は 画面の右(−)へ、左の目は 画面の左(+)へ = 両目とも真ん中へ
     vr = clamp1(vr); vl = clamp1(vl);
 
     // 腕と足
