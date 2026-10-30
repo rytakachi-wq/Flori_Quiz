@@ -508,7 +508,7 @@ export const RANKS = [
   { min: 0, icon: "🥚", name: "たまご" },
   { min: 10, icon: "🐣", name: "ひよこ" },
   { min: 20, icon: "🐥", name: "ひよっこ探検家" },
-  { min: 30, icon: "🐦", name: "小鳥博士" },
+  { min: 30, icon: "🐦", name: "ことり博士" },
   { min: 40, icon: "🦊", name: "きつね名人" },
   { min: 50, icon: "🐬", name: "イルカ先生" },
   { min: 60, icon: "🦉", name: "ふくろう博士" },
