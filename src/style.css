@@ -3485,3 +3485,7 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 #screen-rules .rf-hearts { gap: clamp(4px, 2cqw, 12px); }
 #screen-rules .rf-heart { width: clamp(34px, min(22cqh, 19cqw), 84px); }
 #screen-rules .rf-note { font-size: clamp(13px, min(7cqh, 4.6cqw), 18px); }
+
+/* RPGの「設定」ボタン(ほかのクイズと同じ。ハートのとなり、右はし) */
+#screen-rpg > .screen-head { grid-template-columns: auto minmax(0, 1fr) auto; }
+.rpg-screen .rpg-settings { min-height: 38px; padding: 2px 12px; font-size: 15px; white-space: nowrap; }

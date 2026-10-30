@@ -1273,6 +1273,10 @@ $("btn-q-settings").addEventListener("click", () => {
   showVolumes();
   $("dlg-volume").showModal();
 });
+$("btn-rpg-settings").addEventListener("click", () => {
+  showVolumes();
+  $("dlg-volume").showModal();
+});
 $("btn-volume-close").addEventListener("click", () => $("dlg-volume").close());
 
 
@@ -2702,7 +2706,7 @@ $("btn-rpg-hint-yes").addEventListener("click", () => {
 $("btn-rpg-next").addEventListener("click", rpgNext);
 $("btn-rpg-quit").addEventListener("click", () => $("dlg-quit").showModal());
 document.addEventListener("keydown", (event) => {
-  if ($("screen-rpg").hidden || rpgAnswered || event.ctrlKey || event.metaKey || event.altKey || $("dlg-quit").open || $("dlg-rpg-hint").open) return;
+  if ($("screen-rpg").hidden || rpgAnswered || event.ctrlKey || event.metaKey || event.altKey || $("dlg-quit").open || $("dlg-rpg-hint").open || $("dlg-volume").open) return;
   const index = Number(event.key) - 1;
   if (Number.isInteger(index) && index >= 0 && rpgQuestion && index < rpgQuestion.choices.length) rpgAnswer(index);
 });
