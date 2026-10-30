@@ -86,12 +86,6 @@ export function createMotion(model) {
     if (kind === 'wave') { lastSide = -lastSide; return { kind, t0: t, side: lastSide > 0 ? 'R' : 'L', up: 0.5, hold: 1.9, down: 0.5 }; }   // 片手を上げて、振る(右手・左手、かわりばんこ)
   }
 
-  // 見た目の動く量(ピクセル)をそろえる。画面の右を見る量は、右の目 25px・左の目 22px、左を見る量は、右の目 16px・左の目 25px
-  function gazeValues(look) {
-    const S = Math.abs(look) * 16;       // 見た目で、最大 16px
-    return look > 0 ? [S / 16, S / 25] : [-S / 25, -S / 22];   // 左向き: 右の目 16px・左の目 25px が最大 / 右向き: 右の目 25px・左の目 22px が最大
-  }
-
   // now: ミリ秒(performance.now() など)。返す: { bounce, sx, sy }(からだ全体の上への動き[キャンバス座標]・縦横のつぶれ)
   function update(now) {
     const t = now / 1000, V = model.values;
@@ -125,18 +119,18 @@ export function createMotion(model) {
     // ふだんの口:ゆっくり、小さい(−1)〜ふつう(0 のあたり)を行き来する。大小の差を大きく
     const idleAbs = -0.6 + 0.35 * Math.sin(t * Math.PI * 2 * 0.1);   // 口の動く回数をへらした:10秒で1往復だけ、ゆっくり
     // いつもの顔 = 寄り目(両目とも真ん中へ ±1)。白目で左右を見るときだけ、いったん 0 にもどしてから動かす
-    let brow = 0, tilt = 0, mouth = idleAbs, cross = kind === 'gaze' || kind === 'dart' ? 1 - k : 1;
+    let brow = 0, tilt = 0, mouth = idleAbs;
     if (kind === 'mouth') mouth = idleAbs * (1 - k) + k * (-1 + 1.8 * (0.5 + 0.5 * Math.sin(a * Math.PI * 2 * 0.8 - Math.PI / 2)));   // 口だけ ゆっくり ぱくぱく(ちいさい −1 〜 おおきい +0.8)
     if (x) {
       // 顔の傾き:左右で見た目の角度をそろえる(顔 +1 = 右へ 9.6°、−1 = 左へ 12.4°)。傾き 1 = 9°(右の限界 9.6° 以内)
       const ang = x.tilt * (x.dir ? dir : 1) * e * 9;
       brow = x.brow * e; tilt = ang > 0 ? ang / 9.6 : ang / 12.4; mouth = idleAbs * (1 - e) + x.mouth * e + (x.wobble ? x.wobble * e * Math.sin(a * Math.PI * 2 * 2.2) : 0);
-      if (x.look) cross = 1 - e;            // 視線を動かすときは、寄り目をいったん解く
       if (x.look) gaze = -Math.sign(tilt) * x.look * e;     // 傾けた側を見る(+ は画面の右)
     }
     if (x && x.lid) for (const i of I.lids) V[i] = -Math.max(b, x.lid * e);   // ねむい・うっとり:まぶたを、半分おろす
-    let [vr, vl] = gazeValues(gaze);
-    if (cross) { vr -= cross; vl += cross; }   // 寄り目:右の目は 画面の右(−)へ、左の目は 画面の左(+)へ = 両目とも真ん中へ
+    // いつもの顔は寄り目(右の目 −1・左の目 +1)。左右を見るときは、動かす目だけを動かし、もう一方は そのまま
+    //  画面の左(look>0)= 右の目だけ −1→+1(左の目は +1 のまま)/ 画面の右(look<0)= 左の目だけ +1→−1(右の目は −1 のまま)
+    let vr = -1 + 2 * Math.max(0, gaze), vl = 1 - 2 * Math.max(0, -gaze);
     vr = clamp1(vr); vl = clamp1(vl);
 
     // 腕と足
