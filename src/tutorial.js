@@ -111,7 +111,7 @@ const RELAX_SCENES = [
   },
   {
     title: "コツ 1",
-    caption: "上の段から順に そろえよう。上の木を育てたいときは そのすぐ下の木を押すよ。",
+    caption: "上の段から順に そろえよう。上の木を育てたい時は そのすぐ下の木を押すよ。",
     html: `<div class="tg"><div class="tg-grid">
       ${cell("s", "🌸", "🌸")}${cell("up", "🌿", "🌳")}${cell("s", "🌸", "🌸")}
       ${cell("s", "🌳", "🌳")}<span class="tg-c up tap"><b class="a">🌳</b><b class="b">🌸</b><span class="tg-finger">👆</span></span>${cell("s", "🌳", "🌳")}
@@ -179,28 +179,28 @@ PLAY_SCENES.push(
 const RPG_SCENES = [
   {
     title: "RPGクエスト",
-    caption: "5つのマスを 進んで ボスの ドラゴンを たおそう! ハートは 4つだよ。",
-    html: `<div class="tg">${seq([["🐭", "ザコ"], ["🎁", "たからばこ"], ["🦂", "つよい敵"], ["🐉", "ボス"]])}</div>`,
+    caption: "5つのマスを 進んで ボスの ドラゴンを 倒そう! ハートは 4つだよ。",
+    html: `<div class="tg">${seq([["🐭", "ザコ"], ["🎁", "宝箱"], ["🦂", "強い敵"], ["🐉", "ボス"]])}</div>`,
   },
   {
-    title: "たたかい",
-    caption: "正解すると 敵に こうげき! まちがえると ハートが 1つ へるよ。",
-    html: `<div class="tg">${seq([["✅", "正解"], ["⚔️", "こうげき"], ["❌", "まちがい"], ["💔", "ハート -1"]])}</div>`,
+    title: "戦い",
+    caption: "正解すると 敵に 攻撃! 間違えると ハートが 1つ 減るよ。",
+    html: `<div class="tg">${seq([["✅", "正解"], ["⚔️", "攻撃"], ["❌", "間違い"], ["💔", "ハート -1"]])}</div>`,
   },
   {
     title: "ヒント",
-    caption: "ヒントを見ると ハートが 半分 へるよ。ハートが 半分しか ないときは 見られないよ。",
+    caption: "ヒントを見ると ハートが 半分 減るよ。ハートが 半分しか ない時は 見られないよ。",
     html: `<div class="tg">${seq([["💡", "ヒント"], ["💔", "ハート 半分"]], "wide")}</div>`,
   },
   {
-    title: "たからばこ・ボス",
-    caption: "たからばこは 正解で ハートが 1つ 回復! ボスは 2回 正解すると たおせるよ。",
-    html: `<div class="tg">${seq([["🎁", "回復"], ["🐉", "ボス"], ["⚔️", "2回 こうげき"]])}</div>`,
+    title: "宝箱・ボス",
+    caption: "宝箱は 正解で ハートが 1つ 回復! ボスは 2回 正解すると 倒せるよ。",
+    html: `<div class="tg">${seq([["🎁", "回復"], ["🐉", "ボス"], ["⚔️", "2回 攻撃"]])}</div>`,
   },
   {
-    title: "まちがい・クリア",
-    caption: "まちがえた問題は まちがいノートに 入るよ。ハートが 0になる前に ドラゴンを たおそう!",
-    html: `<div class="tg">${seq([["❌", "まちがい"], ["📓", "ノート"], ["🏆", "クリア"]])}</div>`,
+    title: "間違い・クリア",
+    caption: "間違えた問題は 間違いノートに 入るよ。ハートが 0になる前に ドラゴンを 倒そう!",
+    html: `<div class="tg">${seq([["❌", "間違い"], ["📓", "ノート"], ["🏆", "クリア"]])}</div>`,
   },
 ];
 const SCENE_SETS = { play: PLAY_SCENES, relax: RELAX_SCENES, daily: DAILY_SCENES, review: REVIEW_SCENES, rpg: RPG_SCENES };
@@ -219,7 +219,7 @@ function render() {
   stage.replaceChildren();
   stage.insertAdjacentHTML("beforeend", scene.html);
   stage.className = `tut-stage tut-scene-${index + 1}`;
-  void stage.offsetWidth; // 動きを、はじめからやりなおす
+  void stage.offsetWidth; // 動きを、初めからやりなおす
   $("tut-dots").replaceChildren(
     ...SCENES.map((_, i) => {
       const dot = document.createElement("span");

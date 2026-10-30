@@ -50,7 +50,7 @@
         <button id="btn-settings" class="cover-gear" type="button" aria-label="設定"><span aria-hidden="true">⚙️</span> 設定</button>
       </header>
       <h1 class="sr-only">Flori_Quiz</h1>
-      <div class="hud" aria-label="いまの記録">
+      <div class="hud" aria-label="今の記録">
         <span class="hud-chip hud-rank"><small>ランク</small><span class="hv"><span id="hud-rank-icon" aria-hidden="true">🥚</span><b id="hud-rank">たまご</b></span></span>
         <span class="hud-chip"><small>総合得点</small><span class="hv">🏆 <b id="hud-total">0</b>点</span></span>
         <span class="hud-chip"><small>ご褒美の星</small><span class="hv">⭐ <b id="hud-stars">0</b>個</span></span>
@@ -87,7 +87,7 @@
         <button id="rf-prev" class="rf-prev" type="button">◀ 前へ</button>
         <button id="btn-rules-next" class="go-btn rf-next" type="button">次へ <span aria-hidden="true">▶</span></button>
       </div>
-      <button id="rf-skip" class="rf-skip" type="button">ルールを とばして モード選択へ</button>
+      <button id="rf-skip" class="rf-skip" type="button">ルールを 飛ばして モード選択へ</button>
     </section>
 
     <!-- クイズのモード選択(1つの画面で、ぜんぶ選ぶ) -->
@@ -144,11 +144,11 @@
         <button id="btn-tutorial-menu" class="tile t-tutorial" type="button"><span class="tile-icon" aria-hidden="true">🎬</span><span class="tile-text"><span class="tile-label">遊び方</span></span><span class="tile-dot" hidden></span></button>
       </div>
     </section>
-    <!-- まちがいノート -->
-    <section id="screen-note" class="screen dex-screen note-screen" aria-label="まちがいノート" hidden>
+    <!-- 間違いノート -->
+    <section id="screen-note" class="screen dex-screen note-screen" aria-label="間違いノート" hidden>
       <header class="screen-head">
         <button id="btn-note-back" class="back-btn" type="button"><span aria-hidden="true">↩</span> 戻る</button>
-        <h2 class="title">📓 まちがいノート</h2>
+        <h2 class="title">📓 間違いノート</h2>
       </header>
       <div class="dex-head-box">
         <img class="flori dex-flori" src="../assets/flori/m/wave_nikkori.png" alt="">
@@ -160,7 +160,7 @@
       <div id="note-filter" class="dex-filter" role="tablist" aria-label="分類"></div>
       <div id="note-grid" class="dex-grid"></div>
       <div class="note-buttons">
-        <button id="btn-note-review" class="btn btn-review" type="button">📖 ぜんぶ 復習する</button>
+        <button id="btn-note-review" class="btn btn-review" type="button">📖 全部 復習する</button>
         <button id="btn-note-guide" class="btn btn-plain" type="button">📘 ルール説明</button>
       </div>
     </section>
@@ -210,7 +210,7 @@
       </div>
       <div id="dress-reward" class="reward-card" hidden></div>
       <div id="dress-list" class="dress-list"></div>
-      <p class="note dress-note">制限時間を付けて遊ぶと ご褒美の星 ⭐ がもらえるヨ。いま ⭐ <span id="dress-stars">0</span>個</p>
+      <p class="note dress-note">制限時間を付けて遊ぶと ご褒美の星 ⭐ がもらえるヨ。今 ⭐ <span id="dress-stars">0</span>個</p>
     </section>
 
 
@@ -368,7 +368,7 @@
         <button id="btn-rpg-quit" class="back-btn" type="button"><span aria-hidden="true">↩</span> 戻る</button>
         <div id="rpg-hearts" class="title rpg-hearts" role="img" aria-label="ハート"></div>
       </header>
-      <ol id="rpg-path" class="rpg-path" aria-label="すすむ道"></ol>
+      <ol id="rpg-path" class="rpg-path" aria-label="進む道"></ol>
       <div id="rpg-field" class="rpg-field">
         <div class="rpg-hero"><img id="rpg-flori" class="flori rpg-flori" src="../assets/flori/m/body_wave.webp" alt="フロリ"></div>
         <div class="rpg-foe">
@@ -389,7 +389,7 @@
         <div id="rpg-after" class="rpg-after" hidden>
           <p id="rpg-verdict" class="rpg-verdict"></p>
           <p id="rpg-explain" class="rpg-explain"></p>
-          <button id="btn-rpg-next" class="rpg-next" type="button">つぎへ ▶</button>
+          <button id="btn-rpg-next" class="rpg-next" type="button">次へ ▶</button>
         </div>
       </div>
     </section>
@@ -404,7 +404,7 @@
         <img id="go-flori" class="flori go-flori" src="../assets/flori/m/wave_wrong.png" alt="目をつぶるフロリ">
       </div>
       <p id="go-message" class="go-message" role="status"></p>
-      <ol id="go-path" class="go-path" aria-label="すすんだ道"></ol>
+      <ol id="go-path" class="go-path" aria-label="進んだ道"></ol>
       <dl class="go-scores">
         <div><dt>進んだ マス</dt><dd id="go-reach"></dd></div>
         <div><dt>正解</dt><dd id="go-correct"></dd></div>
@@ -412,7 +412,7 @@
       <p id="go-note" class="go-note"></p>
       <div class="go-buttons">
         <button id="btn-go-again" class="btn btn-main" type="button">もう1度 挑戦</button>
-        <button id="btn-go-note" class="btn btn-review" type="button">まちがいノートを 見る</button>
+        <button id="btn-go-note" class="btn btn-review" type="button">間違いノートを 見る</button>
       </div>
     </section>
 
@@ -422,7 +422,7 @@
         <h2 id="r-title" class="title">結果発表!</h2>
       </header>
       <img class="flori flori-cover" src="../assets/flori/m/wave_nikkori.png" alt="にっこりするフロリ">
-      <p id="r-drum" class="r-drum" aria-live="polite">🥁 けっかは…?</p>
+      <p id="r-drum" class="r-drum" aria-live="polite">🥁 結果は…?</p>
       <div class="r-stars" id="r-stars" aria-hidden="true"></div>
       <div id="r-fx" class="r-fx" aria-hidden="true"></div>
       <p id="r-comment" class="bubble"></p>
@@ -484,7 +484,7 @@
 
   <dialog id="dlg-rpg-hint" class="dialog hint-dialog" aria-labelledby="dlg-rpg-hint-text">
     <img class="flori flori-small hint-dlg-flori" src="../assets/flori/m/wave_surprised.png" alt="">
-    <p id="dlg-rpg-hint-text">ヒントを 見ると ハートが <b>半分</b> へっちゃうヨ。<br>それでも 見るカナ?</p>
+    <p id="dlg-rpg-hint-text">ヒントを 見ると ハートが <b>半分</b> 減っちゃうヨ。<br>それでも 見るカナ?</p>
     <div class="buttons">
       <button id="btn-rpg-hint-no" class="btn btn-sub" type="button">やめとく</button>
       <button id="btn-rpg-hint-yes" class="btn btn-main" type="button" data-no-se="1">見る!</button>
@@ -516,7 +516,7 @@
     </div>
   </dialog>
   <dialog id="dlg-garden-reset" class="dialog" aria-labelledby="dlg-garden-reset-text">
-    <p id="dlg-garden-reset-text">🔄 <b>リセット</b>すると 木の配置が 新しく変わります。いまの育ち具合は なくなります。</p>
+    <p id="dlg-garden-reset-text">🔄 <b>リセット</b>すると 木の配置が 新しく変わります。今の育ち具合は なくなります。</p>
     <div class="buttons buttons-choice">
       <button id="btn-garden-reset-yes" class="btn btn-main btn-mid-big" type="button">リセットする</button>
       <button id="btn-garden-reset-no" class="btn btn-plain btn-small" type="button">やめる</button>
@@ -531,11 +531,11 @@
   </dialog>
   <dialog id="dlg-dex" class="dialog dex-dialog" aria-labelledby="dex-big">
     <div id="dex-big" class="dex-big"></div>
-    <p class="dex-back-hint">カードを押すと もどるヨ</p>
+    <p class="dex-back-hint">カードを押すと 戻るヨ</p>
   </dialog>
   <dialog id="dlg-note" class="dialog dex-dialog note-dialog" aria-labelledby="note-big">
     <div id="note-big" class="dex-big"></div>
-    <p class="dex-back-hint">ノートを押すと もどるヨ</p>
+    <p class="dex-back-hint">ノートを押すと 戻るヨ</p>
   </dialog>
   <dialog id="dlg-ranks"class="dialog ranks-dialog" aria-labelledby="ranks-title">
     <h3 id="ranks-title" class="ranks-title">🏅 ランクの一覧</h3>

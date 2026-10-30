@@ -50,7 +50,7 @@ const VS = [
   },
   {
     title: "② 3回戦で 勝負",
-    caption: "あとの回戦ほど 点が 大きいよ。合計点が 1番 高い人の 勝ち!",
+    caption: "後の回戦ほど 点が 大きいよ。合計点が 1番 高い人の 勝ち!",
     html: `<div class="rf-rounds">${ROUND(1)}${ROUND(2)}${ROUND(3)}</div><span class="rf-crown">👑 合計点が 1番の人が 勝ち!</span>`,
   },
 ];
@@ -76,33 +76,33 @@ const HARD = [
 const RPG = [
   {
     title: "① 5つの マス",
-    caption: "5つのマスを 進んで ボスの ドラゴンを たおそう!",
-    html: SEQ([["🐭", "ザコ"], ["🎁", "たからばこ"], ["🦂", "つよい敵"], ["🐉", "ボス"]]),
+    caption: "5つのマスを 進んで ボスの ドラゴンを 倒そう!",
+    html: SEQ([["🐭", "ザコ"], ["🎁", "宝箱"], ["🦂", "強い敵"], ["🐉", "ボス"]]),
   },
   {
     title: "② ハートは 4つ",
-    caption: "ハートは 4つ。まちがえると 1つ へって、0に なると ゲームオーバーだよ。",
-    html: STACK(HEARTS([HEART, HEART, HEART, HEART], "rf-lose"), '<span class="rf-note">まちがえると… ハート -1</span>'),
+    caption: "ハートは 4つ。間違えると 1つ 減って、0に なると ゲームオーバーだよ。",
+    html: STACK(HEARTS([HEART, HEART, HEART, HEART], "rf-lose"), '<span class="rf-note">間違えると… ハート -1</span>'),
   },
   {
-    title: "③ たたかい",
-    caption: "正解すると 敵に こうげき! まちがえると 敵に やられて ハートが 1つ へるよ。",
-    html: SEQ([["✅", "正解"], ["⚔️", "こうげき"], ["❌", "まちがい"], ["💔", "ハート -1"]]),
+    title: "③ 戦い",
+    caption: "正解すると 敵に 攻撃! 間違えると 敵に やられて ハートが 1つ 減るよ。",
+    html: SEQ([["✅", "正解"], ["⚔️", "攻撃"], ["❌", "間違い"], ["💔", "ハート -1"]]),
   },
   {
     title: "④ ヒント",
-    caption: "ヒントを 見ると ハートが 半分 へるよ。ハートが 半分しか ないときは 見られないよ。",
+    caption: "ヒントを 見ると ハートが 半分 減るよ。ハートが 半分しか ない時は 見られないよ。",
     html: STACK(SEQ([["💡", "ヒントを 見る"]]), HEARTS([HEART, HEART, HEART, HEART_HALF]), '<span class="rf-note">ハート 半分</span>'),
   },
   {
-    title: "⑤ たからばこ・ボス",
-    caption: "たからばこは 正解で ハートが 1つ 回復! ボスは 2回 正解すると たおせるよ。",
-    html: SEQ([["🎁", "回復"], ["🐉", "ボス"], ["⚔️", "2回 こうげき"]]),
+    title: "⑤ 宝箱・ボス",
+    caption: "宝箱は 正解で ハートが 1つ 回復! ボスは 2回 正解すると 倒せるよ。",
+    html: SEQ([["🎁", "回復"], ["🐉", "ボス"], ["⚔️", "2回 攻撃"]]),
   },
   {
-    title: "⑥ まちがい・クリア",
-    caption: "まちがえた問題は まちがいノートに 入るよ。ハートが 0に なる前に ドラゴンを たおそう!",
-    html: SEQ([["❌", "まちがい"], ["📓", "ノート"], ["🏆", "クリア"]]),
+    title: "⑥ 間違い・クリア",
+    caption: "間違えた問題は 間違いノートに 入るよ。ハートが 0に なる前に ドラゴンを 倒そう!",
+    html: SEQ([["❌", "間違い"], ["📓", "ノート"], ["🏆", "クリア"]]),
   },
 ];
 
@@ -135,7 +135,7 @@ function render() {
   stage.replaceChildren();
   stage.insertAdjacentHTML("beforeend", scene.html);
   stage.className = `rf-stage rf-s${index + 1}`;
-  void stage.offsetWidth; // 動きを、はじめからやりなおす
+  void stage.offsetWidth; // 動きを、初めからやりなおす
   $("rf-dots").replaceChildren(
     ...SCENES.map((item, i) => {
       const dot = document.createElement("span");

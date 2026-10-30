@@ -45,16 +45,16 @@ const SPEC = [
   ["timedPerfect8", "時間内パーフェクト8回", "timedPerfect", 8], ["daily70", "毎日1問70日", "daily", 70], ["hardPerfect15", "難しいパーフェクト15回", "perfectHard", 15],
   ["versus70", "70回対戦", "versus", 70], ["timed40", "時間チャレンジ40回", "timed", 40], ["play250", "250回プレイ", "plays", 250],
   ["streak70", "毎日1問70日連続", "streak", 70], ["perfect60", "パーフェクト60回", "perfect", 60], ["play300", "300回プレイ", "plays", 300],
-  // RPG(rpgClear=クリアした回数 rpgPerfect=ノーダメージでクリアした回数 rpgBoss=ボス戦まで進んだ回数 rpgChest=たからばこの問題に正解した数)
+  // RPG(rpgClear=クリアした回数 rpgPerfect=ノーダメージでクリアした回数 rpgBoss=ボス戦まで進んだ回数 rpgChest=宝箱の問題に正解した数)
   ["rpgClear1", "RPG制覇", "rpgClear", 1], ["rpgClear3", "RPG制覇3回", "rpgClear", 3], ["rpgClear5", "RPG制覇5回", "rpgClear", 5],
   ["rpgClear10", "RPG制覇10回", "rpgClear", 10], ["rpgClear20", "RPG制覇20回", "rpgClear", 20], ["rpgClear30", "RPG制覇30回", "rpgClear", 30],
   ["rpgPerfect1", "RPGノーダメージ制覇", "rpgPerfect", 1], ["rpgPerfect3", "RPGノーダメージ制覇3回", "rpgPerfect", 3],
   ["rpgPerfect5", "RPGノーダメージ制覇5回", "rpgPerfect", 5], ["rpgPerfect10", "RPGノーダメージ制覇10回", "rpgPerfect", 10],
   ["rpgBoss1", "RPGボス戦に初挑戦", "rpgBoss", 1], ["rpgBoss3", "RPGボス戦に3回挑戦", "rpgBoss", 3], ["rpgBoss5", "RPGボス戦に5回挑戦", "rpgBoss", 5],
   ["rpgBoss10", "RPGボス戦に10回挑戦", "rpgBoss", 10], ["rpgBoss20", "RPGボス戦に20回挑戦", "rpgBoss", 20],
-  ["rpgChest3", "RPGたからばこ3個", "rpgChest", 3], ["rpgChest5", "RPGたからばこ5個", "rpgChest", 5],
-  ["rpgChest10", "RPGたからばこ10個", "rpgChest", 10], ["rpgChest20", "RPGたからばこ20個", "rpgChest", 20],
-  ["rpgChest30", "RPGたからばこ30個", "rpgChest", 30],
+  ["rpgChest3", "RPG宝箱3個", "rpgChest", 3], ["rpgChest5", "RPG宝箱5個", "rpgChest", 5],
+  ["rpgChest10", "RPG宝箱10個", "rpgChest", 10], ["rpgChest20", "RPG宝箱20個", "rpgChest", 20],
+  ["rpgChest30", "RPG宝箱30個", "rpgChest", 30],
   // 着せ替えを、ゆるやかに、少しずつ増やすための、あとからの条件(dress-unlocks.js で使う)
   ["play6", "6回プレイ", "plays", 6], ["play15", "15回プレイ", "plays", 15], ["play40", "40回プレイ", "plays", 40],
   ["play65", "65回プレイ", "plays", 65], ["play90", "90回プレイ", "plays", 90], ["play110", "110回プレイ", "plays", 110],
@@ -95,8 +95,8 @@ const SPEC = [
   ["rpgPerfect4", "RPGノーダメージ制覇4回", "rpgPerfect", 4], ["rpgPerfect7", "RPGノーダメージ制覇7回", "rpgPerfect", 7], ["rpgPerfect12", "RPGノーダメージ制覇12回", "rpgPerfect", 12],
   ["rpgPerfect15", "RPGノーダメージ制覇15回", "rpgPerfect", 15], ["rpgPerfect20", "RPGノーダメージ制覇20回", "rpgPerfect", 20], ["rpgPerfect30", "RPGノーダメージ制覇30回", "rpgPerfect", 30],
   ["rpgBoss80", "RPGボス戦に80回挑戦", "rpgBoss", 80], ["rpgBoss100", "RPGボス戦に100回挑戦", "rpgBoss", 100], ["rpgBoss125", "RPGボス戦に125回挑戦", "rpgBoss", 125],
-  ["rpgBoss150", "RPGボス戦に150回挑戦", "rpgBoss", 150], ["rpgChest75", "RPGたからばこ75個", "rpgChest", 75], ["rpgChest125", "RPGたからばこ125個", "rpgChest", 125],
-  ["rpgChest150", "RPGたからばこ150個", "rpgChest", 150], ["rpgChest200", "RPGたからばこ200個", "rpgChest", 200], ["rpgChest250", "RPGたからばこ250個", "rpgChest", 250],
+  ["rpgBoss150", "RPGボス戦に150回挑戦", "rpgBoss", 150], ["rpgChest75", "RPG宝箱75個", "rpgChest", 75], ["rpgChest125", "RPG宝箱125個", "rpgChest", 125],
+  ["rpgChest150", "RPG宝箱150個", "rpgChest", 150], ["rpgChest200", "RPG宝箱200個", "rpgChest", 200], ["rpgChest250", "RPG宝箱250個", "rpgChest", 250],
 ];
 
 const COUNT = {
@@ -189,7 +189,7 @@ const HEAD = [
   [6, "ベレー帽", { x: 53, y: 2.5, w: 59, sy: 0.7 }],
   [14, "小鳥", { x: 50, y: 0.7, w: 22 }],
   [15, "ひよこ", { x: 50, y: 0.8, w: 22 }],
-  [24, "星のかざり", { x: 66.6, y: 7.8, w: 36 }],
+  [24, "星の飾り", { x: 66.6, y: 7.8, w: 36 }],
   [23, "ひまわり", { x: 79, y: 11, w: 30 }],
   [11, "猫耳", { x: 55.6, y: 1.2, w: 55, sy: 0.75 }],
   [12, "うさぎ耳", { x: 51.9, y: -4.7, w: 51.1, sy: 0.8, sx: 1.25 }],
@@ -264,19 +264,19 @@ const EXTRA_DECOR = [
   ["face", 12, "音符マーク", "note", { x: 77, y: 37, w: 13 }],
   ["head", 26, "四つ葉のクローバー", "clover", { x: 73, y: 7, w: 21 }],
   ["body", 39, "ダイヤのブローチ", "diamond", { x: 62, y: 64, w: 20 }],
-  ["head", 27, "さくらの花", "sakura", { x: 74, y: 8, w: 21 }],
+  ["head", 27, "桜の花", "sakura", { x: 74, y: 8, w: 21 }],
   ["body", 40, "ハートのブローチ", "heart", { x: 62, y: 64, w: 18 }],
   ["head", 28, "三日月", "moon", { x: 68, y: 7, w: 23 }],
   ["body", 41, "風船", "balloon", { x: 9.0, y: 17.9, w: 46 }],
-  ["body", 42, "かぎのキーホルダー", "key", { x: 52, y: 61, w: 17 }],
-  ["body", 43, "虫めがね", "magnifier", { x: 7.8, y: 23.3, w: 42, r: 45 }],
+  ["body", 42, "鍵のキーホルダー", "key", { x: 52, y: 61, w: 17 }],
+  ["body", 43, "虫眼鏡", "magnifier", { x: 7.8, y: 23.3, w: 42, r: 45 }],
   ["body", 44, "地球儀", "globe", { x: 9.0, y: 16.6, w: 48 }],
   ["body", 45, "開いた本", "book", { x: 9.0, y: 31.2, w: 48 }],
   ["body", 46, "ゴールのはた", "flag", { x: -8.6, y: 25.5, w: 44, sx: -1 }],
   ["body", 47, "トロフィー", "trophy", { x: 9.0, y: 16.5, w: 58 }],
   ["head", 29, "シルクハット", "tophat", { x: 52.5, y: 0.5, w: 44 }],
   // 顔のかざり13こ(ChatGPT。位置は、顔の画面に合わせた。目:x≈33%・69%、y≈29%)
-  ["face", 13, "ねこの鼻", "fp_nose", { x: 51.0, y: 32.0, w: 7 }],
+  ["face", 13, "猫の鼻", "fp_nose", { x: 51.0, y: 32.0, w: 7 }],
   ["face", 14, "ほっぺの花", "fp_flowercheek", { x: 51.0, y: 36.0, w: 52 }],
   ["face", 15, "ほっぺの星", "fp_starcheek", { x: 51.0, y: 36.0, w: 52 }],
   ["face", 16, "そばかす", "fp_freckles", { x: 51.0, y: 35.5, w: 57 }],
@@ -306,7 +306,7 @@ const extraOf = (slot) =>
 
 // あとから足した色・背景(TRIAL)。背景は、着せ替えの画面の枠だけで、ほかの画面は、かわらない
 const TRIAL = [
-  { id: "skyblue", name: "そらいろ", tint: "#4aa8ea", noTheme: true, color: { hue: 202, gain: 3, minSat: 0.95, boost: 1.5 }, stage: "linear-gradient(160deg, #e9f6ff, #6ab9f2)" },
+  { id: "skyblue", name: "空色", tint: "#4aa8ea", noTheme: true, color: { hue: 202, gain: 3, minSat: 0.95, boost: 1.5 }, stage: "linear-gradient(160deg, #e9f6ff, #6ab9f2)" },
   { id: "brown", name: "チョコブラウン", tint: "#8a5a3c", noColor: true, stage: "linear-gradient(160deg, #f4e6d8, #b98a62)" },
   { id: "wine", name: "ワインレッド", tint: "#a8405c", color: { hue: 344, gain: 2.4, minSat: 0.6, lmul: 0.7 }, stage: "linear-gradient(160deg, #f6e0e6, #b35a72)" },
   { id: "sunset", name: "夕焼け", tint: "#f59a7a", color: { sunset: true }, stage: "linear-gradient(180deg, #ffb3c8 0%, #ffc58a 45%, #c9a2f0 100%)" },
@@ -323,12 +323,12 @@ const TRIAL = [
   { id: "candy", name: "キャンディ", tint: "#f08ab8", color: { grad: ["#ffb0d0", "#e8c0f0", "#a8dcff"], gsat: 1 }, stage: "linear-gradient(180deg, #ffbcd6 0%, #ecc8f4 50%, #b0e0ff 100%)" },
   { id: "gingham", name: "ギンガムチェック", tint: "#f0809a", color: { pat: "gingham" }, stage: "repeating-linear-gradient(0deg, rgba(255,160,185,.45) 0 34px, transparent 34px 68px), repeating-linear-gradient(90deg, rgba(255,160,185,.45) 0 34px, transparent 34px 68px), #fff" },
   { id: "hearts", name: "ハート", tint: "#f06a94", color: { pat: "hearts" }, stage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23fff6f9'/%3E%3Cpath d='M32 48 C10 33 14 15 25 16 C29 16 31 19 32 22 C33 19 35 16 39 16 C50 15 54 33 32 48Z' fill='%23ffb0c8'/%3E%3C/svg%3E\") 0 0 / 64px 64px" },
-  { id: "border", name: "ななめボーダー", tint: "#4cc0a0", color: { pat: "border" }, stage: "repeating-linear-gradient(45deg, #bdeedd 0 30px, #ffffff 30px 100px)" },
+  { id: "border", name: "斜めボーダー", tint: "#4cc0a0", color: { pat: "border" }, stage: "repeating-linear-gradient(45deg, #bdeedd 0 30px, #ffffff 30px 100px)" },
   { id: "checker", name: "市松", tint: "#6a7ac0", color: { pat: "checker" }, stage: "conic-gradient(#c9d0f0 25%, #ffffff 0 50%, #c9d0f0 0 75%, #ffffff 0) 0 0 / 104px 104px" },
-  { id: "wave", name: "なみ", tint: "#4aa0e0", color: { pat: "wave" }, stage: "repeating-linear-gradient(0deg, #cfe8fb 0 24px, #ffffff 24px 84px)" },
+  { id: "wave", name: "波", tint: "#4aa0e0", color: { pat: "wave" }, stage: "repeating-linear-gradient(0deg, #cfe8fb 0 24px, #ffffff 24px 84px)" },
   { id: "diamond", name: "ひし形", tint: "#a078d0", color: { pat: "diamond" }, stage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104' height='104'%3E%3Crect width='104' height='104' fill='%23fff'/%3E%3Cpath d='M52 26 L74 52 L52 78 L30 52Z' fill='%23e6d8f6'/%3E%3C/svg%3E\") 0 0 / 104px 104px" },
   { id: "leaves", name: "葉っぱ", tint: "#6ab870", color: { pat: "leaves" }, stage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23fbfdf0'/%3E%3Cellipse cx='36' cy='36' rx='22' ry='9' transform='rotate%28-35 36 36%29' fill='%23b8e0a8'/%3E%3Cellipse cx='88' cy='88' rx='22' ry='9' transform='rotate%28-35 88 88%29' fill='%23b8e0a8'/%3E%3C/svg%3E\") 0 0 / 120px 120px" },
-  { id: "rdots", name: "にじ色の水玉", tint: "#e07ab0", color: { pat: "rainbowdots" }, stage: "radial-gradient(circle, #ff9aa8 0 11px, transparent 12px) 0 0 / 120px 120px, radial-gradient(circle, #ffd04a 0 11px, transparent 12px) 60px 0 / 120px 120px, radial-gradient(circle, #8ad88a 0 11px, transparent 12px) 0 60px / 120px 120px, radial-gradient(circle, #7ab8ff 0 11px, transparent 12px) 60px 60px / 120px 120px, #fff" },
+  { id: "rdots", name: "虹色の水玉", tint: "#e07ab0", color: { pat: "rainbowdots" }, stage: "radial-gradient(circle, #ff9aa8 0 11px, transparent 12px) 0 0 / 120px 120px, radial-gradient(circle, #ffd04a 0 11px, transparent 12px) 60px 0 / 120px 120px, radial-gradient(circle, #8ad88a 0 11px, transparent 12px) 0 60px / 120px 120px, radial-gradient(circle, #7ab8ff 0 11px, transparent 12px) 60px 60px / 120px 120px, #fff" },
   { id: "water", name: "水彩", tint: "#a0b8e8", color: { pat: "watercolor" }, stage: "radial-gradient(circle at 20% 25%, rgba(255,170,200,.7), transparent 45%), radial-gradient(circle at 80% 30%, rgba(150,200,255,.7), transparent 45%), radial-gradient(circle at 50% 85%, rgba(255,230,150,.7), transparent 50%), #fff" },
   { id: "clouds", name: "くも", tint: "#7ab8f0", noColor: true, stage: "radial-gradient(ellipse 60px 22px at 20% 24%, #fff 0 100%, transparent 100%), radial-gradient(ellipse 44px 18px at 28% 20%, #fff 0 100%, transparent 100%), radial-gradient(ellipse 66px 24px at 74% 40%, #fff 0 100%, transparent 100%), radial-gradient(ellipse 46px 18px at 66% 36%, #fff 0 100%, transparent 100%), radial-gradient(ellipse 56px 20px at 38% 74%, #fff 0 100%, transparent 100%), linear-gradient(180deg, #7ac4f8, #cfeaff)" },
 ];
@@ -361,8 +361,8 @@ export const THEMES = [
 ];
 // 着せ替えの一覧は、系統ごとにまとめて並べる(もらえる順とは別。もらえる順は、assignUnlocks の表のまま)。
 // 頭:帽子 → 頭の上(耳・冠・輪・ふたば・小鳥・ひよこ・アンテナ)→ 右上の飾り(花・リボンなど)
-// 体:首まわり → 胸(ブローチ・バッジ)→ ポーチ・バッグ → 手に持つもの
-// 顔:目のまわり(メガネ・涙・汗)→ ほっぺ(ハート・ぐるぐる・線・ばんそうこう)→ マーク(ハート・音符・怒り)
+// 体:首周り → 胸(ブローチ・バッジ)→ ポーチ・バッグ → 手に持つもの
+// 顔:目の周り(メガネ・涙・汗)→ ほっぺ(ハート・ぐるぐる・線・ばんそうこう)→ マーク(ハート・音符・怒り)
 const DISPLAY_ORDER = {
   head: [
     ["head04", "head05", "head06", "head22", "head25", "head07", "head17", "head09", "head10", "head29"], // 帽子
@@ -370,24 +370,24 @@ const DISPLAY_ORDER = {
     ["head01", "head02", "head19", "head20", "head23", "head24", "head26", "head27", "head28"], // 右上の飾り
   ],
   body: [
-    ["body01", "body02", "body03", "body04", "body19", "body12", "body18", "body23", "body31", "body42"], // 首まわり(かぎのキーホルダーも)
+    ["body01", "body02", "body03", "body04", "body19", "body12", "body18", "body23", "body31", "body42"], // 首周り(鍵のキーホルダーも)
     ["body15", "body14", "body13", "body38", "body39", "body40", "body26", "body30"], // 胸
     ["body07", "body20", "body21", "body25", "body08", "body28", "body29", "body24"], // ポーチ・バッグ
     ["body33", "body34", "body27", "body41", "body43", "body44", "body45", "body46", "body47"], // 手に持つもの
   ],
   face: [
-    ["face09", "face23", "face24", "face25", "face21", "face22", "face05"], // 目のまわり(メガネ・サングラス・眼帯・ぐるぐる目・ハートの目・涙)
+    ["face09", "face23", "face24", "face25", "face21", "face22", "face05"], // 目の周り(メガネ・サングラス・眼帯・ぐるぐる目・ハートの目・涙)
     ["face01", "face03", "face08", "face06", "face16", "face15", "face14", "face20"], // ほっぺ(猫のひげも)
-    ["face13", "face19", "face18", "face11", "face12", "face10", "face17", "face04"], // 顔まわり(ねこの鼻・ちょびひげ・舌ぺろ・マーク類・汗)
+    ["face13", "face19", "face18", "face11", "face12", "face10", "face17", "face04"], // 顔周り(猫の鼻・ちょびひげ・舌ぺろ・マーク類・汗)
   ],
 };
 // 系統ごとの、見出し(一覧に、線と文字で出す。どのあたりに着けるものかの説明)
 const GROUP_LABELS = {
-  head: ["帽子(頭にかぶる)", "頭の上", "頭の右上(かざる)"],
-  body: ["首まわり", "胸(ブローチ・バッジ)", "おなか・腰(ポーチ・バッグ)", "手に持つ(左手)"],
-  face: ["目のまわり", "ほっぺ", "顔まわり"],
-  color: ["ベーシックカラー", "ひかる色", "グラデーション・自然", "もよう"],
-  theme: ["ベーシックカラー", "ひかる色", "グラデーション・自然", "もよう"],
+  head: ["帽子(頭にかぶる)", "頭の上", "頭の右上(飾る)"],
+  body: ["首周り", "胸(ブローチ・バッジ)", "お腹・腰(ポーチ・バッグ)", "手に持つ(左手)"],
+  face: ["目の周り", "ほっぺ", "顔周り"],
+  color: ["ベーシックカラー", "光る色", "グラデーション・自然", "模様"],
+  theme: ["ベーシックカラー", "光る色", "グラデーション・自然", "模様"],
 };
 export const groupLabel = (slot, group) => GROUP_LABELS[slot]?.[group] ?? "";
 // 系統ごとに並べる。item.group に、系統の番号を入れる(一覧で、系統が変わるごとに改行するため)
@@ -508,7 +508,7 @@ export const RANKS = [
   { min: 0, icon: "🥚", name: "たまご" },
   { min: 10, icon: "🐣", name: "ひよこ" },
   { min: 20, icon: "🐥", name: "ひよっこ探検家" },
-  { min: 30, icon: "🐦", name: "ことり博士" },
+  { min: 30, icon: "🐦", name: "小鳥博士" },
   { min: 40, icon: "🦊", name: "きつね名人" },
   { min: 50, icon: "🐬", name: "イルカ先生" },
   { min: 60, icon: "🦉", name: "ふくろう博士" },

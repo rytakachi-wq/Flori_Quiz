@@ -80,7 +80,7 @@ let versusPlayers = 2; // 皆で対戦する人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
-  if (name === "rpg") return mode === "rpg" && play?.current?.kind === "boss" ? "rpgboss" : "rpg"; // 画面を出すたびに曲が切りかわって、はじめから鳴りなおすのを防ぐ
+  if (name === "rpg") return mode === "rpg" && play?.current?.kind === "boss" ? "rpgboss" : "rpg"; // 画面を出すたびに曲が切りかわって、初めから鳴りなおすのを防ぐ
   if (name === "gameover") return "gameover"; // BGMはなし(ゲームオーバーの音だけ)
   if (name === "question") {
     return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
@@ -291,7 +291,7 @@ function announce(text, jingle, then, image) {
   applyFloriSrc(flori, image);
   flori.hidden = false;
   flori.style.animation = "none";
-  void flori.offsetWidth; // フロリの登場を、はじめから動かす
+  void flori.offsetWidth; // フロリの登場を、初めから動かす
   flori.style.animation = "";
   $("announce").hidden = false;
   const length = Math.max(1600, playJingle(jingle) + 300);
@@ -491,7 +491,7 @@ function coachLine(asked, total, leveledUp) {
     if (last) return { text: "ラスト 1問! がんばれー!" };
     if (total >= 5 && asked === Math.floor(total / 2)) return { text: "ちょうど 半分! フレーフレー!" };
     if (total >= 5 && asked === total - 2) return { text: "あと ちょっと~!" };
-    return lastCorrect === false ? { text: "どんまい! 次は いけるヨ!" } : { text: "その調子 その調子!" };
+    return lastCorrect === false ? { text: "どんまい! 次は 行けるヨ!" } : { text: "その調子 その調子!" };
   })();
   if (leveledUp && mode !== "oni") return { text: "難しくなりました!", surprised: true, levelup: true };
   return base;
@@ -544,7 +544,7 @@ function startTimer() {
       if (!answered) {
         playSe("whistle"); // 時間切れ
         timedOut = true;
-        answer(current.type === "choice" ? -1 : ""); // 時間切れ=まちがい
+        answer(current.type === "choice" ? -1 : ""); // 時間切れ=間違い
       }
     }
   }, 100);
@@ -642,7 +642,7 @@ function startSpeech(index) {
 }
 function speak(text) {
   if (!canSpeak || !readableText(text)) return;
-  // 漢字は、ふりがな(辞書の読み)に置きかえて、読みまちがいを減らす
+  // 漢字は、ふりがな(辞書の読み)に置きかえて、読み間違いを減らす
   speechSentences = speechOf(text).replace(/□/g, "なにか").replace(/\n/g, "。").match(/[^。]+。?/g) ?? [];
   speechSentences = speechSentences.filter((sentence) => sentence.replace(/[。\s]/g, "") !== "");
   startSpeech(0);
@@ -862,7 +862,7 @@ function showResult() {
   // 総合得点は、初めて正解した問題の分だけ、ふえる。
   const gainText = () => {
     const gained = currentTotal() - before;
-    return gained > 0 ? `総合得点が${gained}点増えたヨ!` : "総合得点は 新しく正解したり ヒントなしで正解しなおしたときだけ増えるヨ。";
+    return gained > 0 ? `総合得点が${gained}点増えたヨ!` : "総合得点は 新しく正解したり ヒントなしで正解し直した時だけ増えるヨ。";
   };
   if (versus) {
     // 皆で対戦した結果は、1人で遊ぶ記録(遊んだ回数、正解率、総合得点など)には入れない。
@@ -902,18 +902,18 @@ function showResult() {
     setNote.textContent = `オニ問題に正解したことがあるのは、${oniDone} / ${oniIds.size}問だヨ。`;
     $("btn-again").textContent = "もう1度挑戦";
   } else if (adventure) {
-    // RPGは、成績の「遊んだ回数」「正解率」「総合得点」には入れない(この遊びだけの記録を、端末の中に残す)。まちがえた問題は、まちがいノートに入る。
+    // RPGは、成績の「遊んだ回数」「正解率」「総合得点」には入れない(この遊びだけの記録を、端末の中に残す)。間違えた問題は、間違いノートに入る。
     recordWrong(result.answers);
     recordRpgResult(result);
     const saved = recordAdventure(result);
-    $("r-title").textContent = result.cleared ? "クエスト クリア! 🏆" : "ざんねん… ゲームオーバー";
+    $("r-title").textContent = result.cleared ? "クエスト クリア! 🏆" : "残念… ゲームオーバー";
     $("r-best-row").hidden = false;
     $("r-best").textContent = adventureBestText();
     $("r-record").hidden = !saved.isRecord;
     const wrongCount = new Set(result.answers.filter((a) => !a.correct || a.hinted).map((a) => a.id)).size; // 同じ問題は、1問と数える
     setNote.textContent = result.cleared
-      ? `ハート${heartsText(result.lives)} のこして クリア!${wrongCount > 0 ? `まちがえた${wrongCount}問は まちがいノートに 入ったヨ。` : ""}`
-      : `${result.stage}マス目まで 進んだヨ。${wrongCount > 0 ? `まちがえた${wrongCount}問は まちがいノートに 入ったヨ。` : ""}`;
+      ? `ハート${heartsText(result.lives)} のこして クリア!${wrongCount > 0 ? `間違えた${wrongCount}問は 間違いノートに 入ったヨ。` : ""}`
+      : `${result.stage}マス目まで 進んだヨ。${wrongCount > 0 ? `間違えた${wrongCount}問は 間違いノートに 入ったヨ。` : ""}`;
     $("btn-again").textContent = "もう1度挑戦";
   } else if (mode === "hard") {
     const saved = recordRound({ ...result, mode: "hard", timed: timeLimit });
@@ -1075,12 +1075,12 @@ function heartsText(n) {
   return Number.isInteger(n) ? `${n}つ` : `${Math.floor(n)}つと半分`;
 }
 
-// RPGの記録(着せ替えの解放に使う):クリア・ノーダメージ・ボス戦まで進んだ・たからばこ
+// RPGの記録(着せ替えの解放に使う):クリア・ノーダメージ・ボス戦まで進んだ・宝箱
 function recordRpgResult(result) {
   recordRpg({ cleared: result.cleared, noDamage: result.lives === RPG_LIVES, boss: result.stage >= RPG_STAGES.length - 1, chests: result.chests ?? 0 });
 }
 function adventureComment(result) {
-  if (result.cleared) return result.lives === RPG_LIVES ? "ノーダメージ クリア! すごいヨ!" : "ドラゴンを たおした! おめでとう!";
+  if (result.cleared) return result.lives === RPG_LIVES ? "ノーダメージ クリア! すごいヨ!" : "ドラゴンを 倒した! おめでとう!";
   return result.stage >= 3 ? "惜しい! ボスの すぐ近くまで 来たヨ!" : "ナイスチャレンジ! また 冒険に 出よう!";
 }
 
@@ -1182,7 +1182,7 @@ function openRankInfo() {
       item.innerHTML = '<span class="rk-icon" aria-hidden="true"></span><span class="rk-name"></span><span class="rk-min"></span>';
       item.querySelector(".rk-icon").textContent = rank.icon;
       item.querySelector(".rk-name").textContent = rank.name;
-      item.querySelector(".rk-min").textContent = (rank.min === 100 ? "〜100点" : `${rank.min}点〜`) + (rank.min === now.min ? " いま!" : "");
+      item.querySelector(".rk-min").textContent = (rank.min === 100 ? "〜100点" : `${rank.min}点〜`) + (rank.min === now.min ? " 今!" : "");
       return item;
     }),
   );
@@ -1375,14 +1375,14 @@ function renderSetup() {
     },
   );
   $("setup-note").textContent = versus
-    ? "1台の画面で 順番に 答えるよ。毎回 はじめから。"
+    ? "1台の画面で 順番に 答えるよ。毎回 初めから。"
     : pick.level === "rpg"
-      ? "5つのマスを ハート4つで 進もう! ボスの ドラゴンを たおせ!"
+      ? "5つのマスを ハート4つで 進もう! ボスの ドラゴンを 倒せ!"
       : hasCourseKey(courseKey())
         ? "💾 続きから 始まるよ!"
         : anySavedCourse()
-          ? "はじめから 始まるよ。(💾 = 続きあり)"
-        : "はじめから 始まるよ。じっくり 考えよう!";
+          ? "初めから 始まるよ。(💾 = 続きあり)"
+        : "初めから 始まるよ。じっくり 考えよう!";
   renderRewardCard($("flow-reward"));
 }
 
@@ -1412,7 +1412,7 @@ function renderConfirm() {
     ["📚", "分類", `${GROUP_ICON[pick.group]} ${pick.group}`, "c-tan"],
     versus ? ["🏁", "進み方", "3回戦で 対戦", "c-green"] : ["🎮", "遊び方", LEVEL_TEXT[pick.level], "c-orange"],
     ["⏱", "制限時間", pick.time ? "つける(30秒)" : "なし", pick.time ? "c-red" : "c-gray"],
-    saved ? ["💾", "続き", "前の続きから 遊ぶ", "c-yellow"] : ["🆕", "続き", "はじめから 遊ぶ", "c-yellow"],
+    saved ? ["💾", "続き", "前の続きから 遊ぶ", "c-yellow"] : ["🆕", "続き", "初めから 遊ぶ", "c-yellow"],
   ];
   $("confirm-list").replaceChildren(
     ...rows.map(([icon, label, value, color]) => {
@@ -1637,7 +1637,7 @@ function openDaily() {
 $("btn-daily").addEventListener("click", openDaily);
 $("btn-info-close").addEventListener("click", () => $("dlg-info").close());
 // 復習には制限時間は付けない(ムービーで説明してから始める)
-$("btn-review").addEventListener("click", showNote); // 復習は、まちがいノートの画面から始める
+$("btn-review").addEventListener("click", showNote); // 復習は、間違いノートの画面から始める
 // ヒント:1問に1回。見ると、その問題の点が半分になる。
 $("btn-hint").addEventListener("click", () => {
   if (answered || hinted || !current?.hint) return;
@@ -1739,7 +1739,7 @@ const leaveGame = () => {
 $("btn-cover").addEventListener("click", leaveGame);
 
 // やめる:確認してから、この回をなかったことにして表紙へ戻る。
-// 「分からない」:答えを見ると、不正解になる。まちがえて押さないように、先に聞く
+// 「分からない」:答えを見ると、不正解になる。間違えて押さないように、先に聞く
 $("btn-giveup").addEventListener("click", () => {
   if (answered) return;
   $("dlg-giveup").showModal();
@@ -1749,7 +1749,7 @@ $("btn-giveup-yes").addEventListener("click", () => {
   $("dlg-giveup").close();
   if (answered) return;
   gaveUp = true;
-  answer(current.type === "choice" ? -1 : ""); // 答えを見た=まちがい
+  answer(current.type === "choice" ? -1 : ""); // 答えを見た=間違い
 });
 $("btn-quit").addEventListener("click", () => $("dlg-quit").showModal());
 $("btn-quit-no").addEventListener("click", () => $("dlg-quit").close());
@@ -1980,7 +1980,7 @@ function renderNews() {
   const lines = [];
   if (news.cards > 0) lines.push(`📚 問題図鑑:新しいカードが ${news.cards}枚!`);
   if (news.dress.length) lines.push(`🎁 着せ替えが 増えたヨ:${news.dress.map(dressName).join("・")}`);
-  if (news.gain > 0) lines.push(`🏆 総合得点が ${news.gain}点 アップ!(いま ${news.now.total}点)`);
+  if (news.gain > 0) lines.push(`🏆 総合得点が ${news.gain}点 アップ!(今 ${news.now.total}点)`);
   const list = $("r-news");
   list.hidden = lines.length === 0;
   list.replaceChildren(
@@ -2046,7 +2046,7 @@ function renderRewardCard(el) {
   bar.append(fill);
   const note = document.createElement("small");
   note.className = "reward-note";
-  note.textContent = p.goal > 1 ? `${getText(item)}(いま ${p.now} / ${p.goal}${p.unit ?? ""})` : getText(item);
+  note.textContent = p.goal > 1 ? `${getText(item)}(今 ${p.now} / ${p.goal}${p.unit ?? ""})` : getText(item);
   info.append(title, bar, note);
   el.replaceChildren(icon, rewardArt(kind, item), info);
   el.hidden = false;
@@ -2171,8 +2171,8 @@ function openDexCard(question, label, owned) {
   $("dlg-dex").showModal();
 }
 
-let dexFilter = "すべて"; // 図鑑で、いま見ている分類
-const DEX_FILTER_ICON = { すべて: "📚", 理系: "🔬", 文系: "📖", ひらめき: "💡", オニ: "👹" };
+let dexFilter = "全て"; // 図鑑で、いま見ている分類
+const DEX_FILTER_ICON = { 全て: "📚", 理系: "🔬", 文系: "📖", ひらめき: "💡", オニ: "👹" };
 
 function showDex() {
   const stats = loadStats();
@@ -2233,7 +2233,7 @@ function showDex() {
   const numbered = playableList.map((q, i) => ({ q, label: `No.${i + 1}` }));
   const oniOpen = oniList.some((q) => met.has(q.uid ?? q.id)); // オニを解放するまでは「？？」
   const oniAll = oniList.map((q, i) => ({ q, label: oniOpen ? `オニ${i + 1}` : "？？" })); // オニも、全部のカードを並べる(まだのカードは「？」)
-  const rows = dexFilter === "オニ" ? oniAll : dexFilter === "すべて" ? [...numbered, ...oniAll] : numbered.filter(({ q }) => groupOf(q) === dexFilter);
+  const rows = dexFilter === "オニ" ? oniAll : dexFilter === "全て" ? [...numbered, ...oniAll] : numbered.filter(({ q }) => groupOf(q) === dexFilter);
   const cards = rows.map(({ q, label }) => card(q, label));
   const everyList = [...playableList, ...oniList];
   const have = everyList.filter((q) => met.has(q.uid ?? q.id)).length;
@@ -2241,8 +2241,8 @@ function showDex() {
   $("dex-count").textContent = `カード ${have} / ${everyList.length}枚(${percent}%)`;
   $("dex-meter-bar").style.width = `${percent}%`;
   // 分類のボタン(いくつ集めたか)
-  const tabs = ["すべて", ...GROUPS, "オニ"].map((name) => {
-    const list = name === "すべて" ? everyList : name === "オニ" ? oniList : playableList.filter((q) => groupOf(q) === name);
+  const tabs = ["全て", ...GROUPS, "オニ"].map((name) => {
+    const list = name === "全て" ? everyList : name === "オニ" ? oniList : playableList.filter((q) => groupOf(q) === name);
     const got = list.filter((q) => met.has(q.uid ?? q.id)).length;
     const button = document.createElement("button");
     button.type = "button";
@@ -2294,8 +2294,8 @@ function closeDexCard() {
 }
 $("dlg-dex").addEventListener("click", closeDexCard);
 
-// ================= まちがいノート =================
-// まちがえて、まだ正解していない問題(stats.wrong)を、答えと解説つきで並べる。記録は増やさない(復習と同じ印を使う)。
+// ================= 間違いノート =================
+// 間違えて、まだ正解していない問題(stats.wrong)を、答えと解説つきで並べる。記録は増やさない(復習と同じ印を使う)。
 function openNoteCard(question) {
   const big = $("note-big");
   big.className = `dex-big lv${question.level}`;
@@ -2326,15 +2326,15 @@ function noteQuestions() {
   return playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
 }
 
-let noteFilter = "すべて"; // ノートで、いま見ている分類
+let noteFilter = "全て"; // ノートで、いま見ている分類
 
 // 一覧は、問題図鑑と同じ作り(カードを押すと めくれて、問題・解説が開く。上に分類のボタン)。No.は、図鑑と同じ番号
 function showNote() {
   const items = noteQuestions();
   const sorted = [...allQuestions].sort((a, b) => a.id.localeCompare(b.id));
   const numberOf = new Map(sorted.filter((q) => q.level <= HARD_LEVEL).map((q, i) => [q.uid ?? q.id, i + 1]));
-  const inFilter = (q) => noteFilter === "すべて" || groupOf(q) === noteFilter;
-  if (noteFilter !== "すべて" && !items.some(inFilter)) noteFilter = "すべて"; // 見ていた分類が空になったら、すべてに戻す
+  const inFilter = (q) => noteFilter === "全て" || groupOf(q) === noteFilter;
+  if (noteFilter !== "全て" && !items.some(inFilter)) noteFilter = "全て"; // 見ていた分類が空になったら、全てに戻す
   const cards = items
     .filter(inFilter)
     .sort((a, b) => numberOf.get(a.uid ?? a.id) - numberOf.get(b.uid ?? b.id))
@@ -2372,8 +2372,8 @@ function showNote() {
     });
   $("note-grid").replaceChildren(...cards);
   $("note-grid").scrollTop = 0;
-  const tabs = ["すべて", ...GROUPS].map((name) => {
-    const count = name === "すべて" ? items.length : items.filter((q) => groupOf(q) === name).length;
+  const tabs = ["全て", ...GROUPS].map((name) => {
+    const count = name === "全て" ? items.length : items.filter((q) => groupOf(q) === name).length;
     const button = document.createElement("button");
     button.type = "button";
     button.className = `dex-tab${name === noteFilter ? " is-on" : ""}`;
@@ -2393,7 +2393,7 @@ function showNote() {
   const [top, topCount] = byGroup.reduce((a, b) => (b[1] > a[1] ? b : a));
   $("note-comment").textContent =
     items.length === 0
-      ? "まちがえた問題は ないヨ。すごい!"
+      ? "間違えた問題は ないヨ。すごい!"
       : topCount >= 2 && topCount > items.length / 2
         ? `${top}の問題が 多いヨ。押すと 解説が 見られるヨ!`
         : "押すと 解説が 見られるヨ!";
@@ -2433,9 +2433,9 @@ let rpgShownStage = -1; // いま画面に出している敵のマス(あたら�
 let rpgAnswered = false;
 let rpgHinted = false;
 
-// ハート:1つ=❤️。半分へったハートは、左の半分だけ赤く(ヒントを見ると、半分へる)
-// ハートの絵は、着せ替えの「ハートのブローチ」。へった分の絵はうすい灰色、半分は左の半分だけ色つき。
-// へったハートは、ぷるっと動く(前に出したときより、へったり、ふえたりしたハートだけ)
+// ハート:1つ=❤️。半分減ったハートは、左の半分だけ赤く(ヒントを見ると、半分へる)
+// ハートの絵は、着せ替えの「ハートのブローチ」。減った分の絵はうすい灰色、半分は左の半分だけ色つき。
+// 減ったハートは、ぷるっと動く(前に出したときより、減ったり、ふえたりしたハートだけ)
 const HEART_IMG = "../assets/illust/heart.webp";
 let rpgHeartsShown = null; // 前に出したときの、ハートごとの量(別のクエストになったら、動かさない)
 let rpgHeartsOwner = null;
@@ -2468,7 +2468,7 @@ function renderRpgHearts() {
   box.setAttribute("aria-label", `ハート ${play.lives}`);
 }
 
-// stage:画面に出す敵のマス(答えた直後は、たおした敵を出したいので、答える前のマスを渡す)
+// stage:画面に出す敵のマス(答えた直後は、倒した敵を出したいので、答える前のマスを渡す)
 function renderRpgStatus(stage = play.current, foeHp = play.hp) {
   renderRpgHearts();
   $("rpg-path").replaceChildren(
@@ -2482,7 +2482,7 @@ function renderRpgStatus(stage = play.current, foeHp = play.hp) {
     }),
   );
   $("rpg-foe-icon").textContent = stage.icon;
-  $("rpg-foe-name").textContent = stage.kind === "chest" ? "たからばこ" : stage.kind === "boss" ? `ボス ${stage.name}` : stage.name;
+  $("rpg-foe-name").textContent = stage.kind === "chest" ? "宝箱" : stage.kind === "boss" ? `ボス ${stage.name}` : stage.name;
   $("rpg-foe-hp").textContent = stage.kind === "chest" ? "正解で ハート回復" : `${"💗".repeat(Math.max(0, foeHp))}${"🤍".repeat(stage.hp - Math.max(0, foeHp))}`;
 }
 
@@ -2521,15 +2521,15 @@ function fitRpgWindow() {
   }
 }
 
-// 「あらわれた!」の文。同じ敵に、まちがえるたびに、ちがう文にする
+// 「現れた!」の文。同じ敵に、間違えるたびに、ちがう文にする
 function rpgIntro(stage, retries) {
   const name = stage.kind === "boss" ? `ボス ${stage.name}` : stage.name;
-  if (stage.kind === "chest") return "たからばこだ! 正解で ハート回復!";
-  if (retries === 0) return `${stage.icon} ${name}が あらわれた!`;
+  if (stage.kind === "chest") return "宝箱だ! 正解で ハート回復!";
+  if (retries === 0) return `${stage.icon} ${name}が 現れた!`;
   const lines = [
-    `${name}が にやりと わらった! もう1度!`,
+    `${name}が にやりと 笑った! もう1度!`,
     `${name}は まだ 立ちはだかっている!`,
-    `${name}の いかりが 高まっている!`,
+    `${name}の 怒りが 高まっている!`,
     `${name}が おそいかかってくる! あきらめるな!`,
   ];
   return lines[(retries - 1) % lines.length];
@@ -2574,13 +2574,13 @@ function showRpg() {
   field.classList.add("is-enter-hero");
   if (newFoe) {
     field.classList.add("is-enter-foe");
-    playSe("rpgStep"); // 次の敵があらわれた(踏みこむ音)
+    playSe("rpgStep"); // 次の敵が現れた(踏みこむ音)
   }
   // ボスの1つ前のマスから、警告
   const warn = $("rpg-warn");
   const beforeBoss = RPG_STAGES.length - 2;
   warn.hidden = play.stage < beforeBoss;
-  warn.textContent = stage.kind === "boss" ? "警告! ボス戦だ!" : "警告! つぎは ボスが まっているぞ!";
+  warn.textContent = stage.kind === "boss" ? "警告! ボス戦だ!" : "警告! 次は ボスが まっているぞ!";
   $("screen-rpg").querySelector(".rpg-window").scrollTop = 0;
   show("rpg");
   setScene(stage.kind === "boss" ? "rpgboss" : "rpg"); // ボス戦は、BGMが変わる
@@ -2597,16 +2597,16 @@ function rpgAnswer(index) {
   const event = play.event;
   rpgSounds(event);
   const message = {
-    hit: `⚔️ こうげき! ${foe.name}に ダメージ!`,
-    defeat: `💥 ${foe.name}を たおした!`,
-    damage: `💢 ${foe.name}の こうげき! ハート -1`,
-    heal: "💖 たからばこが ひらいた! ハート +1",
-    miss: "🎁 たからばこは あけられなかった…",
+    hit: `⚔️ 攻撃! ${foe.name}に ダメージ!`,
+    defeat: `💥 ${foe.name}を 倒した!`,
+    damage: `💢 ${foe.name}の 攻撃! ハート -1`,
+    heal: "💖 宝箱が 開いた! ハート +1",
+    miss: "🎁 宝箱は 開けられなかった…",
   }[event];
   rpgFx("", event === "damage" ? "is-hurt" : "is-strike"); // 動きだけ(文字は、下の正解/残念の行に出す。ウィンドウに収めるため)
   if (event === "defeat") setTimeout(() => $("rpg-field").classList.add("is-defeat"), 400);
   rpgPose(correct ? IMG.correct : IMG.wrong, correct ? "笑うフロリ" : "目をつぶるフロリ");
-  renderRpgStatus(foe, event === "defeat" ? 0 : play.hp); // たおした敵(foe)を出したまま、HPを0に。次の敵は、次の問題で出る
+  renderRpgStatus(foe, event === "defeat" ? 0 : play.hp); // 倒した敵(foe)を出したまま、HPを0に。次の敵は、次の問題で出る
   $("btn-rpg-hint").hidden = true;
   $("rpg-hint").hidden = true;
   $("rpg-choices").hidden = true; // 答えたあとは、答えと解説だけ(問題文と選択肢は、かくす。1画面に収めるため)
@@ -2622,12 +2622,12 @@ function rpgAnswer(index) {
   setTimeout(fitRpgWindow, 150);
 }
 
-// RPGの効果音(敵があらわれた=踏みこむ音。こうげき=小パンチ、敵をたおしたときは、こうげきの音が鳴りおわってから、せいかいのチャイム。
-// ダメージ=パンチを受け止める。ハート回復=パパッ。まちがえた宝箱=ふせいかいの音)
+// RPGの効果音(敵が現れた=踏みこむ音。攻撃=小パンチ、敵を倒したときは、攻撃の音が鳴りおわってから、せいかいのチャイム。
+// ダメージ=パンチを受け止める。ハート回復=パパッ。間違えた宝箱=ふせいかいの音)
 function rpgSounds(event) {
   if (event === "hit" || event === "defeat") {
     playSe("rpgPunch");
-    if (event === "defeat") setTimeout(() => playSe("correct"), 560); // こうげきの音(約0.5秒)のあと
+    if (event === "defeat") setTimeout(() => playSe("correct"), 560); // 攻撃の音(約0.5秒)のあと
   } else if (event === "damage") playSe("rpgGuard");
   else if (event === "heal") playSe("rpgAppear");
   else playSe("wrong");
@@ -2639,22 +2639,22 @@ function rpgNext() {
   else showRpg();
 }
 
-// ゲームオーバーの画面:結果発表とは別。どこまで進んだか・まちがえた問題のこと・もう1度。BGMはなく、zannense(約7秒の音)を2.6秒で切って鳴らす
+// ゲームオーバーの画面:結果発表とは別。どこまで進んだか・間違えた問題のこと・もう1度。BGMはなく、zannense(約7秒の音)を2.6秒で切って鳴らす
 function showGameOver() {
   const result = play.finishRound();
   recordDex(result.answers); // 図鑑
-  recordWrong(result.answers); // まちがえた問題は、まちがいノートへ
+  recordWrong(result.answers); // 間違えた問題は、間違いノートへ
   recordRpgResult(result);
   const wrongCount = new Set(result.answers.filter((a) => !a.correct).map((a) => a.id)).size; // 同じ問題は、1問と数える
   const last = RPG_STAGES.length - 1;
   $("go-message").textContent =
     result.stage === 0
-      ? "さいしょの 敵に まけちゃった…。つぎは がんばろう!"
+      ? "最初の 敵に 負けちゃった…。次は がんばろう!"
       : result.stage >= last
         ? "ドラゴンに やられちゃった…。あと少しだったヨ!"
         : result.stage >= 3
           ? "ボスの すぐ近くまで 来たのに…。くやしいネ!"
-          : "ここまで がんばったヨ。もう1度 いってみよう!";
+          : "ここまで がんばったヨ。もう1度 行ってみよう!";
   $("go-path").replaceChildren(
     ...RPG_STAGES.map((stage, index) => {
       const item = document.createElement("li");
@@ -2667,7 +2667,7 @@ function showGameOver() {
   );
   $("go-reach").textContent = `${result.stage} / ${RPG_STAGES.length}`;
   $("go-correct").textContent = `${result.correct} / ${result.total}問`;
-  $("go-note").textContent = wrongCount > 0 ? `まちがえた${wrongCount}問は、まちがいノートに 入ったヨ。` : "";
+  $("go-note").textContent = wrongCount > 0 ? `間違えた${wrongCount}問は、間違いノートに 入ったヨ。` : "";
   $("go-note").hidden = wrongCount === 0;
   awardBadges();
   show("gameover");
@@ -2690,8 +2690,8 @@ $("btn-rpg-hint-yes").addEventListener("click", () => {
   rpgHinted = true;
   play.useHint();
   renderRpgHearts();
-  playSe("rpgGuard", 380); // ハートが半分へった音(ダメージより短く)
-  rpgFx("💔 ハート 半分 へった");
+  playSe("rpgGuard", 380); // ハートが半分減った音(ダメージより短く)
+  rpgFx("💔 ハート 半分 減った");
   $("screen-rpg").classList.add("is-hinted"); // 低い画面では、上の絵を小さくして、ヒントの場所をあける
   $("rpg-hint").textContent = `💡 ${rpgQuestion.hint}`;
   $("rpg-hint").hidden = false;

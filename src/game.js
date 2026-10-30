@@ -3,8 +3,8 @@
 export const QUESTIONS_PER_ROUND = 5; // 1回の問題数
 export const POINTS_PER_CORRECT = 2; // 1問2点(5問で10点満点)
 export const ONI_POINTS_PER_CORRECT = 5; // オニ問題は、1問5点(10問で50点満点)
-export const MAX_LEVEL = 2; // ふつうモードの段階(1〜2)。正解が続くと2、まちがえると1にもどる
-export const HARD_MIN_LEVEL = 3; // 難しいモードの段階(3〜4)。正解が続くと4、まちがえると3にもどる
+export const MAX_LEVEL = 2; // ふつうモードの段階(1〜2)。正解が続くと2、間違えると1にもどる
+export const HARD_MIN_LEVEL = 3; // 難しいモードの段階(3〜4)。正解が続くと4、間違えると3にもどる
 export const HARD_LEVEL = 4;
 export const ONI_LEVEL = 5; // オニ問題の段階
 const COUNTER_PER_LEVEL = 3; // カウンターが3増えるごとに1段階上がる
@@ -71,7 +71,7 @@ function roundResult(round) {
   };
 }
 
-// ふつうモード(段階1〜2)・難しいモード(段階3〜4)の遊び。正解が続くと上の段階、まちがえると下の段階になる。
+// ふつうモード(段階1〜2)・難しいモード(段階3〜4)の遊び。正解が続くと上の段階、間違えると下の段階になる。
 // 難しさのカウンターと、出した問題の記録は、回をまたいで続く(「つづきから」で、保存して、もどす)。
 export class Session {
   constructor(questions, rng = Math.random, minLevel = 1, maxLevel = MAX_LEVEL) {
@@ -89,7 +89,7 @@ export class Session {
     this.startRound();
   }
 
-  // カウンターは、0から「いちばん上の段階に上がる3 + 1」までにする。(上の段階にいるときは、多くても2問まちがえると、下の段階にもどる)
+  // カウンターは、0から「いちばん上の段階に上がる3 + 1」までにする。(上の段階にいるときは、多くても2問間違えると、下の段階にもどる)
   clampCounter(counter) {
     const top = (this.maxLevel - this.minLevel) * COUNTER_PER_LEVEL;
     return Math.min(top + 1, Math.max(0, counter));
@@ -257,14 +257,14 @@ export class PracticeRound {
 }
 
 // RPG「クエスト」(ミニマップ+サバイバルを、1つにしたもの)。5つのマスを、ハート4つで進む。
-// 敵のマスは、正解で たおして、次のマスへ。まちがえると、ハートが1つへって、同じ敵に、もう1問。
-// 宝箱のマスは、正解で ハートが1つ回復(まちがえても、ハートはへらない。回復なしで、次へ進む)。ボスは、2回 正解で たおせる。
+// 敵のマスは、正解で たおして、次のマスへ。間違えると、ハートが1つ減って、同じ敵に、もう1問。
+// 宝箱のマスは、正解で ハートが1つ回復(間違えても、ハートはへらない。回復なしで、次へ進む)。ボスは、2回 正解で たおせる。
 export const RPG_LIVES = 4;
 export const RPG_HINT_COST = 0.5; // ヒントを見ると、ハートが半分へる
 export const RPG_STAGES = [
   { kind: "enemy", icon: "🐭", name: "ネズミ", level: 1, hp: 1 },
   { kind: "enemy", icon: "🐸", name: "カエル", level: 1, hp: 1 },
-  { kind: "chest", icon: "🎁", name: "たからばこ", level: 2, hp: 1 },
+  { kind: "chest", icon: "🎁", name: "宝箱", level: 2, hp: 1 },
   { kind: "enemy", icon: "🦂", name: "サソリ", level: 3, hp: 1 },
   { kind: "boss", icon: "🐉", name: "ドラゴン", level: 4, hp: 2 },
 ];
@@ -296,9 +296,9 @@ export class RpgRound {
     this.stage = 0; // いまいるマス(RPG_STAGES.length で、クリア)
     this.hp = RPG_STAGES[0].hp; // いまの敵の、のこりHP
     this.event = null; // 直前の答えで、何が起きたか
-    this.pending = null; // まちがえた問題(正解するまで、同じ問題を出す)
-    this.retries = 0; // いまの問題で、まちがえた回数
-    this.chests = 0; // たからばこの問題に、正解した数
+    this.pending = null; // 間違えた問題(正解するまで、同じ問題を出す)
+    this.retries = 0; // いまの問題で、間違えた回数
+    this.chests = 0; // 宝箱の問題に、正解した数
   }
 
   abandonRound() {
@@ -313,13 +313,13 @@ export class RpgRound {
     return this.stage >= RPG_STAGES.length;
   }
 
-  // 敵の問題は、まちがえたら、正解するまで、同じ問題をもう1度出す(宝箱は、まちがえても、次へ進む)
+  // 敵の問題は、間違えたら、正解するまで、同じ問題をもう1度出す(宝箱は、間違えても、次へ進む)
   nextQuestion() {
     if (this.pending) return { question: this.pending, leveledUp: false };
     return { question: pickByLevel(this.questions, this.used, this.current.level, this.rng), leveledUp: false };
   }
 
-  // event:"hit"(敵にダメージ)"defeat"(敵をたおした)"damage"(自分がダメージ)"heal"(宝箱で回復)"miss"(宝箱をのがした)
+  // event:"hit"(敵にダメージ)"defeat"(敵を倒した)"damage"(自分がダメージ)"heal"(宝箱で回復)"miss"(宝箱をのがした)
   answer(question, response, hinted = false) {
     const correct = judge(question, response);
     const points = questionPoints(correct, hinted);
