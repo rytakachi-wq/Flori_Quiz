@@ -31,6 +31,12 @@ export const EXPRESSIONS = [
   { name: 'ぽかん', brow: 0.9, tilt: 0, mouth: -0.1, hold: [1.0, 1.5] },
   { name: 'こまった', brow: 1, tilt: 0.8, mouth: -0.55, wobble: 0.3, hold: [1.4, 2.0], dir: true },   // 困り眉・首をかしげる・口がふるえる
   { name: 'ぷんぷん', brow: -1, tilt: 0.5, mouth: -0.9, hold: [1.0, 1.5], dir: true },
+  { name: 'びっくり', brow: 1, tilt: 0, mouth: 0.8, hold: [0.9, 1.4] },
+  { name: 'にやり', brow: -0.7, tilt: 0.6, mouth: 0.2, hold: [1.0, 1.6], dir: true },
+  { name: 'あはは', brow: 0.4, tilt: 0.4, mouth: 0.6, wobble: 0.35, hold: [1.2, 1.8], dir: true },   // 口が ぱくぱく ゆれる(わらい)
+  { name: 'ねむい', brow: 0.5, tilt: 0.7, mouth: -1, lid: 0.7, hold: [1.4, 2.0], dir: true },        // まぶたが、半分おりる
+  { name: 'うっとり', brow: 0.6, tilt: 0.8, mouth: -0.3, lid: 0.5, hold: [1.2, 1.8], dir: true },
+  { name: 'ぐぬぬ', brow: -1, tilt: 0.3, mouth: -1, wobble: 0.15, hold: [1.0, 1.5], dir: true },
 ];
 
 export function createMotion(model) {
@@ -51,8 +57,14 @@ export function createMotion(model) {
     let r, kind;
     // 表情 55%、眉だけ 8%、白目 8%、口 5%(へらした)、腕と足 24%(伸び 4・手を振る 7・ぱたぱた 5・ばんざい 6)。おなじ種類を、続けて出さない。
     // ※両手を顔の前に上げる「わくわく」は、やめた(利用者の指示)
-    do { r = Math.random(); kind = r < 0.55 ? 'expr' : r < 0.63 ? 'brow' : r < 0.71 ? 'gaze' : r < 0.76 ? 'mouth' : r < 0.80 ? 'stretch' : r < 0.87 ? 'wave' : r < 0.92 ? 'flap' : 'cheer'; } while (kind === lastKind);
+    do { r = Math.random(); kind = r < 0.50 ? 'expr' : r < 0.56 ? 'brow' : r < 0.62 ? 'gaze' : r < 0.72 ? 'dart' : r < 0.76 ? 'mouth' : r < 0.80 ? 'stretch' : r < 0.87 ? 'wave' : r < 0.92 ? 'flap' : 'cheer'; } while (kind === lastKind);
     lastKind = kind;
+    if (kind === 'dart') {      // 目きょろきょろ:寄り目をといて、左右へ、すばやく 3〜5回 見る(かならず かわりばんこ)
+      const n = 3 + Math.floor(Math.random() * 3), seq = []; let d = lastLook;
+      for (let i = 0; i < n; i++) { d = -d; seq.push(d * rnd(0.85, 1)); }
+      lastLook = d;
+      return { kind, t0: t, seq, step: rnd(0.5, 0.7), up: 0.3, hold: n * 0.6 + 0.2, down: 0.3 };
+    }
     if (kind === 'gaze') {      // 白目で左右を見る(look > 0 = 画面の左を見る)。左右、かならず かわりばんこに
       lastLook = -lastLook;
       return { kind, t0: t, look: lastLook * rnd(0.8, 1), up: 0.4, hold: rnd(1.4, 2.4), down: 0.4 };
@@ -96,10 +108,14 @@ export function createMotion(model) {
     let gaze = 0, x = null, e = 0, dir = 1, k = 0, a = 0;
     if (ev) {
       a = t - ev.t0;
-      if (a >= ev.up + ev.hold + ev.down) { ev = null; waitUntil = t + rnd(0.4, 1.2); }
+      if (a >= ev.up + ev.hold + ev.down) { ev = null; waitUntil = t + rnd(0.2, 0.7); }
       else {
         k = env(a, ev.up, ev.hold, ev.down);
         if (ev.kind === 'gaze') gaze = k * ev.look;
+        else if (ev.kind === 'dart') {
+          const u = Math.max(0, a - ev.up) / ev.step, i = Math.min(ev.seq.length - 1, Math.floor(u)), q = ss((u - i) / 0.2);   // 0.2 = 動く速さ(はやい)
+          gaze = k * (i ? ev.seq[i - 1] + (ev.seq[i] - ev.seq[i - 1]) * q : ev.seq[0]);
+        }
         else if (ev.kind === 'expr' || ev.kind === 'brow') { e = k; x = ev.x; dir = ev.dir; }
       }
     }
@@ -109,7 +125,7 @@ export function createMotion(model) {
     // ふだんの口:ゆっくり、小さい(−1)〜ふつう(0 のあたり)を行き来する。大小の差を大きく
     const idleAbs = -0.6 + 0.35 * Math.sin(t * Math.PI * 2 * 0.1);   // 口の動く回数をへらした:10秒で1往復だけ、ゆっくり
     // いつもの顔 = 寄り目(両目とも真ん中へ ±1)。白目で左右を見るときだけ、いったん 0 にもどしてから動かす
-    let brow = 0, tilt = 0, mouth = idleAbs, cross = kind === 'gaze' ? 1 - k : 1;
+    let brow = 0, tilt = 0, mouth = idleAbs, cross = kind === 'gaze' || kind === 'dart' ? 1 - k : 1;
     if (kind === 'mouth') mouth = idleAbs * (1 - k) + k * (-1 + 1.8 * (0.5 + 0.5 * Math.sin(a * Math.PI * 2 * 0.8 - Math.PI / 2)));   // 口だけ ゆっくり ぱくぱく(ちいさい −1 〜 おおきい +0.8)
     if (x) {
       // 顔の傾き:左右で見た目の角度をそろえる(顔 +1 = 右へ 9.6°、−1 = 左へ 12.4°)。傾き 1 = 9°(右の限界 9.6° 以内)
@@ -118,6 +134,7 @@ export function createMotion(model) {
       if (x.look) cross = 1 - e;            // 視線を動かすときは、寄り目をいったん解く
       if (x.look) gaze = -Math.sign(tilt) * x.look * e;     // 傾けた側を見る(+ は画面の右)
     }
+    if (x && x.lid) for (const i of I.lids) V[i] = -Math.max(b, x.lid * e);   // ねむい・うっとり:まぶたを、半分おろす
     let [vr, vl] = gazeValues(gaze);
     if (cross) { vr -= cross; vl += cross; }   // 寄り目:右の目は 画面の右(−)へ、左の目は 画面の左(+)へ = 両目とも真ん中へ
     vr = clamp1(vr); vl = clamp1(vl);
