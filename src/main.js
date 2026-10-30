@@ -2786,6 +2786,20 @@ function fitIcon(pic) {
   pic.style.height = `${(h * 100).toFixed(1)}%`;
 }
 
+// 着せたとき、そのものの名前が、フロリの枠の上を、右から左へ流れる(「炎のレッド」など)
+function flowName(name) {
+  const stage = $("dress-stage");
+  stage.querySelector(".dress-flow")?.remove();
+  const flow = document.createElement("div");
+  flow.className = "dress-flow";
+  flow.setAttribute("aria-hidden", "true");
+  const text = document.createElement("span");
+  text.textContent = name;
+  flow.append(text);
+  stage.append(flow);
+  setTimeout(() => flow.remove(), 2800);
+}
+
 function renderDress() {
   hideTip();
   const stats = loadStats();
@@ -2888,6 +2902,7 @@ function renderDress() {
         applyDress();
         renderDress();
         playSe("button");
+        if (choice.unlock !== undefined && choice.id !== "none") flowName(choice.name);
       });
       const label = newGroup ? groupLabel(kind, groupNo) : "";
       if (label) {

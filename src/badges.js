@@ -282,7 +282,7 @@ function assignUnlocks(groups) {
   });
 }
 
-// お試しの色・背景12こ(このへんは、まだ、ご褒美の条件なし。いつでも選べる。背景は、着せ替えの画面の枠だけで、ほかの画面は、かわらない)
+// あとから足した色・背景(TRIAL。条件は、TRIAL_SETS)。背景は、着せ替えの画面の枠だけで、ほかの画面は、かわらない
 const TRIAL = [
   { id: "skyblue", name: "そらいろ", tint: "#4aa8ea", noTheme: true, color: { hue: 202, gain: 3, minSat: 0.95, boost: 1.5 }, stage: "linear-gradient(160deg, #e9f6ff, #6ab9f2)" },
   { id: "brown", name: "チョコブラウン", tint: "#8a5a3c", noColor: true, stage: "linear-gradient(160deg, #f4e6d8, #b98a62)" },
@@ -348,6 +348,8 @@ const GROUP_LABELS = {
   head: ["帽子(頭にかぶる)", "頭の上", "頭の右上(かざる)"],
   body: ["首まわり", "胸(ブローチ・バッジ)", "おなか・腰(ポーチ・バッグ)", "手に持つ(左手)"],
   face: ["目のまわり", "ほっぺ", "顔まわり"],
+  color: ["いろいろな色", "ひかる色", "グラデーション・自然", "もよう"],
+  theme: ["いろいろな色", "ひかる色", "グラデーション・自然", "もよう"],
 };
 export const groupLabel = (slot, group) => GROUP_LABELS[slot]?.[group] ?? "";
 // 系統ごとに並べる。item.group に、系統の番号を入れる(一覧で、系統が変わるごとに改行するため)
@@ -368,6 +370,40 @@ assignUnlocks([
   [bodies, null],
   [faces, null],
 ]);
+
+// お試しだった色・背景(TRIAL)も、ご褒美にする。同じ名前の色と背景は、1つの条件で、いっしょにもらえる(セット)。
+// やさしい → むずかしい の順(もようの単純なもの・きれいなグラデーションが先)。条件は、ほかのご褒美と、重なってもよい。
+const TRIAL_SETS = [
+  ["skyblue", "play5"], ["sunset", "right10"], ["wine", "perfect"], ["stripes", "streak3"], ["gingham", "dex20"],
+  ["border", "versus3"], ["morning", "total20"], ["sea", "oni1"], ["hearts", "timed5"], ["candy", "right20"],
+  ["grape", "play20"], ["rdots", "perfect3"], ["wave", "dex30"], ["snow", "streak5"], ["sakura", "total30"],
+  ["checker", "review3"], ["diamond", "daily10"], ["leaves", "oni3"], ["water", "right30"], ["aurora", "hardPerfect"],
+  ["brown", "perfect5"], ["clouds", "dex50"], ["forest", "total50"], ["starry", "streak10"], ["dots", "play50"],
+];
+const TRIAL_UNLOCK = new Map(TRIAL_SETS);
+for (const item of [...COLORS, ...THEMES]) if (item.trial) item.unlock = TRIAL_UNLOCK.get(item.id) ?? null;
+
+// 色・背景の一覧も、ジャンルごとにまとめる(item.group に、番号を入れる)
+const SET_ORDER = {
+  color: [
+    ["red", "wine", "pink", "orange", "yellow", "lime", "green", "skyblue", "navy", "purple", "white", "black"],
+    ["gold", "silver", "bronze", "rainbow"],
+    ["sunset", "morning", "sea", "aurora", "grape", "candy", "sakura"],
+    ["stripes", "gingham", "border", "wave", "checker", "diamond", "hearts", "rdots", "leaves", "snow", "water"],
+  ],
+  theme: [
+    ["red", "wine", "pink", "orange", "brown", "yellow", "lime", "green", "navy", "purple", "white", "black"],
+    ["gold", "silver", "bronze", "rainbow"],
+    ["sunset", "morning", "sea", "aurora", "grape", "candy", "clouds", "forest", "starry"],
+    ["stripes", "gingham", "border", "wave", "checker", "diamond", "hearts", "rdots", "dots", "leaves", "snow", "water"],
+  ],
+};
+for (const [slot, list] of [["color", COLORS], ["theme", THEMES]]) {
+  const rank = new Map();
+  SET_ORDER[slot].forEach((ids, group) => ids.forEach((id) => rank.set(id, { group, order: rank.size })));
+  for (const item of list) if (rank.has(item.id)) item.group = rank.get(item.id).group;
+  list.sort((x, y) => (rank.get(x.id)?.order ?? -1) - (rank.get(y.id)?.order ?? -1)); // 先頭(ミルキーブルー・青空)は、そのまま先頭
+}
 
 // お試し:URL に ?tryall=1 を付けて開くと、着せ替えを、ぜんぶ選べる(端末内に覚える)。?tryall=0 で、もとにもどる。もらった数・NEW・ご褒美の記録は、かわらない。
 const TRY_KEY = "floriQuiz.tryAll";
