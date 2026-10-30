@@ -311,6 +311,18 @@ const TRIAL = [
   { id: "clouds", name: "くも", tint: "#7ab8f0", noColor: true, stage: "radial-gradient(ellipse 60px 22px at 20% 24%, #fff 0 100%, transparent 100%), radial-gradient(ellipse 44px 18px at 28% 20%, #fff 0 100%, transparent 100%), radial-gradient(ellipse 66px 24px at 74% 40%, #fff 0 100%, transparent 100%), radial-gradient(ellipse 46px 18px at 66% 36%, #fff 0 100%, transparent 100%), radial-gradient(ellipse 56px 20px at 38% 74%, #fff 0 100%, transparent 100%), linear-gradient(180deg, #7ac4f8, #cfeaff)" },
 ];
 
+// 追加した背景の、ほかの画面・ボタンの色:[画面の背景, ふち・ボタンの色, 題字の色]
+const TRIAL_THEME = {
+  brown: ["#f6e9dc", "#c99a74", "#7a4e30"], wine: ["#f8e6ea", "#c9687f", "#8a2f48"], sunset: ["#ffe8e0", "#f0a07a", "#b4587a"],
+  starry: ["#1d2a55", "#7f93d4", "#34408a"], dots: ["#fff0f5", "#f29ab8", "#c0587a"], stripes: ["#eef7fd", "#7fbdee", "#3d86bd"],
+  snow: ["#e8f4fc", "#8fc4ec", "#4a86b8"], morning: ["#fff1dc", "#f5b080", "#c0704a"], sea: ["#dff0fc", "#5aa6e8", "#2f5da0"],
+  forest: ["#e6f3de", "#6fb878", "#2f7d56"], grape: ["#f1e8fb", "#b690e0", "#7a50b0"], aurora: ["#1d3340", "#6adcb0", "#2f7a8a"],
+  candy: ["#fdeaf4", "#ec9ac4", "#b0609a"], gingham: ["#fff0f3", "#f59ab0", "#c0587a"], hearts: ["#fff0f4", "#f58aa8", "#c04870"],
+  border: ["#e9f9f2", "#7fd4b4", "#2f9a78"], checker: ["#eef0fb", "#98a4e0", "#5060b0"], wave: ["#e8f4fc", "#6fb4e8", "#3a80b8"],
+  diamond: ["#f4edfb", "#b896e0", "#7a50b0"], leaves: ["#f1f9e4", "#86c880", "#4a8a50"], rdots: ["#fff8f0", "#f5a0b8", "#b06090"],
+  water: ["#f2f4fc", "#a0b8e8", "#6078b8"], clouds: ["#e3f2ff", "#7ab8f0", "#3a80c0"],
+};
+
 export const COLORS = [
   { id: "original", name: "ミルキーブルー", original: true, tint: "#7ec3e0", swatch: "linear-gradient(135deg, #f4fbff, #7ec3e0)", unlock: null },
   ...PALETTE.map((p) => ({ id: p.id, name: p.name, tint: p.tint, swatch: p.swatch ?? soften(p.tint), ...p.color, unlock: null })),
@@ -319,7 +331,11 @@ export const COLORS = [
 export const THEMES = [
   { id: "sky", name: "青空", tint: "#7ec3e0", preview: "linear-gradient(160deg, #eef8fd, #7ec3e0)", unlock: null },
   ...PALETTE.map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.swatch ?? `linear-gradient(160deg, ${p.bg}, ${p.blue})`, stage: p.stage, bg: p.bg, blue: p.blue, dark: p.dark, unlock: null })),
-  ...TRIAL.filter((p) => !p.noTheme).map((p) => ({ id: p.id, name: p.name, tint: p.tint, preview: p.stage, stage: p.stage, stageOnly: true, unlock: null, trial: true })),
+  ...TRIAL.filter((p) => !p.noTheme).map((p) => {
+    const [bg, blue, dark] = TRIAL_THEME[p.id];
+    const plain = p.stage.startsWith("linear-gradient(") && !p.stage.includes("), "); // 1つの線形グラデーションだけの背景は、表紙にも、そのまま使う
+    return { id: p.id, name: p.name, tint: p.tint, preview: p.stage, stage: p.stage, bg, blue, dark, cover: plain ? p.stage : `linear-gradient(160deg, ${bg}, ${blue})`, unlock: null, trial: true };
+  }),
 ];
 // 着せ替えの一覧は、系統ごとにまとめて並べる(もらえる順とは別。もらえる順は、assignUnlocks の表のまま)。
 // 頭:帽子 → 頭の上(耳・冠・輪・ふたば・小鳥・ひよこ・アンテナ)→ 右上の飾り(花・リボンなど)

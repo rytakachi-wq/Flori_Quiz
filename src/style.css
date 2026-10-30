@@ -3183,9 +3183,9 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 @media (max-width: 340px) { .rf-total, .rf-turn, .rf-crown { font-size: 12.5px; padding-left: 8px; padding-right: 8px; } }
 
 /* 着せ替えの一覧:系統(帽子・耳・冠…)が変わるところで、線と説明を入れて、改行する */
-.dress-list .dress-sec { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 6px 2px 0; font-size: 13px; font-weight: bold; line-height: 1.3; color: var(--blue-dark); }
-.dress-list .dress-sec::before { content: ""; flex: none; width: 14px; height: 3px; border-radius: 2px; background: var(--blue-dark); }
-.dress-list .dress-sec::after { content: ""; flex: 1; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--blue) 70%, #fff); }
+.dress-list .dress-sec { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 10px 2px 2px; font-size: 13px; font-weight: bold; line-height: 1.3; color: var(--blue-dark); }
+.dress-list .dress-sec::before { content: "◆"; flex: none; font-size: 11px; color: var(--blue); text-shadow: 10px 0 0 color-mix(in srgb, var(--blue) 55%, #fff), 20px 0 0 color-mix(in srgb, var(--blue) 30%, #fff); padding-right: 22px; }
+.dress-list .dress-sec::after { content: ""; flex: 1; height: 6px; border-top: 2px solid var(--blue); border-bottom: 2px dotted color-mix(in srgb, var(--blue) 70%, #fff); }
 .dress-list .dress-sec:first-child { margin-top: 0; }
 
 /* 設定画面のフロリを、少し大きく */

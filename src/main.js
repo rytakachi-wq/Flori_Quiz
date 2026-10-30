@@ -1760,7 +1760,7 @@ async function init() {
     playableQuestions = [...normal, ...hardQuestions];
     allQuestions = questions;
     renderBadgeBackground();
-    for (const theme of THEMES) new Image().src = `../assets/bg/${theme.id}.webp`; // 表紙の背景を、先に読みこむ(着せ替えで変えたとき、すぐ変わるように)
+    for (const theme of THEMES) if (!theme.cover) new Image().src = `../assets/bg/${theme.id}.webp`; // 表紙の背景を、先に読みこむ(着せ替えで変えたとき、すぐ変わるように)
     // 答えたあと・結果で出す、フロリの絵を先に読みこんでおく(すぐ出せるように)
     const preload = [...Object.values(IMG), "../assets/flori/m/wave_nikkori.png", "../assets/flori/m/body_wave.webp"];
     for (const src of preload) new Image().src = src;
@@ -2685,9 +2685,9 @@ function wornItems(over = {}) {
 
 function applyDress() {
   const picked = THEMES.find((item) => item.id === dress.theme);
-  const theme = picked?.stageOnly ? THEMES[0] : picked; // お試しの背景は、着せ替えの枠だけ(ほかの画面は、青空のまま)
+  const theme = picked ?? THEMES[0];
   document.documentElement.dataset.theme = theme.id;
-  document.documentElement.style.setProperty("--cover-bg", `url("../assets/bg/${theme.id}.webp")`); // 表紙の背景の模様(色ごと)
+  document.documentElement.style.setProperty("--cover-bg", theme.cover ?? `url("../assets/bg/${theme.id}.webp")`); // 表紙の背景の模様(色ごと。あとから足した背景は、グラデーション)
   const root = document.documentElement.style;
   for (const [name, key] of [["--bg", "bg"], ["--blue", "blue"], ["--blue-dark", "dark"]]) {
     if (theme?.[key]) root.setProperty(name, theme[key]);
