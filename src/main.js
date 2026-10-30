@@ -408,11 +408,13 @@ function showQuestion() {
   }[mode];
   $("q-progress").textContent = versus ? `${play.round} / ${VERSUS_ROUNDS}回戦` : `${prefix}第${play.asked + 1}問 / ${total}問`;
   renderTurn(versus);
-  $("q-level").textContent =
+  // 星は、せまい枠(文字を大きくしたとき)でも、はみ出さないように、すこし小さく詰めて出す
+  const starsHtml = (text) => `<span class="q-stars">${text}</span>`;
+  $("q-level").innerHTML =
     mode === "oni"
       ? "難しさ オニ"
       : versus
-          ? `${"★".repeat(play.round)}${"☆".repeat(VERSUS_ROUNDS - play.round)} 正解で${play.round}点` : `難しさ ${stars(question.level)}`;
+          ? `${starsHtml("★".repeat(play.round) + "☆".repeat(VERSUS_ROUNDS - play.round))} 正解で${play.round}点` : `難しさ ${starsHtml(stars(question.level))}`;
   // 問題に合わせた、イラスト(絵と動きで、場面が分かるように)
   const art = illustrationFor(question);
   $("q-art").innerHTML = art;
@@ -3076,11 +3078,56 @@ function setTextSize(size) {
   }
   applyTextSize();
 }
+// 大きくしても、画面の中身が「ふだんの最小の画面(幅320×高さ568。この大きさで、どの画面も収まるように作ってある)」より小さくならない大きさまでにする
+// (それより大きくすると、枠や文字が画面からはみ出す。小さい画面ほど、大きくできる幅がせまい)
+const MIN_VIEW_W = 320;
+const MIN_VIEW_H = 568;
+const tabletZoom = () => (innerWidth > 600 && innerWidth < 901 ? 1.2 : 1); // style.css の --tablet-zoom と同じ
+function effectiveZoom(want) {
+  if (want <= 1) return want;
+  const room = Math.min(innerWidth / MIN_VIEW_W, innerHeight / MIN_VIEW_H) / tabletZoom();
+  return Math.max(1, Math.min(want, Math.floor(room * 100) / 100));
+}
+
+// 画面を zoom で大きくすると、画面が「ちいさくなった」のと同じ。style.css の @media の幅・高さのしきい値を、zoom ぶんだけ
+// 大きくして、「ちいさい画面用のくふう」が、大きくした文字でも、同じ場面で効くようにする(もとの値は覚えておく)
+const mediaOriginal = new WeakMap();
+const scaleMediaText = (text, zoom) =>
+  text.replace(/\((min|max)-(width|height):\s*([0-9.]+)px\)/g, (_, edge, axis, px) => `(${edge}-${axis}: ${Math.round(Number(px) * zoom * 100) / 100}px)`);
+function scaleMediaQueries(zoom) {
+  const walk = (rules) => {
+    for (const rule of rules) {
+      if (rule instanceof CSSMediaRule) {
+        if (!mediaOriginal.has(rule)) mediaOriginal.set(rule, rule.media.mediaText);
+        const original = mediaOriginal.get(rule);
+        // タブレットの拡大(--tablet-zoom)を決める規則は、本物の画面の幅で決めるので、そのまま
+        if (!rule.cssText.includes("--tablet-zoom")) rule.media.mediaText = scaleMediaText(original, zoom);
+        walk(rule.cssRules);
+      }
+    }
+  };
+  for (const sheet of document.styleSheets) {
+    let rules;
+    try {
+      rules = sheet.cssRules;
+    } catch {
+      continue; // 外のサイトのスタイル(フォント)は、読めない
+    }
+    walk(rules);
+  }
+}
+
 function applyTextSize() {
-  document.documentElement.style.setProperty("--ui-zoom", String(SIZES[textSize()]));
+  const zoom = effectiveZoom(SIZES[textSize()]);
+  document.documentElement.style.setProperty("--ui-zoom", String(zoom));
+  scaleMediaQueries(zoom);
   for (const radio of document.querySelectorAll('input[type="radio"][name^="size-"]')) radio.checked = radio.value === textSize();
 }
 applyTextSize();
+addEventListener("resize", () => {
+  clearTimeout(applyTextSize.timer);
+  applyTextSize.timer = setTimeout(applyTextSize, 150);
+});
 for (const radio of document.querySelectorAll('input[type="radio"][name^="size-"]')) {
   radio.addEventListener("change", () => setTextSize(radio.value));
 }
