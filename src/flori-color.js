@@ -233,6 +233,23 @@ export function recolor(src, color) {
         }
         parts.push(part);
       }
+      // ツヤ(白い光の部分)も、もようの一部にする: まわりが体の色なら、同じ部分としてあつかう
+      if (color.pat) {
+        const near = (i, dx, dy) => {
+          const x = (i % width) + dx;
+          const y = Math.floor(i / width) + dy;
+          return x >= 0 && x < width && y >= 0 && y < height ? label[y * width + x] : 0;
+        };
+        const add = [];
+        for (let i = 0; i < total; i += 1) {
+          if (label[i] || px[i * 4 + 3] < 128) continue;
+          const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
+          if (l < 0.93 || s > 0.5) continue;
+          const ids = [near(i, -14, 0), near(i, 14, 0), near(i, 0, -14), near(i, 0, 14)].filter(Boolean);
+          if (ids.length >= 3) add.push([i, ids[0]]);
+        }
+        for (const [i, id] of add) label[i] = id;
+      }
       // 足もとの影は、体より、少しこい水色のかたまり。体の色にはふくめない
       const skip = parts.map((part) => part.count > 150 && part.sumL / part.count < 0.84);
       for (let i = 0; i < total; i += 1) {
