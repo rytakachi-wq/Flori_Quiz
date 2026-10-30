@@ -3400,3 +3400,59 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 #screen-dress .dress-legend span.rare-2 { border-color: #e0a21c; color: #c08a0c; }
 #screen-dress .dress-legend span.rare-3 { border-color: #ffd54a; color: #e0509c; box-shadow: 0 0 6px rgba(255, 120, 200, 0.6); }
 
+
+/* =====================================================================
+   追加(その69):RPGのハート(ハートのブローチの絵・へるときに動く)・ヒントのボタンを大きく
+   ===================================================================== */
+.rpg-hearts { gap: 6px; }
+.rpg-heart { position: relative; display: inline-block; width: 30px; height: 30px; }
+.rpg-heart > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.rpg-heart .rpg-heart-off { filter: grayscale(1) brightness(1.15); opacity: 0.4; }
+.rpg-heart .rpg-heart-on.is-half { clip-path: inset(0 50% 0 0); }
+.rpg-heart.is-lose { animation: rpgHeartLose 0.7s ease-out; }
+.rpg-heart.is-gain { animation: rpgHeartGain 0.7s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes rpgHeartLose { 0% { transform: scale(1.35) rotate(0); } 20% { transform: scale(1.35) rotate(-14deg); } 40% { transform: scale(1.2) rotate(12deg); } 60% { transform: scale(1.1) rotate(-8deg); } 80% { transform: scale(1) rotate(4deg); } 100% { transform: none; } }
+@keyframes rpgHeartGain { 0% { transform: scale(0.4); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rpg-heart.is-lose, .rpg-heart.is-gain { animation: none; } }
+
+/* 「ヒントを見る」を大きく(上の1行の、右がわ) */
+.rpg-toprow .rpg-hint-btn { min-height: 42px; padding: 2px 16px; font-size: 17px; border-width: 3px; box-shadow: 0 3px 0 rgba(160, 120, 20, 0.35); }
+@media (max-height: 640px) { .rpg-toprow .rpg-hint-btn { min-height: 36px; padding: 1px 12px; font-size: 15px; } }
+
+/* スタートの確認:下の余白をなくして、あいた分だけ、フロリを大きく */
+#screen-confirm .confirm-stage { flex: 1 1 0; min-height: 0; }
+#screen-confirm .confirm-flori { height: 100%; max-height: 100%; width: auto; max-width: 55%; object-fit: contain; }
+:is(#screen-confirm).screen:not([hidden]) { padding-bottom: 8px; }
+
+/* =====================================================================
+   追加(その69):ルール説明を、遊び方ごとに(普通=黄色・難しい=オレンジ・RPG=赤・皆で=薄紫)
+   ===================================================================== */
+#screen-rules.rf-hard { --rf-bd: #f09a58; --rf-bg1: #fff3e6; --rf-bg2: #ffd6ae; --rf-cap: #ffe8d0; --rf-capbd: #e08a40; --rf-ac: #b8610f; --rf-screen: #fff9f2; }
+#screen-rules.rf-rpg { --rf-bd: #e88a84; --rf-bg1: #fff1ef; --rf-bg2: #ffd2cd; --rf-cap: #ffe5e2; --rf-capbd: #d9706a; --rf-ac: #b03a34; --rf-screen: #fff8f7; }
+.rf-dot-hard.is-on { background: #f08a30; border-color: #b8610f; }
+.rf-dot-rpg.is-on { background: #e8605a; border-color: #b03a34; }
+#screen-rules.rf-hard .rf-next { background: linear-gradient(180deg, #ffe6cc, #ffb36b); border-color: #d9701c; color: #6a3500; box-shadow: 0 6px 0 rgba(170, 90, 20, 0.45); }
+#screen-rules.rf-rpg .rf-next { background: linear-gradient(180deg, #ffe0dd, #ff9d96); border-color: #d9534f; color: #6a1a16; box-shadow: 0 6px 0 rgba(170, 50, 45, 0.4); }
+
+/* 順に出てくる絵(場面の中に、横に並ぶ) */
+.rf-seq { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 14px; }
+.rf-stack > .rf-seq { position: static; inset: auto; }
+.rf-seq-item { display: grid; justify-items: center; gap: 2px; min-width: 44px; animation: rfSeqPop 5s ease-in-out infinite; animation-delay: calc(var(--n) * 0.5s); }
+.rf-seq-item b { font-size: clamp(30px, calc(5.4 * var(--dvh)), 44px); line-height: 1.1; font-weight: normal; }
+.rf-seq-item small { font-size: 12px; font-weight: bold; text-align: center; line-height: 1.2; white-space: nowrap; color: #3a4a52; }
+.rf-seq-item .emi { height: 1em; width: auto; }
+@keyframes rfSeqPop { 0% { opacity: 0.25; transform: scale(0.8); } 12% { opacity: 1; transform: scale(1.15); } 22%, 88% { opacity: 1; transform: none; } 100% { opacity: 0.25; transform: scale(0.8); } }
+
+/* ハート(ハートのブローチの絵) */
+.rf-stack { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.rf-hearts { position: static; display: flex; justify-content: center; gap: 8px; }
+.rf-heart { width: clamp(38px, calc(7 * var(--dvh)), 54px); height: auto; aspect-ratio: 1; object-fit: contain; }
+.rf-heart.is-half { clip-path: inset(0 50% 0 0); }
+.rf-heart.is-off { filter: grayscale(1); opacity: 0.4; }
+.rf-hearts.rf-lose .rf-heart:last-child { animation: rfHeartGone 4.5s ease-in-out infinite; }
+@keyframes rfHeartGone { 0%, 30% { filter: none; opacity: 1; transform: none; } 38% { transform: scale(1.3) rotate(-14deg); } 46% { transform: scale(1.2) rotate(12deg); } 54% { transform: scale(1.1) rotate(-6deg); } 62%, 90% { filter: grayscale(1); opacity: 0.4; transform: none; } 100% { filter: none; opacity: 1; } }
+.rf-note { padding: 2px 12px; font-size: 15px; font-weight: bold; color: var(--rf-ac); background: #fff; border: 2px solid var(--rf-capbd); border-radius: 999px; }
+/* ヒントのハート:半分のうしろに、へった分の薄い絵 */
+.rf-hw { position: relative; display: inline-block; line-height: 0; }
+.rf-hw .rf-heart.is-half { position: absolute; left: 0; top: 0; }
+@media (prefers-reduced-motion: reduce) { .rf-seq-item { animation: none; opacity: 1; } .rf-hearts.rf-lose .rf-heart:last-child { animation: none; } }

@@ -1,6 +1,6 @@
 # 引きつぎメモ(別のセッションで作業を始める人は、最初にこれを読む)
 
-プロジェクトの全体の決まりは [CLAUDE.md](../CLAUDE.md) と [scheme.md](../scheme.md)。決めたことの記録は [decisions.md](decisions.md)(その1〜その64、新しいほど下)。
+プロジェクトの全体の決まりは [CLAUDE.md](../CLAUDE.md) と [scheme.md](../scheme.md)。決めたことの記録は [decisions.md](decisions.md)(その1〜その69、おおむね新しいほど下)。
 これまでのやり取りの全文は、前のセッションの記録(`~/.claude/projects/C--Users-rytak-Documents-Flori-Quiz/*.jsonl`)にある。細かい経緯が必要なときだけ、そこを検索する。
 
 ## 作業の約束(利用者の指示)
@@ -23,7 +23,7 @@
 - ふりがな:furigana-data.js の ENTRIES(後ろの項目が優先。形は `漢字{よみ}送りがな`)、KYOIKU_BY_GRADE(学年別の漢字)。設定は 全部・多め[3年生以上]・少なめ[5年生以上]・なし(decisions その61)。
 - 画面の収まり:style.css 末尾の `@media screen` の層(`:is(#screen-…)` でID指定に勝つ)、小さい画面用の規則、固定高の `.screen-head`(46px)。
 
-- RPGクエスト(decisions その63):`game.js` の `RpgRound`、専用の画面 `screen-rpg`(`main.js` の `showRpg`/`rpgAnswer`/`rpgNext`、見た目は style.css 末尾)。専用の見た目(戦いの場+青いウィンドウ。style.css 末尾)。ヒントでハートが半分へる・ハート4つ・BGM=`TRACKS.quest`(ボスは `questboss`)・ルール説明=`RPG_SCENES`。モード選択の「遊び方」の行は、普通・難しい・RPG(`pick.level`=normal/hard/rpg)。**公開は更新していない**(手元で確認)。
+- RPGクエスト(decisions その63):`game.js` の `RpgRound`、専用の画面 `screen-rpg`(`main.js` の `showRpg`/`rpgAnswer`/`rpgNext`、見た目は style.css 末尾)。専用の見た目(戦いの場+青いウィンドウ。style.css 末尾)。ヒントでハートが半分へる・ハート4つ・BGM=`TRACKS.quest`(ボスは `questboss`)・ルール説明=`rules.js` の `KINDS`(普通・難しい・RPG・皆で。decisions その69)。ハートの絵=ハートのブローチ(`assets/illust/heart.webp`)。モード選択の「遊び方」の行は、普通・難しい・RPG(`pick.level`=normal/hard/rpg)。**公開は更新していない**(手元で確認)。
 
 ## フロリを動かす(Live2D、作業中)
 - `hehehe.cmo3`(利用者のデスクトップ)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で、`src/live2d/model.json`・`tex/` を作る。描画は自作の `src/live2d/live2d.js`。試作ページ:`/src/live2d/preview.html`(スライダーで確認)。表紙用の動き:`src/live2d/flori-motion.js`、確かめ用ページ `/src/live2d/cover.html`(クリックでぴょん)。アプリ(index.html・main.js)には**まだ入れていない**。決めたこと・未決は decisions.md その49。

@@ -80,7 +80,7 @@ let versusPlayers = 2; // 皆で対戦する人数
 
 // 画面ごとのBGMの場面(audio.js の BGM と対応)
 function sceneOf(name) {
-  if (name === "rpg") return "rpg";
+  if (name === "rpg") return mode === "rpg" && play?.current?.kind === "boss" ? "rpgboss" : "rpg"; // 画面を出すたびに曲が切りかわって、はじめから鳴りなおすのを防ぐ
   if (name === "gameover") return "gameover"; // BGMはなし(ゲームオーバーの音だけ)
   if (name === "question") {
     return { oni: "oni", hard: "hard", versus: "versus" }[mode] ?? "question";
@@ -1421,6 +1421,8 @@ function renderConfirm() {
 
 // クイズのルール(フリップ)は、はじめて「クイズ」を押したときだけ、ゲームの前に流れる。2回目からは、モード選択へ(モード選択の「ルールをもう1度見る」で、いつでも見られる)
 const RULES_SEEN_KEY = "floriQuiz.guideSeen.quiz";
+// いま選んでいる遊び方に合う、ルール(普通・難しい・RPG・皆で対戦)
+const rulesKind = () => (pick.kind === "versus" ? "versus" : pick.level);
 function openRules() {
   let seen = false;
   try {
@@ -1434,7 +1436,7 @@ function openRules() {
     show("setup");
     return;
   }
-  resetRules();
+  resetRules(rulesKind());
   show("rules");
 }
 $("btn-quiz").addEventListener("click", openRules);
@@ -1453,7 +1455,7 @@ $("btn-confirm-start").addEventListener("click", () => {
   if (pick.kind === "versus") {
     versusPlayers = Math.min(VERSUS_MAX_PLAYERS, Math.max(VERSUS_MIN_PLAYERS, pick.players));
     startPlay("versus");
-  } else if (pick.level === "rpg") guideOnce("rpg", () => startPlay("rpg")); // RPGは、はじめてのときだけ、先にルール説明
+  } else if (pick.level === "rpg") guideRpg(() => startPlay("rpg")); // RPGは、はじめてのときだけ、先にルール説明
   else startPlay(pick.level);
 });
 
@@ -1465,13 +1467,26 @@ $("btn-rules-back").addEventListener("click", () => {
 });
 $("btn-flow-back").addEventListener("click", () => show("cover", -1));
 $("btn-show-rules").addEventListener("click", () => {
-  if (pick.level === "rpg" && pick.kind !== "versus") {
-    playTutorial("rpg"); // RPGを選んでいるときは、RPGのルール説明
-    return;
-  }
-  resetRules();
+  resetRules(rulesKind()); // 選んでいる遊び方の、ルール説明
   show("rules");
 });
+// RPGの、はじめてのときだけのルール説明(ルールの画面で見て、最後に、ゲームをはじめる)
+function guideRpg(then) {
+  const key = "floriQuiz.guideSeen.rpg";
+  let seen = false;
+  try {
+    seen = localStorage.getItem(key) === "1";
+    localStorage.setItem(key, "1");
+  } catch {
+    // 保存できなくても、遊べる(毎回ルールが出るだけ)
+  }
+  if (seen) {
+    then();
+    return;
+  }
+  resetRules("rpg", then, "ゲームスタート");
+  show("rules");
+}
 $("btn-menu-back").addEventListener("click", () => show("cover", -1));
 
 // その他(2ページ目):下のページ点、または、横スワイプで出る(縦にスクロールしても、表紙をさわっても、画面は変わらない)
@@ -2411,20 +2426,34 @@ let rpgAnswered = false;
 let rpgHinted = false;
 
 // ハート:1つ=❤️。半分へったハートは、左の半分だけ赤く(ヒントを見ると、半分へる)
+// ハートの絵は、着せ替えの「ハートのブローチ」。へった分の絵はうすい灰色、半分は左の半分だけ色つき。
+// へったハートは、ぷるっと動く(前に出したときより、へったり、ふえたりしたハートだけ)
+const HEART_IMG = "../assets/illust/heart.webp";
+let rpgHeartsShown = null; // 前に出したときの、ハートごとの量(別のクエストになったら、動かさない)
+let rpgHeartsOwner = null;
 function renderRpgHearts() {
   const box = $("rpg-hearts");
+  const before = rpgHeartsOwner === play ? rpgHeartsShown : null;
+  rpgHeartsOwner = play;
+  rpgHeartsShown = Array.from({ length: RPG_LIVES }, (_, i) => Math.max(0, Math.min(1, play.lives - i)));
   box.replaceChildren(
-    ...Array.from({ length: RPG_LIVES }, (_, i) => {
-      const value = play.lives - i;
+    ...rpgHeartsShown.map((value, i) => {
       const heart = document.createElement("span");
       heart.className = "rpg-heart";
-      heart.innerHTML = '<span class="rpg-heart-off">🖤</span>';
+      const off = document.createElement("img");
+      off.className = "rpg-heart-off";
+      off.src = HEART_IMG;
+      off.alt = "";
+      heart.append(off);
       if (value >= 0.5) {
-        const on = document.createElement("span");
+        const on = document.createElement("img");
         on.className = `rpg-heart-on${value < 1 ? " is-half" : ""}`;
-        on.textContent = "❤️";
+        on.src = HEART_IMG;
+        on.alt = "";
         heart.append(on);
       }
+      if (before && before[i] > value) heart.classList.add("is-lose");
+      else if (before && before[i] < value) heart.classList.add("is-gain");
       return heart;
     }),
   );
@@ -2505,7 +2534,7 @@ function showRpg() {
   rpgHinted = false;
   renderRpgStatus();
   const stage = play.current;
-  $("screen-rpg").classList.remove("is-answered");
+  $("screen-rpg").classList.remove("is-answered", "is-hinted");
   $("rpg-field").classList.remove("is-strike", "is-defeat", "is-hurt");
   rpgPose(stage.kind === "boss" ? IMG.surprised : "../assets/flori/m/body_wave.webp", "フロリ");
   $("rpg-text").textContent = question.text;
@@ -2653,10 +2682,14 @@ $("btn-rpg-hint-yes").addEventListener("click", () => {
   rpgHinted = true;
   play.useHint();
   renderRpgHearts();
-  rpgFx("💔 ヒントで ハートが 半分 へった");
+  playSe("rpgGuard", 380); // ハートが半分へった音(ダメージより短く)
+  rpgFx("💔 ハート 半分 へった");
+  $("screen-rpg").classList.add("is-hinted"); // 低い画面では、上の絵を小さくして、ヒントの場所をあける
   $("rpg-hint").textContent = `💡 ${rpgQuestion.hint}`;
   $("rpg-hint").hidden = false;
   updateRpgHintButton();
+  fitRpgWindow(); // ヒントの分だけ、ふえたので、収めなおす
+  setTimeout(fitRpgWindow, 150);
 });
 $("btn-rpg-next").addEventListener("click", rpgNext);
 $("btn-rpg-quit").addEventListener("click", () => $("dlg-quit").showModal());
