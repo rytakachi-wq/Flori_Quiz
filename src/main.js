@@ -2798,7 +2798,7 @@ function flowName(name, tint) {
   text.textContent = name;
   flow.append(document.createElement("i"), text, document.createElement("i"));
   stage.append(flow);
-  setTimeout(() => flow.remove(), 2100);
+  setTimeout(() => flow.remove(), 1300);
 }
 
 function renderDress() {
