@@ -15,9 +15,9 @@ const clamp1 = x => Math.max(-1, Math.min(1, x));
 const env = (a, up, hold, down) => ss(a / up) * (1 - ss((a - up - hold) / down));       // 上がる → 保つ → 下がる(0→1→0)
 
 export const HOP_SECONDS = 1.2;
-export const CROSS = 0.5;             // いつもの寄り目の強さ(1 = リグの最大。小さいほど、正面に近い)
-export const PARTNER = 0.25;           // 右を見るとき、もう一方の目が動く量(パラメーター値)
-export const LIP_MARGIN = 0.7;        // 下唇が −LIP_MARGIN より小さくなる(とげが出る)ときだけ、上唇も動かす
+export const CROSS_PX = 9;             // いつもの寄り目の量(ひとみが、内側へ動く。キャンバスのピクセル)
+export const GAZE_PX = 14;             // 左右を見るときの、ひとみの動く量(これより大きいと、ひとみが目からはみ出る)
+export const LIP_MARGIN = 0.2;        // 下唇が −LIP_MARGIN より小さくなる(とげが出る)ときだけ、上唇も動かす
 export const BASE_MOUTH = -0.85;      // ふだんの口(下唇。小さい。−1 がいちばん小さい)
 
 // 表情(強さ e: 0→1 のとき、各部分がどこまで動くか)。dir:true のものは、傾く向きを、ときどき かえる
@@ -41,6 +41,11 @@ export const EXPRESSIONS = [
   { name: 'うっとり', brow: 0.6, tilt: 0.8, mouth: -0.3, lid: 0.5, hold: [1.2, 1.8], dir: true },
   { name: 'ぐぬぬ', brow: -1, tilt: 0.3, mouth: -1, wobble: 0.15, hold: [1.0, 1.5], dir: true },
 ];
+
+// 見た目の位置(px。+ は画面の右)→ 白目のパラメーター値(右の目は、右へ25px・左へ16px、左の目は、右へ22px・左へ26px が、±1)
+const pxToR = px => (px >= 0 ? -px / 25 : -px / 16), pxToL = px => (px >= 0 ? -px / 22 : -px / 26);
+// 視線 g(−1〜1。+ は画面の左)のときの、片目の位置:g = 0 で base(寄り目)、g = ±1 で ∓GAZE_PX
+const eyePx = (g, base) => (g >= 0 ? base + (-GAZE_PX - base) * g : base + (GAZE_PX - base) * -g);
 
 export function createMotion(model) {
   const ix = n => model.params.findIndex(p => p.name === n);
@@ -132,16 +137,16 @@ export function createMotion(model) {
       if (x.look) gaze = -Math.sign(tilt) * x.look * e;     // 傾けた側を見る(+ は画面の右)
     }
     if (x && x.lid) for (const i of I.lids) V[i] = -Math.max(b, x.lid * e);   // ねむい・うっとり:まぶたを、半分おろす
-    // いつもの顔は寄り目(右の目 −1・左の目 +1)。左右を見るときは、動かす目だけを動かし、もう一方は そのまま
-    //  画面の左(look>0)= 右の目だけ動く(左の目は そのまま)/ 画面の右(look<0)= 左の目だけ動く(右の目は そのまま)
-    //  フロリの右(画面の左。look>0)を見るときだけ、もう一方の目(フロリの左目)も、ちょっと動かす
-    let vr = -CROSS + (1 + CROSS) * Math.max(0, gaze), vl = CROSS - (1 + CROSS) * Math.max(0, -gaze) + PARTNER * Math.max(0, gaze);
+    // 見た目の位置(キャンバスのピクセル。+ は画面の右)で決めて、パラメーター値に直す。いつもの顔は寄り目(右の目 +CROSS_PX・左の目 −CROSS_PX)。
+    // 左右を見るときは、両目とも、同じ位置(±GAZE_PX)へ動かす(ひとみが目からはみ出さない・片方だけ動かない、をなくす)
+    const g = Math.max(-1, Math.min(1, gaze)), pr = eyePx(g, CROSS_PX), pl = eyePx(g, -CROSS_PX);
+    let vr = pxToR(pr), vl = pxToL(pl);
     vr = clamp1(vr); vl = clamp1(vl);
 
     // 腕と足
     let banR = 0, banL = 0, foot = 0, swing = 0;
     // ふだんの腕:ほんの少し、ゆれる(コブシの腕を、ごく小さく動かす。呼吸のときは、ごく小さく)
-    const swayR = 0.05 + 0.04 * Math.sin(t * 5), swayL = 0.05 + 0.04 * Math.sin(t * 5 + 1.3);   // ルンルン:ちょっと、リズムをつけて ゆれる(左右で、すこしずれる)   // 左右の手は、べつべつに ゆれる
+    const swayR = 0.02 + 0.012 * Math.sin(t * 1.3), swayL = 0.02 + 0.012 * Math.sin(t * 1.1 + 1.7);   // 左右の手は、べつべつに ゆれる
     if (kind === 'stretch') {   // つま先立ちで、両腕を真上へ(左右同じ)。からだも伸びる
       banR = banL = k; foot = 0.5 * k; bounce += k * 40;
     } else if (kind === 'flap') {   // 両腕を、からだの横へ、小さく開いたり閉じたり(コブシ 0〜−0.2。左右同じ)
@@ -157,7 +162,7 @@ export function createMotion(model) {
     if (hopping) {   // ぴょんのあいだは、表情・視線を、はじめの値から すっと ふだんにもどす
       if (!wasHop) { hold = { vr: V[I.gazeR], vl: V[I.gazeL], brow: V[I.browR], face: V[I.face], mouth: V[I.mouth] }; ev = null; waitUntil = t + HOP_SECONDS + 1; }
       const kk = 1 - ss(hs / 0.25);
-      vr = -CROSS + (hold.vr + CROSS) * kk; vl = CROSS + (hold.vl - CROSS) * kk; brow = hold.brow * kk; tilt = hold.face * kk; mouth = idleAbs + (hold.mouth - idleAbs) * kk;
+      vr = pxToR(CROSS_PX) + (hold.vr - pxToR(CROSS_PX)) * kk; vl = pxToL(-CROSS_PX) + (hold.vl - pxToL(-CROSS_PX)) * kk; brow = hold.brow * kk; tilt = hold.face * kk; mouth = idleAbs + (hold.mouth - idleAbs) * kk;
       banR = banL = 0; fistR = fistL = 0; foot = 0;
       if (hs < 0.14) { const u = ss(hs / 0.14); sy = 1 - 0.06 * u; sx = 1 + 0.03 * u; bounce = 0; }                    // かがむ
       else if (hs < 0.54) { const u = (hs - 0.14) / 0.4, h = Math.sin(u * Math.PI / 2); bounce = 85 * h; sy = 1 + 0.04 * h; sx = 1 - 0.02 * h;   // のぼる
