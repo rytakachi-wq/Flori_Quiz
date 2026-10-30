@@ -39,6 +39,7 @@ import {
   recordOni,
   recordReview,
   recordWrong,
+  recordRpg,
   recordRound,
   recordVersus,
 } from "./storage.js";
@@ -46,12 +47,18 @@ import { illustrationFor } from "./illustrations.js";
 import { createTalker } from "./talk.js";
 import { initTutorial, openTutorial } from "./tutorial.js";
 import { initRules, openRules as resetRules } from "./rules.js";
-import { BODIES, COLORS, FACES, HEADS, RANKS, THEMES, earnedBadges, getText, groupLabel, canWear, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
+import { BODIES, COLORS, FACES, HEADS, RANKS, RARITY_NAMES, THEMES, earnedBadges, keepOwned, getText, groupLabel, canWear, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { refreshDecor, setAutoDecor } from "./decor-overlay.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
 import { getVolume, loopName, playJingle, playSe, resetVolumes, setScene, setVolume, startLoop, stopLoop, unlock } from "./audio.js";
 import { getFuriganaMode, setFuriganaMode, speechOf, startFurigana } from "./furigana.js";
+
+// 着せ替えの条件が変わったとき、前の条件で手に入れていたものを残す(初めて開いたときの1回だけ)
+{
+  const start = loadStats();
+  keepOwned({ have: new Set(start.badges), stars: start.stars });
+}
 
 const QUESTIONS_URL = "../data/questions/questions.json";
 const ONI_TAPS = 5; // 表紙のすみのフロリを、この回数押すと、オニ問題が出る
@@ -895,6 +902,7 @@ function showResult() {
   } else if (adventure) {
     // RPGは、成績の「遊んだ回数」「正解率」「総合得点」には入れない(この遊びだけの記録を、端末の中に残す)。まちがえた問題は、まちがいノートに入る。
     recordWrong(result.answers);
+    recordRpgResult(result);
     const saved = recordAdventure(result);
     $("r-title").textContent = result.cleared ? "クエスト クリア! 🏆" : "ざんねん… ゲームオーバー";
     $("r-best-row").hidden = false;
@@ -1065,6 +1073,10 @@ function heartsText(n) {
   return Number.isInteger(n) ? `${n}つ` : `${Math.floor(n)}つと半分`;
 }
 
+// RPGの記録(着せ替えの解放に使う):クリア・ノーダメージ・ボス戦まで進んだ・たからばこ
+function recordRpgResult(result) {
+  recordRpg({ cleared: result.cleared, noDamage: result.lives === RPG_LIVES, boss: result.stage >= RPG_STAGES.length - 1, chests: result.chests ?? 0 });
+}
 function adventureComment(result) {
   if (result.cleared) return result.lives === RPG_LIVES ? "ノーダメージ クリア! すごいヨ!" : "ドラゴンを たおした! おめでとう!";
   return result.stage >= 3 ? "惜しい! ボスの すぐ近くまで 来たヨ!" : "ナイスチャレンジ! また 冒険に 出よう!";
@@ -2595,6 +2607,7 @@ function showGameOver() {
   const result = play.finishRound();
   recordDex(result.answers); // 図鑑
   recordWrong(result.answers); // まちがえた問題は、まちがいノートへ
+  recordRpgResult(result);
   const wrongCount = new Set(result.answers.filter((a) => !a.correct).map((a) => a.id)).size; // 同じ問題は、1問と数える
   const last = RPG_STAGES.length - 1;
   $("go-message").textContent =
@@ -2801,6 +2814,26 @@ function flowName(name, tint) {
   setTimeout(() => flow.remove(), 1300);
 }
 
+// レア度の★(色が付くよう、絵文字でなく、図形で出す)
+function rareStars(rarity) {
+  const box = document.createDocumentFragment();
+  for (let i = 0; i <= rarity; i += 1) box.append(document.createElement("i"));
+  return box;
+}
+
+// 一覧の上に、レア度の見かた(★の数と、枠の色)を出す
+function dressLegend() {
+  const legend = document.createElement("div");
+  legend.className = "dress-legend";
+  RARITY_NAMES.forEach((name, rarity) => {
+    const chip = document.createElement("span");
+    chip.className = `rare-${rarity}`;
+    chip.append(rareStars(rarity), name);
+    legend.append(chip);
+  });
+  return legend;
+}
+
 function renderDress() {
   hideTip();
   const stats = loadStats();
@@ -2835,6 +2868,7 @@ function renderDress() {
   const kind = dressTab;
   let lastGroup = null; // 系統(帽子・耳・冠…)が変わるごとに、線と説明を入れて、改行する
   $("dress-list").replaceChildren(
+    dressLegend(),
     ...DRESS_LISTS[kind].flatMap((choice, index) => {
       // 「なし」は、さいしょの系統の行に入れる(1行だけ、むだにしない)
       const groupNo = choice.group ?? (index === 0 ? DRESS_LISTS[kind][1]?.group : undefined);
@@ -2844,7 +2878,7 @@ function renderDress() {
       const isNew = freshKeys.has(`${kind}:${choice.id}`);
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}${open ? "" : " is-locked"}${isNew ? " is-new" : ""}`;
+      button.className = `dress-item${dress[kind] === choice.id ? " is-on" : ""}${open ? "" : " is-locked"}${isNew ? " is-new" : ""}${choice.rarity === undefined ? "" : ` rare-${choice.rarity}`}`;
       button.style.setProperty("--tint", choice.tint);
       // 絵だけを見せる(名前や、もらいかたは、押したときや、マウスをのせたときに出す)
       const art = document.createElement("span");
@@ -2874,6 +2908,13 @@ function renderDress() {
         check.setAttribute("aria-hidden", "true");
         button.append(check);
       }
+      if (choice.rarity !== undefined) {
+        const rare = document.createElement("span");
+        rare.className = "dress-rare";
+        rare.append(rareStars(choice.rarity));
+        rare.setAttribute("aria-hidden", "true");
+        button.append(rare);
+      }
       if (isNew) {
         const ribbon = document.createElement("span");
         ribbon.className = "dress-new";
@@ -2890,7 +2931,8 @@ function renderDress() {
       }
       const progress = open ? null : progressOf(choice, bctx);
       const tipText = `🔒 ${getText(choice)}${progress && progress.goal > 1 ? `(${progress.now}/${progress.goal})` : ""}`;
-      button.setAttribute("aria-label", open ? choice.name : `${choice.name}(${getText(choice)})`);
+      const rareName = choice.rarity === undefined ? "" : `[${RARITY_NAMES[choice.rarity]}]`;
+      button.setAttribute("aria-label", open ? `${choice.name}${rareName}` : `${choice.name}${rareName}(${getText(choice)})`);
       if (open) {
         button.addEventListener("mouseenter", () => previewDress(kind, choice));
         button.addEventListener("focus", () => previewDress(kind, choice));

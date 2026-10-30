@@ -49,4 +49,5 @@
 - 公開ずみ:2026-10-28(絵文字を描いた絵に置きかえ・着せ替え15こ追加まで)。これより後のコミットは、題名の終わりが「(未公開)」。
 - 項目ごとにセッションを分けて進める。作業が終わったら、決めたことを decisions.md に、状態が変わったらこのファイルの「既知の残り」「現在の状態」を更新する。
 - 着せ替えの色・背景: お試し(TRIAL)も、正式なご褒美になった(badges.js の TRIAL_SETS で、色と背景のセットごとに条件)。一覧は、ジャンルの見出し付き(SET_ORDER)。着せたとき、名前が枠の上を流れる(main.js の flowName)。
+- 着せ替えの条件・レア度は、`src/dress-unlocks.js`(`UNLOCKS`・`RARITY`・移行用の`OLD_UNLOCKS`)。レア度の名前は badges.js の `RARITY_NAMES`(ノーマル・レア・スーパーレア・レジェンド)。条件を変えたら、`OLD_UNLOCKS` ではなく `UNLOCKS` を直す。RPGの条件は、storage.js の `recordRpg` で数える。
 

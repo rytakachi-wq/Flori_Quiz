@@ -298,6 +298,7 @@ export class RpgRound {
     this.event = null; // 直前の答えで、何が起きたか
     this.pending = null; // まちがえた問題(正解するまで、同じ問題を出す)
     this.retries = 0; // いまの問題で、まちがえた回数
+    this.chests = 0; // たからばこの問題に、正解した数
   }
 
   abandonRound() {
@@ -330,7 +331,10 @@ export class RpgRound {
     const chest = this.current.kind === "chest";
     if (chest) {
       this.event = correct ? "heal" : "miss";
-      if (correct) this.lives = Math.min(RPG_LIVES, this.lives + 1);
+      if (correct) {
+        this.lives = Math.min(RPG_LIVES, this.lives + 1);
+        this.chests += 1;
+      }
       this.pending = null;
       this.retries = 0;
       this.advance();
@@ -375,6 +379,7 @@ export class RpgRound {
       cleared: this.cleared,
       lives: this.lives,
       stage: this.stage,
+      chests: this.chests,
     };
     this.startRound();
     return result;

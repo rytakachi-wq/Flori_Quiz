@@ -1,6 +1,8 @@
 // きせかえ(フロリの色・頭・体・顔・背景)と、そのもらい方(解放の条件)。成績(storage.js)から、条件を数える。
 // 名前や個人情報は入れない。きせかえの選びかただけ、端末内に保存する。
 
+import { OLD_UNLOCKS, RARITY, UNLOCKS } from "./dress-unlocks.js";
+
 const DRESS_KEY = "floriQuiz.dress";
 
 // ---------------- 解放の条件 ----------------
@@ -32,17 +34,27 @@ const SPEC = [
   ["total10", "総合10点", "total", 10], ["total20", "総合20点", "total", 20], ["total30", "総合30点", "total", 30], ["total40", "総合40点", "total", 40],
   ["total50", "総合50点", "total", 50], ["total60", "総合60点", "total", 60], ["total70", "総合70点", "total", 70], ["total80", "総合80点", "total", 80],
   ["total90", "総合90点", "total", 90], ["total100", "総合100点", "total", 100],
-  // あとから足した かざり15こ用(もらえる順の、いちばん後ろ。EXTRA_LADDER)
+  // あとから足した かざり15こ用
   ["daily30", "毎日1問30日", "daily", 30], ["versus30", "30回対戦", "versus", 30], ["timed20", "時間チャレンジ20回", "timed", 20],
   ["review10", "復習コンプリート10回", "review", 10], ["perfect30", "パーフェクト30回", "perfect", 30], ["garden10", "お花畑10回完成", "garden", 10],
   ["timedPerfect5", "時間内パーフェクト5回", "timedPerfect", 5], ["hardPerfect10", "難しいパーフェクト10回", "perfectHard", 10],
   ["play150", "150回プレイ", "plays", 150], ["streak50", "毎日1問50日連続", "streak", 50], ["timed30", "時間チャレンジ30回", "timed", 30],
   ["daily50", "毎日1問50日", "daily", 50], ["versus50", "50回対戦", "versus", 50], ["play200", "200回プレイ", "plays", 200],
-  // あとから足した 顔のかざり13こ用(そのまた後ろ。EXTRA_LADDER の おわり)
+  // あとから足した 顔のかざり13こ用
   ["perfect40", "パーフェクト40回", "perfect", 40], ["review15", "復習コンプリート15回", "review", 15], ["garden15", "お花畑15回完成", "garden", 15],
   ["timedPerfect8", "時間内パーフェクト8回", "timedPerfect", 8], ["daily70", "毎日1問70日", "daily", 70], ["hardPerfect15", "難しいパーフェクト15回", "perfectHard", 15],
   ["versus70", "70回対戦", "versus", 70], ["timed40", "時間チャレンジ40回", "timed", 40], ["play250", "250回プレイ", "plays", 250],
   ["streak70", "毎日1問70日連続", "streak", 70], ["perfect60", "パーフェクト60回", "perfect", 60], ["play300", "300回プレイ", "plays", 300],
+  // RPG(rpgClear=クリアした回数 rpgPerfect=ノーダメージでクリアした回数 rpgBoss=ボス戦まで進んだ回数 rpgChest=たからばこの問題に正解した数)
+  ["rpgClear1", "RPG制覇", "rpgClear", 1], ["rpgClear3", "RPG制覇3回", "rpgClear", 3], ["rpgClear5", "RPG制覇5回", "rpgClear", 5],
+  ["rpgClear10", "RPG制覇10回", "rpgClear", 10], ["rpgClear20", "RPG制覇20回", "rpgClear", 20], ["rpgClear30", "RPG制覇30回", "rpgClear", 30],
+  ["rpgPerfect1", "RPGノーダメージ制覇", "rpgPerfect", 1], ["rpgPerfect3", "RPGノーダメージ制覇3回", "rpgPerfect", 3],
+  ["rpgPerfect5", "RPGノーダメージ制覇5回", "rpgPerfect", 5], ["rpgPerfect10", "RPGノーダメージ制覇10回", "rpgPerfect", 10],
+  ["rpgBoss1", "RPGボス戦に初挑戦", "rpgBoss", 1], ["rpgBoss3", "RPGボス戦に3回挑戦", "rpgBoss", 3], ["rpgBoss5", "RPGボス戦に5回挑戦", "rpgBoss", 5],
+  ["rpgBoss10", "RPGボス戦に10回挑戦", "rpgBoss", 10], ["rpgBoss20", "RPGボス戦に20回挑戦", "rpgBoss", 20],
+  ["rpgChest3", "RPGたからばこ3個", "rpgChest", 3], ["rpgChest5", "RPGたからばこ5個", "rpgChest", 5],
+  ["rpgChest10", "RPGたからばこ10個", "rpgChest", 10], ["rpgChest20", "RPGたからばこ20個", "rpgChest", 20],
+  ["rpgChest30", "RPGたからばこ30個", "rpgChest", 30],
 ];
 
 const COUNT = {
@@ -60,9 +72,13 @@ const COUNT = {
   timedPerfect: (c) => c.stats.timedPerfect,
   garden: (c) => c.stats.gardenClears,
   total: (c) => c.total,
+  rpgClear: (c) => c.stats.rpgClears,
+  rpgPerfect: (c) => c.stats.rpgNoDamage,
+  rpgBoss: (c) => c.stats.rpgBoss,
+  rpgChest: (c) => c.stats.rpgChests,
 };
 // 数のあとに付ける、ことば(「いま 2 / 5問」のように)
-const UNIT = { right: "問", plays: "回", perfect: "回", perfectHard: "回", oni: "問", streak: "日", daily: "日", versus: "回", review: "回", dex: "枚", timed: "回", timedPerfect: "回", garden: "回", total: "点" };
+const UNIT = { right: "問", plays: "回", perfect: "回", perfectHard: "回", oni: "問", streak: "日", daily: "日", versus: "回", review: "回", dex: "枚", timed: "回", timedPerfect: "回", garden: "回", total: "点", rpgClear: "回", rpgPerfect: "回", rpgBoss: "回", rpgChest: "個" };
 const GOAL = { playable: (c) => c.playable, oni: (c) => c.oni, all: (c) => c.all };
 
 export const CONDITIONS = SPEC.map(([id, quest, key, goal]) => ({
@@ -84,20 +100,6 @@ export function earnedBadges(ctx) {
   }).map((condition) => condition.id);
 }
 
-// ---------------- もらえる順番(やさしい → むずかしい)----------------
-// きせかえは全部で90こ(色15・頭25・体26・顔9・背景15)。やさしいものから順に、この表のとおりに、わりあてる。
-// 条件の数(78)+星の数(12)で、ちょうど90。そのあとに、あとから足した かざり15こ(EXTRA_LADDER)が続く(全部で105)。
-const LADDER = [
-  "first", "play1", "right5", "garden", "streak2", "versus1", "timed1", "dex10", "total10", { stars: 5 },
-  "play5", "right10", "review", "perfect", "streak3", "dex20", "total20", "oni1", "versus3", "daily5",
-  { stars: 10 }, "garden3", "right15", "play10", "right20", "perfect3", "streak5", "dex30", "total30", "oni3",
-  "versus5", "review3", "play20", { stars: 15 }, "timedPerfect", "daily10", "hardPerfect", "right30", "perfect5", "streak7",
-  "dex40", "total40", "oni5", "versus10", { stars: 20 }, "timed5", "garden5", "hardPerfect3", "play30", "right40",
-  "dex50", "total50", "streak10", "perfect10", { stars: 25 }, "right50", "play50", "total60", "oni7", "versus20",
-  "review5", { stars: 30 }, "timedPerfect3", "daily20", "dex60", "right60", "total70", "timed10", "hardPerfect5", "streak14",
-  { stars: 40 }, "play75", "right70", "dex70", "total80", "perfect20", "oniAll", { stars: 50 }, "play100", "right80",
-  "dex80", "total90", { stars: 60 }, "streak30", "rightAll", "dexAll", { stars: 75 }, "total100", { stars: 100 }, { stars: 150 },
-];
 
 // ---------------- 色と背景(同じ15色)----------------
 // 見本の絵(swatch):金・銀・銅の光沢と、虹色は、グラデーションで表す。
@@ -125,10 +127,6 @@ const PALETTE = [
   { id: "bronze", name: "どっしりブロンズ", tint: "#b8763a", bg: SWATCH.bronze, blue: "#c98a4a", dark: "#7a4416", swatch: SWATCH.bronze, color: { metal: ["#5e4838", "#8e7054", "#b8906c", "#d8bc9c", "#f0e2d2"] } },
   { id: "rainbow", name: "七色レインボー", tint: "#c9a8f0", bg: "linear-gradient(135deg, #ffd9d9, #fff3c4, #d9f7d9, #d9ecff, #ead9ff)", blue: "#c9a8f0", dark: "#7a50bd", swatch: SWATCH.rainbow, color: { rainbow: true }, stage: "linear-gradient(135deg, #ffb3a7 0%, #ffd9a0 22%, #ffeea0 40%, #b9ecb5 60%, #a8d4ff 80%, #cbb6ff 100%)" },
 ];
-// もらえる順(やさしい → むずかしい)
-const COLOR_ORDER = ["pink", "orange", "yellow", "green", "lime", "red", "purple", "white", "navy", "black", "bronze", "silver", "gold", "rainbow"];
-const THEME_ORDER = ["pink", "yellow", "green", "lime", "orange", "purple", "red", "white", "navy", "black", "bronze", "silver", "gold", "rainbow"];
-
 // うすい色の見本(フロリは、うすい色に染まるので、見本も、うすくする)
 function soften(hex, amount = 0.5) {
   const mix = (i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - amount) + 255 * amount);
@@ -250,14 +248,8 @@ const EXTRA_DECOR = [
   ["face", 24, "眼帯(白)", "fp_eyepatch", { x: 58.2, y: 23.5, w: 74.1 }],
   ["face", 25, "眼帯(黒)", "fp_eyepatch_black", { x: 58.2, y: 23.5, w: 74.1 }],
 ];
-const EXTRA_LADDER = [
-  "daily30", "versus30", "timed20", "review10", "perfect30", "garden10", "timedPerfect5", "hardPerfect10",
-  "play150", "streak50", "timed30", "daily50", "versus50", "play200", { stars: 200 },
-  // 顔のかざり13こ(やさしい順)
-  "perfect40", "review15", "garden15", "timedPerfect8", "daily70", "hardPerfect15", "versus70", "timed40", "play250", "streak70", { stars: 250 }, "perfect60", "play300",
-];
 const extraOf = (slot) =>
-  EXTRA_DECOR.map((row, index) => ({ row, unlock: EXTRA_LADDER[index] }))
+  EXTRA_DECOR.map((row) => ({ row, unlock: null }))
     .filter(({ row }) => row[0] === slot)
     .map(({ row: [, number, name, slug, pos], unlock }) => ({
       id: `${slot}${String(number).padStart(2, "0")}`,
@@ -269,20 +261,8 @@ const extraOf = (slot) =>
       unlock,
     }));
 
-// 色・背景・かざりの、もらえる条件を、やさしい順に、わりあてる(カテゴリごとに、なるべくまんべんなく)
-function assignUnlocks(groups) {
-  const entries = [];
-  for (const [list, rank] of groups) {
-    const ordered = rank ? rank.map((id) => list.find((item) => item.id === id)) : list;
-    ordered.forEach((item, index) => entries.push({ item, at: (index + 0.5) / ordered.length, tie: entries.length }));
-  }
-  entries.sort((a, b) => a.at - b.at || a.tie - b.tie);
-  entries.forEach((entry, index) => {
-    entry.item.unlock = LADDER[index] ?? LADDER[LADDER.length - 1];
-  });
-}
 
-// あとから足した色・背景(TRIAL。条件は、TRIAL_SETS)。背景は、着せ替えの画面の枠だけで、ほかの画面は、かわらない
+// あとから足した色・背景(TRIAL)。背景は、着せ替えの画面の枠だけで、ほかの画面は、かわらない
 const TRIAL = [
   { id: "skyblue", name: "そらいろ", tint: "#4aa8ea", noTheme: true, color: { hue: 202, gain: 3, minSat: 0.95, boost: 1.5 }, stage: "linear-gradient(160deg, #e9f6ff, #6ab9f2)" },
   { id: "brown", name: "チョコブラウン", tint: "#8a5a3c", noColor: true, stage: "linear-gradient(160deg, #f4e6d8, #b98a62)" },
@@ -379,25 +359,7 @@ export const HEADS = [{ id: "none", slot: "head", img: "", name: "なし", tint:
 export const BODIES = [{ id: "none", slot: "body", img: "", name: "なし", tint: "#46555e", unlock: null }, ...arrange("body", [...bodies, ...extraOf("body")])];
 export const FACES = [{ id: "none", slot: "face", img: "", name: "なし", tint: "#46555e", unlock: null }, ...arrange("face", [...faces.filter((item) => !REMOVED.has(item.id)), ...extraOf("face")])];
 
-assignUnlocks([
-  [COLORS.slice(1), COLOR_ORDER],
-  [THEMES.slice(1), THEME_ORDER],
-  [heads, null],
-  [bodies, null],
-  [faces, null],
-]);
 
-// お試しだった色・背景(TRIAL)も、ご褒美にする。同じ名前の色と背景は、1つの条件で、いっしょにもらえる(セット)。
-// やさしい → むずかしい の順(もようの単純なもの・きれいなグラデーションが先)。条件は、ほかのご褒美と、重なってもよい。
-const TRIAL_SETS = [
-  ["skyblue", "play5"], ["sunset", "right10"], ["wine", "perfect"], ["stripes", "streak3"], ["gingham", "dex20"],
-  ["border", "versus3"], ["morning", "total20"], ["sea", "oni1"], ["hearts", "timed5"], ["candy", "right20"],
-  ["grape", "play20"], ["rdots", "perfect3"], ["wave", "dex30"], ["snow", "streak5"], ["sakura", "total30"],
-  ["checker", "review3"], ["diamond", "daily10"], ["leaves", "oni3"], ["water", "right30"], ["aurora", "hardPerfect"],
-  ["brown", "perfect5"], ["clouds", "dex50"], ["forest", "total50"], ["starry", "streak10"], ["dots", "play50"],
-];
-const TRIAL_UNLOCK = new Map(TRIAL_SETS);
-for (const item of [...COLORS, ...THEMES]) if (item.trial) item.unlock = TRIAL_UNLOCK.get(item.id) ?? null;
 
 // 色・背景の一覧も、ジャンルごとにまとめる(item.group に、番号を入れる)
 const SET_ORDER = {
@@ -421,6 +383,39 @@ for (const [slot, list] of [["color", COLORS], ["theme", THEMES]]) {
   list.sort((x, y) => (rank.get(x.id)?.order ?? -1) - (rank.get(y.id)?.order ?? -1)); // 先頭(ミルキーブルー・青空)は、そのまま先頭
 }
 
+// 条件とレア度は、dress-unlocks.js の表のとおり。レア度:0=ノーマル 1=レア 2=スーパーレア 3=レジェンド
+export const RARITY_NAMES = ["ノーマル", "レア", "スーパーレア", "レジェンド"];
+for (const [kind, list] of [["color", COLORS], ["theme", THEMES], ["head", HEADS], ["body", BODIES], ["face", FACES]]) {
+  for (const item of list) {
+    item.key = `${kind}:${item.id}`;
+    if (!(item.key in UNLOCKS)) continue;
+    item.unlock = UNLOCKS[item.key];
+    item.rarity = RARITY[item.key];
+  }
+  // 系統(見出し)の中は、レア度の低い順(同じレア度は、いまの並びのまま)
+  const order = new Map(list.map((item, index) => [item, index]));
+  list.sort((x, y) => (x.group ?? -1) - (y.group ?? -1) || (x.rarity ?? -1) - (y.rarity ?? -1) || order.get(x) - order.get(y));
+}
+
+// 前の版で、すでに手に入れたものは、条件が変わっても、残す(初めて開いたとき、前の条件で開いていたものを、おぼえる)
+const OWNED_KEY = "floriQuiz.dressOwned";
+let owned = new Set();
+try {
+  owned = new Set(JSON.parse(localStorage.getItem(OWNED_KEY) ?? "[]"));
+} catch {
+  // 読めなければ、からのまま
+}
+export function keepOwned({ have, stars }) {
+  try {
+    if (localStorage.getItem(OWNED_KEY) !== null) return;
+    const open = (u) => (typeof u === "string" ? have.has(u) : stars >= u.stars);
+    owned = new Set(Object.entries(OLD_UNLOCKS).filter(([, u]) => open(u)).map(([key]) => key));
+    localStorage.setItem(OWNED_KEY, JSON.stringify([...owned]));
+  } catch {
+    // 保存できなくても遊べる
+  }
+}
+
 // お試し:URL に ?tryall=1 を付けて開くと、着せ替えを、ぜんぶ選べる(端末内に覚える)。?tryall=0 で、もとにもどる。もらった数・NEW・ご褒美の記録は、かわらない。
 const TRY_KEY = "floriQuiz.tryAll";
 export const TRY_ALL = (() => {
@@ -438,7 +433,7 @@ export const canWear = (item, ctx) => TRY_ALL || isOpen(item, ctx);
 // きせかえが使えるか(unlock:条件の id、または { stars: 必要な星の数 }、または null)
 export function isOpen(item, { have, stars }) {
   const u = item.unlock;
-  if (!u) return true;
+  if (!u || owned.has(item.key)) return true;
   return typeof u === "string" ? have.has(u) : stars >= u.stars;
 }
 

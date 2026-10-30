@@ -3383,3 +3383,20 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 /* 模様のアイコン(色・背景):模様の間隔を、せまくする(大きな絵を、縮めて入れる) */
 #screen-dress .dress-art.has-pat { position: relative; overflow: hidden; }
 #screen-dress .dress-art.has-pat > i { position: absolute; left: -150%; top: -150%; width: 400%; height: 400%; transform: scale(0.25); pointer-events: none; }
+
+/* レア度:★の数と、枠の光り方(ノーマル0・レア1・スーパーレア2・レジェンド3) */
+#screen-dress .dress-rare { position: absolute; left: 6px; bottom: 4px; display: flex; gap: 1px; color: #aab4bb; }
+#screen-dress .dress-rare i, #screen-dress .dress-legend i { display: block; width: 11px; height: 11px; background: currentColor; clip-path: polygon(50% 0, 62% 35%, 98% 38%, 69% 59%, 79% 95%, 50% 73%, 21% 95%, 31% 59%, 2% 38%, 38% 35%); }
+#screen-dress .dress-legend span { display: inline-flex; align-items: center; gap: 4px; }
+#screen-dress .dress-item.rare-1 { box-shadow: inset 0 0 0 3px #d6e9fb, 0 0 6px rgba(74, 156, 224, 0.55); }
+#screen-dress .dress-item.rare-1 .dress-rare { color: #3b88d0; }
+#screen-dress .dress-item.rare-2 { box-shadow: inset 0 0 0 3px #fff0c0, 0 0 9px rgba(240, 180, 40, 0.85); }
+#screen-dress .dress-item.rare-2 .dress-rare { color: #d89a10; }
+#screen-dress .dress-item.rare-3 { box-shadow: inset 0 0 0 3px #fff6d0, 0 0 0 3px #ffd54a, 0 0 12px 2px rgba(255, 120, 200, 0.7), 0 0 18px rgba(80, 180, 255, 0.55); }
+#screen-dress .dress-item.rare-3 .dress-rare { color: #e0509c; text-shadow: 0 0 4px #fff; }
+#screen-dress .dress-legend { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 2px 4px; font-size: 11px; font-weight: bold; }
+#screen-dress .dress-legend span { padding: 1px 8px; gap: 1px; background: #fff; border: 2px solid #c4ccd2; border-radius: 999px; color: #6b7a84; }
+#screen-dress .dress-legend span.rare-1 { border-color: #4a9ce0; color: #3b88d0; }
+#screen-dress .dress-legend span.rare-2 { border-color: #e0a21c; color: #c08a0c; }
+#screen-dress .dress-legend span.rare-3 { border-color: #ffd54a; color: #e0509c; box-shadow: 0 0 6px rgba(255, 120, 200, 0.6); }
+

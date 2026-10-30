@@ -29,6 +29,10 @@ const EMPTY = {
   timedPlays: 0, // 制限時間をつけて遊んだ回数
   timedPerfect: 0, // 制限時間をつけて、全問正解した回数
   gardenClears: 0, // お花畑を完成させた回数
+  rpgClears: 0, // RPGをクリアした回数
+  rpgNoDamage: 0, // RPGを、ノーダメージでクリアした回数
+  rpgBoss: 0, // RPGで、ボス戦まで進んだ回数
+  rpgChests: 0, // RPGで、たからばこの問題に正解した数
   stars: 0, // 制限時間をつけたごほうびの星
   courseCounter: 0, // 「つづきから」:ふつうモードの、難しさのカウンター
   courseUsed: [], // 「つづきから」:もう出した問題の番号
@@ -101,6 +105,10 @@ function clean(raw) {
     timedPlays: number(raw?.timedPlays),
     timedPerfect: number(raw?.timedPerfect),
     gardenClears: number(raw?.gardenClears),
+    rpgClears: number(raw?.rpgClears),
+    rpgNoDamage: number(raw?.rpgNoDamage),
+    rpgBoss: number(raw?.rpgBoss),
+    rpgChests: number(raw?.rpgChests),
     stars: number(raw?.stars),
     courseCounter: number(raw?.courseCounter),
     courseUsed: ids(raw?.courseUsed),
@@ -222,6 +230,16 @@ export function recordWrong(answers = []) {
   const wrong = new Set(stats.wrong);
   for (const answer of answers) if (!answer.correct) wrong.add(answer.id);
   stats.wrong = [...wrong];
+  save(stats);
+}
+
+// RPGの記録(クリアした回数・ノーダメージでクリアした回数・ボス戦まで進んだ回数・たからばこの正解の数)。着せ替えの解放に使う。
+export function recordRpg({ cleared, noDamage, boss, chests }) {
+  const stats = loadStats();
+  if (cleared) stats.rpgClears += 1;
+  if (cleared && noDamage) stats.rpgNoDamage += 1;
+  if (boss) stats.rpgBoss += 1;
+  stats.rpgChests += chests;
   save(stats);
 }
 
