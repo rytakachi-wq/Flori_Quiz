@@ -15,6 +15,7 @@ const clamp1 = x => Math.max(-1, Math.min(1, x));
 const env = (a, up, hold, down) => ss(a / up) * (1 - ss((a - up - hold) / down));       // 上がる → 保つ → 下がる(0→1→0)
 
 export const HOP_SECONDS = 1.2;
+export const CROSS = 0.8;             // いつもの寄り目の強さ(1 = リグの最大。小さいほど、正面に近い)
 export const BASE_MOUTH = -0.85;      // ふだんの口(下唇。小さい。−1 がいちばん小さい)
 
 // 表情(強さ e: 0→1 のとき、各部分がどこまで動くか)。dir:true のものは、傾く向きを、ときどき かえる
@@ -130,7 +131,7 @@ export function createMotion(model) {
     if (x && x.lid) for (const i of I.lids) V[i] = -Math.max(b, x.lid * e);   // ねむい・うっとり:まぶたを、半分おろす
     // いつもの顔は寄り目(右の目 −1・左の目 +1)。左右を見るときは、動かす目だけを動かし、もう一方は そのまま
     //  画面の左(look>0)= 右の目だけ −1→+1(左の目は +1 のまま)/ 画面の右(look<0)= 左の目だけ +1→−1(右の目は −1 のまま)
-    let vr = -1 + 2 * Math.max(0, gaze), vl = 1 - 2 * Math.max(0, -gaze);
+    let vr = -CROSS + (1 + CROSS) * Math.max(0, gaze), vl = CROSS - (1 + CROSS) * Math.max(0, -gaze);
     vr = clamp1(vr); vl = clamp1(vl);
 
     // 腕と足
@@ -152,7 +153,7 @@ export function createMotion(model) {
     if (hopping) {   // ぴょんのあいだは、表情・視線を、はじめの値から すっと ふだんにもどす
       if (!wasHop) { hold = { vr: V[I.gazeR], vl: V[I.gazeL], brow: V[I.browR], face: V[I.face], mouth: V[I.mouth] }; ev = null; waitUntil = t + HOP_SECONDS + 1; }
       const kk = 1 - ss(hs / 0.25);
-      vr = -1 + (hold.vr + 1) * kk; vl = 1 + (hold.vl - 1) * kk; brow = hold.brow * kk; tilt = hold.face * kk; mouth = idleAbs + (hold.mouth - idleAbs) * kk;
+      vr = -CROSS + (hold.vr + CROSS) * kk; vl = CROSS + (hold.vl - CROSS) * kk; brow = hold.brow * kk; tilt = hold.face * kk; mouth = idleAbs + (hold.mouth - idleAbs) * kk;
       banR = banL = 0; fistR = fistL = 0; foot = 0;
       if (hs < 0.14) { const u = ss(hs / 0.14); sy = 1 - 0.06 * u; sx = 1 + 0.03 * u; bounce = 0; }                    // かがむ
       else if (hs < 0.54) { const u = (hs - 0.14) / 0.4, h = Math.sin(u * Math.PI / 2); bounce = 85 * h; sy = 1 + 0.04 * h; sx = 1 - 0.02 * h;   // のぼる
