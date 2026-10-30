@@ -15,7 +15,6 @@ const clamp1 = x => Math.max(-1, Math.min(1, x));
 const env = (a, up, hold, down) => ss(a / up) * (1 - ss((a - up - hold) / down));       // 上がる → 保つ → 下がる(0→1→0)
 
 export const HOP_SECONDS = 1.2;
-export const GAZE_PX = 9;              // 左右を見るときの、ひとみの動く量(ピクセル)。16px だと、ひとみが目のふちまで行って寄りすぎ
 export const BASE_MOUTH = -0.85;      // ふだんの口(下唇。小さい。−1 がいちばん小さい)
 
 // 表情(強さ e: 0→1 のとき、各部分がどこまで動くか)。dir:true のものは、傾く向きを、ときどき かえる
@@ -89,7 +88,7 @@ export function createMotion(model) {
 
   // 見た目の動く量(ピクセル)をそろえる。画面の右を見る量は、右の目 25px・左の目 22px、左を見る量は、右の目 16px・左の目 25px
   function gazeValues(look) {
-    const S = Math.abs(look) * GAZE_PX;       // 見た目で、最大 GAZE_PX
+    const S = Math.abs(look) * 16;       // 見た目で、最大 16px
     return look > 0 ? [S / 16, S / 25] : [-S / 25, -S / 22];   // 左向き: 右の目 16px・左の目 25px が最大 / 右向き: 右の目 25px・左の目 22px が最大
   }
 
