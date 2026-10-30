@@ -72,20 +72,18 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
     return hslToRgb(228, 0.3, clamp01(0.3 + (l - 0.55) * 0.5));
   }
   if (color.sakura) {
-    // 桜:うすいピンクに、少しはなれた、大きめの花びら
-    const cx = (x + (Math.floor(y / 112) % 2 ? 56 : 0)) % 112 - 56;
-    const cy = (y % 112) - 56;
-    return (cx / 21) ** 2 + (cy / 14) ** 2 < 1 ? hslToRgb(350, 0.52, clamp01(l * 0.92)) : hslToRgb(345, 0.3, l);
+    // 桜:うすいピンクに、大きさも位置もばらばらの花びら
+    const m = mottle(x, y, 120, 15, 24, 1);
+    return m && (m.u / m.r) ** 2 + (m.v / (m.r * 0.65)) ** 2 < 1 ? hslToRgb(350, 0.52, clamp01(l * 0.92)) : hslToRgb(345, 0.3, l);
   }
   if (color.dots) {
-    // 水玉:白に、大きめのピンクの水玉(間をあけて)
-    const cx = (x + (Math.floor(y / 88) % 2 ? 44 : 0)) % 88;
-    const cy = y % 88;
-    return (cx - 44) ** 2 + (cy - 44) ** 2 < 289 ? hslToRgb(42, 0.9, clamp01(l * 0.9)) : whiteOf(l);
+    // 水玉:白に、大きさも位置もばらばらの、緑の水玉
+    const m = mottle(x, y, 100, 13, 22, 2);
+    return m && m.u * m.u + m.v * m.v < m.r * m.r ? hslToRgb(150, 0.55, clamp01(l * 0.9)) : whiteOf(l);
   }
   if (color.stripes) {
     // ストライプ:太い、水色と白のよこしま
-    return Math.floor(y / 36) % 2 ? hslToRgb(205, 0.6, clamp01(l * 0.92)) : whiteOf(l);
+    return Math.floor(y / 36) % 2 ? hslToRgb(358, 0.62, clamp01(l * 0.94)) : whiteOf(l);
   }
   if (color.snow) {
     // 雪の結晶:水色に、大きな白い結晶(間をあけて)
@@ -115,6 +113,20 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
   return hslToRgb(color.hue, Math.max(target, sKeep * 0.5), clamp01(l * (color.lmul ?? 1)));
 }
 
+// まだら:マス目の中で、位置・大きさを、ばらばらにして、ときどき空ける。(x,y)の、もようの中の位置(中心からの差と大きさ)を返す。無ければ null
+const hash = (a, b, seed) => Math.imul(a * 73856093 ^ b * 19349663 ^ seed * 83492791, 2654435761) >>> 0;
+function mottle(x, y, cell, rMin, rMax, seed) {
+  const ix = Math.floor(x / cell);
+  const iy = Math.floor(y / cell);
+  const h = hash(ix, iy, seed);
+  if (h % 100 < 22) return null; // 空きマス
+  const r = rMin + (((h >>> 8) % 100) / 100) * (rMax - rMin);
+  const room = cell - 2 * r;
+  const cx = ix * cell + r + (((h >>> 16) % 100) / 100) * room;
+  const cy = iy * cell + r + (((h >>> 24) % 100) / 100) * room;
+  return { u: x - cx, v: y - cy, r, k: (h >>> 4) % 360 };
+}
+
 // 柄(お試しの色):白っぽい地に、もようを付ける
 function pattern(name, x, y, l) {
   const c = (h, s, m = 1) => hslToRgb(h, s, clamp01(l * m));
@@ -126,9 +138,10 @@ function pattern(name, x, y, l) {
       return a && b ? c(350, 0.6, 0.88) : a || b ? c(350, 0.5, 0.96) : whiteOf(l);
     }
     case "hearts": {
-      const [u0, v0] = cell(76);
-      const u = u0 / 17;
-      const v = -v0 / 17 + 0.15;
+      const m = mottle(x, y, 96, 16, 26, 3);
+      if (!m) return whiteOf(l);
+      const u = m.u / m.r;
+      const v = -m.v / m.r + 0.15;
       return (u * u + v * v - 1) ** 3 - u * u * v ** 3 < 0 ? c(345, 0.7, 0.9) : whiteOf(l);
     }
     case "stars": {
@@ -139,13 +152,17 @@ function pattern(name, x, y, l) {
     }
     case "border":
       return (x + y) % 108 < 44 ? c(160, 0.5, 0.92) : whiteOf(l);
-    case "checker":
-      return (Math.floor(x / 40) + Math.floor(y / 40)) % 2 ? c(225, 0.4, 0.86) : whiteOf(l);
+    case "checker": {
+      const gx = x % 72;
+      const gy = y % 72;
+      const on = (Math.floor(x / 72) + Math.floor(y / 72)) % 2 === 0 && gx > 6 && gx < 66 && gy > 6 && gy < 66;
+      return on ? c(225, 0.4, 0.86) : whiteOf(l);
+    }
     case "wave":
       return (y + 12 * Math.sin(x / 16) + 400) % 76 < 30 ? c(200, 0.62, 0.93) : whiteOf(l);
     case "diamond": {
       const [u, v] = cell(100);
-      return Math.abs(u) + Math.abs(v) < 24 ? c(280, 0.45, 0.92) : whiteOf(l);
+      return Math.abs(u) + Math.abs(v) < 36 ? c(280, 0.45, 0.92) : whiteOf(l);
     }
     case "leaves": {
       const [u, v] = cell(110);
@@ -154,14 +171,13 @@ function pattern(name, x, y, l) {
       return (p / 20) ** 2 + (q / 8) ** 2 < 1 ? c(125, 0.45, 0.88) : c(60, 0.45, 1.02);
     }
     case "rainbowdots": {
-      const [u, v] = cell(100);
-      const n = Math.floor(x / 100) + Math.floor(y / 100) * 3;
-      return u * u + v * v < 190 ? c((n * 62) % 360, 0.65, 0.92) : whiteOf(l);
+      const m = mottle(x, y, 100, 11, 20, 4);
+      return m && m.u * m.u + m.v * m.v < m.r * m.r ? c((m.k * 7) % 360, 0.65, 0.92) : whiteOf(l);
     }
     case "watercolor": {
       const a = Math.sin(x * 0.045 + Math.sin(y * 0.03) * 2);
       const b = Math.sin(y * 0.05 + Math.sin(x * 0.025) * 2);
-      return c(25 + 30 * a + 22 * b, 0.55, 0.97);
+      return c(100 + 35 * a + 28 * b, 0.5, 0.97);
     }
     default:
       return whiteOf(l);
