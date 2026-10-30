@@ -15,7 +15,7 @@ const clamp1 = x => Math.max(-1, Math.min(1, x));
 const env = (a, up, hold, down) => ss(a / up) * (1 - ss((a - up - hold) / down));       // 上がる → 保つ → 下がる(0→1→0)
 
 export const HOP_SECONDS = 1.2;
-export const CROSS = 0.8;             // いつもの寄り目の強さ(1 = リグの最大。小さいほど、正面に近い)
+export const CROSS = 0.5;             // いつもの寄り目の強さ(1 = リグの最大。小さいほど、正面に近い)
 export const BASE_MOUTH = -0.85;      // ふだんの口(下唇。小さい。−1 がいちばん小さい)
 
 // 表情(強さ e: 0→1 のとき、各部分がどこまで動くか)。dir:true のものは、傾く向きを、ときどき かえる
