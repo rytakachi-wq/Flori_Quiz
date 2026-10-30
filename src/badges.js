@@ -458,19 +458,13 @@ export function keepOwned({ have, stars }) {
   }
 }
 
-// お試し:URL に ?tryall=1 を付けて開くと、着せ替えを、ぜんぶ選べる(端末内に覚える)。?tryall=0 で、もとにもどる。もらった数・NEW・ご褒美の記録は、かわらない。
-const TRY_KEY = "floriQuiz.tryAll";
-export const TRY_ALL = (() => {
-  try {
-    const q = new URLSearchParams(location.search).get("tryall");
-    if (q === "1") localStorage.setItem(TRY_KEY, "1");
-    else if (q === "0") localStorage.removeItem(TRY_KEY);
-    return localStorage.getItem(TRY_KEY) === "1";
-  } catch {
-    return false;
-  }
-})();
-export const canWear = (item, ctx) => TRY_ALL || isOpen(item, ctx);
+// 以前あった「お試し全開放」(URL に ?tryall=1)は、なくした。端末に残った印だけ消す。
+try {
+  localStorage.removeItem("floriQuiz.tryAll");
+} catch {
+  // 消せなくても遊べる
+}
+export const canWear = (item, ctx) => isOpen(item, ctx);
 
 // きせかえが使えるか(unlock:条件の id、または { stars: 必要な星の数 }、または null)
 export function isOpen(item, { have, stars }) {
