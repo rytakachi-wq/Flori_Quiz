@@ -53,12 +53,13 @@ export function createMotion(model) {
   let ev = null, waitUntil = 1.5, lastExpr = -1, lastLook = 1, lastKind = '', lastDir = 1, lastSide = 1, lastBrow = 1;   // ev = いま出しているイベント(なければ待つ)
   let hopT0 = -99, wasHop = false, hold = null;      // hold: ぴょんの前の表情・視線(なめらかに 0 にもどすため)
   const out = { bounce: 0, sx: 1, sy: 1 };
+  model.follow = false;     // 上唇は、下唇に追尾させない(下唇だけが動く。上唇はふだんの形のまま)
 
   function nextEvent(t) {
     let r, kind;
     // 表情 55%、眉だけ 8%、白目 8%、口 5%(へらした)、腕と足 24%(伸び 4・手を振る 7・ぱたぱた 5・ばんざい 6)。おなじ種類を、続けて出さない。
     // ※両手を顔の前に上げる「わくわく」は、やめた(利用者の指示)
-    do { r = Math.random(); kind = r < 0.50 ? 'expr' : r < 0.56 ? 'brow' : r < 0.62 ? 'gaze' : r < 0.72 ? 'dart' : r < 0.76 ? 'mouth' : r < 0.80 ? 'stretch' : r < 0.87 ? 'wave' : r < 0.92 ? 'flap' : 'cheer'; } while (kind === lastKind);
+    do { r = Math.random(); kind = r < 0.62 ? 'expr' : r < 0.67 ? 'brow' : r < 0.72 ? 'gaze' : r < 0.80 ? 'dart' : r < 0.83 ? 'mouth' : r < 0.86 ? 'stretch' : r < 0.92 ? 'wave' : r < 0.96 ? 'flap' : 'cheer'; } while (kind === lastKind);
     lastKind = kind;
     if (kind === 'dart') {      // 目きょろきょろ:寄り目をといて、左右へ、すばやく 3〜5回 見る(かならず かわりばんこ)
       const n = 3 + Math.floor(Math.random() * 3), seq = []; let d = lastLook;
@@ -78,7 +79,7 @@ export function createMotion(model) {
       let k; do k = Math.floor(Math.random() * EXPRESSIONS.length); while (k === lastExpr);
       lastExpr = k; const x = EXPRESSIONS[k];
       lastDir = -lastDir;       // 傾ける向きは、かならず かわりばんこ(左も右も)
-      return { kind, t0: t, x, dir: lastDir, up: 0.5, hold: rnd(...x.hold), down: 0.5 };
+      return { kind, t0: t, x, dir: lastDir, up: 0.3, hold: rnd(...x.hold) * 0.55, down: 0.3 };   // 表情は、コロコロかわる(はやく動いて、みじかく保つ)
     }
     if (kind === 'flap') return { kind, t0: t, up: 0.4, hold: rnd(1.4, 2.0), down: 0.4 };       // ぱたぱた:両腕を、からだの横で、小さく ぱたぱた(左右同じ)
     if (kind === 'cheer') return { kind, t0: t, up: 0.4, hold: rnd(1.4, 2.0), down: 0.5 };      // ばんざい:両腕を上げて、ぴょこぴょこ(左右同じ)
@@ -103,7 +104,7 @@ export function createMotion(model) {
     let gaze = 0, x = null, e = 0, dir = 1, k = 0, a = 0;
     if (ev) {
       a = t - ev.t0;
-      if (a >= ev.up + ev.hold + ev.down) { ev = null; waitUntil = t + rnd(0.2, 0.7); }
+      if (a >= ev.up + ev.hold + ev.down) { ev = null; waitUntil = t + rnd(0.1, 0.4); }
       else {
         k = env(a, ev.up, ev.hold, ev.down);
         if (ev.kind === 'gaze') gaze = k * ev.look;
@@ -130,14 +131,17 @@ export function createMotion(model) {
     }
     if (x && x.lid) for (const i of I.lids) V[i] = -Math.max(b, x.lid * e);   // ねむい・うっとり:まぶたを、半分おろす
     // いつもの顔は寄り目(右の目 −1・左の目 +1)。左右を見るときは、動かす目だけを動かし、もう一方は そのまま
-    //  画面の左(look>0)= 右の目だけ −1→+1(左の目は +1 のまま)/ 画面の右(look<0)= 左の目だけ +1→−1(右の目は −1 のまま)
-    let vr = -CROSS + (1 + CROSS) * Math.max(0, gaze), vl = CROSS - (1 + CROSS) * Math.max(0, -gaze);
+    //  画面の左(look>0)= 右の目だけ動く(左の目は そのまま)/ 画面の右(look<0)= 左の目だけ動く(右の目は そのまま)
+    //  動かす目は、もう一方の目と同じ見た目の位置(ピクセル)まで動かす(両目のひとみの位置がそろう)
+    const pxR = CROSS * 25, pxL = -CROSS * 26;                                   // いつもの寄り目の、見た目の位置(+ = 画面の右)
+    const valR = px => (px >= 0 ? -px / 25 : -px / 16), valL = px => (px >= 0 ? -px / 22 : -px / 26);   // 見た目の位置 → パラメーター値
+    let vr = -CROSS + (valR(pxL) + CROSS) * Math.max(0, gaze), vl = CROSS + (valL(pxR) - CROSS) * Math.max(0, -gaze);
     vr = clamp1(vr); vl = clamp1(vl);
 
     // 腕と足
     let banR = 0, banL = 0, foot = 0, swing = 0;
     // ふだんの腕:ほんの少し、ゆれる(コブシの腕を、ごく小さく動かす。呼吸のときは、ごく小さく)
-    const swayR = 0.02 + 0.012 * Math.sin(t * 1.3), swayL = 0.02 + 0.012 * Math.sin(t * 1.1 + 1.7);   // 左右の手は、べつべつに ゆれる
+    const swayR = 0.05 + 0.04 * Math.sin(t * 5), swayL = 0.05 + 0.04 * Math.sin(t * 5 + 1.3);   // ルンルン:ちょっと、リズムをつけて ゆれる(左右で、すこしずれる)   // 左右の手は、べつべつに ゆれる
     if (kind === 'stretch') {   // つま先立ちで、両腕を真上へ(左右同じ)。からだも伸びる
       banR = banL = k; foot = 0.5 * k; bounce += k * 40;
     } else if (kind === 'flap') {   // 両腕を、からだの横へ、小さく開いたり閉じたり(コブシ 0〜−0.2。左右同じ)
