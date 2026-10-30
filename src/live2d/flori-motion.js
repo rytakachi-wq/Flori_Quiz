@@ -69,8 +69,8 @@ export function createMotion(model) {
     // ※両手を顔の前に上げる「わくわく」は、やめた(利用者の指示)
     do { r = Math.random(); kind = r < 0.62 ? 'expr' : r < 0.67 ? 'brow' : r < 0.72 ? 'gaze' : r < 0.80 ? 'dart' : r < 0.83 ? 'mouth' : r < 0.86 ? 'stretch' : r < 0.92 ? 'wave' : r < 0.96 ? 'flap' : 'cheer'; } while (kind === lastKind || (kind === 'dart' && lastKind === 'gaze'));
     lastKind = kind;
-    if (kind === 'dart') {      // 目きょろきょろ:寄り目をといて、左右へ、すばやく 3〜5回 見る(かならず かわりばんこ)
-      const n = 3 + Math.floor(Math.random() * 3), seq = []; let d = lastLook;
+    if (kind === 'dart') {      // 目きょろきょろ:寄り目をといて、左右へ 2〜3回(3回まで)見る(かならず かわりばんこ)
+      const n = 2 + Math.floor(Math.random() * 2), seq = []; let d = lastLook;
       for (let i = 0; i < n; i++) { d = -d; seq.push(d * rnd(0.85, 1)); }
       lastLook = d;
       const step = rnd(0.85, 1.15);
