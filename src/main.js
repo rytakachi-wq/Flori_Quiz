@@ -1205,15 +1205,21 @@ document.addEventListener("keydown", (event) => {
 });
 
 // 音:画面を初めてさわったら音を出せるようにして、ボタンを押すと効果音をならす。
-for (const type of ["pointerdown", "keydown"]) {
+// (iPhone などは、「さわって はなした」とき[touchend・click]でないと、音を出す許可が出ないことがあるので、それも見る)
+for (const type of ["pointerdown", "touchend", "click", "keydown"]) {
   document.addEventListener(type, () => {
     unlock();
   }, { capture: true });
 }
-document.addEventListener("click", (event) => {
-  const button = event.target.closest("button");
-  if (button && !button.dataset.noSe) playSe("button");
-});
+// 効果音は、キャプチャ(先に受ける)で鳴らす。ボタンの処理が stopPropagation しても、画面を作りかえても、鳴りもれない
+document.addEventListener(
+  "click",
+  (event) => {
+    const button = event.target.closest?.("button");
+    if (button && !button.dataset.noSe) playSe("button");
+  },
+  { capture: true },
+);
 
 // 設定:BGMと効果音の大きさ(0〜100)。表紙の「設定」と、問題を解いているときの「設定」で、同じ大きさを使う。
 function showVolumes() {

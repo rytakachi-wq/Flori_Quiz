@@ -154,7 +154,7 @@ async function prepare() {
 export function unlock() {
   unlocked = true;
   if (!context) prepare();
-  else if (context.state === "suspended") context.resume();
+  else if (context.state !== "running") context.resume().catch(() => {}); // 止まっている(suspended)・割りこまれた(interrupted)ときは、動かしなおす
 }
 
 // ゲームの画面を見ていないとき(ほかのタブや、ほかのアプリを見ているとき)は、音を止める。もどったら、つづきから。
@@ -169,6 +169,7 @@ export function playSe(name, maxMs = 0) {
   const se = SE[name];
   if (!se || volumes.se === 0) return { stop() {} };
   const level = curve(volumes.se) * se.boost;
+  if (context && context.state !== "running") context.resume().catch(() => {}); // 次の音から、WebAudio で鳴らせるように(この音は、下のふつうの再生で鳴らす)
   if (context && buffers[name] && context.state === "running") {
     const source = context.createBufferSource();
     const gain = context.createGain();
