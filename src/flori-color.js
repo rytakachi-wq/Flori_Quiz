@@ -73,12 +73,12 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
   }
   if (color.sakura) {
     // 桜:うすいピンクに、大きさも位置もばらばらの花びら
-    const m = mottle(x, y, 120, 15, 24, 1);
+    const m = mottle(x, y, 92, 12, 19, 1);
     return m && (m.u / m.r) ** 2 + (m.v / (m.r * 0.65)) ** 2 < 1 ? hslToRgb(350, 0.52, clamp01(l * 0.92)) : hslToRgb(345, 0.3, l);
   }
   if (color.dots) {
     // 水玉:白に、大きさも位置もばらばらの、緑の水玉
-    const m = mottle(x, y, 100, 13, 22, 2);
+    const m = mottle(x, y, 78, 11, 17, 2);
     return m && m.u * m.u + m.v * m.v < m.r * m.r ? hslToRgb(150, 0.55, clamp01(l * 0.9)) : whiteOf(l);
   }
   if (color.stripes) {
@@ -119,7 +119,7 @@ function mottle(x, y, cell, rMin, rMax, seed) {
   const ix = Math.floor(x / cell);
   const iy = Math.floor(y / cell);
   const h = hash(ix, iy, seed);
-  if (h % 100 < 22) return null; // 空きマス
+  if (h % 100 < 12) return null; // 空きマス
   const r = rMin + (((h >>> 8) % 100) / 100) * (rMax - rMin);
   const room = cell - 2 * r;
   const cx = ix * cell + r + (((h >>> 16) % 100) / 100) * room;
@@ -138,7 +138,7 @@ function pattern(name, x, y, l) {
       return a && b ? c(350, 0.6, 0.88) : a || b ? c(350, 0.5, 0.96) : whiteOf(l);
     }
     case "hearts": {
-      const m = mottle(x, y, 96, 16, 26, 3);
+      const m = mottle(x, y, 76, 13, 20, 3);
       if (!m) return whiteOf(l);
       const u = m.u / m.r;
       const v = -m.v / m.r + 0.15;
@@ -153,16 +153,14 @@ function pattern(name, x, y, l) {
     case "border":
       return (x + y) % 108 < 44 ? c(160, 0.5, 0.92) : whiteOf(l);
     case "checker": {
-      const gx = x % 72;
-      const gy = y % 72;
-      const on = (Math.floor(x / 72) + Math.floor(y / 72)) % 2 === 0 && gx > 6 && gx < 66 && gy > 6 && gy < 66;
+      const on = (Math.floor(x / 72) + Math.floor(y / 72)) % 2 === 0;
       return on ? c(225, 0.4, 0.86) : whiteOf(l);
     }
     case "wave":
       return (y + 12 * Math.sin(x / 16) + 400) % 76 < 30 ? c(200, 0.62, 0.93) : whiteOf(l);
     case "diamond": {
       const [u, v] = cell(100);
-      return Math.abs(u) + Math.abs(v) < 36 ? c(280, 0.45, 0.92) : whiteOf(l);
+      return Math.abs(u) + Math.abs(v) < 50 ? c(280, 0.45, 0.92) : whiteOf(l);
     }
     case "leaves": {
       const [u, v] = cell(110);
@@ -171,7 +169,7 @@ function pattern(name, x, y, l) {
       return (p / 20) ** 2 + (q / 8) ** 2 < 1 ? c(125, 0.45, 0.88) : c(60, 0.45, 1.02);
     }
     case "rainbowdots": {
-      const m = mottle(x, y, 100, 11, 20, 4);
+      const m = mottle(x, y, 76, 9, 15, 4);
       return m && m.u * m.u + m.v * m.v < m.r * m.r ? c((m.k * 7) % 360, 0.65, 0.92) : whiteOf(l);
     }
     case "watercolor": {
