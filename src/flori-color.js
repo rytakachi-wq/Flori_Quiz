@@ -213,7 +213,7 @@ export function recolor(src, color) {
       for (let start = 0; start < total; start += 1) {
         if (!mask[start] || label[start]) continue;
         const id = parts.length + 1;
-        const part = { count: 0, sumL: 0 };
+        const part = { count: 0, sumL: 0, minX: width, minY: height };
         let top = 0;
         stack[top++] = start;
         label[start] = id;
@@ -222,6 +222,8 @@ export function recolor(src, color) {
           part.count += 1;
           part.sumL += (Math.max(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]) + Math.min(px[i * 4], px[i * 4 + 1], px[i * 4 + 2])) / 510;
           const x = i % width;
+          part.minX = Math.min(part.minX, x);
+          part.minY = Math.min(part.minY, Math.floor(i / width));
           for (const j of [x > 0 ? i - 1 : -1, x < width - 1 ? i + 1 : -1, i - width, i + width]) {
             if (j >= 0 && j < total && mask[j] && !label[j]) {
               label[j] = id;
@@ -239,7 +241,9 @@ export function recolor(src, color) {
         const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
         // 足もとの影(こい水色)は、そのまま。足のうすい水色は、影とつながっていても、色をつける
         if (skip[id - 1] && l < 0.86) continue;
-        const [r, g, b] = shade(color, h, s, s, l, i % width, Math.floor(i / width), width, height);
+        // もよう系は、線で区切られた部分ごとに、はじめから並べる(黒線をまたいで、もようがつながらない)
+        const own = color.pat || color.dots || color.sakura ? parts[id - 1] : null;
+        const [r, g, b] = shade(color, h, s, s, l, i % width - (own?.minX ?? 0), Math.floor(i / width) - (own?.minY ?? 0), width, height);
         px[i * 4] = Math.round(r * 255);
         px[i * 4 + 1] = Math.round(g * 255);
         px[i * 4 + 2] = Math.round(b * 255);
