@@ -98,7 +98,7 @@ function shade(color, h, sTarget, sKeep, l, x, y, width, height) {
     return hslToRgb(h, Math.min(1, s * (color.gsat ?? 1)), clamp01(l * (color.glm ?? 0.97)));
   }
   if (color.pat) return pattern(color.pat, x, y, l);
-  if (color.rainbow) return hslToRgb(((x / width) * 320 + (y / height) * 120) % 360, 0.34, Math.min(0.9, l * 0.98 + 0.02));
+  if (color.rainbow) return hslToRgb(((x / width) * 320 + (y / height) * 120) % 360, 0.44, Math.min(0.9, l * 0.95));
   if (color.metal) {
     // 金属の光沢:もとの明るさを、暗い色→明るい色の段階に当てはめ、斜めに走る光の帯(つや)を重ねる
     const stops = color.metal.map(hexRgb);

@@ -3369,9 +3369,17 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 .rpg-explain { font-size: calc(13.5px * var(--rpg-scale, 1)); }
 @media (max-height: 700px) { .rpg-screen.is-answered .rpg-explain { font-size: calc(13px * var(--rpg-scale, 1)); } }
 
-/* 着せたときの名前が、枠の上を、右から左へ流れる */
-#screen-dress .dress-flow { position: absolute; left: 0; right: 0; top: 8px; z-index: 4; overflow: hidden; pointer-events: none; container-type: inline-size; height: 34px; }
-#screen-dress .dress-flow span { display: inline-block; white-space: nowrap; font-size: 22px; font-weight: 900; color: var(--line); -webkit-text-stroke: 5px #fff; paint-order: stroke fill; text-shadow: 0 2px 0 rgba(255, 255, 255, 0.8); animation: dressFlow 2.6s linear forwards; }
-@keyframes dressFlow { from { transform: translateX(100cqw); } to { transform: translateX(-110%); } }
-@media (prefers-reduced-motion: reduce) { #screen-dress .dress-flow span { animation: none; display: block; text-align: center; } }
+/* 着せたとき、フロリの前に、名前が、その色で「きらん!」と出る(飾り付き) */
+#screen-dress .dress-flow { position: absolute; left: 50%; top: 66%; z-index: 4; display: flex; align-items: center; gap: 6px; max-width: 94%; transform: translate(-50%, -50%); pointer-events: none; animation: dressPop 2s ease-out forwards; }
+#screen-dress .dress-flow b { position: relative; display: block; overflow: hidden; padding: 6px 18px; font-size: 22px; font-weight: 900; line-height: 1.3; white-space: nowrap; color: var(--tint); -webkit-text-stroke: 5px #fff; paint-order: stroke fill; background: linear-gradient(180deg, #fff, #fff6fb); border: 4px double var(--tint); border-radius: 999px; box-shadow: 0 4px 0 color-mix(in srgb, var(--tint) 45%, transparent), 0 0 18px color-mix(in srgb, var(--tint) 60%, #fff); }
+#screen-dress .dress-flow b::after { content: ""; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.95), transparent); transform: skewX(-20deg); animation: dressShine 0.9s 0.25s ease-out both; }
+#screen-dress .dress-flow i { flex: none; width: 30px; height: 30px; background: url("../assets/illust/sparkle.webp") center / contain no-repeat; animation: dressTwinkle 0.9s ease-in-out 2; }
+#screen-dress .dress-flow i:last-child { animation-delay: 0.2s; }
+@keyframes dressPop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); } 18% { opacity: 1; transform: translate(-50%, -50%) scale(1.18); } 30% { transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -62%) scale(1); } }
+@keyframes dressShine { from { left: -40%; } to { left: 130%; } }
+@keyframes dressTwinkle { 0%, 100% { transform: scale(0.6) rotate(0); opacity: 0.6; } 50% { transform: scale(1.3) rotate(25deg); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #screen-dress .dress-flow, #screen-dress .dress-flow i, #screen-dress .dress-flow b::after { animation: none; } }
 
+/* 模様のアイコン(色・背景):模様の間隔を、せまくする(大きな絵を、縮めて入れる) */
+#screen-dress .dress-art.has-pat { position: relative; overflow: hidden; }
+#screen-dress .dress-art.has-pat > i { position: absolute; left: -150%; top: -150%; width: 400%; height: 400%; transform: scale(0.25); pointer-events: none; }

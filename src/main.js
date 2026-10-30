@@ -2786,18 +2786,19 @@ function fitIcon(pic) {
   pic.style.height = `${(h * 100).toFixed(1)}%`;
 }
 
-// 着せたとき、そのものの名前が、フロリの枠の上を、右から左へ流れる(「炎のレッド」など)
-function flowName(name) {
+// 着せたとき、フロリの前に、名前が、その色で「きらん!」と出る(飾り付き)
+function flowName(name, tint) {
   const stage = $("dress-stage");
   stage.querySelector(".dress-flow")?.remove();
   const flow = document.createElement("div");
   flow.className = "dress-flow";
   flow.setAttribute("aria-hidden", "true");
-  const text = document.createElement("span");
+  flow.style.setProperty("--tint", tint);
+  const text = document.createElement("b");
   text.textContent = name;
-  flow.append(text);
+  flow.append(document.createElement("i"), text, document.createElement("i"));
   stage.append(flow);
-  setTimeout(() => flow.remove(), 2800);
+  setTimeout(() => flow.remove(), 2100);
 }
 
 function renderDress() {
@@ -2848,8 +2849,15 @@ function renderDress() {
       // 絵だけを見せる(名前や、もらいかたは、押したときや、マウスをのせたときに出す)
       const art = document.createElement("span");
       art.className = `dress-art is-${kind}`;
-      if (kind === "color") art.style.background = choice.swatch ?? choice.tint;
-      else if (kind === "theme") art.style.background = choice.preview ?? choice.tint;
+      const paint = kind === "color" ? (choice.swatch ?? choice.tint) : kind === "theme" ? (choice.preview ?? choice.tint) : "";
+      if (choice.trial && paint.includes("px")) {
+        // 模様のあるもの:大きな絵を縮めて入れて、模様の間隔を、せまくする
+        art.classList.add("has-pat");
+        const pat = document.createElement("i");
+        pat.style.background = paint;
+        art.append(pat);
+      } else if (kind === "color") art.style.background = paint;
+      else if (kind === "theme") art.style.background = paint;
       else if (choice.img) {
         const pic = document.createElement("img");
         pic.addEventListener("load", () => fitIcon(pic)); // 細長いもの・横長のものも、見かけの大きさが、そろうように
@@ -2902,7 +2910,7 @@ function renderDress() {
         applyDress();
         renderDress();
         playSe("button");
-        if (choice.unlock !== undefined && choice.id !== "none") flowName(choice.name);
+        if (choice.unlock !== undefined && choice.id !== "none") flowName(choice.name, choice.tint);
       });
       const label = newGroup ? groupLabel(kind, groupNo) : "";
       if (label) {
