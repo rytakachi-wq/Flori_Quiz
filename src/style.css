@@ -3456,3 +3456,13 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 .rf-hw { position: relative; display: inline-block; line-height: 0; }
 .rf-hw .rf-heart.is-half { position: absolute; left: 0; top: 0; }
 @media (prefers-reduced-motion: reduce) { .rf-seq-item { animation: none; opacity: 1; } .rf-hearts.rf-lose .rf-heart:last-child { animation: none; } }
+
+/* ルール説明(RPG・難しい)の絵:場面の大きさに合わせて、大きさを決める(小さすぎ・大きすぎをなくす) */
+#screen-rules .rf-stage { container-type: size; }
+#screen-rules .rf-seq { gap: clamp(8px, 4cqw, 20px); }
+#screen-rules .rf-seq-item b { font-size: clamp(30px, min(26cqh, 17cqw), 76px); }
+#screen-rules .rf-seq-item small { font-size: clamp(11px, min(8cqh, 4.2cqw), 15px); }
+#screen-rules .rf-stack .rf-seq-item b { font-size: clamp(28px, min(18cqh, 14cqw), 56px); }
+#screen-rules .rf-hearts { gap: clamp(4px, 2cqw, 12px); }
+#screen-rules .rf-heart { width: clamp(34px, min(22cqh, 19cqw), 84px); }
+#screen-rules .rf-note { font-size: clamp(13px, min(7cqh, 4.6cqw), 18px); }
