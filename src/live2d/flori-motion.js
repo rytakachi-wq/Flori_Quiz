@@ -16,6 +16,8 @@ const env = (a, up, hold, down) => ss(a / up) * (1 - ss((a - up - hold) / down))
 
 export const HOP_SECONDS = 1.2;
 export const CROSS = 0.5;             // いつもの寄り目の強さ(1 = リグの最大。小さいほど、正面に近い)
+export const PARTNER = 0.25;           // 右を見るとき、もう一方の目が動く量(パラメーター値)
+export const LIP_MARGIN = 0.7;        // 下唇が −LIP_MARGIN より小さくなる(とげが出る)ときだけ、上唇も動かす
 export const BASE_MOUTH = -0.85;      // ふだんの口(下唇。小さい。−1 がいちばん小さい)
 
 // 表情(強さ e: 0→1 のとき、各部分がどこまで動くか)。dir:true のものは、傾く向きを、ときどき かえる
@@ -47,13 +49,13 @@ export function createMotion(model) {
     gazeR: ix('右白目　左右'), gazeL: ix('左白目　左右'), browR: ix('右眉'), browL: ix('左眉'),
     face: ix('顔'), facePart: ix('顔パーツ'), mouth: ix('下唇'),
     banR: ix('右手バンザイ'), banL: ix('左手バンザイ'), fistR: ix('右手コブシ'), fistL: ix('左手コブシ'),
-    footR: ix('右足'), footL: ix('左足'),
+    lip: ix('上唇'), footR: ix('右足'), footL: ix('左足'),
   };
   let blinkAt = 1.5, blinkT0 = -9, blinkTwice = false;
   let ev = null, waitUntil = 1.5, lastExpr = -1, lastLook = 1, lastKind = '', lastDir = 1, lastSide = 1, lastBrow = 1;   // ev = いま出しているイベント(なければ待つ)
   let hopT0 = -99, wasHop = false, hold = null;      // hold: ぴょんの前の表情・視線(なめらかに 0 にもどすため)
   const out = { bounce: 0, sx: 1, sy: 1 };
-  model.follow = false;     // 上唇は、下唇に追尾させない(下唇だけが動く。上唇はふだんの形のまま)
+  model.follow = false;     // 上唇は、live2d.js の追尾ではなく、ここで決める(LIP_MARGIN)
 
   function nextEvent(t) {
     let r, kind;
@@ -132,10 +134,8 @@ export function createMotion(model) {
     if (x && x.lid) for (const i of I.lids) V[i] = -Math.max(b, x.lid * e);   // ねむい・うっとり:まぶたを、半分おろす
     // いつもの顔は寄り目(右の目 −1・左の目 +1)。左右を見るときは、動かす目だけを動かし、もう一方は そのまま
     //  画面の左(look>0)= 右の目だけ動く(左の目は そのまま)/ 画面の右(look<0)= 左の目だけ動く(右の目は そのまま)
-    //  動かす目は、もう一方の目と同じ見た目の位置(ピクセル)まで動かす(両目のひとみの位置がそろう)
-    const pxR = CROSS * 25, pxL = -CROSS * 26;                                   // いつもの寄り目の、見た目の位置(+ = 画面の右)
-    const valR = px => (px >= 0 ? -px / 25 : -px / 16), valL = px => (px >= 0 ? -px / 22 : -px / 26);   // 見た目の位置 → パラメーター値
-    let vr = -CROSS + (valR(pxL) + CROSS) * Math.max(0, gaze), vl = CROSS + (valL(pxR) - CROSS) * Math.max(0, -gaze);
+    //  フロリの右(画面の左。look>0)を見るときだけ、もう一方の目(フロリの左目)も、ちょっと動かす
+    let vr = -CROSS + (1 + CROSS) * Math.max(0, gaze), vl = CROSS - (1 + CROSS) * Math.max(0, -gaze) + PARTNER * Math.max(0, gaze);
     vr = clamp1(vr); vl = clamp1(vl);
 
     // 腕と足
@@ -168,6 +168,7 @@ export function createMotion(model) {
     }
     wasHop = hopping;
     mouth = Math.max(-1, Math.min(1, mouth));
+    if (I.lip >= 0) V[I.lip] = Math.min(0, mouth + LIP_MARGIN);   // 上唇:ふだんは動かさない(0)。下唇が小さすぎて とげが出るときだけ、足りない分だけ動かす
     V[I.gazeR] = vr; V[I.gazeL] = vl;
     V[I.browR] = V[I.browL] = brow;                         // 左右同じ値(ヽ／ ↔ ／ヽ)
     V[I.face] = V[I.facePart] = tilt; V[I.mouth] = mouth;   // 上唇は、live2d.js の followParams が追尾する
