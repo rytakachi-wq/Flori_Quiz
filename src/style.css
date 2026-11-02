@@ -3513,6 +3513,7 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 #screen-credits .cr-title { display: grid; gap: 2px; }
 #screen-credits .cr-title-sub { font-size: 18px; font-weight: bold; color: var(--blue-dark); }
 #screen-credits .cr-title-main { font-size: 34px; font-weight: bold; letter-spacing: 0.04em; color: #2a5d8f; }
+#screen-credits .cr-section { margin: 40px 0 0; padding-top: 10px; font-size: 20px; letter-spacing: 0.2em; color: #2a5d8f; border-top: 2px solid #9cc2e6; }
 #screen-credits .cr-row { display: grid; gap: 2px; }
 #screen-credits .cr-role { margin: 0; font-size: 13px; font-weight: bold; letter-spacing: 0.08em; color: var(--blue-dark); }
 #screen-credits .cr-name { margin: 0; font-size: 22px; font-weight: bold; line-height: 1.35; overflow-wrap: anywhere; }

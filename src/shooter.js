@@ -5,7 +5,7 @@ import { playSe } from "./audio.js";
 
 const ENEMY_IMAGES = ["balloon", "bulb", "sakura", "candy", "butterfly", "bird", "bolt"];
 const LIVES = 3;
-const FIRE_EVERY = 0.26; // 星を撃つ間かく(秒)
+const FIRE_EVERY = 0.32; // 星を撃つ間かく(秒)
 const BULLET_SPEED = 460;
 const INVULNERABLE = 1.4; // 当たったあと、しばらく当たらない(秒)
 
@@ -26,6 +26,7 @@ export function createShooter({ stage, canvas, onChange }) {
   let height = 0;
   let bullets = [];
   let enemies = [];
+  let enemyShots = [];
   let sparks = [];
   let state = "idle"; // idle(まだ遊んでいない) playing over
   let score = 0;
@@ -56,6 +57,7 @@ export function createShooter({ stage, canvas, onChange }) {
   function reset() {
     bullets = [];
     enemies = [];
+    enemyShots = [];
     sparks = [];
     score = 0;
     lives = LIVES;
@@ -114,17 +116,27 @@ export function createShooter({ stage, canvas, onChange }) {
   window.addEventListener("keyup", onKeyUp);
   window.addEventListener("blur", () => keys.clear());
 
+  // 難しさは、時間とともに上がる(45秒で、いちばん難しく)
+  function level() {
+    return Math.min(1, elapsed / 45);
+  }
+
   function spawn() {
     const size = 34 + Math.random() * 20;
-    const level = Math.min(1, elapsed / 60);
+    const hard = size > 48; // 大きいものは、2回当てないと消えない
+    const index = Math.floor(Math.random() * enemyImages.length);
     enemies.push({
       x: size / 2 + Math.random() * (width - size),
       y: -size,
       size,
-      speed: 55 + Math.random() * 40 + level * 70,
+      hp: hard ? 2 : 1,
+      speed: 85 + Math.random() * 60 + level() * 130,
       wave: Math.random() * Math.PI * 2,
-      sway: Math.random() * 26,
-      image: enemyImages[Math.floor(Math.random() * enemyImages.length)],
+      sway: 10 + Math.random() * 36,
+      // 12秒をすぎると、鳥だけは、フロリをねらって弾を撃ってくる
+      shooter: ENEMY_IMAGES[index] === "bird" && elapsed > 12,
+      shotTimer: 0.8 + Math.random() * 0.8,
+      image: enemyImages[index],
     });
   }
 
@@ -183,36 +195,65 @@ export function createShooter({ stage, canvas, onChange }) {
     spawnTimer -= dt;
     if (spawnTimer <= 0) {
       spawn();
-      spawnTimer = Math.max(0.35, 1.0 - elapsed / 90);
+      if (elapsed > 20 && Math.random() < 0.4) spawn(); // 後半は、2つ同時に出ることがある
+      spawnTimer = Math.max(0.2, 0.75 - elapsed / 80);
     }
     for (const enemy of enemies) {
       enemy.y += enemy.speed * dt;
-      enemy.wave += dt * 2;
+      enemy.wave += dt * 2.4;
       enemy.drawX = enemy.x + Math.sin(enemy.wave) * enemy.sway;
+      if (enemy.shooter && enemy.y > 0 && enemy.y < height * 0.7) {
+        enemy.shotTimer -= dt;
+        if (enemy.shotTimer <= 0) {
+          enemy.shotTimer = 1.5;
+          const ex = enemy.drawX;
+          const angle = Math.atan2(player.y - enemy.y, player.x - ex);
+          const speed = 170 + level() * 70;
+          enemyShots.push({ x: ex, y: enemy.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed });
+        }
+      }
     }
+    for (const shot of enemyShots) {
+      shot.x += shot.vx * dt;
+      shot.y += shot.vy * dt;
+    }
+    enemyShots = enemyShots.filter((shot) => !shot.dead && shot.x > -20 && shot.x < width + 20 && shot.y > -20 && shot.y < height + 20);
 
+    function damage() {
+      lives -= 1;
+      invulnerable = INVULNERABLE;
+      burst(player.x, player.y);
+      playSe("rpgGuard");
+      if (lives <= 0) {
+        state = "over";
+        enemyShots = [];
+        best = Math.max(best, score);
+        playSe("wrong");
+      }
+    }
     for (const enemy of enemies) {
       for (const bullet of bullets) {
         if (bullet.dead || enemy.dead) continue;
         if (Math.hypot(bullet.x - (enemy.drawX ?? enemy.x), bullet.y - enemy.y) < enemy.size / 2 + 6) {
           bullet.dead = true;
-          enemy.dead = true;
-          score += 10;
-          burst(enemy.drawX ?? enemy.x, enemy.y);
-          playSe("button");
+          enemy.hp -= 1;
+          if (enemy.hp <= 0) {
+            enemy.dead = true;
+            score += enemy.shooter ? 30 : 10 * (enemy.size > 48 ? 2 : 1);
+            burst(enemy.drawX ?? enemy.x, enemy.y);
+            playSe("button");
+          }
         }
       }
       if (!enemy.dead && invulnerable === 0 && Math.hypot(player.x - (enemy.drawX ?? enemy.x), player.y - enemy.y) < enemy.size / 2 + player.size / 2 - 10) {
         enemy.dead = true;
-        lives -= 1;
-        invulnerable = INVULNERABLE;
-        burst(player.x, player.y);
-        playSe("rpgGuard");
-        if (lives <= 0) {
-          state = "over";
-          best = Math.max(best, score);
-          playSe("wrong");
-        }
+        damage();
+      }
+    }
+    for (const shot of enemyShots) {
+      if (state === "playing" && invulnerable === 0 && Math.hypot(player.x - shot.x, player.y - shot.y) < player.size / 2 - 6 + 5) {
+        shot.dead = true;
+        damage();
       }
     }
     enemies = enemies.filter((enemy) => !enemy.dead && enemy.y < height + enemy.size);
@@ -227,6 +268,15 @@ export function createShooter({ stage, canvas, onChange }) {
       if (image.complete && image.naturalWidth) {
         ctx.drawImage(image, (enemy.drawX ?? enemy.x) - enemy.size / 2, enemy.y - enemy.size / 2, enemy.size, enemy.size);
       }
+    }
+    for (const shot of enemyShots) {
+      ctx.fillStyle = "#ff5a6e";
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(shot.x, shot.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
     }
     for (const bullet of bullets) {
       if (bulletImage.complete && bulletImage.naturalWidth) ctx.drawImage(bulletImage, bullet.x - 9, bullet.y - 9, 18, 18);

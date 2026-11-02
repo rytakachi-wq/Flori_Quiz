@@ -1,21 +1,59 @@
 // スタッフクレジット:下から上へ流れるスタッフロール。流れている後ろで、シューティングが遊べる(shooter.js)。
-// 載せる内容は CREDITS の表。names が空の行は、画面に出さない(名前が決まったら、ここに足す)。
+// 載せる内容は CREDITS の表(映画のスタッフロールのように、見出しごとに、役割と名前をならべる)。
 import { createShooter } from "./shooter.js";
 
+// section は大きな見出し。role の行は、names が空なら画面に出さない。「（仮）」は、名前が決まったら入れかえる。
 export const CREDITS = [
-  { role: "キャラクター", names: ["フロリ"] },
-  { role: "企画・制作", names: [] },
-  { role: "問題・解説の作成", names: ["Claude"] },
-  { role: "プログラム", names: ["Claude"] },
-  { role: "問題のイラスト・着せ替えの絵", names: ["ChatGPT"] },
-  { role: "BGM", names: ["オリジナル曲", "(ブラウザの中で 演奏しています)"] },
+  { section: "出演" },
+  { role: "ナビゲーター", names: ["フロリ"] },
+  { role: "出題", names: ["理系 / 文系 / ひらめき"] },
+
+  { section: "製作" },
+  { role: "企画", names: ["（仮）"] },
+  { role: "原案", names: ["（仮）"] },
+  { role: "製作総指揮", names: ["（仮）"] },
+  { role: "プロデューサー", names: ["（仮）"] },
+  { role: "監督", names: ["（仮）"] },
+
+  { section: "問題" },
+  { role: "問題の作成", names: ["Claude"] },
+  { role: "解説の作成", names: ["Claude"] },
+  { role: "問題の監修", names: ["（仮）"] },
+  { role: "オニ問題 作成", names: ["Claude"] },
+
+  { section: "デザイン" },
+  { role: "キャラクター「フロリ」", names: ["（仮）"] },
+  { role: "問題のイラスト", names: ["ChatGPT"] },
+  { role: "着せ替えのデザイン", names: ["ChatGPT"] },
+  { role: "背景", names: ["（仮）"] },
+  { role: "画面のデザイン", names: ["（仮）"] },
   { role: "文字(フォント)", names: ["Zen Maru Gothic", "(Google Fonts)"] },
-  { role: "ご意見・動作確認", names: ["ご協力くださった みなさん"] },
-  { role: "Special Thanks", names: ["あそんでくれた あなた"] },
+
+  { section: "音" },
+  { role: "BGM", names: ["オリジナル曲", "(ブラウザの中で 演奏しています)"] },
+  { role: "効果音", names: ["効果音ラボ"] },
+
+  { section: "プログラム" },
+  { role: "プログラム", names: ["Claude"] },
+  { role: "RPGクエスト", names: ["Claude"] },
+  { role: "シューティング", names: ["Claude"] },
+  { role: "技術協力", names: ["（仮）"] },
+
+  { section: "テスト" },
+  { role: "動作確認", names: ["（仮）"] },
+  { role: "ご意見", names: ["（仮）"] },
+
+  { section: "協力" },
+  { role: "制作協力", names: ["（仮）"] },
+  { role: "協力", names: ["（仮）"] },
+
+  { section: "Special Thanks" },
+  { role: "ご家族・ご友人", names: ["（仮）"] },
+  { role: "そして", names: ["あそんでくれた あなた"] },
 ];
 
 export const CREDITS_THANKS = "あそんでくれて ありがとう!";
-const ROLL_SPEED = 36; // 流れる速さ(1秒に進むピクセル)
+const ROLL_SPEED = 62; // 流れる速さ(1秒に進むピクセル)
 const ROLL_PAUSE = 1.8; // 最後まで流れたあと、また始まるまでの間(秒)
 
 const $ = (id) => document.getElementById(id);
@@ -27,7 +65,14 @@ function buildRoll() {
   title.className = "cr-title";
   title.innerHTML = '<span class="cr-title-sub">ひらめきクイズ</span><span class="cr-title-main">Flori_Quiz</span>';
   parts.push(title);
-  for (const row of CREDITS.filter((item) => item.names.length > 0)) {
+  for (const row of CREDITS.filter((item) => item.section || item.names.length > 0)) {
+    if (row.section) {
+      const head = document.createElement("h3");
+      head.className = "cr-section";
+      head.textContent = row.section;
+      parts.push(head);
+      continue;
+    }
     const box = document.createElement("div");
     box.className = "cr-row";
     const role = document.createElement("p");
