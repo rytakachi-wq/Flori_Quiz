@@ -14,21 +14,19 @@ export const CREDITS = [
   { role: "原案", names: ["（仮）"] },
   { role: "製作総指揮", names: ["（仮）"] },
   { role: "プロデューサー", names: ["（仮）"] },
-  { role: "監督", names: ["（仮）"] },
 
   { section: "問題" },
   { role: "問題の作成", names: ["Claude"] },
   { role: "解説の作成", names: ["Claude"] },
   { role: "問題の監修", names: ["（仮）"] },
-  { role: "オニ問題 作成", names: ["Claude"] },
 
   { section: "デザイン" },
   { role: "キャラクター「フロリ」", names: ["（仮）"] },
-  { role: "問題のイラスト", names: ["ChatGPT"] },
-  { role: "着せ替えのデザイン", names: ["ChatGPT"] },
   { role: "背景", names: ["（仮）"] },
   { role: "画面のデザイン", names: ["（仮）"] },
   { role: "文字(フォント)", names: ["Zen Maru Gothic", "(Google Fonts)"] },
+  { role: "問題のイラスト", names: ["ChatGPT"] },
+  { role: "着せ替えのデザイン", names: ["ChatGPT"] },
 
   { section: "音" },
   { role: "BGM", names: ["オリジナル曲", "(ブラウザの中で 演奏しています)"] },
@@ -36,21 +34,26 @@ export const CREDITS = [
 
   { section: "プログラム" },
   { role: "プログラム", names: ["Claude"] },
-  { role: "RPGクエスト", names: ["Claude"] },
-  { role: "シューティング", names: ["Claude"] },
+  { role: "出題・採点の仕組み", names: ["Claude"] },
+  { role: "画面の動き", names: ["Claude"] },
+  { role: "ふりがなの仕組み", names: ["Claude"] },
+  { role: "着せ替えの仕組み", names: ["Claude"] },
+  { role: "成績・記録の仕組み", names: ["Claude"] },
+  { role: "BGMの演奏", names: ["Claude"] },
   { role: "技術協力", names: ["（仮）"] },
+  { role: "システム設計", names: ["（仮）"] },
 
   { section: "テスト" },
   { role: "動作確認", names: ["（仮）"] },
-  { role: "ご意見", names: ["（仮）"] },
 
   { section: "協力" },
-  { role: "制作協力", names: ["（仮）"] },
   { role: "協力", names: ["（仮）"] },
 
   { section: "Special Thanks" },
-  { role: "ご家族・ご友人", names: ["（仮）"] },
-  { role: "そして", names: ["あそんでくれた あなた"] },
+  { role: "", names: ["あそんでくれた あなた"] },
+
+  { section: "監督" },
+  { role: "", names: ["（仮）"] },
 ];
 
 export const CREDITS_THANKS = "あそんでくれて ありがとう!";
@@ -83,10 +86,12 @@ function buildRoll() {
     }
     const box = document.createElement("div");
     box.className = "cr-row";
-    const role = document.createElement("p");
-    role.className = "cr-role";
-    role.textContent = row.role;
-    box.append(role);
+    if (row.role) {
+      const role = document.createElement("p");
+      role.className = "cr-role";
+      role.textContent = row.role;
+      box.append(role);
+    }
     for (const name of row.names) {
       const note = document.createElement("p");
       note.className = name.startsWith("(") ? "cr-note" : "cr-name";
