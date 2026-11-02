@@ -1,8 +1,18 @@
 // ゲームの決まり(画面に依存しない部分)。decisions.md の決定事項に対応。
 
 // 選択肢の順番を、出すたびに、ランダムにする(正解の番号も、あわせて直した、コピーを返す。元の問題は、変えない)
+// 順番に意味がある選択肢は、ならべかえない:問題に fixedOrder: true を書いたもの、または、数が小さい順(大きい順)にならんでいるもの(0滴・1滴・2滴…、6本・12本・18本…)
+function hasOrder(question) {
+  if (question.fixedOrder) return true;
+  const values = question.choices.map((text) => /-?\d+(?:\.\d+)?/.exec(String(text))?.[0]);
+  if (values.some((v) => v === undefined)) return false;
+  const nums = values.map(Number);
+  return nums.every((n, i) => i === 0 || n > nums[i - 1]) || nums.every((n, i) => i === 0 || n < nums[i - 1]);
+}
+
 export function shuffleChoices(question, rng = Math.random) {
   if (!Array.isArray(question?.choices) || question.choices.length < 2 || !Number.isInteger(question.answer)) return question;
+  if (hasOrder(question)) return question;
   const order = question.choices.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i -= 1) {
     const j = Math.floor(rng() * (i + 1));
