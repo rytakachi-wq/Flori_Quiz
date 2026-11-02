@@ -1,6 +1,7 @@
 // スタッフクレジット:下から上へ流れるスタッフロール。流れている後ろで、シューティングが遊べる(shooter.js)。
 // 載せる内容は CREDITS の表(映画のスタッフロールのように、見出しごとに、役割と名前をならべる)。
 import { createShooter } from "./shooter.js";
+import { playSe } from "./audio.js";
 
 // section は大きな見出し。role の行は、names が空なら画面に出さない。「（仮）」は、名前が決まったら入れかえる。
 export const CREDITS = [
@@ -54,7 +55,7 @@ export const CREDITS = [
 
 export const CREDITS_THANKS = "あそんでくれて ありがとう!";
 const ROLL_SPEED = 62; // 流れる速さ(1秒に進むピクセル)
-const ROLL_PAUSE = 1.8; // 最後まで流れたあと、また始まるまでの間(秒)
+const PER_LINE = 3; // 同じ行に ならべる数(最大)
 
 const $ = (id) => document.getElementById(id);
 
@@ -65,13 +66,20 @@ function buildRoll() {
   title.className = "cr-title";
   title.innerHTML = '<span class="cr-title-sub">ひらめきクイズ</span><span class="cr-title-main">Flori_Quiz</span>';
   parts.push(title);
+  let line = null;
   for (const row of CREDITS.filter((item) => item.section || item.names.length > 0)) {
     if (row.section) {
       const head = document.createElement("h3");
       head.className = "cr-section";
       head.textContent = row.section;
       parts.push(head);
+      line = null;
       continue;
+    }
+    if (!line || line.children.length >= PER_LINE) {
+      line = document.createElement("div");
+      line.className = "cr-line";
+      parts.push(line);
     }
     const box = document.createElement("div");
     box.className = "cr-row";
@@ -80,12 +88,12 @@ function buildRoll() {
     role.textContent = row.role;
     box.append(role);
     for (const name of row.names) {
-      const line = document.createElement("p");
-      line.className = name.startsWith("(") ? "cr-note" : "cr-name";
-      line.textContent = name;
-      box.append(line);
+      const note = document.createElement("p");
+      note.className = name.startsWith("(") ? "cr-note" : "cr-name";
+      note.textContent = name;
+      box.append(note);
     }
-    parts.push(box);
+    line.append(box);
   }
   const end = document.createElement("div");
   end.className = "cr-end";
@@ -97,10 +105,11 @@ function buildRoll() {
 let shooter = null;
 let frame = 0;
 let rollY = 0;
-let pause = 0;
+let finished = false;
 let last = 0;
 
 function messageFor({ state, best }) {
+  if (state === "ended") return "";
   if (state === "idle") return "画面を タッチして シューティング!\n(ドラッグで フロリを 動かそう)";
   if (state === "over") return `ゲームオーバー!  最高 ${best}点\nタッチで もう1回`;
   return "";
@@ -124,17 +133,34 @@ function tick(now) {
   const dt = Math.min(0.05, (now - last) / 1000 || 0);
   last = now;
   const roll = $("credits-roll");
-  const stageHeight = $("credits-stage").clientHeight;
-  if (pause > 0) {
-    pause -= dt;
-    if (pause <= 0) rollY = stageHeight;
-  } else {
+  if (!finished) {
     rollY -= ROLL_SPEED * dt;
-    if (rollY < -roll.offsetHeight) pause = ROLL_PAUSE;
+    roll.style.transform = `translateY(${Math.round(rollY)}px)`;
+    if (rollY < -roll.offsetHeight) showResult();
   }
-  roll.style.transform = `translateY(${Math.round(rollY)}px)`;
   shooter.update(dt);
   shooter.draw();
+}
+
+// スタッフロールが流れ終わったら、シューティングの結果発表
+function commentFor(score) {
+  if (score >= 600) return "シューティング名人! すごすぎる!";
+  if (score >= 300) return "すごい うでまえ!";
+  if (score >= 100) return "いい ちょうし! もっと いけるよ!";
+  return "まだまだ これから! もう1回 どうかな?";
+}
+
+function showResult() {
+  finished = true;
+  const { played, best, kills } = shooter.finish();
+  $("credits-hud").hidden = true;
+  $("credits-msg").hidden = true;
+  $("cres-title").textContent = played ? "シューティング 結果発表!" : "スタッフロール 終わり";
+  $("cres-score").textContent = played ? `${best}点` : "";
+  $("cres-kills").textContent = played ? `たおした数 ${kills}こ` : "";
+  $("cres-comment").textContent = played ? commentFor(best) : "次は シューティングにも ちょうせんしてね!";
+  $("credits-result").hidden = false;
+  playSe("rollend");
 }
 
 export function openCredits() {
@@ -142,12 +168,14 @@ export function openCredits() {
   if (!shooter) {
     shooter = createShooter({ stage: $("credits-stage"), canvas: $("credits-canvas"), onChange: render });
     window.addEventListener("resize", () => shooter.resize());
+    $("cres-again").addEventListener("click", openCredits);
   }
   cancelAnimationFrame(frame);
   shooter.open();
   shooter.setActive(true);
   rollY = $("credits-stage").clientHeight;
-  pause = 0;
+  finished = false;
+  $("credits-result").hidden = true;
   last = performance.now();
   frame = requestAnimationFrame(tick);
 }

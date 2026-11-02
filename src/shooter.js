@@ -26,9 +26,9 @@ export function createShooter({ stage, canvas, onChange }) {
   let height = 0;
   let bullets = [];
   let enemies = [];
-  let enemyShots = [];
+  let bubbles = [];
   let sparks = [];
-  let state = "idle"; // idle(まだ遊んでいない) playing over
+  let state = "idle"; // idle(まだ遊んでいない) playing over ended(スタッフロールが終わった)
   let score = 0;
   let lives = LIVES;
   let fireTimer = 0;
@@ -36,6 +36,8 @@ export function createShooter({ stage, canvas, onChange }) {
   let elapsed = 0;
   let invulnerable = 0;
   let best = 0;
+  let kills = 0; // たおした数(この画面を開いてからの合計)
+  let played = false;
   let pointerId = null;
 
   function emit() {
@@ -52,12 +54,19 @@ export function createShooter({ stage, canvas, onChange }) {
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     player.x = player.tx = Math.min(Math.max(player.x || width / 2, player.size / 2), width - player.size / 2);
     player.y = player.ty = Math.min(Math.max(player.y || height * 0.82, player.size / 2), height - player.size / 2);
+    // ラムネの泡:下から上へ、ゆっくり のぼる
+    bubbles = Array.from({ length: 18 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: 3 + Math.random() * 11,
+      speed: 14 + Math.random() * 34,
+      wobble: Math.random() * Math.PI * 2,
+    }));
   }
 
   function reset() {
     bullets = [];
     enemies = [];
-    enemyShots = [];
     sparks = [];
     score = 0;
     lives = LIVES;
@@ -70,6 +79,7 @@ export function createShooter({ stage, canvas, onChange }) {
   function start() {
     reset();
     state = "playing";
+    played = true;
     emit();
   }
 
@@ -85,7 +95,7 @@ export function createShooter({ stage, canvas, onChange }) {
     pointerId = event.pointerId;
     stage.setPointerCapture?.(event.pointerId);
     aim(event);
-    if (state !== "playing") start();
+    if (state === "idle" || state === "over") start();
   });
   stage.addEventListener("pointermove", (event) => {
     if (pointerId === event.pointerId || event.pointerType === "mouse") aim(event);
@@ -103,8 +113,8 @@ export function createShooter({ stage, canvas, onChange }) {
     if (event.key in KEY_DIRS) {
       keys.add(event.key);
       event.preventDefault();
-      if (state !== "playing") start();
-    } else if ((event.key === " " || event.key === "Enter") && state !== "playing") {
+      if (state === "idle" || state === "over") start();
+    } else if ((event.key === " " || event.key === "Enter") && (state === "idle" || state === "over")) {
       event.preventDefault();
       start();
     }
@@ -133,9 +143,8 @@ export function createShooter({ stage, canvas, onChange }) {
       speed: 85 + Math.random() * 60 + level() * 130,
       wave: Math.random() * Math.PI * 2,
       sway: 10 + Math.random() * 36,
-      // 12秒をすぎると、鳥だけは、フロリをねらって弾を撃ってくる
-      shooter: ENEMY_IMAGES[index] === "bird" && elapsed > 12,
-      shotTimer: 0.8 + Math.random() * 0.8,
+      // 12秒をすぎると、鳥だけは、フロリのほうへ すばやく 寄ってくる
+      hunter: ENEMY_IMAGES[index] === "bird" && elapsed > 12,
       image: enemyImages[index],
     });
   }
@@ -170,6 +179,14 @@ export function createShooter({ stage, canvas, onChange }) {
       spark.life -= dt;
     }
     sparks = sparks.filter((spark) => spark.life > 0);
+    for (const bubble of bubbles) {
+      bubble.y -= bubble.speed * dt;
+      bubble.wobble += dt * 1.6;
+      if (bubble.y < -bubble.r) {
+        bubble.y = height + bubble.r;
+        bubble.x = Math.random() * width;
+      }
+    }
     if (state !== "playing") {
       // 遊んでいないあいだも、敵は ゆっくり落ちて、背景がさびしくならない
       enemies = enemies.filter((enemy) => enemy.y < height + enemy.size);
@@ -202,22 +219,8 @@ export function createShooter({ stage, canvas, onChange }) {
       enemy.y += enemy.speed * dt;
       enemy.wave += dt * 2.4;
       enemy.drawX = enemy.x + Math.sin(enemy.wave) * enemy.sway;
-      if (enemy.shooter && enemy.y > 0 && enemy.y < height * 0.7) {
-        enemy.shotTimer -= dt;
-        if (enemy.shotTimer <= 0) {
-          enemy.shotTimer = 1.5;
-          const ex = enemy.drawX;
-          const angle = Math.atan2(player.y - enemy.y, player.x - ex);
-          const speed = 170 + level() * 70;
-          enemyShots.push({ x: ex, y: enemy.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed });
-        }
-      }
+      if (enemy.hunter) enemy.x += Math.sign(player.x - enemy.drawX) * 50 * dt;
     }
-    for (const shot of enemyShots) {
-      shot.x += shot.vx * dt;
-      shot.y += shot.vy * dt;
-    }
-    enemyShots = enemyShots.filter((shot) => !shot.dead && shot.x > -20 && shot.x < width + 20 && shot.y > -20 && shot.y < height + 20);
 
     function damage() {
       lives -= 1;
@@ -226,7 +229,6 @@ export function createShooter({ stage, canvas, onChange }) {
       playSe("rpgGuard");
       if (lives <= 0) {
         state = "over";
-        enemyShots = [];
         best = Math.max(best, score);
         playSe("wrong");
       }
@@ -239,7 +241,8 @@ export function createShooter({ stage, canvas, onChange }) {
           enemy.hp -= 1;
           if (enemy.hp <= 0) {
             enemy.dead = true;
-            score += enemy.shooter ? 30 : 10 * (enemy.size > 48 ? 2 : 1);
+            kills += 1;
+            score += enemy.hunter ? 30 : 10 * (enemy.size > 48 ? 2 : 1);
             burst(enemy.drawX ?? enemy.x, enemy.y);
             playSe("button");
           }
@@ -250,33 +253,54 @@ export function createShooter({ stage, canvas, onChange }) {
         damage();
       }
     }
-    for (const shot of enemyShots) {
-      if (state === "playing" && invulnerable === 0 && Math.hypot(player.x - shot.x, player.y - shot.y) < player.size / 2 - 6 + 5) {
-        shot.dead = true;
-        damage();
-      }
-    }
     enemies = enemies.filter((enemy) => !enemy.dead && enemy.y < height + enemy.size);
     bullets = bullets.filter((bullet) => !bullet.dead);
     emit();
   }
 
+  // 背景:ラムネのびんの ガラスのような、すきとおった水色。光のすじと、のぼる泡
+  function drawBackground() {
+    const glass = ctx.createLinearGradient(0, 0, 0, height);
+    glass.addColorStop(0, "#e4fbff");
+    glass.addColorStop(0.55, "#a9ecf7");
+    glass.addColorStop(1, "#7fd6ea");
+    ctx.fillStyle = glass;
+    ctx.fillRect(0, 0, width, height);
+    // 光のすじ(ガラスの ななめの 反射)
+    ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+    for (const [x, w] of [[0.12, 0.1], [0.3, 0.04], [0.74, 0.08]]) {
+      ctx.beginPath();
+      ctx.moveTo(width * x, 0);
+      ctx.lineTo(width * (x + w), 0);
+      ctx.lineTo(width * (x + w) - height * 0.35, height);
+      ctx.lineTo(width * x - height * 0.35, height);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // 泡
+    for (const bubble of bubbles) {
+      const x = bubble.x + Math.sin(bubble.wobble) * 6;
+      const ball = ctx.createRadialGradient(x - bubble.r * 0.35, bubble.y - bubble.r * 0.35, bubble.r * 0.1, x, bubble.y, bubble.r);
+      ball.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+      ball.addColorStop(0.45, "rgba(255, 255, 255, 0.15)");
+      ball.addColorStop(1, "rgba(255, 255, 255, 0.5)");
+      ctx.fillStyle = ball;
+      ctx.beginPath();
+      ctx.arc(x, bubble.y, bubble.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
   function draw() {
-    ctx.clearRect(0, 0, width, height);
+    drawBackground();
     for (const enemy of enemies) {
       const image = enemy.image;
       if (image.complete && image.naturalWidth) {
         ctx.drawImage(image, (enemy.drawX ?? enemy.x) - enemy.size / 2, enemy.y - enemy.size / 2, enemy.size, enemy.size);
       }
-    }
-    for (const shot of enemyShots) {
-      ctx.fillStyle = "#ff5a6e";
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(shot.x, shot.y, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
     }
     for (const bullet of bullets) {
       if (bulletImage.complete && bulletImage.naturalWidth) ctx.drawImage(bulletImage, bullet.x - 9, bullet.y - 9, 18, 18);
@@ -289,7 +313,7 @@ export function createShooter({ stage, canvas, onChange }) {
       ctx.fill();
     }
     ctx.globalAlpha = 1;
-    if (state !== "over") {
+    if (state !== "over" && state !== "ended") {
       const blink = invulnerable > 0 && Math.floor(invulnerable * 10) % 2 === 0;
       if (!blink && face.complete && face.naturalWidth) {
         const ratio = face.naturalHeight / face.naturalWidth;
@@ -306,9 +330,19 @@ export function createShooter({ stage, canvas, onChange }) {
       active = value;
       if (!value) keys.clear();
     },
+    // スタッフロールが終わったとき:成績を返して、遊びを止める
+    finish() {
+      if (state === "playing") best = Math.max(best, score);
+      state = "ended";
+      emit();
+      return { played, best, kills };
+    },
     // 画面をひらいたときの、はじめの状態
     open() {
       reset();
+      best = 0;
+      kills = 0;
+      played = false;
       state = "idle";
       resize();
       emit();
