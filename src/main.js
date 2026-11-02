@@ -340,6 +340,7 @@ function playableIds() {
 
 let reviewFromQuiz = false; // クイズの結果から、すぐ復習に来たか(戻る先が、モード選択になる)
 let reviewOnly = null; // 結果から「すぐ復習」したときの、復習する問題(uid)
+let reviewScope = []; // クイズから来た復習の、その回の間違いの全部(復習の結果から「もう1度」するとき、その回の問題だけにする)
 let lastCorrect = null; // 前の問題に正解したか(フロリのセリフに使う)
 // 画面に出す得点は、5点満点(中の点は、1問2点のまま。出すときに、半分にする)
 const fmtPts = (internal) => {
@@ -356,7 +357,12 @@ function startPlay(nextMode, startMessage = null) {
   else if (mode === "hard") play = getSession(pick.group, "hard");
   else if (mode === "versus") play = new VersusRound(versusPool(), versusPlayers);
   else if (mode === "review") {
-    const wrong = new Set(reviewOnly ?? loadStats().wrong);
+    let scope = reviewOnly;
+    if (!scope && reviewFromQuiz && reviewScope.length) {
+      const left = reviewScope.filter((id) => loadStats().wrong.includes(id)); // まだ間違いのままのものだけ
+      scope = left.length ? left : reviewScope;
+    }
+    const wrong = new Set(scope ?? loadStats().wrong);
     reviewOnly = null;
     const pool = playableQuestions.filter((q) => wrong.has(q.uid ?? q.id));
     if (pool.length === 0) return show("cover");
@@ -882,7 +888,9 @@ function showResult() {
     $("btn-again").textContent = "もう1度対戦";
   } else if (mode === "review") {
     // 復習:間違えた問題の一覧だけが変わる。成績の回数や、総合得点には入れない。
-    const left = recordReview(result.answers);
+    const leftAll = recordReview(result.answers);
+    // クイズから来た復習は、その回の問題だけを数える(「もう1度復習」も、その回の問題だけ)
+    const left = reviewFromQuiz ? reviewScope.filter((id) => loadStats().wrong.includes(id)).length : leftAll;
     $("r-title").textContent = "復習の結果!";
     $("r-best-row").hidden = true;
     $("r-record").hidden = true;
@@ -1740,6 +1748,7 @@ $("btn-again").addEventListener("click", () => startPlay(mode));
 $("btn-r-review").addEventListener("click", () => {
   if (reviewNow.length === 0) return;
   reviewOnly = [...reviewNow];
+  reviewScope = [...reviewNow];
   reviewFromQuiz = true;
   timeLimit = false;
   startPlay("review", "ここで 正解すると 復習モードから 消えるヨ!");
