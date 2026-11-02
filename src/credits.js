@@ -3,10 +3,11 @@
 import { createShooter } from "./shooter.js";
 import { playSe } from "./audio.js";
 
-// section は大きな見出し。role の行は、names が空なら画面に出さない。「（仮）」は、名前が決まったら入れかえる。
+// section は大きな見出し。{ br: true } は、そこで行を改める(次の項目は、つぎの行へ)。role の行は、names が空なら画面に出さない。「（仮）」は、名前が決まったら入れかえる。
 export const CREDITS = [
   { section: "出演" },
   { role: "ナビゲーター", names: ["フロリ"] },
+  { br: true },
   { role: "出題", names: ["理系 / 文系 / ひらめき"] },
 
   { section: "製作" },
@@ -18,6 +19,7 @@ export const CREDITS = [
   { section: "問題" },
   { role: "問題の作成", names: ["Claude"] },
   { role: "解説の作成", names: ["Claude"] },
+  { br: true },
   { role: "問題の監修", names: ["（仮）"] },
 
   { section: "デザイン" },
@@ -70,7 +72,11 @@ function buildRoll() {
   title.innerHTML = '<span class="cr-title-sub">ひらめきクイズ</span><span class="cr-title-main">Flori_Quiz</span>';
   parts.push(title);
   let line = null;
-  for (const row of CREDITS.filter((item) => item.section || item.names.length > 0)) {
+  for (const row of CREDITS.filter((item) => item.section || item.br || item.names.length > 0)) {
+    if (row.br) {
+      line = null;
+      continue;
+    }
     if (row.section) {
       const head = document.createElement("h3");
       head.className = "cr-section";
