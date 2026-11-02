@@ -1,7 +1,7 @@
 // スタッフクレジット:下から上へ流れるスタッフロール。流れている後ろで、シューティングが遊べる(shooter.js)。
 // 載せる内容は CREDITS の表(映画のスタッフロールのように、見出しごとに、役割と名前をならべる)。
 import { createShooter } from "./shooter.js";
-import { playSe } from "./audio.js";
+import { playSe, setScene } from "./audio.js";
 
 // section は大きな見出し。{ br: true } は、そこで行を改める(次の項目は、つぎの行へ)。{ space: N } は、Nピクセルの間をあける。role の行は、names が空なら画面に出さない。「（仮）」は、名前が決まったら入れかえる。
 export const CREDITS = [
@@ -65,6 +65,7 @@ export const CREDITS = [
 
 export const CREDITS_THANKS = "あそんでくれて ありがとう!";
 const ROLL_SPEED = 62; // 流れる速さ(1秒に進むピクセル)
+const NO_SPAWN_LEFT = 320; // ロールの終わりまで、これより近づいたら、落ちものを出さない(ピクセル)
 const PER_LINE = 3; // 同じ行に ならべる数(最大)
 
 const $ = (id) => document.getElementById(id);
@@ -160,6 +161,8 @@ function tick(now) {
   const roll = $("credits-roll");
   if (!finished) {
     rollY -= ROLL_SPEED * dt;
+    // 終わりが近づいたら(のこり約5秒)、新しい落ちものは出さない
+    shooter.setSpawning(rollY + roll.offsetHeight > NO_SPAWN_LEFT);
     roll.style.transform = `translateY(${Math.round(rollY)}px)`;
     if (rollY < -roll.offsetHeight) beginResult();
   }
@@ -167,14 +170,7 @@ function tick(now) {
   shooter.draw();
 }
 
-// スタッフロールが流れ終わったら、シューティングの結果発表
-function commentFor(score) {
-  if (score >= 600) return "シューティング名人! すごすぎる!";
-  if (score >= 300) return "すごい うでまえ!";
-  if (score >= 100) return "いい ちょうし! もっと いけるよ!";
-  return "まだまだ これから! もう1回 どうかな?";
-}
-
+// スタッフロールが流れ終わったら、シューティングの結果発表(点とたおした数だけ。ランクのような ひとことは つけない)
 // 流れ終わったら、「スタッフロール 終了!」のホイッスル → ドラムロール → 結果発表
 function beginResult() {
   finished = true;
@@ -184,6 +180,7 @@ function beginResult() {
   $("credits-msg").textContent = "スタッフロール 終了!";
   $("credits-msg").hidden = false;
   playSe("whistle");
+  setScene("credits-end"); // 終了からドラムロールの間は、BGMを止める
   // ホイッスルのあと、ドラムロール(約2.2秒)→ 結果発表
   resultTimer = setTimeout(() => {
     $("credits-msg").dataset.text = "結果発表!";
@@ -200,9 +197,11 @@ function showResult() {
   $("cres-title").textContent = played ? "シューティング 結果発表!" : "スタッフロール 終わり";
   $("cres-score").textContent = played ? `${best}点` : "";
   $("cres-kills").textContent = played ? `たおした数 ${kills}こ` : "";
-  $("cres-comment").textContent = played ? commentFor(best) : "次は シューティングにも ちょうせんしてね!";
+  $("cres-comment").textContent = played ? "" : "次は シューティングにも ちょうせんしてね!";
+  $("cres-comment").hidden = played;
   $("credits-result").hidden = false;
   playSe("rollend");
+  setScene("credits"); // 結果発表のあとは、BGMが、また始まる
 }
 
 export function openCredits() {
@@ -215,6 +214,7 @@ export function openCredits() {
   cancelAnimationFrame(frame);
   clearTimeout(resultTimer);
   shooter.open();
+  shooter.setSpawning(true);
   shooter.setActive(true);
   rollY = $("credits-stage").clientHeight;
   finished = false;

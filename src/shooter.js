@@ -38,6 +38,7 @@ export function createShooter({ stage, canvas, onChange }) {
   let kills = 0; // たおした数(この画面を開いてからの合計)
   let played = false;
   let pointerId = null;
+  let spawning = true; // false のあいだは、新しい落ちものを出さない(スタッフロールの終わり近く)
 
   function emit() {
     onChange?.({ state, score, lives, best });
@@ -124,7 +125,7 @@ export function createShooter({ stage, canvas, onChange }) {
 
   // 難しさは、時間とともに上がる(45秒で、いちばん難しく)
   function level() {
-    return Math.min(1, elapsed / 45);
+    return Math.min(1, elapsed / 40);
   }
 
   function spawn() {
@@ -136,11 +137,11 @@ export function createShooter({ stage, canvas, onChange }) {
       y: -size,
       size,
       hp: hard ? 2 : 1,
-      speed: 85 + Math.random() * 60 + level() * 130,
+      speed: 95 + Math.random() * 65 + level() * 150,
       wave: Math.random() * Math.PI * 2,
       sway: 10 + Math.random() * 36,
       // 12秒をすぎると、鳥だけは、フロリのほうへ すばやく 寄ってくる
-      hunter: ENEMY_IMAGES[index] === "bird" && elapsed > 12,
+      hunter: ENEMY_IMAGES[index] === "bird" && elapsed > 10,
       image: enemyImages[index],
     });
   }
@@ -180,7 +181,7 @@ export function createShooter({ stage, canvas, onChange }) {
       enemies = enemies.filter((enemy) => enemy.y < height + enemy.size);
       for (const enemy of enemies) enemy.y += enemy.speed * 0.5 * dt;
       spawnTimer -= dt;
-      if (spawnTimer <= 0 && enemies.length < 4) {
+      if (spawnTimer <= 0 && spawning && enemies.length < 4) {
         spawn();
         spawnTimer = 1.4;
       }
@@ -198,16 +199,16 @@ export function createShooter({ stage, canvas, onChange }) {
     bullets = bullets.filter((bullet) => bullet.y > -20);
 
     spawnTimer -= dt;
-    if (spawnTimer <= 0) {
+    if (spawnTimer <= 0 && spawning) {
       spawn();
       if (elapsed > 20 && Math.random() < 0.4) spawn(); // 後半は、2つ同時に出ることがある
-      spawnTimer = Math.max(0.55, 1.3 - elapsed / 100);
+      spawnTimer = Math.max(0.42, 1.15 - elapsed / 80);
     }
     for (const enemy of enemies) {
       enemy.y += enemy.speed * dt;
       enemy.wave += dt * 2.4;
       enemy.drawX = enemy.x + Math.sin(enemy.wave) * enemy.sway;
-      if (enemy.hunter) enemy.x += Math.sign(player.x - enemy.drawX) * 50 * dt;
+      if (enemy.hunter) enemy.x += Math.sign(player.x - enemy.drawX) * 65 * dt;
     }
 
     function damage() {
@@ -278,6 +279,9 @@ export function createShooter({ stage, canvas, onChange }) {
     update,
     draw,
     resize,
+    setSpawning(value) {
+      spawning = value;
+    },
     setActive(value) {
       active = value;
       if (!value) keys.clear();
