@@ -827,7 +827,7 @@ function fitExplanation(ids = QUIZ_IDS) {
 
 // 答えたあとに読む文(正解かどうか・正解・解説)
 function answerReading() {
-  return `${$("q-verdict").textContent}。正解は、${renderers[current.type].correctText(current)}。${current.explanation}`;
+  return `${$("q-verdict").textContent}。正解は${renderers[current.type].correctText(current)}。${current.explanation}`;
 }
 
 // 総合得点(100点満点)を、保存した記録から数える。いまある普通・難しい問題の、問題ごとの最高の点を足す(1問2点・ヒントを見たら1点)。
