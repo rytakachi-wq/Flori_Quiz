@@ -1879,7 +1879,11 @@ $("btn-tutorial-menu").addEventListener("click", () => playTutorial());
 // ================= 着せ替えの解放(条件は badges.js) =================
 // 条件を数えるための材料
 function badgeContext(stats = loadStats()) {
-  return { stats, total: currentTotal(stats), playable: playableQuestions.length, all: allQuestions.length, oni: oniQuestions.length };
+  // ジャンル別(理系・文系・ひらめき)に、正解したことのある問題の数
+  const right = new Set(stats.right);
+  const groupRight = {};
+  for (const q of allQuestions) if (right.has(q.uid ?? q.id)) groupRight[groupOf(q)] = (groupRight[groupOf(q)] ?? 0) + 1;
+  return { stats, total: currentTotal(stats), playable: playableQuestions.length, all: allQuestions.length, oni: oniQuestions.length, groupRight };
 }
 
 // 条件を満たしたものを、数えな押して、初めてのものを、おぼえる(画面には、出さない。着せ替えの解放に使う)
