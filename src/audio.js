@@ -23,6 +23,7 @@ const BGM = {
   rpgboss: "questboss", // RPGの、ボス戦
   result: "result",
   tutorial: "tutorial",
+  credits: "credits", // スタッフクレジット
 };
 
 // 効果音(ファイル)。boost は、小さい音をもち上げる倍率(ピークが 0 dB をこえない範囲)。
@@ -41,6 +42,9 @@ const SE = {
   rpgPunch: { file: "se-rpg-punch.mp3", boost: 1.8 }, // RPG:こうげきが当たった
   rpgGuard: { file: "se-rpg-guard.mp3", boost: 1.8 }, // RPG:敵のこうげきを受けた
   rpgDing: { file: "se-rpg-ding.mp3", boost: 1.5 }, // RPG:たからばこで回復
+  cancel3: { file: "se-cancel3.mp3", boost: 1.5 }, // シューティング:フロリが当たった
+  cancel4: { file: "se-cancel4.mp3", boost: 1.5 }, // シューティング:大きい敵に1回当たった
+  cancel5: { file: "se-cancel5.mp3", boost: 1.5 }, // シューティング:ゲームオーバー
   rpgSad: { file: "se-rpg-sad.mp3", boost: 1.2 }, // RPG:ゲームオーバー
 };
 

@@ -26,7 +26,6 @@ export function createShooter({ stage, canvas, onChange }) {
   let height = 0;
   let bullets = [];
   let enemies = [];
-  let bubbles = [];
   let sparks = [];
   let state = "idle"; // idle(まだ遊んでいない) playing over ended(スタッフロールが終わった)
   let score = 0;
@@ -54,14 +53,6 @@ export function createShooter({ stage, canvas, onChange }) {
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     player.x = player.tx = Math.min(Math.max(player.x || width / 2, player.size / 2), width - player.size / 2);
     player.y = player.ty = Math.min(Math.max(player.y || height * 0.82, player.size / 2), height - player.size / 2);
-    // ラムネの泡:下から上へ、ゆっくり のぼる
-    bubbles = Array.from({ length: 18 }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      r: 3 + Math.random() * 11,
-      speed: 14 + Math.random() * 34,
-      wobble: Math.random() * Math.PI * 2,
-    }));
   }
 
   function reset() {
@@ -92,6 +83,7 @@ export function createShooter({ stage, canvas, onChange }) {
   }
 
   stage.addEventListener("pointerdown", (event) => {
+    if (state === "ended" || event.target.closest("button")) return; // 結果発表のボタンは、ふつうに押せるように
     pointerId = event.pointerId;
     stage.setPointerCapture?.(event.pointerId);
     aim(event);
@@ -179,14 +171,6 @@ export function createShooter({ stage, canvas, onChange }) {
       spark.life -= dt;
     }
     sparks = sparks.filter((spark) => spark.life > 0);
-    for (const bubble of bubbles) {
-      bubble.y -= bubble.speed * dt;
-      bubble.wobble += dt * 1.6;
-      if (bubble.y < -bubble.r) {
-        bubble.y = height + bubble.r;
-        bubble.x = Math.random() * width;
-      }
-    }
     if (state !== "playing") {
       // 遊んでいないあいだも、敵は ゆっくり落ちて、背景がさびしくならない
       enemies = enemies.filter((enemy) => enemy.y < height + enemy.size);
@@ -226,11 +210,11 @@ export function createShooter({ stage, canvas, onChange }) {
       lives -= 1;
       invulnerable = INVULNERABLE;
       burst(player.x, player.y);
-      playSe("rpgGuard");
+      playSe("cancel3");
       if (lives <= 0) {
         state = "over";
         best = Math.max(best, score);
-        playSe("wrong");
+        playSe("cancel5");
       }
     }
     for (const enemy of enemies) {
@@ -239,6 +223,7 @@ export function createShooter({ stage, canvas, onChange }) {
         if (Math.hypot(bullet.x - (enemy.drawX ?? enemy.x), bullet.y - enemy.y) < enemy.size / 2 + 6) {
           bullet.dead = true;
           enemy.hp -= 1;
+          if (enemy.hp > 0) playSe("cancel4");
           if (enemy.hp <= 0) {
             enemy.dead = true;
             kills += 1;
@@ -258,44 +243,8 @@ export function createShooter({ stage, canvas, onChange }) {
     emit();
   }
 
-  // 背景:ラムネのびんの ガラスのような、すきとおった水色。光のすじと、のぼる泡
-  function drawBackground() {
-    const glass = ctx.createLinearGradient(0, 0, 0, height);
-    glass.addColorStop(0, "#e4fbff");
-    glass.addColorStop(0.55, "#a9ecf7");
-    glass.addColorStop(1, "#7fd6ea");
-    ctx.fillStyle = glass;
-    ctx.fillRect(0, 0, width, height);
-    // 光のすじ(ガラスの ななめの 反射)
-    ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-    for (const [x, w] of [[0.12, 0.1], [0.3, 0.04], [0.74, 0.08]]) {
-      ctx.beginPath();
-      ctx.moveTo(width * x, 0);
-      ctx.lineTo(width * (x + w), 0);
-      ctx.lineTo(width * (x + w) - height * 0.35, height);
-      ctx.lineTo(width * x - height * 0.35, height);
-      ctx.closePath();
-      ctx.fill();
-    }
-    // 泡
-    for (const bubble of bubbles) {
-      const x = bubble.x + Math.sin(bubble.wobble) * 6;
-      const ball = ctx.createRadialGradient(x - bubble.r * 0.35, bubble.y - bubble.r * 0.35, bubble.r * 0.1, x, bubble.y, bubble.r);
-      ball.addColorStop(0, "rgba(255, 255, 255, 0.95)");
-      ball.addColorStop(0.45, "rgba(255, 255, 255, 0.15)");
-      ball.addColorStop(1, "rgba(255, 255, 255, 0.5)");
-      ctx.fillStyle = ball;
-      ctx.beginPath();
-      ctx.arc(x, bubble.y, bubble.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-  }
-
   function draw() {
-    drawBackground();
+    ctx.clearRect(0, 0, width, height);
     for (const enemy of enemies) {
       const image = enemy.image;
       if (image.complete && image.naturalWidth) {

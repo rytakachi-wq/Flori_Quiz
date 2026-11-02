@@ -3507,7 +3507,7 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 #screen-menu .menu-grid { grid-template-rows: repeat(2, clamp(64px, calc(11 * var(--dvh)), 96px)) clamp(40px, calc(6.5 * var(--dvh)), 52px); }
 #screen-menu .menu-grid .t-credits .tile-label { font-size: 16px; white-space: nowrap; }
 #screen-credits.credits-screen:not([hidden]) { gap: 8px; }
-#screen-credits .credits-stage { position: relative; flex: 1 1 0; min-height: 0; width: 100%; overflow: hidden; border-radius: 22px; background: linear-gradient(180deg, #e4fbff, #7fd6ea); border: 3px solid rgba(255, 255, 255, 0.9); box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.8), 0 2px 8px rgba(40, 120, 150, 0.25); touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; }
+#screen-credits .credits-stage { position: relative; flex: 1 1 0; min-height: 0; width: 100%; overflow: hidden; border-radius: 18px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(214, 232, 250, 0.6)); touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; }
 #screen-credits .credits-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #screen-credits .credits-roll { position: absolute; left: 0; right: 0; top: 0; padding: 0 14px; display: grid; gap: 26px; justify-items: center; text-align: center; pointer-events: none; will-change: transform; text-shadow: 0 0 6px #fff, 0 0 3px #fff; }
 #screen-credits .cr-title { display: grid; gap: 2px; }
@@ -3528,7 +3528,7 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 #screen-credits .credits-msg { position: absolute; left: 10px; right: 10px; top: 8px; margin: 0; padding: 6px 10px; text-align: center; font-size: 14px; font-weight: bold; line-height: 1.5; white-space: pre-line; color: #2a5d8f; background: rgba(255, 255, 255, 0.88); border: 2px solid #9cc2e6; border-radius: 14px; pointer-events: none; }
 #screen-credits .credits-msg[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) { #screen-credits .credits-roll { will-change: auto; } }
-#screen-credits .credits-result { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 6px; padding: 14px; text-align: center; background: rgba(228, 251, 255, 0.92); }
+#screen-credits .credits-result { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 6px; padding: 14px; text-align: center; background: rgba(255, 255, 255, 0.92); }
 #screen-credits .credits-result[hidden] { display: none; }
 #screen-credits .cres-flori { width: auto; height: clamp(64px, calc(14 * var(--dvh)), 110px); object-fit: contain; }
 #screen-credits .cres-title { margin: 0; font-size: 22px; color: #2a5d8f; }
