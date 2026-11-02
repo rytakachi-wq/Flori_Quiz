@@ -158,6 +158,8 @@ const SPEC = [
   ["rpgChest35", "RPGたからばこ35個", "rpgChest", 35], ["rpgChest36", "RPGたからばこ36個", "rpgChest", 36], ["rpgChest37", "RPGたからばこ37個", "rpgChest", 37],
   ["rpgChest38", "RPGたからばこ38個", "rpgChest", 38], ["rpgChest39", "RPGたからばこ39個", "rpgChest", 39], ["rpgChest40", "RPGたからばこ40個", "rpgChest", 40],
   ["rpgChest21", "RPGたからばこ21個", "rpgChest", 21],
+  ["play12", "12回プレイ", "plays", 12], ["play25", "25回プレイ", "plays", 25], ["play35", "35回プレイ", "plays", 35], ["hardPerfect2", "難しいパーフェクト2回", "perfectHard", 2], ["streak40", "毎日1問40日連続", "streak", 40], ["daily7", "毎日1問7日", "daily", 7], ["versus15", "15回対戦", "versus", 15], ["garden8", "お花畑8回完成", "garden", 8], ["garden30", "お花畑30回完成", "garden", 30], ["rpgClear8", "RPG制覇8回", "rpgClear", 8], ["rpgClear40", "RPG制覇40回", "rpgClear", 40], ["rpgPerfect2", "RPGノーダメージ制覇2回", "rpgPerfect", 2], ["rpgBoss8", "RPGボス戦に8回挑戦", "rpgBoss", 8], ["rpgBoss15", "RPGボス戦に15回挑戦", "rpgBoss", 15],
+  ["streak80", "毎日1問80日連続", "streak", 80], ["daily25", "毎日1問25日", "daily", 25], ["timedPerfect10", "時間内パーフェクト10回", "timedPerfect", 10], ["rpgClear50", "RPG制覇50回", "rpgClear", 50], ["rpgPerfect6", "RPGノーダメージ制覇6回", "rpgPerfect", 6],
 ];
 
 const COUNT = {
