@@ -162,7 +162,7 @@ const SPEC = [
   ["streak80", "毎日1問80日連続", "streak", 80], ["daily25", "毎日1問25日", "daily", 25], ["timedPerfect10", "時間内パーフェクト10回", "timedPerfect", 10], ["rpgClear50", "RPG制覇50回", "rpgClear", 50], ["rpgPerfect6", "RPGノーダメージ制覇6回", "rpgPerfect", 6],
   ["play85", "85回プレイ", "plays", 85], ["streak15", "毎日1問15日連続", "streak", 15], ["streak35", "毎日1問35日連続", "streak", 35], ["streak45", "毎日1問45日連続", "streak", 45], ["streak55", "毎日1問55日連続", "streak", 55], ["streak65", "毎日1問65日連続", "streak", 65], ["streak75", "毎日1問75日連続", "streak", 75], ["daily45", "毎日1問45日", "daily", 45], ["daily55", "毎日1問55日", "daily", 55], ["daily65", "毎日1問65日", "daily", 65], ["daily75", "毎日1問75日", "daily", 75], ["daily80", "毎日1問80日", "daily", 80], ["rpgBoss35", "RPGボス戦に35回挑戦", "rpgBoss", 35],
   ["perfect55", "パーフェクト55回", "perfect", 55], ["versus45", "45回対戦", "versus", 45], ["versus55", "55回対戦", "versus", 55], ["review35", "復習コンプリート35回", "review", 35], ["garden35", "お花畑35回完成", "garden", 35], ["garden45", "お花畑45回完成", "garden", 45], ["rpgClear35", "RPG制覇35回", "rpgClear", 35], ["rpgClear45", "RPG制覇45回", "rpgClear", 45],
-  ["sci15", "理系の問題に15問正解", "genreSci", 15], ["sci20", "理系の問題に20問正解", "genreSci", 20], ["sci25", "理系の問題に25問正解", "genreSci", 25], ["hum20", "文系の問題に20問正解", "genreHum", 20], ["hum25", "文系の問題に25問正解", "genreHum", 25], ["idea20", "ひらめきの問題に20問正解", "genreIdea", 20], ["idea25", "ひらめきの問題に25問正解", "genreIdea", 25],
+  ["sci15", "理系の問題に15問挑戦", "genreSci", 15], ["sci20", "理系の問題に20問挑戦", "genreSci", 20], ["sci25", "理系の問題に25問挑戦", "genreSci", 25], ["hum20", "文系の問題に20問挑戦", "genreHum", 20], ["hum25", "文系の問題に25問挑戦", "genreHum", 25], ["idea20", "ひらめきの問題に20問挑戦", "genreIdea", 20], ["idea25", "ひらめきの問題に25問挑戦", "genreIdea", 25],
 ];
 
 const COUNT = {
@@ -184,9 +184,9 @@ const COUNT = {
   rpgPerfect: (c) => c.stats.rpgNoDamage,
   rpgBoss: (c) => c.stats.rpgBoss,
   rpgChest: (c) => c.stats.rpgChests,
-  genreSci: (c) => c.groupRight?.["理系"] ?? 0,
-  genreHum: (c) => c.groupRight?.["文系"] ?? 0,
-  genreIdea: (c) => c.groupRight?.["ひらめき"] ?? 0,
+  genreSci: (c) => c.groupSeen?.["理系"] ?? 0,
+  genreHum: (c) => c.groupSeen?.["文系"] ?? 0,
+  genreIdea: (c) => c.groupSeen?.["ひらめき"] ?? 0,
 };
 // 数のあとに付ける、ことば(「いま 2 / 5問」のように)
 const UNIT = { right: "問", plays: "回", perfect: "回", perfectHard: "回", oni: "問", streak: "日", daily: "日", versus: "回", review: "回", dex: "枚", timed: "回", timedPerfect: "回", garden: "回", total: "点", rpgClear: "回", rpgPerfect: "回", rpgBoss: "回", rpgChest: "個", genreSci: "問", genreHum: "問", genreIdea: "問" };
