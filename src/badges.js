@@ -20,7 +20,7 @@ const SPEC = [
   ["perfect", "5問パーフェクト", "perfect", 1], ["perfect3", "パーフェクト3回", "perfect", 3], ["perfect5", "パーフェクト5回", "perfect", 5],
   ["perfect10", "パーフェクト10回", "perfect", 10], ["perfect20", "パーフェクト20回", "perfect", 20],
   ["hardPerfect", "難しいパーフェクト", "perfectHard", 1], ["hardPerfect3", "難しいパーフェクト3回", "perfectHard", 3], ["hardPerfect5", "難しいパーフェクト5回", "perfectHard", 5],
-  ["oni1", "オニ退治", "oni", 1], ["oni3", "オニ3問正解", "oni", 3], ["oni5", "オニ5問正解", "oni", 5], ["oni7", "オニ7問正解", "oni", 7], ["oniAll", "オニ全問制覇", "oni", "oni"],
+  ["oni1", "オニ退治", "oni", 1], ["oni3", "オニ3問正解", "oni", 3], ["oni5", "オニ5問正解", "oni", 5], ["oni7", "オニ7問正解", "oni", 7], ["oniAll", "オニ全問クリア", "oni", "oni"],
   ["streak2", "毎日1問2日連続", "streak", 2], ["streak3", "毎日1問3日連続", "streak", 3], ["streak5", "毎日1問5日連続", "streak", 5], ["streak7", "毎日1問7日連続", "streak", 7],
   ["streak10", "毎日1問10日連続", "streak", 10], ["streak14", "毎日1問14日連続", "streak", 14], ["streak30", "毎日1問30日連続", "streak", 30],
   ["daily5", "毎日1問5日", "daily", 5], ["daily10", "毎日1問10日", "daily", 10], ["daily20", "毎日1問20日", "daily", 20],
@@ -31,9 +31,9 @@ const SPEC = [
   ["timed1", "時間チャレンジ", "timed", 1], ["timed5", "時間チャレンジ5回", "timed", 5], ["timed10", "時間チャレンジ10回", "timed", 10],
   ["timedPerfect", "時間内パーフェクト", "timedPerfect", 1], ["timedPerfect3", "時間内パーフェクト3回", "timedPerfect", 3],
   ["garden", "お花畑完成", "garden", 1], ["garden3", "お花畑3回完成", "garden", 3], ["garden5", "お花畑5回完成", "garden", 5],
-  ["total10", "総合10点", "total", 10], ["total20", "総合20点", "total", 20], ["total30", "総合30点", "total", 30], ["total40", "総合40点", "total", 40],
-  ["total50", "総合50点", "total", 50], ["total60", "総合60点", "total", 60], ["total70", "総合70点", "total", 70], ["total80", "総合80点", "total", 80],
-  ["total90", "総合90点", "total", 90], ["total100", "総合100点", "total", 100],
+  ["total10", "ひよこにランクアップ", "total", 10], ["total20", "ひよっこ探検家にランクアップ", "total", 20], ["total30", "ことり博士にランクアップ", "total", 30], ["total40", "きつね名人にランクアップ", "total", 40],
+  ["total50", "イルカ先生にランクアップ", "total", 50], ["total60", "ふくろう博士にランクアップ", "total", 60], ["total70", "ユニコーン賢者にランクアップ", "total", 70], ["total80", "ドラゴン学者にランクアップ", "total", 80],
+  ["total90", "ひらめきスターにランクアップ", "total", 90], ["total100", "ひらめき王にランクアップ", "total", 100],
   // あとから足した かざり15こ用
   ["daily30", "毎日1問30日", "daily", 30], ["versus30", "30回対戦", "versus", 30], ["timed20", "時間チャレンジ20回", "timed", 20],
   ["review10", "復習コンプリート10回", "review", 10], ["perfect30", "パーフェクト30回", "perfect", 30], ["garden10", "お花畑10回完成", "garden", 10],
@@ -183,6 +183,13 @@ const SPEC = [
   ["cor200", "200問正解", "correctAll", 200], ["cor250", "250問正解", "correctAll", 250], ["cor300", "300問正解", "correctAll", 300],
   ["cor350", "350問正解", "correctAll", 350], ["cor400", "400問正解", "correctAll", 400],
   ["ans450", "全部で450問に挑戦", "answered", 450],
+  ["norm45", "ふつう全問クリア", "normRight", 45], ["hard45", "難しい全問クリア", "hardRight", 45], ["nsci5", "理系のふつう問題に5問正解", "gnSci", 5],
+  ["nsci10", "理系のふつう問題に10問正解", "gnSci", 10], ["nsci15", "理系のふつう問題に15問正解", "gnSci", 15], ["hsci5", "理系の難しい問題に5問正解", "ghSci", 5],
+  ["hsci10", "理系の難しい問題に10問正解", "ghSci", 10], ["hsci15", "理系の難しい問題に15問正解", "ghSci", 15], ["nhum5", "文系のふつう問題に5問正解", "gnHum", 5],
+  ["nhum10", "文系のふつう問題に10問正解", "gnHum", 10], ["nhum15", "文系のふつう問題に15問正解", "gnHum", 15], ["hhum5", "文系の難しい問題に5問正解", "ghHum", 5],
+  ["hhum10", "文系の難しい問題に10問正解", "ghHum", 10], ["hhum15", "文系の難しい問題に15問正解", "ghHum", 15], ["nidea5", "ひらめきのふつう問題に5問正解", "gnIdea", 5],
+  ["nidea10", "ひらめきのふつう問題に10問正解", "gnIdea", 10], ["nidea15", "ひらめきのふつう問題に15問正解", "gnIdea", 15], ["hidea5", "ひらめきの難しい問題に5問正解", "ghIdea", 5],
+  ["hidea10", "ひらめきの難しい問題に10問正解", "ghIdea", 10], ["hidea14", "ひらめきの難しい問題に14問正解", "ghIdea", 14],
 ];
 
 const COUNT = {
@@ -208,13 +215,20 @@ const COUNT = {
   hardRight: (c) => c.hardRight ?? 0, // 難しい問題(45問)に、正解した問題の数
   answered: (c) => c.stats.answered, // 何問に答えたか(同じ問題も、もう1度、数える)
   correctAll: (c) => c.stats.correct, // 何問、正解したか
+  // ジャンル別・ふつう/難しい別の、正解した問題の数
+  gnSci: (c) => c.groupNormRight?.["理系"] ?? 0,
+  gnHum: (c) => c.groupNormRight?.["文系"] ?? 0,
+  gnIdea: (c) => c.groupNormRight?.["ひらめき"] ?? 0,
+  ghSci: (c) => c.groupHardRight?.["理系"] ?? 0,
+  ghHum: (c) => c.groupHardRight?.["文系"] ?? 0,
+  ghIdea: (c) => c.groupHardRight?.["ひらめき"] ?? 0,
   noHint: (c) => Object.values(c.stats.qpts ?? {}).filter((point) => point >= 2).length, // ヒントを使わずに正解した問題の数
   genreSci: (c) => c.groupSeen?.["理系"] ?? 0,
   genreHum: (c) => c.groupSeen?.["文系"] ?? 0,
   genreIdea: (c) => c.groupSeen?.["ひらめき"] ?? 0,
 };
 // 数のあとに付ける、ことば(「いま 2 / 5問」のように)
-const UNIT = { right: "問", plays: "回", perfect: "回", perfectHard: "回", oni: "問", streak: "日", daily: "日", versus: "回", review: "回", dex: "枚", timed: "回", timedPerfect: "回", garden: "回", total: "点", rpgClear: "回", rpgPerfect: "回", rpgBoss: "回", rpgChest: "個", genreSci: "問", noHint: "問", answered: "問", correctAll: "問", normRight: "問", hardRight: "問", genreHum: "問", genreIdea: "問" };
+const UNIT = { right: "問", plays: "回", perfect: "回", perfectHard: "回", oni: "問", streak: "日", daily: "日", versus: "回", review: "回", dex: "枚", timed: "回", timedPerfect: "回", garden: "回", total: "点", rpgClear: "回", rpgPerfect: "回", rpgBoss: "回", rpgChest: "個", genreSci: "問", noHint: "問", gnSci: "問", gnHum: "問", gnIdea: "問", ghSci: "問", ghHum: "問", ghIdea: "問", answered: "問", correctAll: "問", normRight: "問", hardRight: "問", genreHum: "問", genreIdea: "問" };
 const GOAL = { playable: (c) => c.playable, oni: (c) => c.oni, all: (c) => c.all };
 
 export const CONDITIONS = SPEC.map(([id, quest, key, goal]) => ({

@@ -1903,9 +1903,17 @@ function badgeContext(stats = loadStats()) {
   const right = new Set(stats.right);
   const groupSeen = {};
   for (const q of allQuestions) if (seen.has(q.uid ?? q.id)) groupSeen[groupOf(q)] = (groupSeen[groupOf(q)] ?? 0) + 1;
+  const groupNormRight = {};
+  const groupHardRight = {};
+  for (const q of allQuestions) {
+    const id = q.uid ?? q.id;
+    if (!right.has(id)) continue;
+    if (normalIds.has(id)) groupNormRight[groupOf(q)] = (groupNormRight[groupOf(q)] ?? 0) + 1;
+    else if (hardIds.has(id)) groupHardRight[groupOf(q)] = (groupHardRight[groupOf(q)] ?? 0) + 1;
+  }
   const normRight = [...right].filter((id) => normalIds.has(id)).length;
   const hardRight = [...right].filter((id) => hardIds.has(id)).length;
-  return { stats, total: currentTotal(stats), playable: playableQuestions.length, all: allQuestions.length, oni: oniQuestions.length, groupSeen, normRight, hardRight };
+  return { stats, total: currentTotal(stats), playable: playableQuestions.length, all: allQuestions.length, oni: oniQuestions.length, groupSeen, groupNormRight, groupHardRight, normRight, hardRight };
 }
 
 // 条件を満たしたものを、数えな押して、初めてのものを、おぼえる(画面には、出さない。着せ替えの解放に使う)
