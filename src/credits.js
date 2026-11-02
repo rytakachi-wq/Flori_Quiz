@@ -7,6 +7,7 @@ import { playSe } from "./audio.js";
 export const CREDITS = [
   { section: "出演" },
   { role: "ナビゲーター", names: ["フロリ"] },
+  { role: "キャラクター「フロリ」", names: ["（仮）"] },
   { br: true },
   { role: "出題", names: ["理系 / 文系 / ひらめき"] },
 
@@ -23,12 +24,13 @@ export const CREDITS = [
   { role: "問題の監修", names: ["（仮）"] },
 
   { section: "デザイン" },
-  { role: "キャラクター「フロリ」", names: ["（仮）"] },
   { role: "背景", names: ["（仮）"] },
   { role: "画面のデザイン", names: ["（仮）"] },
-  { role: "文字(フォント)", names: ["Zen Maru Gothic", "(Google Fonts)"] },
+  { br: true },
   { role: "問題のイラスト", names: ["ChatGPT"] },
   { role: "着せ替えのデザイン", names: ["ChatGPT"] },
+  { br: true },
+  { role: "文字(フォント)", names: ["Zen Maru Gothic", "(Google Fonts)"] },
 
   { section: "音" },
   { role: "BGM", names: ["オリジナル曲", "(ブラウザの中で 演奏しています)"] },
