@@ -149,6 +149,7 @@ function render(info) {
     box.textContent = message;
   }
   box.hidden = message === "";
+  box.classList.toggle("is-center", info.state === "ended"); // 終了・結果発表の文字は、画面の真ん中に
   $("credits-hud").hidden = info.state !== "playing";
 }
 
@@ -174,21 +175,21 @@ function commentFor(score) {
   return "まだまだ これから! もう1回 どうかな?";
 }
 
-// 流れ終わったら、「そこまで!」のホイッスル → ドラムロール → 結果発表
+// 流れ終わったら、「スタッフロール 終了!」のホイッスル → ドラムロール → 結果発表
 function beginResult() {
   finished = true;
   shooter.finish(); // ここで、シューティングは止まる
   $("credits-hud").hidden = true;
-  $("credits-msg").dataset.text = "そこまで!";
-  $("credits-msg").textContent = "そこまで!";
+  $("credits-msg").dataset.text = "スタッフロール 終了!";
+  $("credits-msg").textContent = "スタッフロール 終了!";
   $("credits-msg").hidden = false;
   playSe("whistle");
-  // ホイッスルのあと、ドラムロール(約4.5秒)→ 結果発表
+  // ホイッスルのあと、ドラムロール(約2.2秒)→ 結果発表
   resultTimer = setTimeout(() => {
     $("credits-msg").dataset.text = "結果発表!";
     $("credits-msg").textContent = "結果発表!";
-    playSe("drumroll");
-    resultTimer = setTimeout(showResult, 4500);
+    playSe("drumroll", 2200);
+    resultTimer = setTimeout(showResult, 2200);
   }, 1600);
 }
 
