@@ -2749,6 +2749,9 @@ function applyDress() {
   const theme = picked ?? THEMES[0];
   document.documentElement.dataset.theme = theme.id;
   document.documentElement.style.setProperty("--cover-bg", theme.cover ?? `url("../assets/bg/${theme.id}.webp")`); // 表紙の背景の模様(色ごと。あとから足した背景は、グラデーション)
+  // 柄物の背景は、ホーム・図鑑・その他・設定の背景にも、その柄(--cover-pat)を使う(style.css の data-pattern)
+  document.documentElement.toggleAttribute("data-pattern", Boolean(theme.pattern));
+  document.documentElement.style.setProperty("--cover-pat", theme.pattern ?? "none");
   const root = document.documentElement.style;
   for (const [name, key] of [["--bg", "bg"], ["--blue", "blue"], ["--blue-dark", "dark"]]) {
     if (theme?.[key]) root.setProperty(name, theme[key]);

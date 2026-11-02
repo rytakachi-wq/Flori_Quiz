@@ -3489,3 +3489,13 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 /* RPGの「設定」ボタン(ほかのクイズと同じ。ハートのとなり、右はし) */
 #screen-rpg > .screen-head { grid-template-columns: auto minmax(0, 1fr) auto; }
 .rpg-screen .rpg-settings { min-height: 38px; padding: 2px 12px; font-size: 15px; white-space: nowrap; }
+
+/* ===== 柄物の背景(縞・水玉・波・ハートなど)を選んだとき:ホーム・図鑑・その他・設定でも、その柄にする =====
+   ふつうの背景は、上半分の絵を上下に折り返して使う。柄物は、折り返さず、画面ぜんたいにその柄を敷く(上に、うすい白で、文字を読みやすく)。 */
+html[data-pattern] #screen-cover.cover-home::before,
+html[data-pattern] :is(#screen-menu, #screen-note, #screen-dex, #screen-settings).screen::before {
+  top: 0; bottom: 0; height: 100%; transform: none;
+  background: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)), var(--cover-pat);
+}
+html[data-pattern] #screen-cover.cover-home::after,
+html[data-pattern] :is(#screen-menu, #screen-note, #screen-dex, #screen-settings).screen::after { display: none; }

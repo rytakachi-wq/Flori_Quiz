@@ -356,7 +356,7 @@ export const THEMES = [
   ...TRIAL.filter((p) => !p.noTheme).map((p) => {
     const [bg, blue, dark] = TRIAL_THEME[p.id];
     const plain = p.stage.startsWith("linear-gradient(") && !p.stage.includes("), "); // 1つの線形グラデーションだけの背景は、表紙にも、そのまま使う
-    return { id: p.id, name: p.name, tint: p.tint, preview: p.stage, stage: p.stage, bg, blue, dark, cover: plain ? p.stage : `linear-gradient(160deg, ${bg}, ${blue})`, unlock: null, trial: true };
+    return { id: p.id, name: p.name, tint: p.tint, preview: p.stage, stage: p.stage, bg, blue, dark, cover: plain ? p.stage : `linear-gradient(160deg, ${bg}, ${blue})`, pattern: plain ? undefined : p.stage, unlock: null, trial: true }; // pattern:柄物の背景は、ホーム・図鑑・その他・設定の背景にも、その柄を使う
   }),
 ];
 // 着せ替えの一覧は、系統ごとにまとめて並べる(もらえる順とは別。もらえる順は、assignUnlocks の表のまま)。
