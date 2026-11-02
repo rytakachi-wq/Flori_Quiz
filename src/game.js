@@ -1,5 +1,16 @@
 // ゲームの決まり(画面に依存しない部分)。decisions.md の決定事項に対応。
 
+// 選択肢の順番を、出すたびに、ランダムにする(正解の番号も、あわせて直した、コピーを返す。元の問題は、変えない)
+export function shuffleChoices(question, rng = Math.random) {
+  if (!Array.isArray(question?.choices) || question.choices.length < 2 || !Number.isInteger(question.answer)) return question;
+  const order = question.choices.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rng() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return { ...question, choices: order.map((i) => question.choices[i]), answer: order.indexOf(question.answer) };
+}
+
 export const QUESTIONS_PER_ROUND = 5; // 1回の問題数
 export const POINTS_PER_CORRECT = 2; // 1問2点(5問で10点満点)
 export const ONI_POINTS_PER_CORRECT = 5; // オニ問題は、1問5点(10問で50点満点)

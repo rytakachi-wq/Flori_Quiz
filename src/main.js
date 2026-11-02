@@ -25,6 +25,7 @@ import {
   dateKey,
   pickRandom,
   previousDateKey,
+  shuffleChoices,
   totalScore,
 } from "./game.js";
 import {
@@ -392,7 +393,9 @@ function versusPool() {
 }
 
 function showQuestion() {
-  const { question, leveledUp } = play.nextQuestion();
+  const next = play.nextQuestion();
+  const { leveledUp } = next;
+  const question = shuffleChoices(next.question); // 選択肢は、出すたびに、ランダムな順番
   current = question;
   answered = false;
 
@@ -2540,7 +2543,7 @@ function rpgIntro(stage, retries) {
 }
 
 function showRpg() {
-  const { question } = play.nextQuestion();
+  const question = shuffleChoices(play.nextQuestion().question); // 選択肢は、出すたびに、ランダムな順番
   rpgQuestion = question;
   rpgAnswered = false;
   rpgHinted = false;
