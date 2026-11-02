@@ -3,7 +3,7 @@
 import { createShooter } from "./shooter.js";
 import { playSe } from "./audio.js";
 
-// section は大きな見出し。{ br: true } は、そこで行を改める(次の項目は、つぎの行へ)。role の行は、names が空なら画面に出さない。「（仮）」は、名前が決まったら入れかえる。
+// section は大きな見出し。{ br: true } は、そこで行を改める(次の項目は、つぎの行へ)。{ space: N } は、Nピクセルの間をあける。role の行は、names が空なら画面に出さない。「（仮）」は、名前が決まったら入れかえる。
 export const CREDITS = [
   { section: "出演" },
   { role: "ナビゲーター", names: ["フロリ"] },
@@ -42,6 +42,7 @@ export const CREDITS = [
   { role: "着せ替えの仕組み", names: ["Claude"] },
   { role: "成績・記録の仕組み", names: ["Claude"] },
   { role: "BGMの演奏", names: ["Claude"] },
+  { br: true },
   { role: "技術協力", names: ["（仮）"] },
   { role: "システム設計", names: ["（仮）"] },
 
@@ -54,6 +55,7 @@ export const CREDITS = [
   { section: "Special Thanks" },
   { role: "", names: ["あそんでくれた あなた"] },
 
+  { space: 90 },
   { section: "監督" },
   { role: "", names: ["（仮）"] },
 ];
@@ -72,7 +74,14 @@ function buildRoll() {
   title.innerHTML = '<span class="cr-title-sub">ひらめきクイズ</span><span class="cr-title-main">Flori_Quiz</span>';
   parts.push(title);
   let line = null;
-  for (const row of CREDITS.filter((item) => item.section || item.br || item.names.length > 0)) {
+  for (const row of CREDITS.filter((item) => item.section || item.br || item.space || item.names.length > 0)) {
+    if (row.space) {
+      const gap = document.createElement("div");
+      gap.style.height = `${row.space}px`;
+      parts.push(gap);
+      line = null;
+      continue;
+    }
     if (row.br) {
       line = null;
       continue;
@@ -162,7 +171,7 @@ function commentFor(score) {
   return "まだまだ これから! もう1回 どうかな?";
 }
 
-// 流れ終わったら、「そこまで!」のホイッスル → 少しおいて、結果発表
+// 流れ終わったら、「そこまで!」のホイッスル → ドラムロール → 結果発表
 function beginResult() {
   finished = true;
   shooter.finish(); // ここで、シューティングは止まる
@@ -171,7 +180,13 @@ function beginResult() {
   $("credits-msg").textContent = "そこまで!";
   $("credits-msg").hidden = false;
   playSe("whistle");
-  resultTimer = setTimeout(showResult, 1800);
+  // ホイッスルのあと、ドラムロール(約4.5秒)→ 結果発表
+  resultTimer = setTimeout(() => {
+    $("credits-msg").dataset.text = "結果発表!";
+    $("credits-msg").textContent = "結果発表!";
+    playSe("drumroll");
+    resultTimer = setTimeout(showResult, 4500);
+  }, 1600);
 }
 
 function showResult() {

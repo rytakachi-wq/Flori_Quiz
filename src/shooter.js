@@ -180,9 +180,9 @@ export function createShooter({ stage, canvas, onChange }) {
       enemies = enemies.filter((enemy) => enemy.y < height + enemy.size);
       for (const enemy of enemies) enemy.y += enemy.speed * 0.5 * dt;
       spawnTimer -= dt;
-      if (spawnTimer <= 0 && enemies.length < 2) {
+      if (spawnTimer <= 0 && enemies.length < 4) {
         spawn();
-        spawnTimer = 2.4;
+        spawnTimer = 1.4;
       }
       return;
     }
@@ -200,7 +200,7 @@ export function createShooter({ stage, canvas, onChange }) {
     spawnTimer -= dt;
     if (spawnTimer <= 0) {
       spawn();
-      if (elapsed > 25 && Math.random() < 0.15) spawn(); // 後半は、ときどき、2つ同時に出る
+      if (elapsed > 20 && Math.random() < 0.4) spawn(); // 後半は、2つ同時に出ることがある
       spawnTimer = Math.max(0.55, 1.3 - elapsed / 100);
     }
     for (const enemy of enemies) {

@@ -274,7 +274,7 @@ export const TRACKS = {
 
   // スタッフクレジット:ゆっくり、ひろがるように進む、エンディングの曲(変ロ長調。長く のばす金管と、半分の速さのドラム)
   credits: {
-    bpm: 66,
+    bpm: 84,
     trim: 1.2,
     voice: "brass",
     bass: "sustain",
