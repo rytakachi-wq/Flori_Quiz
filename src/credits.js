@@ -197,8 +197,6 @@ function showResult() {
   $("cres-title").textContent = played ? "シューティング 結果発表!" : "スタッフロール 終わり";
   $("cres-score").textContent = played ? `${best}点` : "";
   $("cres-kills").textContent = played ? `たおした数 ${kills}こ` : "";
-  $("cres-comment").textContent = played ? "" : "次は シューティングにも ちょうせんしてね!";
-  $("cres-comment").hidden = played;
   $("credits-result").hidden = false;
   playSe("rollend");
   setScene("credits"); // 結果発表のあとは、BGMが、また始まる

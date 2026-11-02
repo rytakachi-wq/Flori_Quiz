@@ -3535,5 +3535,4 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 #screen-credits .cres-title { margin: 0; font-size: 22px; color: #2a5d8f; }
 #screen-credits .cres-score { margin: 0; font-size: 44px; font-weight: bold; line-height: 1.1; color: #e0607a; text-shadow: 0 2px 0 #fff; }
 #screen-credits .cres-kills { margin: 0; font-size: 16px; font-weight: bold; color: var(--blue-dark); }
-#screen-credits .cres-comment { margin: 0 0 6px; font-size: 16px; font-weight: bold; line-height: 1.5; }
 #screen-credits .credits-msg.is-center { top: 50%; bottom: auto; transform: translateY(-50%); padding: 14px 10px; font-size: 24px; }
