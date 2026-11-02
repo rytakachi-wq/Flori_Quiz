@@ -25,7 +25,7 @@
 
 - RPGクエスト(decisions その63):`game.js` の `RpgRound`、専用の画面 `screen-rpg`(`main.js` の `showRpg`/`rpgAnswer`/`rpgNext`、見た目は style.css 末尾)。専用の見た目(戦いの場+青いウィンドウ。style.css 末尾)。ヒントでハートが半分へる・ハート4つ・BGM=`TRACKS.quest`(ボスは `questboss`)・ルール説明=`rules.js` の `KINDS`(普通・難しい・RPG・皆で。decisions その69)。ハートの絵=ハートのブローチ(`assets/illust/heart.webp`)。モード選択の「遊び方」の行は、普通・難しい・RPG(`pick.level`=normal/hard/rpg)。**公開は更新していない**(手元で確認)。
 
-- スタッフクレジット(decisions その75・76):「その他」の一番下のボタン → `screen-credits`。`src/credits.js`(内容の表 `CREDITS`+流れるロール+ループ)、`src/shooter.js`(シューティング、canvas)。画面を離れると `closeCredits()` で止まる(main.js の `show`)。
+- スタッフクレジット(decisions その75〜86):「その他」の一番下のボタン → `screen-credits`。`src/credits.js`(内容の表 `CREDITS`+流れるロール+ループ)、`src/shooter.js`(シューティング、canvas)。画面を離れると `closeCredits()` で止まる(main.js の `show`)。
 
 ## フロリを動かす(Live2D、作業中)
 - `hehehe.cmo3`(利用者のデスクトップ)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で、`src/live2d/model.json`・`tex/` を作る。描画は自作の `src/live2d/live2d.js`。試作ページ:`/src/live2d/preview.html`(スライダーで確認)。表紙用の動き:`src/live2d/flori-motion.js`、確かめ用ページ `/src/live2d/cover.html`(クリックでぴょん)。アプリ(index.html・main.js)には**まだ入れていない**。決めたこと・未決は decisions.md その49。
@@ -51,7 +51,7 @@
 - 図鑑の「ひらめき」タブが 320 幅で右端にぎりぎり。
 
 ## 現在の状態
-- 公開ずみ:2026-10-28(絵文字を描いた絵に置きかえ・着せ替え15こ追加まで)。これより後のコミットは、題名の終わりが「(未公開)」。
+- 公開ずみ:2026-11-02(スタッフクレジット・ふりがな見直しまで。decisions その86)。これより後のコミットは、題名の終わりが「(未公開)」。
 - 項目ごとにセッションを分けて進める。作業が終わったら、決めたことを decisions.md に、状態が変わったらこのファイルの「既知の残り」「現在の状態」を更新する。
 - 着せ替えの色・背景: お試し(TRIAL)も、正式なご褒美になった(badges.js の TRIAL_SETS で、色と背景のセットごとに条件)。一覧は、ジャンルの見出し付き(SET_ORDER)。着せたとき、名前が枠の上を流れる(main.js の flowName)。
 - 着せ替えの条件・レア度は、`src/dress-unlocks.js`(`UNLOCKS`・`RARITY`・移行用の`OLD_UNLOCKS`)。レア度の名前は badges.js の `RARITY_NAMES`(ノーマル・レア・スーパーレア・レジェンド)。条件を変えたら、`OLD_UNLOCKS` ではなく `UNLOCKS` を直す。RPGの条件は、storage.js の `recordRpg` で数える。

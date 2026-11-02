@@ -3509,7 +3509,7 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 #screen-credits.credits-screen:not([hidden]) { gap: 8px; }
 #screen-credits .credits-stage { position: relative; flex: 1 1 0; min-height: 0; width: 100%; overflow: hidden; border-radius: 18px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(214, 232, 250, 0.6)); touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; }
 #screen-credits .credits-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-#screen-credits .credits-roll { position: absolute; left: 0; right: 0; top: 0; padding: 0 14px; display: grid; gap: 26px; justify-items: center; text-align: center; pointer-events: none; will-change: transform; text-shadow: 0 0 6px #fff, 0 0 3px #fff; }
+#screen-credits .credits-roll { position: absolute; left: 0; right: 0; top: 0; padding: 0 8px; display: grid; gap: 26px; justify-items: center; text-align: center; pointer-events: none; will-change: transform; text-shadow: 0 0 6px #fff, 0 0 3px #fff; }
 #screen-credits .cr-title { display: grid; gap: 2px; }
 #screen-credits .cr-title-sub { font-size: 18px; font-weight: bold; color: var(--blue-dark); }
 #screen-credits .cr-title-main { font-size: 34px; font-weight: bold; letter-spacing: 0.04em; color: #2a5d8f; }
@@ -3517,7 +3517,8 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 #screen-credits .cr-line { width: 100%; display: flex; justify-content: center; align-items: flex-start; gap: 8px; }
 #screen-credits .cr-row { flex: 1 1 0; min-width: 0; display: grid; gap: 2px; justify-items: center; }
 #screen-credits .cr-line .cr-name { font-size: 17px; }
-#screen-credits .cr-line .cr-role { font-size: 12px; letter-spacing: 0; }
+#screen-credits .cr-line .cr-role { font-size: 11px; letter-spacing: -0.04em; }
+#screen-credits .cr-line { gap: 4px; }
 #screen-credits .cr-role { margin: 0; font-size: 13px; font-weight: bold; letter-spacing: 0.08em; color: var(--blue-dark); }
 #screen-credits .cr-name { margin: 0; font-size: 22px; font-weight: bold; line-height: 1.35; overflow-wrap: anywhere; }
 #screen-credits .cr-note { margin: 0; font-size: 13px; color: #4a5a68; }
