@@ -48,6 +48,7 @@ import { illustrationFor } from "./illustrations.js";
 import { createTalker } from "./talk.js";
 import { initTutorial, openTutorial } from "./tutorial.js";
 import { initRules, openRules as resetRules } from "./rules.js";
+import { CREDITS, CREDITS_THANKS } from "./credits.js";
 import { BODIES, COLORS, FACES, HEADS, RANKS, RARITY_NAMES, THEMES, earnedBadges, keepOwned, getText, groupLabel, canWear, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { refreshDecor, setAutoDecor } from "./decor-overlay.js";
@@ -71,7 +72,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "note", "relax", "records", "settings", "dex", "dress", "question", "rpg", "gameover", "result", "error"];
+const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "credits", "note", "relax", "records", "settings", "dex", "dress", "question", "rpg", "gameover", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問) "rpg"(RPGクエスト)
@@ -1509,6 +1510,27 @@ function openMenu() {
   refreshCover();
   show("menu");
 }
+// スタッフクレジット(その他から開く。戻るで、その他へ)
+function showCredits() {
+  const rows = CREDITS.filter((row) => row.names.length > 0).map((row) => {
+    const box = document.createElement("div");
+    box.className = "credits-row";
+    const role = document.createElement("p");
+    role.className = "credits-role";
+    role.textContent = row.role;
+    const names = document.createElement("p");
+    names.className = "credits-names";
+    names.textContent = row.names.join(" / ");
+    box.append(role, names);
+    return box;
+  });
+  $("credits-list").replaceChildren(...rows);
+  $("credits-list").scrollTop = 0;
+  $("credits-thanks").textContent = CREDITS_THANKS;
+  show("credits", 1);
+}
+$("btn-credits").addEventListener("click", showCredits);
+$("btn-credits-back").addEventListener("click", () => show("menu", -1));
 const PAGE_OPEN = {
   cover: () => show("cover"),
   menu: () => openMenu(),

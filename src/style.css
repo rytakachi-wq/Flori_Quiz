@@ -1743,7 +1743,7 @@ body.has-pager { padding-bottom: 56px; }
   .app { height: calc(100dvh / (var(--ui-zoom) * var(--tablet-zoom))); max-width: 760px; margin: 0 auto; padding: 6px; display: flex; flex-direction: column; }
   .pager { bottom: 12px; }
   body.has-pager :is(#screen-cover, #screen-menu, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen:not([hidden]) { padding-bottom: 58px; }
-  :is(#screen-cover, #screen-flow, #screen-menu, #screen-note, #screen-rpg, #screen-gameover, #screen-dex, #screen-dress, #screen-versus, #screen-relax, #screen-records, #screen-settings, #screen-question, #screen-result, #screen-error).screen:not([hidden]) {
+  :is(#screen-cover, #screen-flow, #screen-menu, #screen-note, #screen-credits, #screen-rpg, #screen-gameover, #screen-dex, #screen-dress, #screen-versus, #screen-relax, #screen-records, #screen-settings, #screen-question, #screen-result, #screen-error).screen:not([hidden]) {
     flex: 1 1 0; min-height: 0; height: auto; overflow: hidden; padding: 8px 8px 10px; gap: 6px; justify-content: flex-start; border-radius: 22px;
   }
   .title { font-size: clamp(20px, calc(3.6 * var(--dvh)), 28px); line-height: 1.3; }
@@ -2083,7 +2083,7 @@ body.has-pager { padding-bottom: 56px; }
 #screen-setup .reward-card { flex: none; }
 #screen-cover .home-stage { flex: 1 1 0; min-height: 0; }
 #screen-cover .home-hero { width: min(calc(68 * var(--vw)), calc(38 * var(--dvh))); }
-:is(#screen-menu, #screen-note, #screen-rpg, #screen-gameover, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { margin-bottom: 0; }
+:is(#screen-menu, #screen-note, #screen-credits, #screen-rpg, #screen-gameover, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { margin-bottom: 0; }
 #screen-dress { gap: 5px; }
 #screen-dress .hero-small { flex: none; }
 #screen-dress .dress-banner-text { font-size: 13px; line-height: 1.45; }
@@ -2144,7 +2144,7 @@ body.has-pager { padding-bottom: 56px; }
 #screen-question .back-btn { min-height: 36px; padding: 2px 12px; font-size: 16px; box-shadow: 0 4px 0 rgba(53, 95, 140, 0.4); }
 #screen-question .status { min-height: 44px; align-items: center; }
 #screen-question.screen:not([hidden]) { padding-top: 8px; }
-:is(#screen-result, #screen-records, #screen-settings, #screen-relax, #screen-dex, #screen-dress, #screen-menu, #screen-note, #screen-rules, #screen-setup).screen:not([hidden]) { padding-top: 8px; }
+:is(#screen-result, #screen-records, #screen-settings, #screen-relax, #screen-dex, #screen-dress, #screen-menu, #screen-note, #screen-credits, #screen-rules, #screen-setup).screen:not([hidden]) { padding-top: 8px; }
 .screen-head { min-height: 0; height: 46px; }
 #screen-question .status { min-height: 46px; }
 .dex-tab { font-size: 12px; letter-spacing: -0.03em; padding: 1px 0; }
@@ -2526,7 +2526,7 @@ button:not(:disabled):active { transform: translateY(3px) !important; filter: no
 /* 戻るボタンを大きく */
 .back-btn, #screen-question .back-btn, #screen-question .status .back-btn { height: 48px; min-height: 48px; padding: 0 18px; font-size: 20px; gap: 6px; }
 @media (max-width: 400px) { .back-btn, #screen-question .back-btn, #screen-question .status .back-btn { height: 44px; min-height: 44px; padding: 0 12px; font-size: 18px; } }
-.screen-head, :is(#screen-menu, #screen-note, #screen-rpg, #screen-gameover, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { min-height: 50px; height: 50px; grid-template-rows: 50px; }
+.screen-head, :is(#screen-menu, #screen-note, #screen-credits, #screen-credits, #screen-rpg, #screen-gameover, #screen-dex, #screen-dress, #screen-records, #screen-settings, #screen-relax, #screen-result, #screen-question) > .screen-head { min-height: 50px; height: 50px; grid-template-rows: 50px; }
 
 /* =====================================================================
    追加(その45):ルールのフリップ(次へで進む。共通=青、1人=黄色、皆で=薄紫)・折り返し・結果のフロリ
@@ -3165,14 +3165,14 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 
 /* ===== 表紙の背景(色ごとの模様)を、ゲームモード以外の画面でも使う(その45) =====
    ホーム以外のページ(その他・図鑑・着せ替え・成績・設定)。クイズ・結果・ルールなどのゲームの画面は、これまでどおり。 */
-:is(#screen-menu, #screen-note, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen { position: relative; overflow: hidden; isolation: isolate; background: var(--bg); }
-:is(#screen-menu, #screen-note, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::before,
-:is(#screen-menu, #screen-note, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::after {
+:is(#screen-menu, #screen-note, #screen-credits, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen { position: relative; overflow: hidden; isolation: isolate; background: var(--bg); }
+:is(#screen-menu, #screen-note, #screen-credits, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::before,
+:is(#screen-menu, #screen-note, #screen-credits, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::after {
   content: ""; position: absolute; left: 0; right: 0; z-index: -1; height: 50%; pointer-events: none;
   background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), var(--cover-bg, url("../assets/bg/sky.webp")) 30% 50% / cover no-repeat;
 }
-:is(#screen-menu, #screen-note, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::before { top: 0; }
-:is(#screen-menu, #screen-note, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::after { bottom: 0; transform: scaleY(-1); }
+:is(#screen-menu, #screen-note, #screen-credits, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::before { top: 0; }
+:is(#screen-menu, #screen-note, #screen-credits, #screen-dex, #screen-dress, #screen-records, #screen-settings).screen::after { bottom: 0; transform: scaleY(-1); }
 
 /* ===== ルール画面:絵文字が絵になって、少し大きくなったぶん、枠からはみ出さないように ===== */
 .rf-players { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -3493,9 +3493,23 @@ body.is-moving .badge-bg span, body.is-touching .badge-bg span { animation-play-
 /* ===== 柄物の背景(縞・水玉・波・ハートなど)を選んだとき:ホーム・図鑑・その他・設定でも、その柄にする =====
    ふつうの背景は、上半分の絵を上下に折り返して使う。柄物は、折り返さず、画面ぜんたいにその柄を敷く(上に、うすい白で、文字を読みやすく)。 */
 html[data-pattern] #screen-cover.cover-home::before,
-html[data-pattern] :is(#screen-menu, #screen-note, #screen-dex, #screen-settings).screen::before {
+html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex, #screen-settings).screen::before {
   top: 0; bottom: 0; height: 100%; transform: none;
   background: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)), var(--cover-pat);
 }
 html[data-pattern] #screen-cover.cover-home::after,
-html[data-pattern] :is(#screen-menu, #screen-note, #screen-dex, #screen-settings).screen::after { display: none; }
+html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex, #screen-settings).screen::after { display: none; }
+
+/* ---- スタッフクレジット(その他から開く) ---- */
+.t-credits { --tile: #e6dcff; }
+.menu-grid .t-credits { grid-column: 1 / -1; flex-direction: row; gap: 10px; min-height: 0; }
+.menu-grid .t-credits .tile-icon { font-size: 26px; }
+#screen-menu .menu-grid { grid-template-rows: repeat(2, clamp(64px, calc(11 * var(--dvh)), 96px)) clamp(40px, calc(6.5 * var(--dvh)), 52px); }
+#screen-menu .menu-grid .t-credits .tile-label { font-size: 16px; white-space: nowrap; }
+#screen-credits.credits-screen:not([hidden]) { align-items: center; gap: 8px; }
+#screen-credits .credits-flori { flex: none; width: auto; height: clamp(64px, calc(14 * var(--dvh)), 120px); object-fit: contain; }
+#screen-credits .credits-list { flex: 1 1 0; min-height: 0; width: min(520px, 100%); overflow-y: auto; display: grid; align-content: start; gap: 10px; padding: 4px; overscroll-behavior: contain; }
+#screen-credits .credits-row { background: rgba(255, 255, 255, 0.85); border: 3px solid #cbbcf0; border-radius: 18px; padding: 8px 12px; text-align: center; }
+#screen-credits .credits-role { margin: 0; font-size: 13px; font-weight: bold; color: var(--blue-dark); }
+#screen-credits .credits-names { margin: 2px 0 0; font-size: 18px; font-weight: bold; line-height: 1.4; overflow-wrap: anywhere; }
+#screen-credits .credits-thanks { flex: none; margin: 0; font-size: 16px; font-weight: bold; text-align: center; color: var(--blue-dark); }
