@@ -175,6 +175,7 @@ const SPEC = [
   ["idea15", "ひらめきの問題に15問挑戦", "genreIdea", 15],
   ["hard10", "難しい問題に10問正解", "hardRight", 10], ["norm15", "ふつうの問題に15問正解", "normRight", 15], ["nohint20", "ヒントを使わずに20問正解", "noHint", 20], ["sci5", "理系の問題に5問挑戦", "genreSci", 5],
   ["hard5", "難しい問題に5問正解", "hardRight", 5], ["norm10", "ふつうの問題に10問正解", "normRight", 10], ["nohint15", "ヒントを使わずに15問正解", "noHint", 15],
+  ["rpgChest15", "RPGたからばこ15個", "rpgChest", 15],
 ];
 
 const COUNT = {
