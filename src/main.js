@@ -48,7 +48,7 @@ import { illustrationFor } from "./illustrations.js";
 import { createTalker } from "./talk.js";
 import { initTutorial, openTutorial } from "./tutorial.js";
 import { initRules, openRules as resetRules } from "./rules.js";
-import { CREDITS, CREDITS_THANKS } from "./credits.js";
+import { openCredits, closeCredits } from "./credits.js";
 import { BODIES, COLORS, FACES, HEADS, RANKS, RARITY_NAMES, THEMES, earnedBadges, keepOwned, getText, groupLabel, canWear, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { refreshDecor, setAutoDecor } from "./decor-overlay.js";
@@ -164,6 +164,7 @@ function slideIn(name, direction) {
 function show(name, direction = 0) {
   const previous = currentScreen;
   for (const key of SCREENS) $(`screen-${key}`).hidden = key !== name;
+  if (name !== "credits") closeCredits();
   if (name !== "cover") coverTaps = 0;
   if (name === "cover") {
     refreshCover();
@@ -1510,24 +1511,10 @@ function openMenu() {
   refreshCover();
   show("menu");
 }
-// スタッフクレジット(その他から開く。戻るで、その他へ)
+// スタッフクレジット(その他から開く。戻るで、その他へ)。流れるスタッフロールと、シューティング(credits.js)
 function showCredits() {
-  const rows = CREDITS.filter((row) => row.names.length > 0).map((row) => {
-    const box = document.createElement("div");
-    box.className = "credits-row";
-    const role = document.createElement("p");
-    role.className = "credits-role";
-    role.textContent = row.role;
-    const names = document.createElement("p");
-    names.className = "credits-names";
-    names.textContent = row.names.join(" / ");
-    box.append(role, names);
-    return box;
-  });
-  $("credits-list").replaceChildren(...rows);
-  $("credits-list").scrollTop = 0;
-  $("credits-thanks").textContent = CREDITS_THANKS;
   show("credits", 1);
+  openCredits();
 }
 $("btn-credits").addEventListener("click", showCredits);
 $("btn-credits-back").addEventListener("click", () => show("menu", -1));

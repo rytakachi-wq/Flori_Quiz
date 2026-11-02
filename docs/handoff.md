@@ -25,6 +25,8 @@
 
 - RPGクエスト(decisions その63):`game.js` の `RpgRound`、専用の画面 `screen-rpg`(`main.js` の `showRpg`/`rpgAnswer`/`rpgNext`、見た目は style.css 末尾)。専用の見た目(戦いの場+青いウィンドウ。style.css 末尾)。ヒントでハートが半分へる・ハート4つ・BGM=`TRACKS.quest`(ボスは `questboss`)・ルール説明=`rules.js` の `KINDS`(普通・難しい・RPG・皆で。decisions その69)。ハートの絵=ハートのブローチ(`assets/illust/heart.webp`)。モード選択の「遊び方」の行は、普通・難しい・RPG(`pick.level`=normal/hard/rpg)。**公開は更新していない**(手元で確認)。
 
+- スタッフクレジット(decisions その75・76):「その他」の一番下のボタン → `screen-credits`。`src/credits.js`(内容の表 `CREDITS`+流れるロール+ループ)、`src/shooter.js`(シューティング、canvas)。画面を離れると `closeCredits()` で止まる(main.js の `show`)。
+
 ## フロリを動かす(Live2D、作業中)
 - `hehehe.cmo3`(利用者のデスクトップ)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で、`src/live2d/model.json`・`tex/` を作る。描画は自作の `src/live2d/live2d.js`。試作ページ:`/src/live2d/preview.html`(スライダーで確認)。表紙用の動き:`src/live2d/flori-motion.js`、確かめ用ページ `/src/live2d/cover.html`(クリックでぴょん)。アプリ(index.html・main.js)には**まだ入れていない**。決めたこと・未決は decisions.md その49。
 - 開発用サーバー:`python tools/serve.py [ポート]`(既定 8780。同じネットワークの別の端末・スマホからも見られる。待ち行列を大きくし、キャッシュしない設定)。標準の http.server は、画像を同時に読むと接続を切ることがある(live2d.js はやり直す)。

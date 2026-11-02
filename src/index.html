@@ -151,9 +151,12 @@
         <button id="btn-credits-back" class="back-btn" type="button"><span aria-hidden="true">↩</span> 戻る</button>
         <h2 class="title">スタッフクレジット</h2>
       </header>
-      <img class="flori credits-flori" src="../assets/flori/m/wave_nikkori.png" alt="">
-      <div id="credits-list" class="credits-list"></div>
-      <p id="credits-thanks" class="credits-thanks"></p>
+      <div id="credits-stage" class="credits-stage">
+        <canvas id="credits-canvas" class="credits-canvas" aria-hidden="true"></canvas>
+        <div id="credits-roll" class="credits-roll"></div>
+        <div id="credits-hud" class="credits-hud" hidden><span id="credits-hearts"></span><span id="credits-score" class="credits-score">0点</span></div>
+        <p id="credits-msg" class="credits-msg" role="status"></p>
+      </div>
     </section>
     <!-- 間違いノート -->
     <section id="screen-note" class="screen dex-screen note-screen" aria-label="間違いノート" hidden>
