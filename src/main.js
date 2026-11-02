@@ -939,11 +939,11 @@ function showResult() {
     persistCourse(); // 「続きから」の記録
   }
   setNote.hidden = false;
-  // 制限時間を付けたご褒美:正解した数ぶんの星。全問正解なら、さらに3つ(オニと対戦は、なし)
+  // 制限時間を付けたご褒美:1ラウンドに、星1つ(オニと対戦は、なし)
   const reward = $("r-reward");
   reward.hidden = true;
   if (timeLimit && !versus && mode !== "oni" && !adventure) {
-    const earned = result.correct + (result.correct === result.total ? 3 : 0);
+    const earned = 1;
     const stars = addStars(earned);
     reward.textContent = `制限時間のご褒美! ⭐ +${earned}(全部で ${stars}個)`;
     reward.hidden = false;
