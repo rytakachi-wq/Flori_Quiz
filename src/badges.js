@@ -165,6 +165,15 @@ const SPEC = [
   ["sci15", "理系の問題に15問挑戦", "genreSci", 15], ["sci20", "理系の問題に20問挑戦", "genreSci", 20], ["sci25", "理系の問題に25問挑戦", "genreSci", 25], ["hum20", "文系の問題に20問挑戦", "genreHum", 20], ["hum25", "文系の問題に25問挑戦", "genreHum", 25], ["idea20", "ひらめきの問題に20問挑戦", "genreIdea", 20], ["idea25", "ひらめきの問題に25問挑戦", "genreIdea", 25],
   ["play95", "95回プレイ", "plays", 95], ["versus65", "65回対戦", "versus", 65], ["versus75", "75回対戦", "versus", 75], ["garden55", "お花畑55回完成", "garden", 55], ["garden65", "お花畑65回完成", "garden", 65], ["rpgClear55", "RPG制覇55回", "rpgClear", 55], ["nohint30", "ヒントを使わずに30問正解", "noHint", 30], ["nohint35", "ヒントを使わずに35問正解", "noHint", 35], ["nohint50", "ヒントを使わずに50問正解", "noHint", 50], ["nohint55", "ヒントを使わずに55問正解", "noHint", 55], ["nohint60", "ヒントを使わずに60問正解", "noHint", 60], ["sci30", "理系の問題に30問挑戦", "genreSci", 30], ["hum30", "文系の問題に30問挑戦", "genreHum", 30], ["idea30", "ひらめきの問題に30問挑戦", "genreIdea", 30],
   ["nohint65", "ヒントを使わずに65問正解", "noHint", 65], ["nohint70", "ヒントを使わずに70問正解", "noHint", 70], ["nohint75", "ヒントを使わずに75問正解", "noHint", 75], ["nohint80", "ヒントを使わずに80問正解", "noHint", 80],
+  ["norm5", "ふつうの問題に5問正解", "normRight", 5], ["hard15", "難しい問題に15問正解", "hardRight", 15], ["norm20", "ふつうの問題に20問正解", "normRight", 20],
+  ["hard20", "難しい問題に20問正解", "hardRight", 20], ["norm25", "ふつうの問題に25問正解", "normRight", 25], ["hard25", "難しい問題に25問正解", "hardRight", 25],
+  ["norm30", "ふつうの問題に30問正解", "normRight", 30], ["hard30", "難しい問題に30問正解", "hardRight", 30], ["norm35", "ふつうの問題に35問正解", "normRight", 35],
+  ["hard35", "難しい問題に35問正解", "hardRight", 35], ["norm40", "ふつうの問題に40問正解", "normRight", 40], ["hard40", "難しい問題に40問正解", "hardRight", 40],
+  ["nohint25", "ヒントを使わずに25問正解", "noHint", 25], ["nohint40", "ヒントを使わずに40問正解", "noHint", 40], ["nohint45", "ヒントを使わずに45問正解", "noHint", 45],
+  ["sci10", "理系の問題に10問挑戦", "genreSci", 10], ["hum5", "文系の問題に5問挑戦", "genreHum", 5], ["hum10", "文系の問題に10問挑戦", "genreHum", 10],
+  ["hum15", "文系の問題に15問挑戦", "genreHum", 15], ["idea5", "ひらめきの問題に5問挑戦", "genreIdea", 5], ["idea10", "ひらめきの問題に10問挑戦", "genreIdea", 10],
+  ["idea15", "ひらめきの問題に15問挑戦", "genreIdea", 15],
+  ["hard10", "難しい問題に10問正解", "hardRight", 10], ["norm15", "ふつうの問題に15問正解", "normRight", 15], ["nohint20", "ヒントを使わずに20問正解", "noHint", 20], ["sci5", "理系の問題に5問挑戦", "genreSci", 5],
 ];
 
 const COUNT = {
@@ -186,13 +195,15 @@ const COUNT = {
   rpgPerfect: (c) => c.stats.rpgNoDamage,
   rpgBoss: (c) => c.stats.rpgBoss,
   rpgChest: (c) => c.stats.rpgChests,
+  normRight: (c) => c.normRight ?? 0, // ふつうの問題(45問)に、正解した問題の数
+  hardRight: (c) => c.hardRight ?? 0, // 難しい問題(45問)に、正解した問題の数
   noHint: (c) => Object.values(c.stats.qpts ?? {}).filter((point) => point >= 2).length, // ヒントを使わずに正解した問題の数
   genreSci: (c) => c.groupSeen?.["理系"] ?? 0,
   genreHum: (c) => c.groupSeen?.["文系"] ?? 0,
   genreIdea: (c) => c.groupSeen?.["ひらめき"] ?? 0,
 };
 // 数のあとに付ける、ことば(「いま 2 / 5問」のように)
-const UNIT = { right: "問", plays: "回", perfect: "回", perfectHard: "回", oni: "問", streak: "日", daily: "日", versus: "回", review: "回", dex: "枚", timed: "回", timedPerfect: "回", garden: "回", total: "点", rpgClear: "回", rpgPerfect: "回", rpgBoss: "回", rpgChest: "個", genreSci: "問", noHint: "問", genreHum: "問", genreIdea: "問" };
+const UNIT = { right: "問", plays: "回", perfect: "回", perfectHard: "回", oni: "問", streak: "日", daily: "日", versus: "回", review: "回", dex: "枚", timed: "回", timedPerfect: "回", garden: "回", total: "点", rpgClear: "回", rpgPerfect: "回", rpgBoss: "回", rpgChest: "個", genreSci: "問", noHint: "問", normRight: "問", hardRight: "問", genreHum: "問", genreIdea: "問" };
 const GOAL = { playable: (c) => c.playable, oni: (c) => c.oni, all: (c) => c.all };
 
 export const CONDITIONS = SPEC.map(([id, quest, key, goal]) => ({

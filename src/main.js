@@ -89,6 +89,7 @@ function sceneOf(name) {
   }
   if (name === "relax") return "relax";
   if (name === "result") return "result";
+  if (name === "credits") return "credits";
   return name === "error" ? null : "cover";
 }
 
@@ -1881,9 +1882,12 @@ $("btn-tutorial-menu").addEventListener("click", () => playTutorial());
 function badgeContext(stats = loadStats()) {
   // ジャンル別(理系・文系・ひらめき)に、挑戦した(答えたことのある)問題の数
   const seen = new Set(stats.seen);
+  const right = new Set(stats.right);
   const groupSeen = {};
   for (const q of allQuestions) if (seen.has(q.uid ?? q.id)) groupSeen[groupOf(q)] = (groupSeen[groupOf(q)] ?? 0) + 1;
-  return { stats, total: currentTotal(stats), playable: playableQuestions.length, all: allQuestions.length, oni: oniQuestions.length, groupSeen };
+  const normRight = [...right].filter((id) => normalIds.has(id)).length;
+  const hardRight = [...right].filter((id) => hardIds.has(id)).length;
+  return { stats, total: currentTotal(stats), playable: playableQuestions.length, all: allQuestions.length, oni: oniQuestions.length, groupSeen, normRight, hardRight };
 }
 
 // 条件を満たしたものを、数えな押して、初めてのものを、おぼえる(画面には、出さない。着せ替えの解放に使う)
