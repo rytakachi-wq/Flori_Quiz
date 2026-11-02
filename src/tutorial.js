@@ -208,6 +208,7 @@ let SCENES = PLAY_SCENES;
 
 let index = 0;
 let onClose = null;
+let options = {}; // startLabel:最後の場面の「次へ」を、この名前の「始めるボタン」にする / skipLabel:閉じるボタンの名前 / skipStarts:閉じるボタンでも、始める
 
 const $ = (id) => document.getElementById(id);
 
@@ -228,7 +229,10 @@ function render() {
     }),
   );
   $("tut-prev").disabled = index === 0;
-  $("tut-next").textContent = index === SCENES.length - 1 ? "もう1度 見る" : "次へ ▶";
+  const last = index === SCENES.length - 1;
+  $("tut-next").textContent = last ? (options.startLabel ?? "もう1度 見る") : "次へ ▶";
+  $("tut-next").classList.toggle("is-start", last && Boolean(options.startLabel));
+  $("tut-skip").textContent = options.skipLabel ?? "閉じる";
 }
 
 function go(next) {
@@ -236,8 +240,9 @@ function go(next) {
   render();
 }
 
-export function openTutorial(closed, kind = "play") {
+export function openTutorial(closed, kind = "play", opts = {}) {
   onClose = closed ?? null;
+  options = opts;
   SCENES = SCENE_SETS[kind] ?? PLAY_SCENES;
   index = 0;
   $("tutorial").hidden = false;
@@ -245,17 +250,21 @@ export function openTutorial(closed, kind = "play") {
   $("tut-next").focus({ preventScroll: true });
 }
 
-export function closeTutorial() {
+// started:始めるボタンで閉じた(true)か、ただ閉じた(false)か
+export function closeTutorial(started = false) {
   $("tutorial").hidden = true;
   const callback = onClose;
   onClose = null;
-  callback?.();
+  callback?.(started || Boolean(options.skipStarts));
 }
 
 export function initTutorial() {
-  $("tut-next").addEventListener("click", () => go(index === SCENES.length - 1 ? 0 : index + 1));
+  $("tut-next").addEventListener("click", () => {
+    if (index === SCENES.length - 1 && options.startLabel) closeTutorial(true);
+    else go(index === SCENES.length - 1 ? 0 : index + 1);
+  });
   $("tut-prev").addEventListener("click", () => go(index - 1));
-  $("tut-skip").addEventListener("click", closeTutorial);
+  $("tut-skip").addEventListener("click", () => closeTutorial());
   $("tutorial").addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeTutorial();
   });

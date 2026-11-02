@@ -1703,7 +1703,7 @@ function startGarden(size = gardenSize) {
 // リラックスを選ぶと、説明・遊び方・コツのムービーを見てから、お花畑へ進む
 // (ムービーは、はじめて選んだときだけ。あとは、「遊び方・コツ」ボタンで、いつでも見られる)
 // 毎日1問・復習・リラックスのムービーは、はじめて選んだときだけ、ゲームの前に流れる
-const GUIDE_SEEN_KEYS = ["daily", "review", "relax", "rpg"].map((kind) => `floriQuiz.guideSeen.${kind}`);
+const GUIDE_SEEN_KEYS = ["daily", "review", "relax", "rpg", "intro"].map((kind) => `floriQuiz.guideSeen.${kind}`);
 function guideOnce(kind, then) {
   const key = `floriQuiz.guideSeen.${kind}`;
   let seen = false;
@@ -1832,10 +1832,25 @@ startFurigana();
 init();
 
 // ゲームを開いたときのオープニング。画面をさわると、曲がなって、表紙になる(ブラウザは、さわるまで音を出せない)。
+function introSeen() {
+  const key = "floriQuiz.guideSeen.intro";
+  try {
+    if (localStorage.getItem(key) === "1") return true;
+    localStorage.setItem(key, "1");
+  } catch {
+    // 保存できなくても、遊べる(毎回、遊び方が出るだけ)
+  }
+  return false;
+}
 function closeOpening() {
   const opening = $("opening");
   if (opening.hidden || opening.classList.contains("is-playing")) return;
   unlock();
+  if (!opening.classList.contains("is-idle") && !introSeen()) {
+    // はじめて開いたときは、先に遊び方を見せる(知っている人は、「スキップ」で、すぐ始められる)
+    playTutorial("play", (started) => started && closeOpening(), { startLabel: "ゲームスタート", skipLabel: "スキップ", skipStarts: true });
+    return;
+  }
   if (opening.classList.contains("is-idle")) {
     // 1分何もしなくて、戻ってきたオープニング:さわると、すぐ表紙に戻る
     opening.classList.add("is-leaving");
@@ -1864,16 +1879,19 @@ $("opening").addEventListener("keydown", (event) => {
 });
 // 遊び方(チュートリアルムービー):オープニングからも、その他からも、見られる
 initTutorial();
-function playTutorial(kind = "play", then = null) {
+function playTutorial(kind = "play", then = null, opts = {}) {
   setScene("tutorial");
-  openTutorial(() => {
+  openTutorial((started) => {
     setScene(sceneOf(currentScreen)); // 閉じたら、もとの画面のBGMに戻る
-    then?.();
-  }, kind);
+    then?.(started);
+  }, kind, opts);
 }
 $("btn-tutorial").addEventListener("click", (event) => {
   event.stopPropagation(); // オープニングを、閉じてしまわないように
-  playTutorial();
+  unlock();
+  introSeen(); // 見たので、はじめての自動表示は、もう出さない
+  // 最後の場面まで来たら、「ゲームスタート」で、そのまま始められる(「閉じる」なら、オープニングに戻る)
+  playTutorial("play", (started) => started && closeOpening(), { startLabel: "ゲームスタート" });
 });
 $("btn-tutorial-menu").addEventListener("click", () => playTutorial());
 
