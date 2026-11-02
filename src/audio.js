@@ -205,6 +205,39 @@ export function playSe(name, maxMs = 0) {
   return { stop: () => sound.pause() };
 }
 
+// 「しゅん」:高い音から すっと下がる、短い音(ファイルなし。WebAudio で作る)。シューティングで、弾が当たったときに鳴らす
+export function playShun() {
+  if (!context || context.state !== "running" || volumes.se === 0) return;
+  const t = context.currentTime;
+  const level = curve(volumes.se);
+  const osc = context.createOscillator();
+  const gain = context.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(1900, t);
+  osc.frequency.exponentialRampToValueAtTime(380, t + 0.17);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, 0.22 * level), t + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+  osc.connect(gain).connect(context.destination);
+  osc.start(t);
+  osc.stop(t + 0.22);
+  // すうっという息のような音を、少し重ねる
+  const length = Math.floor(context.sampleRate * 0.14);
+  const noise = context.createBuffer(1, length, context.sampleRate);
+  const data = noise.getChannelData(0);
+  for (let i = 0; i < length; i += 1) data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+  const source = context.createBufferSource();
+  const filter = context.createBiquadFilter();
+  const air = context.createGain();
+  source.buffer = noise;
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(5200, t);
+  filter.frequency.exponentialRampToValueAtTime(1400, t + 0.14);
+  air.gain.value = 0.1 * level;
+  source.connect(filter).connect(air).connect(context.destination);
+  source.start(t);
+}
+
 // くり返す音(制限時間のカチカチ)。止めるときは、stopLoop()
 let loop = null;
 export function startLoop(name) {

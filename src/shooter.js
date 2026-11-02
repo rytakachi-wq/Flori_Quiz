@@ -1,7 +1,7 @@
 // スタッフクレジットの画面で遊べる、小さなシューティング。
 // ドラッグ(またはキーボード)でフロリを動かすと、星が自動で飛ぶ。落ちてくる風船などに当てて、点をかせぐ。
 // 記録は残さない(その場かぎりの遊び)。描画は canvas、文字や数字は画面の上の HTML(ふりがなが付くように)。
-import { playSe } from "./audio.js";
+import { playSe, playShun } from "./audio.js";
 
 const ENEMY_IMAGES = ["balloon", "bulb", "sakura", "candy", "butterfly", "bird", "bolt"];
 const LIVES = 3;
@@ -85,7 +85,11 @@ export function createShooter({ stage, canvas, onChange }) {
   stage.addEventListener("pointerdown", (event) => {
     if (state === "ended" || event.target.closest("button")) return; // 結果発表のボタンは、ふつうに押せるように
     pointerId = event.pointerId;
-    stage.setPointerCapture?.(event.pointerId);
+    try {
+      stage.setPointerCapture?.(event.pointerId);
+    } catch {
+      // 指のしるしが見つからなくても、遊びは、始める
+    }
     aim(event);
     if (state === "idle" || state === "over") start();
   });
@@ -176,9 +180,9 @@ export function createShooter({ stage, canvas, onChange }) {
       enemies = enemies.filter((enemy) => enemy.y < height + enemy.size);
       for (const enemy of enemies) enemy.y += enemy.speed * 0.5 * dt;
       spawnTimer -= dt;
-      if (spawnTimer <= 0 && enemies.length < 4) {
+      if (spawnTimer <= 0 && enemies.length < 2) {
         spawn();
-        spawnTimer = 1.4;
+        spawnTimer = 2.4;
       }
       return;
     }
@@ -196,8 +200,8 @@ export function createShooter({ stage, canvas, onChange }) {
     spawnTimer -= dt;
     if (spawnTimer <= 0) {
       spawn();
-      if (elapsed > 20 && Math.random() < 0.4) spawn(); // 後半は、2つ同時に出ることがある
-      spawnTimer = Math.max(0.2, 0.75 - elapsed / 80);
+      if (elapsed > 25 && Math.random() < 0.15) spawn(); // 後半は、ときどき、2つ同時に出る
+      spawnTimer = Math.max(0.55, 1.3 - elapsed / 100);
     }
     for (const enemy of enemies) {
       enemy.y += enemy.speed * dt;
@@ -223,13 +227,12 @@ export function createShooter({ stage, canvas, onChange }) {
         if (Math.hypot(bullet.x - (enemy.drawX ?? enemy.x), bullet.y - enemy.y) < enemy.size / 2 + 6) {
           bullet.dead = true;
           enemy.hp -= 1;
-          if (enemy.hp > 0) playSe("cancel4");
+          playShun(); // 当たったら、しゅん
           if (enemy.hp <= 0) {
             enemy.dead = true;
             kills += 1;
             score += enemy.hunter ? 30 : 10 * (enemy.size > 48 ? 2 : 1);
             burst(enemy.drawX ?? enemy.x, enemy.y);
-            playSe("button");
           }
         }
       }

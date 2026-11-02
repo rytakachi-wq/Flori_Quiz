@@ -117,6 +117,7 @@ let shooter = null;
 let frame = 0;
 let rollY = 0;
 let finished = false;
+let resultTimer = 0;
 let last = 0;
 
 function messageFor({ state, best }) {
@@ -147,7 +148,7 @@ function tick(now) {
   if (!finished) {
     rollY -= ROLL_SPEED * dt;
     roll.style.transform = `translateY(${Math.round(rollY)}px)`;
-    if (rollY < -roll.offsetHeight) showResult();
+    if (rollY < -roll.offsetHeight) beginResult();
   }
   shooter.update(dt);
   shooter.draw();
@@ -161,8 +162,19 @@ function commentFor(score) {
   return "まだまだ これから! もう1回 どうかな?";
 }
 
-function showResult() {
+// 流れ終わったら、「そこまで!」のホイッスル → 少しおいて、結果発表
+function beginResult() {
   finished = true;
+  shooter.finish(); // ここで、シューティングは止まる
+  $("credits-hud").hidden = true;
+  $("credits-msg").dataset.text = "そこまで!";
+  $("credits-msg").textContent = "そこまで!";
+  $("credits-msg").hidden = false;
+  playSe("whistle");
+  resultTimer = setTimeout(showResult, 1800);
+}
+
+function showResult() {
   const { played, best, kills } = shooter.finish();
   $("credits-hud").hidden = true;
   $("credits-msg").hidden = true;
@@ -182,6 +194,7 @@ export function openCredits() {
     $("cres-again").addEventListener("click", openCredits);
   }
   cancelAnimationFrame(frame);
+  clearTimeout(resultTimer);
   shooter.open();
   shooter.setActive(true);
   rollY = $("credits-stage").clientHeight;
@@ -193,6 +206,7 @@ export function openCredits() {
 
 export function closeCredits() {
   cancelAnimationFrame(frame);
+  clearTimeout(resultTimer);
   frame = 0;
   shooter?.setActive(false);
 }
