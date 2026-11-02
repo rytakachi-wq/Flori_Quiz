@@ -7,7 +7,6 @@ import { playSe } from "./audio.js";
 export const CREDITS = [
   { section: "出演" },
   { role: "ナビゲーター", names: ["フロリ"] },
-  { role: "キャラクター「フロリ」", names: ["（仮）"] },
   { br: true },
   { role: "出題", names: ["理系 / 文系 / ひらめき"] },
 
@@ -24,6 +23,8 @@ export const CREDITS = [
   { role: "問題の監修", names: ["（仮）"] },
 
   { section: "デザイン" },
+  { role: "キャラクター「フロリ」", names: ["（仮）"] },
+  { br: true },
   { role: "背景", names: ["（仮）"] },
   { role: "画面のデザイン", names: ["（仮）"] },
   { br: true },
