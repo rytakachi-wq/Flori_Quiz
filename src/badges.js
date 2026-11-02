@@ -176,13 +176,13 @@ const SPEC = [
   ["hard10", "難しい問題に10問正解", "hardRight", 10], ["norm15", "ふつうの問題に15問正解", "normRight", 15], ["nohint20", "ヒントを使わずに20問正解", "noHint", 20], ["sci5", "理系の問題に5問挑戦", "genreSci", 5],
   ["hard5", "難しい問題に5問正解", "hardRight", 5], ["norm10", "ふつうの問題に10問正解", "normRight", 10], ["nohint15", "ヒントを使わずに15問正解", "noHint", 15],
   ["rpgChest15", "RPGたからばこ15個", "rpgChest", 15],
-  ["ans50", "のべ50問に挑戦", "answered", 50], ["ans100", "のべ100問に挑戦", "answered", 100], ["ans150", "のべ150問に挑戦", "answered", 150],
-  ["ans200", "のべ200問に挑戦", "answered", 200], ["ans250", "のべ250問に挑戦", "answered", 250], ["ans300", "のべ300問に挑戦", "answered", 300],
-  ["ans350", "のべ350問に挑戦", "answered", 350], ["ans400", "のべ400問に挑戦", "answered", 400], ["ans500", "のべ500問に挑戦", "answered", 500],
-  ["cor50", "のべ50問正解", "correctAll", 50], ["cor100", "のべ100問正解", "correctAll", 100], ["cor150", "のべ150問正解", "correctAll", 150],
-  ["cor200", "のべ200問正解", "correctAll", 200], ["cor250", "のべ250問正解", "correctAll", 250], ["cor300", "のべ300問正解", "correctAll", 300],
-  ["cor350", "のべ350問正解", "correctAll", 350], ["cor400", "のべ400問正解", "correctAll", 400],
-  ["ans450", "のべ450問に挑戦", "answered", 450],
+  ["ans50", "50問に挑戦", "answered", 50], ["ans100", "100問に挑戦", "answered", 100], ["ans150", "150問に挑戦", "answered", 150],
+  ["ans200", "200問に挑戦", "answered", 200], ["ans250", "250問に挑戦", "answered", 250], ["ans300", "300問に挑戦", "answered", 300],
+  ["ans350", "350問に挑戦", "answered", 350], ["ans400", "400問に挑戦", "answered", 400], ["ans500", "500問に挑戦", "answered", 500],
+  ["cor50", "50問正解", "correctAll", 50], ["cor100", "100問正解", "correctAll", 100], ["cor150", "150問正解", "correctAll", 150],
+  ["cor200", "200問正解", "correctAll", 200], ["cor250", "250問正解", "correctAll", 250], ["cor300", "300問正解", "correctAll", 300],
+  ["cor350", "350問正解", "correctAll", 350], ["cor400", "400問正解", "correctAll", 400],
+  ["ans450", "450問に挑戦", "answered", 450],
 ];
 
 const COUNT = {
@@ -206,8 +206,8 @@ const COUNT = {
   rpgChest: (c) => c.stats.rpgChests,
   normRight: (c) => c.normRight ?? 0, // ふつうの問題(45問)に、正解した問題の数
   hardRight: (c) => c.hardRight ?? 0, // 難しい問題(45問)に、正解した問題の数
-  answered: (c) => c.stats.answered, // のべ何問に答えたか(同じ問題も、もう1度、数える)
-  correctAll: (c) => c.stats.correct, // のべ何問、正解したか
+  answered: (c) => c.stats.answered, // 何問に答えたか(同じ問題も、もう1度、数える)
+  correctAll: (c) => c.stats.correct, // 何問、正解したか
   noHint: (c) => Object.values(c.stats.qpts ?? {}).filter((point) => point >= 2).length, // ヒントを使わずに正解した問題の数
   genreSci: (c) => c.groupSeen?.["理系"] ?? 0,
   genreHum: (c) => c.groupSeen?.["文系"] ?? 0,
