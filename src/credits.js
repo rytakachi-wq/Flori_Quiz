@@ -55,12 +55,12 @@ export const CREDITS = [
   { section: "協力" },
   { role: "協力", names: ["（仮）"] },
 
-  { section: "Special Thanks" },
-  { role: "", names: ["あそんでくれた あなた"] },
-
-  { space: 90 },
   { section: "監督" },
   { role: "", names: ["（仮）"] },
+
+  { space: 90 },
+  { section: "Special Thanks" },
+  { role: "", names: ["あそんでくれた あなた"] },
 ];
 
 export const CREDITS_THANKS = "あそんでくれて ありがとう!";
