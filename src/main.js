@@ -176,6 +176,7 @@ function show(name, direction = 0) {
     $("screen-cover").classList.remove("is-lively");
     talker.stop();
   }
+  if (name !== "rpg") stopRpgTimer();
   if (name !== "question") {
     stopTimer();
     stopSpeaking();
@@ -363,7 +364,6 @@ function startPlay(nextMode, startMessage = null) {
   } else if (mode === "daily") {
     play = new PracticeRound([dailyQuestion(playableQuestions, dateKey())]);
   } else if (mode === "rpg") {
-    timeLimit = false; // RPGには、制限時間はない
     play = new RpgRound(adventurePool());
     rpgShownStage = -1;
     announce("クエスト スタート!", "start", showRpg, "../assets/flori/m/body_wave.webp");
@@ -2636,11 +2636,46 @@ function showRpg() {
   setScene(stage.kind === "boss" ? "rpgboss" : "rpg"); // ボス戦は、BGMが変わる
   fitRpgWindow();
   setTimeout(fitRpgWindow, 150); // ふりがなが付いたあとに、もう1度
+  if (timeLimit) startRpgTimer();
+  else $("rpg-timer").hidden = true;
 }
 
-function rpgAnswer(index) {
+// RPGの制限時間(1問30秒)。時間切れは、間違いと同じ(ハートが減る)。設定・やめるの確認を開いている間は、とまる
+let rpgTimerId = 0;
+let rpgTimerLeft = 0;
+function stopRpgTimer() {
+  clearInterval(rpgTimerId);
+  rpgTimerId = 0;
+}
+function renderRpgTimer() {
+  const bar = $("rpg-timer-bar");
+  bar.style.width = `${Math.max(0, (rpgTimerLeft / TIMED_SECONDS) * 100)}%`;
+  bar.classList.toggle("is-low", rpgTimerLeft <= 5);
+  $("rpg-timer-text").textContent = `${Math.ceil(Math.max(0, rpgTimerLeft))}秒`;
+}
+function startRpgTimer() {
+  stopRpgTimer();
+  rpgTimerLeft = TIMED_SECONDS;
+  $("rpg-timer").hidden = false;
+  renderRpgTimer();
+  rpgTimerId = setInterval(() => {
+    if ($("dlg-quit").open || $("dlg-volume").open || $("dlg-rpg-hint").open) return;
+    rpgTimerLeft -= 0.1;
+    renderRpgTimer();
+    if (rpgTimerLeft <= 0) {
+      stopRpgTimer();
+      if (!rpgAnswered) {
+        playSe("whistle"); // 時間切れ
+        rpgAnswer(-1, true);
+      }
+    }
+  }, 100);
+}
+
+function rpgAnswer(index, timedUp = false) {
   if (rpgAnswered) return;
   rpgAnswered = true;
+  stopRpgTimer();
   const question = rpgQuestion;
   const foe = play.current; // 答える前の敵(たおすと、次のマスに進むので)
   const correct = play.answer(question, index, rpgHinted);
@@ -2661,7 +2696,7 @@ function rpgAnswer(index) {
   $("rpg-hint").hidden = true;
   $("rpg-choices").hidden = true; // 答えたあとは、答えと解説だけ(問題文と選択肢は、かくす。1画面に収めるため)
   $("rpg-text").hidden = true;
-  $("rpg-verdict").textContent = `${correct ? "正解!" : "残念…"} ${message}${correct && rpgHinted ? "(ヒントを使ったヨ)" : ""}`;
+  $("rpg-verdict").textContent = `${correct ? "正解!" : timedUp ? "時間切れ…" : "残念…"} ${message}${correct && rpgHinted ? "(ヒントを使ったヨ)" : ""}`;
   $("rpg-explain").textContent = `正解は「${question.choices[question.answer]}」\n${question.explanation}`;
   $("rpg-after").hidden = false;
   $("screen-rpg").classList.add("is-answered"); // 低い画面では、答えたあと、上の絵を小さくして、解説の場所をあける

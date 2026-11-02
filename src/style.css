@@ -3536,3 +3536,9 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 #screen-credits .cres-score { margin: 0; font-size: 44px; font-weight: bold; line-height: 1.1; color: #e0607a; text-shadow: 0 2px 0 #fff; }
 #screen-credits .cres-kills { margin: 0; font-size: 16px; font-weight: bold; color: var(--blue-dark); }
 #screen-credits .credits-msg.is-center { top: 50%; bottom: auto; transform: translateY(-50%); padding: 14px 10px; font-size: 24px; }
+
+/* その87 RPGの制限時間(1問30秒) */
+.rpg-timer { flex: none; gap: 8px; }
+.rpg-timer .timer-track { height: 12px; }
+.rpg-timer .timer-text { min-width: 2.8em; font-size: 14px; line-height: 1.2; }
+.rpg-screen.is-answered .rpg-timer { display: none; }
