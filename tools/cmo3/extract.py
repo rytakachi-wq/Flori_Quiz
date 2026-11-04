@@ -110,11 +110,13 @@ for m in arts:
                        pts=pts, tri=arr(m, 'indices', int), parent=didx.get(gid(N(sup, 'targetDeformerGuid')), -1), clip=clip, invclip=val(sup, 'invertClippingMask') == 'true',
                        binds=binds, forms=[forms[e['form']] for e in ents], idx=[e['idx'] for e in ents]))
 
-# 絵を描きなおしたのに、メッシュが古いまま(絵の外へはみ出している)ものは、メッシュを絵の大きさに合わせる(絵が見切れるのを防ぐ)。
+# 絵を描きなおしたのに、メッシュが古いまま(絵の外へはみ出している・数ピクセルずれて絵の端が切れている)ものは、メッシュを絵の大きさに合わせる(絵が見切れるのを防ぐ)。
 # 四すみの頂点を、絵の四すみへ動かし、各キーフォームの位置にも、同じ動き(差)を足す。Cubism でメッシュを作りなおせば、この調整は何もしない
 for m in meshes:
     xs, ys = m['pts'][0::2], m['pts'][1::2]
-    if len(xs) != 4 or (max(xs) <= m['ox'] + m['iw'] + 8 and max(ys) <= m['oy'] + m['ih'] + 8): continue
+    if len(xs) != 4: continue
+    dd = [min(xs) - m['ox'], min(ys) - m['oy'], max(xs) - m['ox'] - m['iw'], max(ys) - m['oy'] - m['ih']]   # メッシュと絵の、四辺のずれ
+    if not (max(dd[2], dd[3]) > 8 or (max(abs(v) for v in dd) <= 12 and max(abs(v) for v in dd) > 3)): continue   # はみ出している、または、数ピクセルずれて絵の端が切れている
     mx, my = max(xs), max(ys)
     new = []
     for x, y in zip(xs, ys): new += [m['ox'] + (m['iw'] if x == mx else 0), m['oy'] + (m['ih'] if y == my else 0)]

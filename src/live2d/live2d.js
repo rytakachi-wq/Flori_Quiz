@@ -1,5 +1,20 @@
 // Live2D(Cubism)で作ったフロリを、cmo3 から取り出したデータで動かして描く(自作の描画)。
 // 対応: 回転デフォーマー・メッシュ・キーフォーム(複数パラメーター)。ワープ・クリップ・物理は未対応。
+// 口のはし(唇の絵の左右の端。上唇の絵が、下唇より左右に はみ出して見える)を、見えないように、左右の端を LIP_TRIM ピクセルずつ切る
+// (メッシュの頂点を内側へ。絵の貼りつけは、頂点の位置から決まるので、端が切れる)。model.lipTrim = 0 で、切らない
+export const LIP_TRIM = { 上唇: 15, 下唇: 0 };
+function trimLips(model) {
+  if (model.lipTrim === 0) return;
+  for (const m of model.meshes) {
+    if (!/^(上唇|下唇)$/.test(m.name) || m.pts.length !== 8) continue;
+    const mid = (Math.min(...m.pts.filter((_, i) => i % 2 === 0)) + Math.max(...m.pts.filter((_, i) => i % 2 === 0))) / 2;
+    const t = LIP_TRIM[m.name], dx = k => (m.pts[k * 2] > mid ? -t : t);
+    const d = [0, 1, 2, 3].map(dx);
+    for (let k = 0; k < 4; k++) m.pts[k * 2] += d[k];
+    for (const f of m.forms) for (let k = 0; k < 4; k++) f.pos[k * 2] += d[k];
+  }
+}
+
 export async function loadModel(base) {
   const model = await (await fetch(base + 'model.json')).json();
   const imgs = new Map();
@@ -14,6 +29,7 @@ export async function loadModel(base) {
   model.imgs = imgs;
   // 腕は、ファイルでは、どちらか(または両方)が非表示のことがある(バンザイとコブシがかさなるため)。出し分けは armHidden がするので、ここでは表示にしておく
   for (const m of model.meshes) if (/^(右|左)手(バンザイ|コブシ)$/.test(m.name)) m.visible = true;
+  trimLips(model);
   model.values = model.params.map(p => p.default);
   // 描画順は、ファイルの並びの逆(後ろから前)。顔は、体のすぐ上に重ねる
   const order = model.meshes.map((m, i) => i).reverse();
