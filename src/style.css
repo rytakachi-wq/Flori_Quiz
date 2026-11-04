@@ -3544,6 +3544,7 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 .rpg-screen.is-answered .rpg-timer { display: none; }
 
 /* 動くフロリ(Live2D)。頭・顔のかざりは、首のかしげについていく(--tilt は live-flori.js が入れる) */
+.decor-hop { position: absolute; inset: 0; pointer-events: none; translate: 0 var(--hop-y, 0%); scale: var(--sx, 1) var(--sy, 1); transform-origin: var(--foot-origin, 50% 90%); }
 .decor-tilt { position: absolute; inset: 0; pointer-events: none; rotate: var(--tilt, 0deg); transform-origin: var(--tilt-origin, 50% 30%); }
 /* 動くフロリは、自分で動くので、CSS の はねる・ゆれる動きは、小さくする(ぴょんぴょんを へらす) */
 @keyframes liveBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }

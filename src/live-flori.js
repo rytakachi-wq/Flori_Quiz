@@ -34,11 +34,16 @@ function faceAngle() {
   const t = (v - k[i]) / (k[i + 1] - k[i]);
   return d.forms[i].angle + (d.forms[i + 1].angle - d.forms[i].angle) * t;
 }
-function tiltDecor(img, angle) {
+function tiltDecor(img, angle, m) {
+  const foot = `${(((FOOT.px - X0) * S) / FRAME.w) * 100}% ${(((FOOT.py - Y0) * S) / FRAME.h) * 100}%`;
   const origin = `${(((PIVOT.x - X0) * S) / FRAME.w) * 100}% ${(((PIVOT.y - Y0) * S) / FRAME.h) * 100}%`;
   for (const box of img.parentElement.querySelectorAll(":scope > .decor")) {
     box.style.setProperty("--tilt", `${angle.toFixed(2)}deg`);
     box.style.setProperty("--tilt-origin", origin);
+    box.style.setProperty("--hop-y", `${((-m.bounce * S) / FRAME.h) * 100}%`); // ジャンプで体が上がった分・つぶれた分を、かざりにも
+    box.style.setProperty("--sx", String(m.sx));
+    box.style.setProperty("--sy", String(m.sy));
+    box.style.setProperty("--foot-origin", foot);
   }
 }
 
@@ -169,7 +174,7 @@ function frame(now) {
     const m = reduced ? { bounce: 0, sx: 1, sy: 1 } : item.motion.update(now);
     const bg = model.meshes.findIndex((mesh) => mesh.name === "BG");
     draw(model, canvas.getContext("2d"), view(m.bounce), { hide: new Set([bg]), squash: { sx: m.sx, sy: m.sy, ...FOOT }, imgs: tint?.imgs, before: shadow });
-    tiltDecor(img, reduced ? 0 : faceAngle());
+    tiltDecor(img, reduced ? 0 : faceAngle(), m);
     if (!item.ready) {
       item.ready = true;
       img.style.visibility = "hidden"; // 動くフロリが出たら、静止画はかくす(場所・大きさは、そのまま)

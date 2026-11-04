@@ -4,12 +4,17 @@
 const SELECTOR = "img.flori, img.opening-flori, img.announce-flori, img.tut-side-flori";
 const POSE = /(?:wave_(?:nikkori|smile|wrong|surprised)\.png|body_wave\.webp)$/; // かざりの位置が合う絵(同じ大きさ・同じ立ち姿)
 // 頭・顔のかざりは、動くフロリが首をかしげたとき、顔といっしょに かたむく(live-flori.js が、--tilt を入れる)。入れものの span で、かざりをくるむ
+// すべてのかざりは、ジャンプ(上がる・つぶれる)にもついていく:外側の span(decor-hop)に、live-flori.js が --hop-y・--sx・--sy を入れる
 export function tiltable(item, el) {
-  if (item.slot !== "head" && item.slot !== "face") return el;
   const wrap = document.createElement("span");
-  wrap.className = "decor-tilt";
+  wrap.className = "decor-hop";
   wrap.style.zIndex = item.pos.back ? "0" : "2";
-  wrap.append(el);
+  if (item.slot === "head" || item.slot === "face") {
+    const tilt = document.createElement("span");
+    tilt.className = "decor-tilt";
+    tilt.append(el);
+    wrap.append(tilt);
+  } else wrap.append(el);
   return wrap;
 }
 const overlays = new Map(); // 絵 → { front, back }

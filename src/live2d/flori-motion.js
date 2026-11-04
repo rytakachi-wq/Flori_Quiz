@@ -88,7 +88,7 @@ export function createMotion(model, opts = {}) {
     // 表情 50%、眉だけ 8%、白目 5%、きょろきょろ 7%、口 5%、腕と足 25%(伸び 7・手を振る 5・ぱたぱた 7・ばんざい 6)。おなじ種類を、続けて出さない。
     // ※両手を顔の前に上げる「わくわく」は、やめた(利用者の指示)
     let tries = 0;
-    do { tries++; r = Math.random(); kind = r < 0.42 ? 'expr' : r < 0.50 ? 'brow' : r < 0.54 ? 'gaze' : r < 0.60 ? 'dart' : r < 0.64 ? 'mouth' : r < 0.76 ? 'stretch' : r < 0.88 ? 'wave' : r < 0.94 ? 'flap' : 'cheer'; } while (!allowed(kind) || tries < 40 && ( kind === lastKind || recent.includes(kind) && Math.random() < 0.8 || GROUP[kind] === lastGroup || (kind === 'dart' && lastKind === 'gaze')));   // 同じ種類・同じ系統(顔 / 目 / 腕)を、続けて出さない。直近3つと同じものも、ほとんど出さない
+    do { tries++; r = Math.random(); kind = r < 0.46 ? 'expr' : r < 0.54 ? 'brow' : r < 0.58 ? 'gaze' : r < 0.60 ? 'dart' : r < 0.615 ? 'mouth' : r < 0.74 ? 'stretch' : r < 0.86 ? 'wave' : r < 0.93 ? 'flap' : 'cheer'; } while (!allowed(kind) || tries < 40 && ( kind === lastKind || recent.includes(kind) && Math.random() < 0.8 || GROUP[kind] === lastGroup || (kind === 'dart' && lastKind === 'gaze')));   // 同じ種類・同じ系統(顔 / 目 / 腕)を、続けて出さない。直近3つと同じものも、ほとんど出さない
     lastKind = kind; recent.push(kind); if (recent.length > 3) recent.shift(); lastGroup = GROUP[kind];
     if (kind === 'dart') {      // 目きょろきょろ:寄り目をといて、左右へ 2〜3回(3回まで)見る(かならず かわりばんこ)
       const n = 2 + Math.floor(Math.random() * 2), seq = []; let d = lastLook;
@@ -116,7 +116,7 @@ export function createMotion(model, opts = {}) {
     }
     if (kind === 'flap') return { kind, t0: t, up: 0.4, hold: rnd(1.4, 2.0), down: 0.4 };       // ぱたぱた:両腕を、からだの横で、小さく ぱたぱた(左右同じ)
     if (kind === 'cheer') return { kind, t0: t, up: 0.4, hold: rnd(1.4, 2.0), down: 0.5 };      // ばんざい:両腕を上げて、ぴょこぴょこ(左右同じ)
-    if (kind === 'mouth') return { kind, t0: t, rate: rnd(0.5, 2.2), up: 0.3, hold: rnd(0.8, 3.2), down: 0.3 };    // 口だけ ぱくぱく(回数は、1〜6回くらいに ばらばら:はやさ 0.5〜2.2Hz × 長さ 0.8〜3.2秒)    // 口だけ、小さく ぱくぱく
+    if (kind === 'mouth') return { kind, t0: t, rate: rnd(0.5, 1.4), up: 0.3, hold: rnd(0.8, 2.2), down: 0.3 };    // 口だけ ぱくぱく(回数は、1〜6回くらいに ばらばら:はやさ 0.5〜2.2Hz × 長さ 0.8〜3.2秒)    // 口だけ、小さく ぱくぱく
     if (kind === 'stretch') return { kind, t0: t, up: 0.9, hold: 1.5, down: 0.9 };                          // つま先立ちで、両腕を上げて伸び
     if (kind === 'wave') { lastSide = -lastSide; return { kind, t0: t, side: lastSide > 0 ? 'R' : 'L', up: 0.5, hold: 1.9, down: 0.5 }; }   // 片手を上げて、振る(右手・左手、かわりばんこ)
   }
