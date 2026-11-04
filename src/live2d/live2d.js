@@ -22,6 +22,11 @@ export async function loadModel(base) {
   // 上唇は、顔の上(下唇と同じ層)に出す
   const lip = model.meshes.findIndex(m => m.name === '上唇'), lower = model.meshes.findIndex(m => m.name === '下唇');
   if (lip >= 0 && lower >= 0) { order.splice(order.indexOf(lip), 1); order.splice(order.indexOf(lower), 0, lip); }
+  // 同じ名前のパーツが2つあるとき(絵を描きなおして、あとから足したもの)は、先のパーツと同じ重なりの位置に置く
+  model.meshes.forEach((m, j) => {
+    const i = model.meshes.findIndex(x => x.name === m.name);
+    if (i >= 0 && i < j) { order.splice(order.indexOf(j), 1); order.splice(order.indexOf(i), 0, j); }
+  });
   model.drawOrder = order;
   return model;
 }
