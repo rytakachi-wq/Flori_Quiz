@@ -19,6 +19,7 @@ export const CROSS_PX = 0;             // いつもの寄り目の量(ひとみ�
 // ※いつもの目の位置(CROSS_PX = 0)は、Live2D のパラメーターが 0 のときの位置(利用者が見せた絵のとおり)
 // 左右を見るときの、ひとみの動く量(ピクセル。これより大きいと、ひとみが目からはみ出る)。画面の左を見る(フロリの右)/ 画面の右を見る(フロリの左)
 export const GAZE_PX = { R: [16, 15], L: [15, 20] };   // R = フロリの右目(画面の左の目)、L = フロリの左目。右目は、フロリの右を見るとき もう少し右へ、左目は、フロリの左を見るとき もう少し左へ
+export const GAZE_EXTRA_R = 4;        // フロリの右を見るとき、右目だけ、パラメーターの範囲(16px)をこえて、さらに左へずらす量(ピクセル)
 export const ARM_L_BIAS = 8;          // フロリの左腕(画面の右の腕)を、フロリの右(画面の左)へ、すこし寄せる角度(度)
 export const LIP_MARGIN = 0.2;        // 下唇が −LIP_MARGIN より小さくなる(とげが出る)ときだけ、上唇も動かす
 export const BASE_MOUTH = -0.85;      // ふだんの口(下唇。小さい。−1 がいちばん小さい)
@@ -77,7 +78,7 @@ export function createMotion(model) {
     let r, kind;
     // 表情 50%、眉だけ 8%、白目 5%、きょろきょろ 7%、口 5%、腕と足 25%(伸び 7・手を振る 5・ぱたぱた 7・ばんざい 6)。おなじ種類を、続けて出さない。
     // ※両手を顔の前に上げる「わくわく」は、やめた(利用者の指示)
-    do { r = Math.random(); kind = r < 0.50 ? 'expr' : r < 0.58 ? 'brow' : r < 0.63 ? 'gaze' : r < 0.70 ? 'dart' : r < 0.75 ? 'mouth' : r < 0.82 ? 'stretch' : r < 0.87 ? 'wave' : r < 0.94 ? 'flap' : 'cheer'; } while (kind === lastKind || recent.includes(kind) && Math.random() < 0.8 || GROUP[kind] === lastGroup || (kind === 'dart' && lastKind === 'gaze'));   // 同じ種類・同じ系統(顔 / 目 / 腕)を、続けて出さない。直近3つと同じものも、ほとんど出さない
+    do { r = Math.random(); kind = r < 0.42 ? 'expr' : r < 0.50 ? 'brow' : r < 0.54 ? 'gaze' : r < 0.60 ? 'dart' : r < 0.64 ? 'mouth' : r < 0.76 ? 'stretch' : r < 0.88 ? 'wave' : r < 0.94 ? 'flap' : 'cheer'; } while (kind === lastKind || recent.includes(kind) && Math.random() < 0.8 || GROUP[kind] === lastGroup || (kind === 'dart' && lastKind === 'gaze'));   // 同じ種類・同じ系統(顔 / 目 / 腕)を、続けて出さない。直近3つと同じものも、ほとんど出さない
     lastKind = kind; recent.push(kind); if (recent.length > 3) recent.shift(); lastGroup = GROUP[kind];
     if (kind === 'dart') {      // 目きょろきょろ:寄り目をといて、左右へ 2〜3回(3回まで)見る(かならず かわりばんこ)
       const n = 2 + Math.floor(Math.random() * 2), seq = []; let d = lastLook;
@@ -159,6 +160,7 @@ export function createMotion(model) {
     // 左右を見るときは、両目とも、同じ位置(GAZE_PX)へ動かす(ひとみが目からはみ出さない・片方だけ動かない、をなくす)
     const g = Math.max(-1, Math.min(1, gaze)), pr = eyePx(g, CROSS_PX, GAZE_PX.R), pl = eyePx(g, -CROSS_PX, GAZE_PX.L);
     let vr = pxToR(pr), vl = pxToL(pl);
+    model.extra = { '右白目': [-GAZE_EXTRA_R * Math.max(0, g), 0] };   // 範囲をこえる分(live2d.js の model.extra)
     vr = clamp1(vr); vl = clamp1(vl);
 
     // 腕と足
