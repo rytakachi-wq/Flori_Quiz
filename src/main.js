@@ -52,6 +52,7 @@ import { openCredits, closeCredits } from "./credits.js";
 import { BODIES, COLORS, FACES, HEADS, RANKS, RARITY_NAMES, THEMES, earnedBadges, keepOwned, getText, groupLabel, canWear, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
 import { refreshDecor, setAutoDecor } from "./decor-overlay.js";
+import { startLiveFlori } from "./live-flori.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
 import { getVolume, loopName, playJingle, playSe, resetVolumes, setScene, setVolume, startLoop, stopLoop, unlock } from "./audio.js";
 import { getFuriganaMode, setFuriganaMode, speechOf, startFurigana } from "./furigana.js";
@@ -3117,6 +3118,7 @@ for (const tab of document.querySelectorAll("[data-dress-tab]")) {
   });
 }
 applyDress();
+startLiveFlori(); // 動くフロリ(クイズ画面以外のフロリの絵を、動くフロリにかえる)
 
 $("btn-dex-back").addEventListener("click", () => show("cover", -1));
 $("btn-dress-back").addEventListener("click", () => show("cover", -1));

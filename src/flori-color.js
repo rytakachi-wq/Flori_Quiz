@@ -182,6 +182,89 @@ function pattern(name, x, y, l) {
   }
 }
 
+// canvas の絵の、体の色の部分に、色をつける(recolor と recolorCanvas の、共通の中身)
+function paintBody(ctx, width, height, color) {
+  const data = ctx.getImageData(0, 0, width, height);
+  const px = data.data;
+  const total = width * height;
+  // 体の色の画素を、つながり(線で区切られた1かたまり)ごとに分ける
+  const mask = new Uint8Array(total);
+  for (let i = 0; i < total; i += 1) {
+    if (px[i * 4 + 3] < 128) continue;
+    const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
+    if (isBody(h, s, l)) mask[i] = 1;
+  }
+  const label = new Int32Array(total);
+  const parts = []; // { count, sumL }
+  const stack = new Int32Array(total);
+  for (let start = 0; start < total; start += 1) {
+    if (!mask[start] || label[start]) continue;
+    const id = parts.length + 1;
+    const part = { count: 0, sumL: 0, minX: width, minY: height };
+    let top = 0;
+    stack[top++] = start;
+    label[start] = id;
+    while (top > 0) {
+      const i = stack[--top];
+      part.count += 1;
+      part.sumL += (Math.max(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]) + Math.min(px[i * 4], px[i * 4 + 1], px[i * 4 + 2])) / 510;
+      const x = i % width;
+      part.minX = Math.min(part.minX, x);
+      part.minY = Math.min(part.minY, Math.floor(i / width));
+      for (const j of [x > 0 ? i - 1 : -1, x < width - 1 ? i + 1 : -1, i - width, i + width]) {
+        if (j >= 0 && j < total && mask[j] && !label[j]) {
+          label[j] = id;
+          stack[top++] = j;
+        }
+      }
+    }
+    parts.push(part);
+  }
+  // ツヤ(白い光の部分)も、もようの一部にする: まわりが体の色なら、同じ部分としてあつかう
+  if (color.pat) {
+    const near = (i, dx, dy) => {
+      const x = (i % width) + dx;
+      const y = Math.floor(i / width) + dy;
+      return x >= 0 && x < width && y >= 0 && y < height ? label[y * width + x] : 0;
+    };
+    const add = [];
+    for (let i = 0; i < total; i += 1) {
+      if (label[i] || px[i * 4 + 3] < 128) continue;
+      const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
+      if (l < 0.93 || s > 0.5) continue;
+      const ids = [near(i, -14, 0), near(i, 14, 0), near(i, 0, -14), near(i, 0, 14)].filter(Boolean);
+      if (ids.length >= 3) add.push([i, ids[0]]);
+    }
+    for (const [i, id] of add) label[i] = id;
+  }
+  // 足もとの影は、体より、少しこい水色のかたまり。体の色にはふくめない
+  const skip = parts.map((part) => part.count > 150 && part.sumL / part.count < 0.84);
+  for (let i = 0; i < total; i += 1) {
+    const id = label[i];
+    if (!id) continue;
+    const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
+    // 足もとの影(こい水色)は、そのまま。足のうすい水色は、影とつながっていても、色をつける
+    if (skip[id - 1] && l < 0.86) continue;
+    // もよう系は、線で区切られた部分ごとに、はじめから並べる(黒線をまたいで、もようがつながらない)
+    const own = color.pat || color.dots || color.sakura ? parts[id - 1] : null;
+    const [r, g, b] = shade(color, h, s, s, l, i % width - (own?.minX ?? 0), Math.floor(i / width) - (own?.minY ?? 0), width, height);
+    px[i * 4] = Math.round(r * 255);
+    px[i * 4 + 1] = Math.round(g * 255);
+    px[i * 4 + 2] = Math.round(b * 255);
+  }
+  // 足(くつ)の、灰色がかった部分も、同じ色あいにする(足もとの影・線・目は、そのまま)
+  for (let i = 0; i < total; i += 1) {
+    if (mask[i] || px[i * 4 + 3] < 128 || Math.floor(i / width) < height * 0.8) continue;
+    const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
+    if (s < 0.02 || s > 0.22 || l < 0.45 || l > 0.8) continue;
+    const [r, g, b] = shade(color, h, 0.3, s, l, i % width, Math.floor(i / width), width, height);
+    px[i * 4] = Math.round(r * 255);
+    px[i * 4 + 1] = Math.round(g * 255);
+    px[i * 4 + 2] = Math.round(b * 255);
+  }
+  ctx.putImageData(data, 0, 0);
+}
+
 // color = { hue, gain, minSat, gray }
 export function recolor(src, color) {
   const key = `${src}|${color.id}`;
@@ -197,85 +280,7 @@ export function recolor(src, color) {
       canvas.height = height;
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       ctx.drawImage(image, 0, 0, width, height);
-      const data = ctx.getImageData(0, 0, width, height);
-      const px = data.data;
-      const total = width * height;
-      // 体の色の画素を、つながり(線で区切られた1かたまり)ごとに分ける
-      const mask = new Uint8Array(total);
-      for (let i = 0; i < total; i += 1) {
-        if (px[i * 4 + 3] < 128) continue;
-        const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
-        if (isBody(h, s, l)) mask[i] = 1;
-      }
-      const label = new Int32Array(total);
-      const parts = []; // { count, sumL }
-      const stack = new Int32Array(total);
-      for (let start = 0; start < total; start += 1) {
-        if (!mask[start] || label[start]) continue;
-        const id = parts.length + 1;
-        const part = { count: 0, sumL: 0, minX: width, minY: height };
-        let top = 0;
-        stack[top++] = start;
-        label[start] = id;
-        while (top > 0) {
-          const i = stack[--top];
-          part.count += 1;
-          part.sumL += (Math.max(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]) + Math.min(px[i * 4], px[i * 4 + 1], px[i * 4 + 2])) / 510;
-          const x = i % width;
-          part.minX = Math.min(part.minX, x);
-          part.minY = Math.min(part.minY, Math.floor(i / width));
-          for (const j of [x > 0 ? i - 1 : -1, x < width - 1 ? i + 1 : -1, i - width, i + width]) {
-            if (j >= 0 && j < total && mask[j] && !label[j]) {
-              label[j] = id;
-              stack[top++] = j;
-            }
-          }
-        }
-        parts.push(part);
-      }
-      // ツヤ(白い光の部分)も、もようの一部にする: まわりが体の色なら、同じ部分としてあつかう
-      if (color.pat) {
-        const near = (i, dx, dy) => {
-          const x = (i % width) + dx;
-          const y = Math.floor(i / width) + dy;
-          return x >= 0 && x < width && y >= 0 && y < height ? label[y * width + x] : 0;
-        };
-        const add = [];
-        for (let i = 0; i < total; i += 1) {
-          if (label[i] || px[i * 4 + 3] < 128) continue;
-          const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
-          if (l < 0.93 || s > 0.5) continue;
-          const ids = [near(i, -14, 0), near(i, 14, 0), near(i, 0, -14), near(i, 0, 14)].filter(Boolean);
-          if (ids.length >= 3) add.push([i, ids[0]]);
-        }
-        for (const [i, id] of add) label[i] = id;
-      }
-      // 足もとの影は、体より、少しこい水色のかたまり。体の色にはふくめない
-      const skip = parts.map((part) => part.count > 150 && part.sumL / part.count < 0.84);
-      for (let i = 0; i < total; i += 1) {
-        const id = label[i];
-        if (!id) continue;
-        const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
-        // 足もとの影(こい水色)は、そのまま。足のうすい水色は、影とつながっていても、色をつける
-        if (skip[id - 1] && l < 0.86) continue;
-        // もよう系は、線で区切られた部分ごとに、はじめから並べる(黒線をまたいで、もようがつながらない)
-        const own = color.pat || color.dots || color.sakura ? parts[id - 1] : null;
-        const [r, g, b] = shade(color, h, s, s, l, i % width - (own?.minX ?? 0), Math.floor(i / width) - (own?.minY ?? 0), width, height);
-        px[i * 4] = Math.round(r * 255);
-        px[i * 4 + 1] = Math.round(g * 255);
-        px[i * 4 + 2] = Math.round(b * 255);
-      }
-      // 足(くつ)の、灰色がかった部分も、同じ色あいにする(足もとの影・線・目は、そのまま)
-      for (let i = 0; i < total; i += 1) {
-        if (mask[i] || px[i * 4 + 3] < 128 || Math.floor(i / width) < height * 0.8) continue;
-        const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
-        if (s < 0.02 || s > 0.22 || l < 0.45 || l > 0.8) continue;
-        const [r, g, b] = shade(color, h, 0.3, s, l, i % width, Math.floor(i / width), width, height);
-        px[i * 4] = Math.round(r * 255);
-        px[i * 4 + 1] = Math.round(g * 255);
-        px[i * 4 + 2] = Math.round(b * 255);
-      }
-      ctx.putImageData(data, 0, 0);
+      paintBody(ctx, width, height, color);
       const url = canvas.toDataURL("image/png");
       resolved.set(key, url);
       resolve(url);
@@ -286,6 +291,19 @@ export function recolor(src, color) {
   cache.set(key, job);
   job.catch(() => cache.delete(key)); // 読みこめなかったら、また試せるように
   return job;
+}
+
+// 絵(Image か canvas)を、scale 倍にして、体の色の部分に色をつけた canvas を返す(動くフロリの、パーツの絵用)
+export function recolorCanvas(source, color, scale = 1) {
+  const width = Math.max(1, Math.round((source.naturalWidth ?? source.width) * scale));
+  const height = Math.max(1, Math.round((source.naturalHeight ?? source.height) * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(source, 0, 0, width, height);
+  paintBody(ctx, width, height, color);
+  return canvas;
 }
 
 // ---- 画面のフロリの絵に、色をつける ----
@@ -330,7 +348,10 @@ export function setFloriColor(color) {
     } else paint(img, original);
   }
   warm();
+  document.dispatchEvent(new CustomEvent("flori-color", { detail: current })); // 動くフロリ(live-flori.js)に知らせる
 }
+
+export const getFloriColor = () => current;
 
 new MutationObserver((records) => {
   for (const record of records) {

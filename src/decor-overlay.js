@@ -12,6 +12,7 @@ const skip = (img) => img.closest(".hero-fig, .decor") || img.id === "unlock-flo
 function build({ front, back }) {
   for (const [box, isBack] of [[front, false], [back, true]]) {
     box.replaceChildren(
+      ...box.querySelectorAll(":scope > canvas.live-flori"), // 動くフロリの canvas(live-flori.js)は、残す
       ...items
         .filter((item) => item?.img && Boolean(item.pos.back) === isBack)
         .map((item) => {

@@ -126,7 +126,7 @@ export function evaluate(model) {
 }
 
 // 三角形ごとに、画像を貼る(アフィン変換)
-function drawTri(ctx, im, u, p, grow) {
+function drawTri(ctx, im, u, p, grow, iw, ih) {
   const [u0, v0, u1, v1, u2, v2] = u, [x0, y0, x1, y1, x2, y2] = p;
   const det = (u1 - u0) * (v2 - v0) - (u2 - u0) * (v1 - v0);
   if (!det) return;
@@ -141,7 +141,7 @@ function drawTri(ctx, im, u, p, grow) {
   ctx.save();
   ctx.beginPath(); ctx.moveTo(...q[0]); ctx.lineTo(...q[1]); ctx.lineTo(...q[2]); ctx.closePath(); ctx.clip();
   ctx.transform(a, b, c, d, e, f);
-  ctx.drawImage(im, 0, 0);
+  ctx.drawImage(im, 0, 0, iw, ih);
   ctx.restore();
 }
 
@@ -164,6 +164,7 @@ export function draw(model, ctx, view, opts = {}) {
   ctx.clearRect(0, 0, W, H);
   const k = Math.min(W / view.w, H / view.h);
   ctx.setTransform(k, 0, 0, k, (W - view.w * k) / 2 - view.x * k, (H - view.h * k) / 2 - view.y * k);
+  if (opts.before) opts.before(ctx);   // 動くフロリの下に、先に描くもの(足もとの影など。キャンバス座標)
   // つぶれ・のび(opts.squash = { sx, sy, px, py }。px,py はキャンバス座標の支点=足もと)
   if (opts.squash) { const q = opts.squash; ctx.translate(q.px, q.py); ctx.scale(q.sx, q.sy); ctx.translate(-q.px, -q.py); }
   const order = model.meshes.map((m, i) => i).sort((i, j) => (ev[i].order - ev[j].order) || (model.drawOrder.indexOf(i) - model.drawOrder.indexOf(j)));
@@ -171,12 +172,12 @@ export function draw(model, ctx, view, opts = {}) {
     const m = model.meshes[i], e = ev[i];
     if (!m.visible || (opts.hide && opts.hide.has(i)) || armHidden(model, m)) continue;
     ctx.globalAlpha = e.op;
-    const im = model.imgs.get(m.img);
+    const im = (opts.imgs && opts.imgs.get(m.img)) || model.imgs.get(m.img);   // opts.imgs = 色をつけた絵(もとより小さくてもよい。メッシュの絵の大きさに のばして貼る)
     for (let t = 0; t < m.tri.length; t += 3) {
       const ix = [m.tri[t], m.tri[t + 1], m.tri[t + 2]];
       const u = ix.flatMap(v => [m.pts[v * 2] - m.ox, m.pts[v * 2 + 1] - m.oy]);
       const p = ix.flatMap(v => [e.pos[v * 2], e.pos[v * 2 + 1]]);
-      drawTri(ctx, im, u, p, 0.4);
+      drawTri(ctx, im, u, p, 0.4, m.iw, m.ih);
     }
   }
   ctx.globalAlpha = 1;

@@ -27,9 +27,15 @@
 
 - スタッフクレジット(decisions その75〜86):「その他」の一番下のボタン → `screen-credits`。`src/credits.js`(内容の表 `CREDITS`+流れるロール+ループ)、`src/shooter.js`(シューティング、canvas)。画面を離れると `closeCredits()` で止まる(main.js の `show`)。
 
-## フロリを動かす(Live2D、作業中)
-- `hehehe.cmo3`(利用者のデスクトップ)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で、`src/live2d/model.json`・`tex/` を作る。描画は自作の `src/live2d/live2d.js`。試作ページ:`/src/live2d/preview.html`(スライダーで確認)。表紙用の動き:`src/live2d/flori-motion.js`、確かめ用ページ `/src/live2d/cover.html`(クリックでぴょん)。アプリ(index.html・main.js)には**まだ入れていない**。決めたこと・未決は decisions.md その49。
-- 開発用サーバー:`python tools/serve.py [ポート]`(既定 8780。同じネットワークの別の端末・スマホからも見られる。待ち行列を大きくし、キャッシュしない設定)。標準の http.server は、画像を同時に読むと接続を切ることがある(live2d.js はやり直す)。
+## フロリを動かす(Live2D。アプリに入れた、未公開)
+- モデル:デスクトップの `hehehe - コピー.cmo3`(利用者が絵を描きなおしたもの)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で `src/live2d/model.json`・`tex/` を作る(絵からはみ出した古いメッシュは、取り出すときに絵の大きさに合わせる)。描画は自作の `src/live2d/live2d.js`、動きは `src/live2d/flori-motion.js`(パラメーター名で動かす)。確かめ用ページ:`/src/live2d/cover.html`(クリックでぴょん)・`preview.html`(スライダー)。
+- アプリへの入れ方:`src/live-flori.js`(main.js から `startLiveFlori()`)。ポーズつきの絵(`img.flori` で、POSE に合う `wave_*.png`・`body_wave.webp`)の上に、同じ場所・同じ大きさの canvas を重ねて、動くフロリを描く。絵(img)は残して `visibility:hidden`(大きさ・ゆれ・かざりの位置は、絵のもの)。かざりは decor-overlay.js のまま(canvas は `.decor-front` の中、または `.hero-fig` の中)。**クイズ画面(`#screen-question`・`#screen-rpg`)は動くフロリにしない。着せ替え画面は腕を動かさない。表紙はクリックで ぴょん**。絵のポーズに合わせて、`wave_wrong`=こまった顔・`wave_surprised`=びっくり顔でずっと固定。
+- 位置合わせ(`live-flori.js` の S・X0・Y0):静止画(800×1003)の頭の幅・上端に合わせた(頭が3%せまく、体が4%長い)。かざりの位置は、静止画で決めた値のまま。腕・体のかざりは、少しずれるかもしれない(着せ替え画面で確かめて、必要なら badges.js の表を直す)。
+- 色(着せ替えの色):`flori-color.js` の `recolorCanvas` で、体・頭・手足のパーツの絵を色づけして貼る(色が変わると `flori-color` イベントで作り直し)。
+- 動き:`createMotion(model, { mood, noArms })`。同じ系統(顔 / 目 / 腕)を続けて出さない・直近の同じ種類をほとんど出さない。調整できる数字は、flori-motion.js の先頭(CROSS_PX・GAZE_PX・GAZE_EXTRA_R・ARM_L_BIAS など)と、live2d.js の LIP_TRIM。決めた経緯は decisions その49・その50(その1〜その31)。
+- **まだ確かめていない**:結果・ゲームオーバー・ヒントのダイアログ・ルール説明のフロリ(ポーズ固定の動き)、実機のスマホでの重さ(約30コマ/秒に制限している)、`prefers-reduced-motion`、ふりがな設定ごとの画面の収まり。
+- 開発用サーバー:`python tools/serve.py [ポート]`(既定 8780)。アプリは、このリポジトリの `.claude/launch.json` の `flori-quiz`(8765)でも見られる(こちらは接続が切れにくい)。標準の http.server は、画像を同時に読むと接続を切ることがある(live2d.js はやり直す)。
+- 表紙の試作ページを、claude.ai の限定公開ページに置いてある(動きの確認用。アプリとは別。古いモデルのまま)。
 
 ## 動かして確かめる方法
 - `python -m http.server 8766`(src を配信)をブラウザ画面で開き、resize_window で 320×568 / 375×667 / 390×844 / 768×1024 / 1024×768 を見る。サーバーが ERR_CONNECTION_RESET になったら再読みこみ。アニメーション中のスクショは薄く写る。

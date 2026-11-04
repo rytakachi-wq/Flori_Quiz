@@ -55,7 +55,11 @@ const pxToR = px => (px >= 0 ? -px / 25 : -px / 16), pxToL = px => (px >= 0 ? -p
 // 視線 g(−1〜1。+ は画面の左)のときの、片目の位置:g = 0 で base(寄り目)、g = ±1 で ∓GAZE_PX
 const eyePx = (g, base, [toLeft, toRight]) => (g >= 0 ? base + (-toLeft - base) * g : base + (toRight - base) * -g);
 
-export function createMotion(model) {
+// opts.mood = 表情の名前(EXPRESSIONS の name)。ずっと その表情のまま、目・腕だけ動かす(ポーズつきの絵の代わり:困った顔・驚いた顔など)
+// opts.noArms = true:腕は、動かさない(着せ替え画面。腕のかざりが、ずれないように)
+export function createMotion(model, opts = {}) {
+  const moodExpr = opts.mood ? EXPRESSIONS.find(x => x.name === opts.mood) : null;
+  let moodT0 = null;
   const ix = n => model.params.findIndex(p => p.name === n);
   const I = {
     lids: ['右上まぶた', '右下まぶた', '左上まぶた', '左下まぶた', '右白目　まばたき', '左白目　まばたき'].map(ix),
@@ -74,11 +78,15 @@ export function createMotion(model) {
   if (armL) model.angleBias = { [armL.parent]: ARM_L_BIAS };   // フロリの左腕を、すこしだけ(フロリの右へ)寄せる
   model.follow = false;     // 上唇は、live2d.js の追尾ではなく、ここで決める(LIP_MARGIN)
 
+  // 使えるイベント:ずっと同じ表情のとき(mood)は、顔の系統を出さない。腕を動かさないとき(noArms)は、腕の系統を出さない
+  const allowed = kind => !((moodExpr && GROUP[kind] === 'face') || (opts.noArms && GROUP[kind] === 'arm'));
+
   function nextEvent(t) {
     let r, kind;
     // 表情 50%、眉だけ 8%、白目 5%、きょろきょろ 7%、口 5%、腕と足 25%(伸び 7・手を振る 5・ぱたぱた 7・ばんざい 6)。おなじ種類を、続けて出さない。
     // ※両手を顔の前に上げる「わくわく」は、やめた(利用者の指示)
-    do { r = Math.random(); kind = r < 0.42 ? 'expr' : r < 0.50 ? 'brow' : r < 0.54 ? 'gaze' : r < 0.60 ? 'dart' : r < 0.64 ? 'mouth' : r < 0.76 ? 'stretch' : r < 0.88 ? 'wave' : r < 0.94 ? 'flap' : 'cheer'; } while (kind === lastKind || recent.includes(kind) && Math.random() < 0.8 || GROUP[kind] === lastGroup || (kind === 'dart' && lastKind === 'gaze'));   // 同じ種類・同じ系統(顔 / 目 / 腕)を、続けて出さない。直近3つと同じものも、ほとんど出さない
+    let tries = 0;
+    do { tries++; r = Math.random(); kind = r < 0.42 ? 'expr' : r < 0.50 ? 'brow' : r < 0.54 ? 'gaze' : r < 0.60 ? 'dart' : r < 0.64 ? 'mouth' : r < 0.76 ? 'stretch' : r < 0.88 ? 'wave' : r < 0.94 ? 'flap' : 'cheer'; } while (!allowed(kind) || tries < 40 && ( kind === lastKind || recent.includes(kind) && Math.random() < 0.8 || GROUP[kind] === lastGroup || (kind === 'dart' && lastKind === 'gaze')));   // 同じ種類・同じ系統(顔 / 目 / 腕)を、続けて出さない。直近3つと同じものも、ほとんど出さない
     lastKind = kind; recent.push(kind); if (recent.length > 3) recent.shift(); lastGroup = GROUP[kind];
     if (kind === 'dart') {      // 目きょろきょろ:寄り目をといて、左右へ 2〜3回(3回まで)見る(かならず かわりばんこ)
       const n = 2 + Math.floor(Math.random() * 2), seq = []; let d = lastLook;
@@ -142,6 +150,10 @@ export function createMotion(model) {
         }
       }
     }
+    if (moodExpr && !x) {      // 表情が決まっているとき:その表情を、すっと出して、保つ
+      moodT0 ??= t;
+      e = ss((t - moodT0) / 0.6); x = moodExpr; dir = moodExpr.dir ? 1 : 1;
+    }
     const kind = ev ? ev.kind : '';
     // 表情:眉・口・傾き・視線を同じ強さで。眉が動くときは、かならず寄り目(眉と同じ強さ)
     // 口:ふだんから、小さく うごかす(ゆっくり ぱくぱく)。表情のときは、表情の口へ
@@ -166,7 +178,7 @@ export function createMotion(model) {
     // 腕と足
     let banR = 0, banL = 0, foot = 0, swing = 0;
     // ふだんの腕:ほんの少し、ゆれる(コブシの腕を、ごく小さく動かす。呼吸のときは、ごく小さく)
-    const swayR = 0.02 + 0.012 * Math.sin(t * 1.3), swayL = 0.02 + 0.012 * Math.sin(t * 1.1 + 1.7);   // 左右の手は、べつべつに ゆれる
+    const swayR = opts.noArms ? 0 : 0.02 + 0.012 * Math.sin(t * 1.3), swayL = opts.noArms ? 0 : 0.02 + 0.012 * Math.sin(t * 1.1 + 1.7);   // 左右の手は、べつべつに ゆれる
     if (kind === 'stretch') {   // つま先立ちで、両腕を真上へ(左右同じ)。からだも伸びる
       banR = banL = k; foot = 0.5 * k; bounce += k * 40;
     } else if (kind === 'flap') {   // 両腕を、からだの横へ、小さく開いたり閉じたり(コブシ 0〜−0.2。左右同じ)
