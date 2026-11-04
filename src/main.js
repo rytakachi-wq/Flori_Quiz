@@ -51,7 +51,7 @@ import { initRules, openRules as resetRules } from "./rules.js";
 import { openCredits, closeCredits } from "./credits.js";
 import { BODIES, COLORS, FACES, HEADS, RANKS, RARITY_NAMES, THEMES, earnedBadges, keepOwned, getText, groupLabel, canWear, isOpen, loadDress, progressOf, rankOf, saveDress, todoText } from "./badges.js";
 import { GardenUI } from "./garden.js";
-import { refreshDecor, setAutoDecor } from "./decor-overlay.js";
+import { refreshDecor, setAutoDecor, tiltable } from "./decor-overlay.js";
 import { startLiveFlori } from "./live-flori.js";
 import { applyFloriSrc, recolor, setFloriColor, setWarmList } from "./flori-color.js";
 import { getVolume, loopName, playJingle, playSe, resetVolumes, setScene, setVolume, startLoop, stopLoop, unlock } from "./audio.js";
@@ -2822,7 +2822,7 @@ function setDecor(containerId, items) {
         img.style.top = `${item.pos.y}%`;
         img.style.width = `${item.pos.w}%`;
         img.style.transform = `translate(-50%, -50%) rotate(${item.pos.r ?? 0}deg) scale(${item.pos.sx ?? 1}, ${item.pos.sy ?? 1})`;
-        return img;
+        return tiltable(item, img);
       }),
   );
 }

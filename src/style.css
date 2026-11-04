@@ -3542,3 +3542,12 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 .rpg-timer .timer-track { height: 12px; }
 .rpg-timer .timer-text { min-width: 2.8em; font-size: 14px; line-height: 1.2; }
 .rpg-screen.is-answered .rpg-timer { display: none; }
+
+/* 動くフロリ(Live2D)。頭・顔のかざりは、首のかしげについていく(--tilt は live-flori.js が入れる) */
+.decor-tilt { position: absolute; inset: 0; pointer-events: none; rotate: var(--tilt, 0deg); transform-origin: var(--tilt-origin, 50% 30%); }
+/* 動くフロリは、自分で動くので、CSS の はねる・ゆれる動きは、小さくする(ぴょんぴょんを へらす) */
+@keyframes liveBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes liveHop { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-5px); } 50% { transform: translateY(0); } }
+:is(#screen-cover, #screen-menu, #screen-flow) .hero-fig.has-live { animation: liveBob 3.6s ease-in-out infinite; }
+#screen-cover.is-lively .home-hero .hero-fig.has-live { animation: liveHop 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { :is(#screen-cover, #screen-menu, #screen-flow) .hero-fig.has-live { animation: none; } }

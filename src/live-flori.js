@@ -20,6 +20,28 @@ const S = 0.362; // 頭の幅を、静止画に合わせた(3%せまい)。い�
 const X0 = 304;
 const Y0 = 861;
 const MARGIN = { x: 0.06, y: 0.03 }; // 腕などが はみ出してもよいように、canvas を、絵より少し大きくする(絵に対する割合)
+// 首のかしげ:顔の部品(回転)の角度を、パラメーターの値から求める(かざりを、いっしょに かたむけるため)
+const PIVOT = { x: 1459.5, y: 1696.5 }; // 顔の回転の中心(キャンバス座標)
+function faceAngle() {
+  const d = model.deformers.find((deformer) => deformer.binds.length === 1 && model.params[deformer.binds[0].param].name === "顔");
+  if (!d) return 0;
+  const v = model.values[d.binds[0].param];
+  const k = d.binds[0].keys;
+  if (v <= k[0]) return d.forms[0].angle;
+  if (v >= k[k.length - 1]) return d.forms[k.length - 1].angle;
+  let i = 0;
+  while (v > k[i + 1]) i += 1;
+  const t = (v - k[i]) / (k[i + 1] - k[i]);
+  return d.forms[i].angle + (d.forms[i + 1].angle - d.forms[i].angle) * t;
+}
+function tiltDecor(img, angle) {
+  const origin = `${(((PIVOT.x - X0) * S) / FRAME.w) * 100}% ${(((PIVOT.y - Y0) * S) / FRAME.h) * 100}%`;
+  for (const box of img.parentElement.querySelectorAll(":scope > .decor")) {
+    box.style.setProperty("--tilt", `${angle.toFixed(2)}deg`);
+    box.style.setProperty("--tilt-origin", origin);
+  }
+}
+
 const FOOT = { px: 1455, py: 3470 }; // つぶれ・のびの支点(足もと)
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -55,7 +77,7 @@ async function retint() {
     if (!TINT_PARTS.test(mesh.name) || imgs.has(mesh.img)) continue;
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (job !== tintJob) return;
-    imgs.set(mesh.img, recolorCanvas(model.imgs.get(mesh.img), color, TINT_SCALE));
+    imgs.set(mesh.img, recolorCanvas(model.imgs.get(mesh.img), color, TINT_SCALE, mesh.name === "顔" ? 0.8 : 0)); // 頭は、バイザーの下の影(暗い部分)に、色をつけない
   }
   if (job === tintJob) tint = { id: color.id, imgs };
 }
@@ -96,6 +118,7 @@ function mount(img) {
   canvas.style.cssText = `position:absolute;left:${-MARGIN.x * 100}%;top:${-MARGIN.y * 100}%;width:${(1 + 2 * MARGIN.x) * 100}%;height:${(1 + 2 * MARGIN.y) * 100}%;pointer-events:none;`;
   canvas.style.zIndex = box.classList.contains("decor-front") ? "0" : "1";
   box.prepend(canvas);
+  if (box.classList.contains("hero-fig")) box.classList.add("has-live"); // CSS の はねる動きを小さくする
   const item = { canvas, motion: null, key: "", ready: false, size: "", box };
   if (img.closest("#screen-cover")) {
     canvas.style.pointerEvents = "auto";
@@ -146,6 +169,7 @@ function frame(now) {
     const m = reduced ? { bounce: 0, sx: 1, sy: 1 } : item.motion.update(now);
     const bg = model.meshes.findIndex((mesh) => mesh.name === "BG");
     draw(model, canvas.getContext("2d"), view(m.bounce), { hide: new Set([bg]), squash: { sx: m.sx, sy: m.sy, ...FOOT }, imgs: tint?.imgs, before: shadow });
+    tiltDecor(img, reduced ? 0 : faceAngle());
     if (!item.ready) {
       item.ready = true;
       img.style.visibility = "hidden"; // 動くフロリが出たら、静止画はかくす(場所・大きさは、そのまま)

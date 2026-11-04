@@ -183,7 +183,8 @@ function pattern(name, x, y, l) {
 }
 
 // canvas の絵の、体の色の部分に、色をつける(recolor と recolorCanvas の、共通の中身)
-function paintBody(ctx, width, height, color) {
+// keepBelow: これより暗い画素(影)は、色をつけずに、そのまま残す(動くフロリの頭の、バイザーの下の影が、こい色になるのを防ぐ)
+function paintBody(ctx, width, height, color, keepBelow = 0) {
   const data = ctx.getImageData(0, 0, width, height);
   const px = data.data;
   const total = width * height;
@@ -245,6 +246,7 @@ function paintBody(ctx, width, height, color) {
     const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
     // 足もとの影(こい水色)は、そのまま。足のうすい水色は、影とつながっていても、色をつける
     if (skip[id - 1] && l < 0.86) continue;
+    if (keepBelow && l < keepBelow) continue;
     // もよう系は、線で区切られた部分ごとに、はじめから並べる(黒線をまたいで、もようがつながらない)
     const own = color.pat || color.dots || color.sakura ? parts[id - 1] : null;
     const [r, g, b] = shade(color, h, s, s, l, i % width - (own?.minX ?? 0), Math.floor(i / width) - (own?.minY ?? 0), width, height);
@@ -294,7 +296,7 @@ export function recolor(src, color) {
 }
 
 // 絵(Image か canvas)を、scale 倍にして、体の色の部分に色をつけた canvas を返す(動くフロリの、パーツの絵用)
-export function recolorCanvas(source, color, scale = 1) {
+export function recolorCanvas(source, color, scale = 1, keepBelow = 0) {
   const width = Math.max(1, Math.round((source.naturalWidth ?? source.width) * scale));
   const height = Math.max(1, Math.round((source.naturalHeight ?? source.height) * scale));
   const canvas = document.createElement("canvas");
@@ -302,7 +304,7 @@ export function recolorCanvas(source, color, scale = 1) {
   canvas.height = height;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   ctx.drawImage(source, 0, 0, width, height);
-  paintBody(ctx, width, height, color);
+  paintBody(ctx, width, height, color, keepBelow);
   return canvas;
 }
 

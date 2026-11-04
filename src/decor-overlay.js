@@ -3,6 +3,15 @@
 // 絵の前に出るかざり(front)と、うしろに回るかざり(back)の入れものを、絵のあとに並べる(重なり順は z-index)。
 const SELECTOR = "img.flori, img.opening-flori, img.announce-flori, img.tut-side-flori";
 const POSE = /(?:wave_(?:nikkori|smile|wrong|surprised)\.png|body_wave\.webp)$/; // かざりの位置が合う絵(同じ大きさ・同じ立ち姿)
+// 頭・顔のかざりは、動くフロリが首をかしげたとき、顔といっしょに かたむく(live-flori.js が、--tilt を入れる)。入れものの span で、かざりをくるむ
+export function tiltable(item, el) {
+  if (item.slot !== "head" && item.slot !== "face") return el;
+  const wrap = document.createElement("span");
+  wrap.className = "decor-tilt";
+  wrap.style.zIndex = item.pos.back ? "0" : "2";
+  wrap.append(el);
+  return wrap;
+}
 const overlays = new Map(); // 絵 → { front, back }
 let items = [];
 let fit = 1; // かざりをつけたとき、かざりが絵の外に出ても、まわりのボタン・文字と重ならないよう、フロリ+かざりを縮める倍率
@@ -26,7 +35,7 @@ function build({ front, back }) {
           el.style.top = `${item.pos.y}%`;
           el.style.width = `${item.pos.w}%`;
           el.style.transform = `translate(-50%, -50%) rotate(${item.pos.r ?? 0}deg) scale(${item.pos.sx ?? 1}, ${item.pos.sy ?? 1})`;
-          return el;
+          return tiltable(item, el);
         }),
     );
   }

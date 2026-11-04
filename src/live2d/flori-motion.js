@@ -15,6 +15,8 @@ const clamp1 = x => Math.max(-1, Math.min(1, x));
 const env = (a, up, hold, down) => ss(a / up) * (1 - ss((a - up - hold) / down));       // 上がる → 保つ → 下がる(0→1→0)
 
 export const HOP_SECONDS = 1.2;
+const HOP_H = 45;                  // ぴょんの高さ(キャンバス座標。はじめは 85。へらした)
+const HOP_SQ = 0.55;               // かがむ・のびる・着地のつぶれを、へらす倍率
 export const CROSS_PX = 0;             // いつもの寄り目の量(ひとみが、内側へ動く。キャンバスのピクセル)
 // ※いつもの目の位置(CROSS_PX = 0)は、Live2D のパラメーターが 0 のときの位置(利用者が見せた絵のとおり)
 // 左右を見るときの、ひとみの動く量(ピクセル。これより大きいと、ひとみが目からはみ出る)。画面の左を見る(フロリの右)/ 画面の右を見る(フロリの左)
@@ -196,12 +198,12 @@ export function createMotion(model, opts = {}) {
       const kk = 1 - ss(hs / 0.25);
       vr = pxToR(CROSS_PX) + (hold.vr - pxToR(CROSS_PX)) * kk; vl = pxToL(-CROSS_PX) + (hold.vl - pxToL(-CROSS_PX)) * kk; brow = hold.brow * kk; tilt = hold.face * kk; mouth = idleAbs + (hold.mouth - idleAbs) * kk;
       banR = banL = 0; fistR = fistL = 0; foot = 0;
-      if (hs < 0.14) { const u = ss(hs / 0.14); sy = 1 - 0.06 * u; sx = 1 + 0.03 * u; bounce = 0; }                    // かがむ
-      else if (hs < 0.54) { const u = (hs - 0.14) / 0.4, h = Math.sin(u * Math.PI / 2); bounce = 85 * h; sy = 1 + 0.04 * h; sx = 1 - 0.02 * h;   // のぼる
+      if (hs < 0.14) { const u = ss(hs / 0.14); sy = 1 - 0.06 * HOP_SQ * u; sx = 1 + 0.03 * HOP_SQ * u; bounce = 0; }                    // かがむ
+      else if (hs < 0.54) { const u = (hs - 0.14) / 0.4, h = Math.sin(u * Math.PI / 2); bounce = HOP_H * h; sy = 1 + 0.04 * HOP_SQ * h; sx = 1 - 0.02 * HOP_SQ * h;   // のぼる
         banR = banL = ss(u * 2.5); foot = 0.5 * ss(u * 2); }
-      else if (hs < 0.94) { const u = (hs - 0.54) / 0.4, h = Math.cos(u * Math.PI / 2); bounce = 85 * h; sy = 1 + 0.04 * h; sx = 1 - 0.02 * h;    // おりる
+      else if (hs < 0.94) { const u = (hs - 0.54) / 0.4, h = Math.cos(u * Math.PI / 2); bounce = HOP_H * h; sy = 1 + 0.04 * HOP_SQ * h; sx = 1 - 0.02 * HOP_SQ * h;    // おりる
         banR = banL = 1 - ss((u - 0.35) / 0.65); foot = 0.5 * (1 - ss((u - 0.55) / 0.45)); }
-      else { const u = (hs - 0.94) / 0.26; sy = 1 - 0.07 * Math.sin(u * Math.PI); sx = 1 + 0.035 * Math.sin(u * Math.PI); bounce = 0; }  // 着地
+      else { const u = (hs - 0.94) / 0.26; sy = 1 - 0.07 * HOP_SQ * Math.sin(u * Math.PI); sx = 1 + 0.035 * HOP_SQ * Math.sin(u * Math.PI); bounce = 0; }  // 着地
     }
     wasHop = hopping;
     { const up = Math.max(banR, banL); if (up) mouth += (0.7 - mouth) * up; }   // 手を挙げるときは、口を大きく
