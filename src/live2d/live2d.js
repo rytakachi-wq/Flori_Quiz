@@ -12,8 +12,8 @@ export async function loadModel(base) {
   const files = [...new Set(model.meshes.map(m => m.img))];
   await Promise.all(Array.from({ length: 3 }, async () => { for (let f; (f = files.shift());) imgs.set(f, await load(f)); }));
   model.imgs = imgs;
-  // バンザイの腕は、ファイルでは非表示(コブシの腕とかさなるため)。出し分けは armHidden がするので、ここでは表示にしておく
-  for (const m of model.meshes) if (/^(右|左)手バンザイ$/.test(m.name)) m.visible = true;
+  // 腕は、ファイルでは、どちらか(または両方)が非表示のことがある(バンザイとコブシがかさなるため)。出し分けは armHidden がするので、ここでは表示にしておく
+  for (const m of model.meshes) if (/^(右|左)手(バンザイ|コブシ)$/.test(m.name)) m.visible = true;
   model.values = model.params.map(p => p.default);
   // 描画順は、ファイルの並びの逆(後ろから前)。顔は、体のすぐ上に重ねる
   const order = model.meshes.map((m, i) => i).reverse();
@@ -22,6 +22,12 @@ export async function loadModel(base) {
   // 上唇は、顔の上(下唇と同じ層)に出す
   const lip = model.meshes.findIndex(m => m.name === '上唇'), lower = model.meshes.findIndex(m => m.name === '下唇');
   if (lip >= 0 && lower >= 0) { order.splice(order.indexOf(lip), 1); order.splice(order.indexOf(lower), 0, lip); }
+  // 腕(コブシ・バンザイ)は、体と顔の上に重ねる(ファイルの最後に並んでいても、体の後ろに隠れないように)
+  if (face >= 0) {
+    const arms = model.meshes.map((m, i) => i).filter(i => /^(右|左)手(バンザイ|コブシ)$/.test(model.meshes[i].name));
+    for (const i of arms) order.splice(order.indexOf(i), 1);
+    order.splice(order.indexOf(face) + 1, 0, ...arms);
+  }
   // 同じ名前のパーツが2つあるとき(絵を描きなおして、あとから足したもの)は、先のパーツと同じ重なりの位置に置く
   model.meshes.forEach((m, j) => {
     const i = model.meshes.findIndex(x => x.name === m.name);

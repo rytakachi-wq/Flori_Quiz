@@ -34,12 +34,13 @@ def arr(e, name, cast=float):
     c = N(e, name); return [cast(x) for x in c.text.split()] if c is not None and c.text else []
 def ref(e):  # xs.ref を実体に
     r = e.get('xs.ref'); return ids[r] if r else e
-def gid(e): return e.get('xs.ref') or e.get('xs.id')
+def gid(e): return e.get('xs.ref') or e.get('xs.id') or e.get('uuid')   # 描きなおしたファイルでは、参照でなく uuid で書かれているものがある
 
 # パラメーター
 params = []; pidx = {}
 for p in [p for p in root.iter('CParameterSource') if 'xs.ref' not in p.attrib]:
-    pidx[gid(N(p, 'guid'))] = len(params)
+    g = N(p, 'guid'); pidx[gid(g)] = len(params)
+    if ref(g).get('uuid'): pidx[ref(g).get('uuid')] = len(params)
     params.append(dict(name=val(p, 'name'), min=val(p, 'minValue', float), max=val(p, 'maxValue', float), default=val(p, 'defaultValue', float)))
 
 def grid(g):
@@ -108,6 +109,19 @@ for m in arts:
     meshes.append(dict(name=val(pc, 'localName'), visible=val(pc, 'isVisible') == 'true', img=img['file'], iw=img['w'], ih=img['h'], ox=img['ox'], oy=img['oy'],
                        pts=pts, tri=arr(m, 'indices', int), parent=didx.get(gid(N(sup, 'targetDeformerGuid')), -1), clip=clip, invclip=val(sup, 'invertClippingMask') == 'true',
                        binds=binds, forms=[forms[e['form']] for e in ents], idx=[e['idx'] for e in ents]))
+
+# 絵を描きなおしたのに、メッシュが古いまま(絵の外へはみ出している)ものは、メッシュを絵の大きさに合わせる(絵が見切れるのを防ぐ)。
+# 四すみの頂点を、絵の四すみへ動かし、各キーフォームの位置にも、同じ動き(差)を足す。Cubism でメッシュを作りなおせば、この調整は何もしない
+for m in meshes:
+    xs, ys = m['pts'][0::2], m['pts'][1::2]
+    if len(xs) != 4 or (max(xs) <= m['ox'] + m['iw'] + 8 and max(ys) <= m['oy'] + m['ih'] + 8): continue
+    mx, my = max(xs), max(ys)
+    new = []
+    for x, y in zip(xs, ys): new += [m['ox'] + (m['iw'] if x == mx else 0), m['oy'] + (m['ih'] if y == my else 0)]
+    d = [a - b for a, b in zip(new, m['pts'])]
+    for f in m['forms']: f['pos'] = [v + dv for v, dv in zip(f['pos'], d)]
+    m['pts'] = new
+    print('mesh refit:', m['name'], [round(v) for v in d])
 
 os.makedirs(out + '/tex', exist_ok=True)
 for im in {m['img'] for m in meshes}:
