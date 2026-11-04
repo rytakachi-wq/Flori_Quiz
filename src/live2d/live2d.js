@@ -83,6 +83,7 @@ function deformerTransform(model, d, cache) {
   let angle = 0, ox = 0, oy = 0, sc = 0, tot = 0;
   for (const [f, k] of w) { const F = D.forms[f]; angle += F.angle * k; ox += F.ox * k; oy += F.oy * k; sc += F.scale * k; tot += k; }
   if (!tot) { const F = D.forms[0]; angle = F.angle; ox = F.ox; oy = F.oy; sc = F.scale; }
+  angle += (model.angleBias && model.angleBias[d]) || 0;   // model.angleBias[部品の番号] = 度: 動きのプログラムが、ふだんの角度を少しずらす
   const r = angle * Math.PI / 180, c = Math.cos(r) * sc, s = Math.sin(r) * sc;
   // 子の座標 p を、親の座標へ: origin + R(angle) * scale * p  (画面は y が下向き)
   let T = { a: c, b: s, c: -s, d: c, e: ox, f: oy };
