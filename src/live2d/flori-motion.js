@@ -15,7 +15,8 @@ const clamp1 = x => Math.max(-1, Math.min(1, x));
 const env = (a, up, hold, down) => ss(a / up) * (1 - ss((a - up - hold) / down));       // 上がる → 保つ → 下がる(0→1→0)
 
 export const HOP_SECONDS = 1.2;
-export const CROSS_PX = 7;             // いつもの寄り目の量(ひとみが、内側へ動く。キャンバスのピクセル)
+export const CROSS_PX = 0;             // いつもの寄り目の量(ひとみが、内側へ動く。キャンバスのピクセル)
+// ※いつもの目の位置(CROSS_PX = 0)は、Live2D のパラメーターが 0 のときの位置(利用者が見せた絵のとおり)
 // 左右を見るときの、ひとみの動く量(ピクセル。これより大きいと、ひとみが目からはみ出る)。画面の左を見る(フロリの右)/ 画面の右を見る(フロリの左)
 export const GAZE_PX = { R: [16, 15], L: [15, 20] };   // R = フロリの右目(画面の左の目)、L = フロリの左目。右目は、フロリの右を見るとき もう少し右へ、左目は、フロリの左を見るとき もう少し左へ
 export const ARM_L_BIAS = 8;          // フロリの左腕(画面の右の腕)を、フロリの右(画面の左)へ、すこし寄せる角度(度)
@@ -94,13 +95,13 @@ export function createMotion(model) {
       const n = 1 + Math.floor(Math.random() * 3), seq = [];
       for (let i = 0; i < n; i++) { lastBrow = -lastBrow; seq.push(lastBrow * [0.25, 0.5, 0.75, 1][Math.floor(Math.random() * 4)]); }
       const step = rnd(0.55, 1.0);
-      return { kind, t0: t, seq, step, up: 0.25, hold: n * step, down: 0.25 };
+      return { kind, t0: t, seq, step, up: seq[0] > 0 ? 0.7 : 0.25, hold: n * step, down: seq[n - 1] > 0 ? 0.7 : 0.25 };   // 困り眉(+)が はじめ・おわりのときは、ゆっくり
     }
     if (kind === 'expr') {
       let k; do k = Math.floor(Math.random() * EXPRESSIONS.length); while (recentExpr.includes(k));
       lastExpr = k; recentExpr.push(k); if (recentExpr.length > 4) recentExpr.shift(); const x = EXPRESSIONS[k];
       lastDir = -lastDir;       // 傾ける向きは、かならず かわりばんこ(左も右も)
-      return { kind, t0: t, x, dir: lastDir, up: 0.3, hold: rnd(...x.hold) * 0.55, down: 0.3 };   // 表情は、コロコロかわる(はやく動いて、みじかく保つ)
+      return { kind, t0: t, x, dir: lastDir, up: x.brow >= 0.5 ? 0.7 : 0.3, hold: rnd(...x.hold) * 0.55, down: x.brow >= 0.5 ? 0.7 : 0.3 };   // 表情は、コロコロかわる(はやく動いて、みじかく保つ)
     }
     if (kind === 'flap') return { kind, t0: t, up: 0.4, hold: rnd(1.4, 2.0), down: 0.4 };       // ぱたぱた:両腕を、からだの横で、小さく ぱたぱた(左右同じ)
     if (kind === 'cheer') return { kind, t0: t, up: 0.4, hold: rnd(1.4, 2.0), down: 0.5 };      // ばんざい:両腕を上げて、ぴょこぴょこ(左右同じ)
@@ -135,7 +136,7 @@ export function createMotion(model) {
         }
         else if (ev.kind === 'expr') { e = k; x = ev.x; dir = ev.dir; }
         else if (ev.kind === 'brow') {
-          const u = Math.max(0, a - ev.up) / ev.step, i = Math.min(ev.seq.length - 1, Math.floor(u)), q = ss((u - i) / 0.35);
+          const u = Math.max(0, a - ev.up) / ev.step, i = Math.min(ev.seq.length - 1, Math.floor(u)), q = ss((u - i) / (ev.seq[i] > 0 ? 0.85 : 0.35));   // 困り眉(+)へ動くときは、ゆっくり
           browSeq = k * (i ? ev.seq[i - 1] + (ev.seq[i] - ev.seq[i - 1]) * q : ev.seq[0]);
         }
       }
