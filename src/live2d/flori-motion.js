@@ -22,6 +22,8 @@ export const CROSS_PX = 0;             // いつもの寄り目の量(ひとみ�
 // 左右を見るときの、ひとみの動く量(ピクセル。これより大きいと、ひとみが目からはみ出る)。画面の左を見る(フロリの右)/ 画面の右を見る(フロリの左)
 export const GAZE_PX = { R: [16, 15], L: [15, 20] };   // R = フロリの右目(画面の左の目)、L = フロリの左目。右目は、フロリの右を見るとき もう少し右へ、左目は、フロリの左を見るとき もう少し左へ
 export const GAZE_EXTRA_R = 4;        // フロリの右を見るとき、右目だけ、パラメーターの範囲(16px)をこえて、さらに左へずらす量(ピクセル)
+export const ARM_SCALE_DOWN = 0.8;     // 手を下ろす腕(コブシの腕)の長さの倍率(利用者の指示)
+export const ARM_SCALE_UP = 0.9;       // ほかの腕(バンザイ・手を振る)の長さの倍率
 export const ARM_L_BIAS = 8;          // フロリの左腕(画面の右の腕)を、フロリの右(画面の左)へ、すこし寄せる角度(度)
 export const LIP_MARGIN = 0.2;        // 下唇が −LIP_MARGIN より小さくなる(とげが出る)ときだけ、上唇も動かす
 export const BASE_MOUTH = -0.85;      // ふだんの口(下唇。小さい。−1 がいちばん小さい)
@@ -77,6 +79,10 @@ export function createMotion(model, opts = {}) {
   let hopT0 = -99, wasHop = false, hold = null;      // hold: ぴょんの前の表情・視線(なめらかに 0 にもどすため)
   const out = { bounce: 0, sx: 1, sy: 1 };
   const armL = model.meshes.find(m => m.name === '左手コブシ');
+  const meshOf = n => model.meshes.find(m => m.name === n);
+  model.scaleBias = {};
+  for (const n of ['右手コブシ', '左手コブシ']) if (meshOf(n)) model.scaleBias[meshOf(n).parent] = ARM_SCALE_DOWN;
+  for (const n of ['右手バンザイ', '左手バンザイ']) if (meshOf(n)) model.scaleBias[meshOf(n).parent] = ARM_SCALE_UP;
   if (armL) model.angleBias = { [armL.parent]: ARM_L_BIAS };   // フロリの左腕を、すこしだけ(フロリの右へ)寄せる
   model.follow = false;     // 上唇は、live2d.js の追尾ではなく、ここで決める(LIP_MARGIN)
 
