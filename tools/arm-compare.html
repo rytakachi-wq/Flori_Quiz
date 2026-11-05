@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><title>腕の長さくらべ</title>
+<style>body{margin:8px;font:14px sans-serif;background:#cfe}canvas{max-width:100%;display:block}</style></head><body>
+<p id="msg">作っています…</p>
+<script type="module">
+// 開発用:腕(回転の部品)を縮めたときの見た目くらべ。左から 1.0 倍(いま)・0.9 倍・0.8 倍。できた画像は /upload へ送る
+import { draw, loadModel } from '../src/live2d/live2d.js';
+const base = new URL('../src/', location.href);
+const model = await loadModel(new URL('live2d/', base).href);
+const P = (n) => model.params.findIndex((p) => p.name === n);
+const bg = model.meshes.findIndex((m) => m.name === 'BG');
+const armDef = (name) => model.meshes.find((m) => m.name === name).parent;
+const ARMS = ['右手コブシ', '左手コブシ', '右手バンザイ', '左手バンザイ'].map(armDef);
+const POSES = [
+  ['手を下ろす', {}],
+  ['両手バンザイ', { '右手バンザイ': -1, '左手バンザイ': -1 }],
+  ['片手(右)をあげる', { '右手バンザイ': -0.8 }],
+  ['両手コブシを少しあげる', { '右手コブシ': -0.4, '左手コブシ': -0.4 }],
+];
+const FACTORS = [1, 0.9, 0.8];
+const FRAME = { w: 800, h: 1003 }, S = 0.362, X0 = 304, Y0 = 861;
+const CW = 330, CH = 440, LAB = 30, MX = 0.12;
+const sheet = document.createElement('canvas');
+sheet.width = FACTORS.length * CW; sheet.height = POSES.length * (CH + LAB);
+const sc = sheet.getContext('2d');
+sc.fillStyle = '#e6f4fb'; sc.fillRect(0, 0, sheet.width, sheet.height);
+sc.font = '15px sans-serif'; sc.textAlign = 'center'; sc.fillStyle = '#234';
+POSES.forEach(([label, vals], r) => FACTORS.forEach((f, c) => {
+  model.values = model.params.map((p) => p.default);
+  for (const [k, v] of Object.entries(vals)) model.values[P(k)] = v;
+  model.scaleBias = Object.fromEntries(ARMS.map((d) => [d, f]));
+  const t = document.createElement('canvas'); t.width = CW * 2; t.height = CH * 2;
+  const mx = MX * FRAME.w;
+  draw(model, t.getContext('2d'), { x: X0 - mx / S, y: Y0, w: (FRAME.w + 2 * mx) / S, h: FRAME.h / S * 1.0 }, { hide: new Set([bg]) });
+  sc.drawImage(t, c * CW, r * (CH + LAB), CW, CH);
+  sc.fillText(`${label}  ${f}倍`, c * CW + CW / 2, r * (CH + LAB) + CH + 20);
+}));
+document.body.append(sheet);
+const blob = await new Promise((ok) => sheet.toBlob(ok, 'image/png'));
+const res = await fetch('/upload?name=arm-compare.png', { method: 'POST', body: blob });
+document.getElementById('msg').textContent = '保存: ' + res.status; window.__done = res.status;
+</script></body></html>
