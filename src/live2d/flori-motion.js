@@ -24,7 +24,7 @@ export const GAZE_PX = { R: [16, 15], L: [15, 20] };   // R = フロリの右目
 export const GAZE_EXTRA_R = 4;        // フロリの右を見るとき、右目だけ、パラメーターの範囲(16px)をこえて、さらに左へずらす量(ピクセル)
 export const ARM_SCALE_DOWN = 0.8;     // 手を下ろす腕(コブシの腕)の長さの倍率(利用者の指示)
 export const ARM_SCALE_UP = 0.9;       // ほかの腕(バンザイ・手を振る)の長さの倍率
-export const ARM_L_BIAS = 8;          // フロリの左腕(画面の右の腕)を、フロリの右(画面の左)へ、すこし寄せる角度(度)
+export const ARM_L_BIAS = 4;          // フロリの左腕(画面の右の腕)を、フロリの右(画面の左)へ、すこし寄せる角度(度)
 export const LIP_MARGIN = 0.2;        // 下唇が −LIP_MARGIN より小さくなる(とげが出る)ときだけ、上唇も動かす
 export const BASE_MOUTH = -0.85;      // ふだんの口(下唇。小さい。−1 がいちばん小さい)
 
