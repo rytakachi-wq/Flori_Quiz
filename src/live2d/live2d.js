@@ -178,7 +178,7 @@ export function draw(model, ctx, view, opts = {}) {
       const ix = [m.tri[t], m.tri[t + 1], m.tri[t + 2]];
       const u = ix.flatMap(v => [m.pts[v * 2] - m.ox, m.pts[v * 2 + 1] - m.oy]);
       const p = ix.flatMap(v => [e.pos[v * 2], e.pos[v * 2 + 1]]);
-      drawTri(ctx, im, u, p, 0.4, m.iw, m.ih);
+      drawTri(ctx, im, u, p, 0.7 / k, m.iw, m.ih);   // 三角形のつなぎめに すじが出ないように、画面で約0.7ピクセル分、ふくらませる(k = 画面の拡大率)
     }
   }
   ctx.globalAlpha = 1;
