@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><title>左腕の角度くらべ</title>
+<style>body{margin:8px;font:14px sans-serif;background:#cfe}canvas{max-width:100%;display:block}</style></head><body>
+<p id="msg">作っています…</p>
+<script type="module">
+// 開発用:フロリの左腕(画面の右の腕)の寄せる角度くらべ。左から 8度(前)・4度(いま)・0度(寄せない)
+import { draw, loadModel } from '../src/live2d/live2d.js';
+import { ARM_SCALE_DOWN, ARM_SCALE_UP } from '../src/live2d/flori-motion.js';
+const base = new URL('../src/', location.href);
+const model = await loadModel(new URL('live2d/', base).href);
+const bg = model.meshes.findIndex((m) => m.name === 'BG');
+const par = (n) => model.meshes.find((m) => m.name === n).parent;
+const FRAME = { w: 800, h: 1003 }, S = 0.362, X0 = 304, Y0 = 861, CW = 330, CH = 440, MX = 0.12;
+const sheet = document.createElement('canvas'); sheet.width = 3 * CW; sheet.height = CH + 30;
+const sc = sheet.getContext('2d'); sc.fillStyle = '#e6f4fb'; sc.fillRect(0, 0, sheet.width, sheet.height); sc.font = '15px sans-serif'; sc.textAlign = 'center'; sc.fillStyle = '#234';
+[8, 4, 0].forEach((deg, c) => {
+  model.values = model.params.map((p) => p.default);
+  model.values[model.params.findIndex((p) => p.name === '右手コブシ')] = -0.03;
+  model.values[model.params.findIndex((p) => p.name === '左手コブシ')] = -0.03;
+  model.scaleBias = { [par('右手コブシ')]: ARM_SCALE_DOWN, [par('左手コブシ')]: ARM_SCALE_DOWN, [par('右手バンザイ')]: ARM_SCALE_UP, [par('左手バンザイ')]: ARM_SCALE_UP };
+  model.angleBias = { [par('左手コブシ')]: deg };
+  const t = document.createElement('canvas'); t.width = CW * 2; t.height = CH * 2;
+  const mx = MX * FRAME.w;
+  draw(model, t.getContext('2d'), { x: X0 - mx / S, y: Y0, w: (FRAME.w + 2 * mx) / S, h: FRAME.h / S }, { hide: new Set([bg]) });
+  sc.drawImage(t, c * CW, 0, CW, CH);
+  sc.fillText(`左腕(画面の右) ${deg}度${deg === 4 ? '(いま)' : deg === 8 ? '(前)' : '(寄せない)'}`, c * CW + CW / 2, CH + 20);
+});
+document.body.append(sheet);
+const blob = await new Promise((ok) => sheet.toBlob(ok, 'image/png'));
+const res = await fetch('/upload?name=arm-bias.png', { method: 'POST', body: blob });
+document.getElementById('msg').textContent = '保存: ' + res.status; window.__done = res.status;
+</script></body></html>
