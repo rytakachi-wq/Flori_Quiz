@@ -27,7 +27,7 @@
 
 - スタッフクレジット(decisions その75〜86):「その他」の一番下のボタン → `screen-credits`。`src/credits.js`(内容の表 `CREDITS`+流れるロール+ループ)、`src/shooter.js`(シューティング、canvas)。画面を離れると `closeCredits()` で止まる(main.js の `show`)。
 
-## フロリを動かす(Live2D。アプリに入れた、未公開)
+## フロリを動かす(Live2D。アプリに入れた、2026-11-05に公開)
 - モデル:デスクトップの `hehehe - コピー.cmo3`(利用者が絵を描きなおしたもの)から `python -I tools/cmo3/extract.py <cmo3> src/live2d` で `src/live2d/model.json`・`tex/` を作る(絵からはみ出した古いメッシュは、取り出すときに絵の大きさに合わせる)。描画は自作の `src/live2d/live2d.js`、動きは `src/live2d/flori-motion.js`(パラメーター名で動かす)。確かめ用ページ:`/src/live2d/cover.html`(クリックでぴょん)・`preview.html`(スライダー)。
 - アプリへの入れ方:`src/live-flori.js`(main.js から `startLiveFlori()`)。ポーズつきの絵(`img.flori` で、POSE に合う `wave_*.png`・`body_wave.webp`)の上に、同じ場所・同じ大きさの canvas を重ねて、動くフロリを描く。絵(img)は残して `visibility:hidden`(大きさ・ゆれ・かざりの位置は、絵のもの)。かざりは decor-overlay.js のまま(canvas は `.decor-front` の中、または `.hero-fig` の中)。**クイズ画面(`#screen-question`・`#screen-rpg`)は動くフロリにしない。着せ替え画面は腕を動かさない。表紙はクリックで ぴょん**。絵のポーズに合わせて、`wave_wrong`=こまった顔・`wave_surprised`=びっくり顔でずっと固定。
 - 位置合わせ(`live-flori.js` の S・X0・Y0):静止画(800×1003)の頭の幅・上端に合わせた(頭が3%せまく、体が4%長い)。かざりの位置は、静止画で決めた値のまま。腕・体のかざりは、少しずれるかもしれない(着せ替え画面で確かめて、必要なら badges.js の表を直す)。
@@ -57,7 +57,7 @@
 - 図鑑の「ひらめき」タブが 320 幅で右端にぎりぎり。
 
 ## 現在の状態
-- 公開ずみ:2026-11-02(スタッフクレジット・ふりがな見直しまで。decisions その86)。これより後のコミットは、題名の終わりが「(未公開)」。
+- 公開ずみ:2026-11-05(動くフロリ・顔の線の修正まで)。これより後のコミットは、題名の終わりが「(未公開)」。
 - 項目ごとにセッションを分けて進める。作業が終わったら、決めたことを decisions.md に、状態が変わったらこのファイルの「既知の残り」「現在の状態」を更新する。
 - 着せ替えの色・背景: お試し(TRIAL)も、正式なご褒美になった(badges.js の TRIAL_SETS で、色と背景のセットごとに条件)。一覧は、ジャンルの見出し付き(SET_ORDER)。着せたとき、名前が枠の上を流れる(main.js の flowName)。
 - 着せ替えの条件・レア度は、`src/dress-unlocks.js`(`UNLOCKS`・`RARITY`・移行用の`OLD_UNLOCKS`)。レア度の名前は badges.js の `RARITY_NAMES`(ノーマル・レア・スーパーレア・レジェンド)。条件を変えたら、`OLD_UNLOCKS` ではなく `UNLOCKS` を直す。RPGの条件は、storage.js の `recordRpg` で数える。
