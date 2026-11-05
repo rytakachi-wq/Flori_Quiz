@@ -255,7 +255,7 @@ function paintBody(ctx, width, height, color, keepBelow = 0) {
     px[i * 4 + 2] = Math.round(b * 255);
   }
   // 足(くつ)の、灰色がかった部分も、同じ色あいにする(足もとの影・線・目は、そのまま)
-  for (let i = 0; i < total; i += 1) {
+  for (let i = 0; i < total && !keepBelow; i += 1) { // keepBelow があるとき(動くフロリの頭)は、足の灰色の処理をしない(バイザーの下の灰色に、色がつくため)
     if (mask[i] || px[i * 4 + 3] < 128 || Math.floor(i / width) < height * 0.8) continue;
     const [h, s, l] = rgbToHsl(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255);
     if (s < 0.02 || s > 0.22 || l < 0.45 || l > 0.8) continue;

@@ -2,7 +2,7 @@
 //  - 絵(img)は、そのまま残す(大きさ・ゆれる動き・着せ替えのかざりの位置は、絵のものを使う)。動くフロリが出せるまでは、絵が見える。
 //  - かざり(頭・体・顔)は、いままでどおり。絵の見えている場所にそろえて、重ねる(decor-overlay.js)。
 //  - 色(着せ替えの色)は、体・頭・手足の絵を、flori-color.js で色づけしてから、貼る。
-//  - 出さない画面:クイズ(問題・RPG)。着せ替え画面は、腕を動かさない。表紙は、クリックで ぴょん。
+//  - 出さない画面:クイズ(問題・RPG)。表紙は、クリックで ぴょん。着せ替え画面でも、腕を動かす。
 import { draw, loadModel } from "./live2d/live2d.js";
 import { createMotion } from "./live2d/flori-motion.js";
 import { getFloriColor, recolorCanvas } from "./flori-color.js";
@@ -82,7 +82,7 @@ async function retint() {
     if (!TINT_PARTS.test(mesh.name) || imgs.has(mesh.img)) continue;
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (job !== tintJob) return;
-    imgs.set(mesh.img, recolorCanvas(model.imgs.get(mesh.img), color, TINT_SCALE, mesh.name === "顔" ? 0.8 : 0)); // 頭は、バイザーの下の影(暗い部分)に、色をつけない
+    imgs.set(mesh.img, recolorCanvas(model.imgs.get(mesh.img), color, TINT_SCALE, mesh.name === "顔" ? 0.87 : 0)); // 頭は、バイザーの下の影・ふちの混ざった色(明るさ 0.87 より暗い部分)に、色をつけない
   }
   if (job === tintJob) tint = { id: color.id, imgs };
 }
@@ -136,7 +136,7 @@ function mount(img) {
 function configure(img, item) {
   const src = originalSrc(img);
   const mood = MOOD[(/(wave_\w+)\.png$/.exec(src) ?? [])[1]] ?? null;
-  const noArms = Boolean(img.closest("#screen-dress"));
+  const noArms = false; // 着せ替え画面でも、腕を動かす(利用者の指示)
   const key = `${mood}|${noArms}`;
   if (item.key === key) return;
   item.key = key;

@@ -7,6 +7,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Cache-Control', 'no-store')   # 開発中は、古いファイルが残らないように
         super().end_headers()
+    def do_POST(self):
+        # 確かめ用:ページで作った画像を、環境変数 FLORI_UPLOAD_DIR のフォルダへ保存する(指定がなければ、受けつけない)
+        d = os.environ.get('FLORI_UPLOAD_DIR')
+        if not d or not self.path.startswith('/upload?name='):
+            self.send_response(403); self.end_headers(); return
+        name = os.path.basename(self.path.split('=', 1)[1])
+        data = self.rfile.read(int(self.headers.get('Content-Length', 0)))
+        os.makedirs(d, exist_ok=True)
+        open(os.path.join(d, name), 'wb').write(data)
+        self.send_response(200); self.end_headers(); self.wfile.write(b'ok')
     def log_message(self, *a): pass
 
 class Server(http.server.ThreadingHTTPServer):

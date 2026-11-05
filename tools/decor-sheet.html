@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><title>かざり一覧(動くフロリ+色)</title>
+<style>body{margin:8px;font:14px sans-serif;background:#cfe}canvas{max-width:100%;display:block;margin:6px 0}</style></head><body>
+<p id="msg">作っています…</p>
+<script type="module">
+// 開発用:すべてのかざり(頭・体・顔)を、動くフロリ(色つき)に着せて、一覧にする。できた画像は、サーバーの /upload へ送る
+// 使い方:FLORI_UPLOAD_DIR=<保存先> python tools/serve.py → /tools/decor-sheet.html?slot=head|body|face
+import { draw, loadModel } from '../src/live2d/live2d.js';
+import { recolorCanvas } from '../src/flori-color.js';
+import { BODIES, COLORS, FACES, HEADS } from '../src/badges.js';
+
+const slot = new URLSearchParams(location.search).get('slot') ?? 'head';
+const LIST = { head: HEADS, body: BODIES, face: FACES }[slot].filter((i) => i.img);
+const FRAME = { w: 800, h: 1003 }, S = 0.362, X0 = 304, Y0 = 861;
+const TW = 240, TH = 340, COLS = 8, LABEL = 34, M = 0.15; // M = 頭の上に、かざりがはみ出してもよいように、上に あける割合
+const base = new URL('../src/', location.href);
+const model = await loadModel(new URL('live2d/', base).href);
+model.values = model.params.map((p) => p.default);
+const bg = model.meshes.findIndex((m) => m.name === 'BG');
+const TINT = /^(体|顔|右足|左足|右手(コブシ|バンザイ)|左手(コブシ|バンザイ))$/;
+const ids = ['pink', 'green', 'purple', 'orange', 'yellow', 'red', 'navy', 'gold'];
+const tints = ids.map((id) => {
+  const color = COLORS.find((c) => c.id === id);
+  const imgs = new Map();
+  for (const mesh of model.meshes) if (TINT.test(mesh.name) && !imgs.has(mesh.img)) imgs.set(mesh.img, recolorCanvas(model.imgs.get(mesh.img), color, 0.3, mesh.name === '顔' ? 0.87 : 0));
+  return imgs;
+});
+const load = (src) => new Promise((ok) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = src; });
+
+const rows = Math.ceil(LIST.length / COLS);
+const sheet = document.createElement('canvas');
+sheet.width = COLS * TW; sheet.height = rows * (TH + LABEL);
+const sc = sheet.getContext('2d');
+sc.fillStyle = '#e6f4fb'; sc.fillRect(0, 0, sheet.width, sheet.height);
+sc.font = '15px sans-serif'; sc.textAlign = 'center';
+
+function item(ctx, it, im, k, back) {
+  if (!im || Boolean(it.pos.back) !== back) return;
+  const w = FRAME.w * it.pos.w / 100 * k, h = w * im.naturalHeight / im.naturalWidth;
+  ctx.save();
+  ctx.translate(FRAME.w * it.pos.x / 100 * k, (FRAME.h * it.pos.y / 100 + M * FRAME.h) * k);
+  ctx.rotate((it.pos.r ?? 0) * Math.PI / 180);
+  ctx.scale(it.pos.sx ?? 1, it.pos.sy ?? 1);
+  ctx.drawImage(im, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
+for (let n = 0; n < LIST.length; n++) {
+  const it = LIST[n];
+  const im = await load(new URL(it.img, base).href);
+  const tile = document.createElement('canvas');
+  tile.width = 640; tile.height = Math.round(640 * (1 + M) * FRAME.h / FRAME.w);
+  const ctx = tile.getContext('2d');
+  item(ctx, it, im, 640 / FRAME.w, true);
+  const f = document.createElement('canvas'); f.width = tile.width; f.height = tile.height;
+  draw(model, f.getContext('2d'), { x: X0, y: Y0 - M * FRAME.h / S, w: FRAME.w / S, h: (1 + M) * FRAME.h / S }, { hide: new Set([bg]), imgs: tints[n % tints.length] });
+  ctx.drawImage(f, 0, 0);
+  item(ctx, it, im, 640 / FRAME.w, false);
+  const x = (n % COLS) * TW, y = Math.floor(n / COLS) * (TH + LABEL);
+  sc.drawImage(tile, x + 10, y + 4, TW - 20, Math.round((TW - 20) * (1 + M) * FRAME.h / FRAME.w));
+  sc.fillStyle = '#234'; sc.fillText(`${it.id} ${it.name}`, x + TW / 2, y + TH + 22);
+}
+document.body.append(sheet);
+document.getElementById('msg').textContent = `${slot}: ${LIST.length}こ できた。送っています…`;
+const blob = await new Promise((ok) => sheet.toBlob(ok, 'image/png'));
+const r = await fetch(`/upload?name=decor-${slot}.png`, { method: 'POST', body: blob });
+document.getElementById('msg').textContent = `${slot}: ${LIST.length}こ。保存: ${r.status}`;
+window.__done = r.status;
+</script></body></html>
