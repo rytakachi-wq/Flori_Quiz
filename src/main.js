@@ -1852,18 +1852,31 @@ function introSeen() {
   }
   return false;
 }
+let openingJingleDone = false; // 「画面をタッチして スタート!」の曲を、すでに鳴らしたか(はじめて開いて遊び方が先に出るときも、タッチしたら、まず曲を鳴らす)
 function closeOpening() {
   const opening = $("opening");
   if (opening.hidden || opening.classList.contains("is-playing")) return;
   unlock();
   if (!opening.classList.contains("is-idle") && !introSeen()) {
     // はじめて開いたときは、先に遊び方を見せる(知っている人は、「スキップ」で、すぐ始められる)
-    playTutorial("play", (started) => started && closeOpening(), { startLabel: "ゲームスタート", skipLabel: "スキップ", skipStarts: true });
+    if (!openingJingleDone) {
+      openingJingleDone = true;
+      playJingle("opening");
+    }
+    playTutorial(
+      "play",
+      (started) => {
+        if (!started) openingJingleDone = false; // 閉じただけなら、つぎのタッチで、また曲を鳴らす
+        if (started) closeOpening();
+      },
+      { startLabel: "ゲームスタート", skipLabel: "スキップ", skipStarts: true },
+    );
     return;
   }
   if (opening.classList.contains("is-idle")) {
-    // 1分何もしなくて、戻ってきたオープニング:さわると、すぐ表紙に戻る
+    // 1分何もしなくて、戻ってきたオープニング:さわると、すぐ表紙に戻る(曲も鳴らす)
     opening.classList.add("is-leaving");
+    playJingle("opening");
     setTimeout(() => {
       opening.hidden = true;
       opening.classList.remove("is-idle", "is-leaving");
@@ -1875,7 +1888,8 @@ function closeOpening() {
   }
   opening.classList.add("is-playing"); // フロリが、動いて登場する
   opening.querySelector(".opening-flori").hidden = false;
-  const length = Math.max(2600, playJingle("opening") + 400);
+  const length = Math.max(2600, (openingJingleDone ? 0 : playJingle("opening")) + 400);
+  openingJingleDone = false;
   setTimeout(() => opening.classList.add("is-leaving"), length);
   setTimeout(() => {
     opening.hidden = true;
