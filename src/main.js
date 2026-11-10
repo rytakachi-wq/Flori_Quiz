@@ -273,7 +273,7 @@ let hardIds = new Set(); // 難しい問題の uid
 let oniIds = new Set(); // オニ問題の uid
 const sessions = new Map(); // 「理系-normal」のような名前 → 普通・難しいモードの遊び(難しさのカウンターを引き継ぐ)
 let activeKey = null; // いま遊んでいる、sessions の名前
-const pick = { kind: "solo", group: "理系", level: "normal", simple: "normal", time: false, players: 2 }; // 設定の画面で選んだ、遊ぶ人・分類・難しさ(人数)・制限時間
+const pick = { kind: "solo", group: "理系", level: "normal", simple: "normal", time: true, players: 2 }; // (制限時間は、はじめから「つける」=おすすめ)設定の画面で選んだ、遊ぶ人・分類・難しさ(人数)・制限時間
 const GROUPS = ["理系", "文系", "ひらめき"];
 const MIN_POOL = 10; // 1つの組み合わせで、最低これだけの問題がないと、他の分類から足す
 let versusQuestions = []; // 対戦で使う問題(段階1〜3)
