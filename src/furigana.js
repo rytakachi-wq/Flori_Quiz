@@ -16,6 +16,7 @@ const HOST_CLASS = "rb";
 
 const KANJI = /[一-鿿々〆]/;
 const KATAKANA_ANY = /[ァ-ヶ]/;
+const DIGIT_COUNTER_HINT = /[0-9][ぁ-んァ-ヶ一-鿿A-Za-z%]/;
 const gradeOf = new Map();
 KYOIKU_BY_GRADE.forEach((chars, i) => [...chars].forEach((c) => gradeOf.set(c, i + 1)));
 
@@ -116,9 +117,94 @@ function counterSegs(digits, counter, following = "") {
   return null;
 }
 
-// text の i 番目から、辞書か数え方に当てはまる部分を探す。
-function matchAt(text, i) {
+// ---- 数字+数え方の ふりがな(「ふりがな:全部」のときだけ。問題・選択肢・ヒント・解説の文字に限る)----
+// 「3本」全体に「さんぼん」と、ルビをつける(読みの規則は、docs/number-readings.xlsx)。数え方のつかない数(式・番号)には、つけない。
+const DIG = ["", "いち", "に", "さん", "よん", "ご", "ろく", "なな", "はち", "きゅう"];
+function below10000(n) {
+  const th = Math.floor(n / 1000), h = Math.floor((n % 1000) / 100), t = Math.floor((n % 100) / 10), o = n % 10;
+  let s = "";
+  if (th) s += th === 1 ? "せん" : th === 3 ? "さんぜん" : th === 8 ? "はっせん" : `${DIG[th]}せん`;
+  if (h) s += h === 1 ? "ひゃく" : h === 3 ? "さんびゃく" : h === 6 ? "ろっぴゃく" : h === 8 ? "はっぴゃく" : `${DIG[h]}ひゃく`;
+  if (t) s += `${t === 1 ? "" : DIG[t]}じゅう`;
+  if (o) s += DIG[o];
+  return s;
+}
+function bigNumberKana(n) {
+  if (n === 0) return "ぜろ";
+  const man = Math.floor(n / 10000);
+  return (man ? `${below10000(man)}まん` : "") + below10000(n % 10000);
+}
+const swapEnd = (s, from, to) => (s.endsWith(from) ? s.slice(0, -from.length) + to : s);
+// 小さい「っ」:いち→いっ、ろく→ろっ、はち→はっ、じゅう→じゅっ、ひゃく→ひゃっ
+const shorten = (s) => [["いち", "いっ"], ["ろく", "ろっ"], ["はち", "はっ"], ["じゅう", "じゅっ"], ["ひゃく", "ひゃっ"], ["びゃく", "びゃっ"], ["ぴゃく", "ぴゃっ"]].reduce((r, [a, b]) => swapEnd(r, a, b), s);
+
+const SPECIAL_DAY_KANA = { 2: "ふつか", 3: "みっか", 4: "よっか", 5: "いつか", 6: "むいか", 7: "なのか", 8: "ようか", 9: "ここのか", 10: "とおか", 14: "じゅうよっか", 20: "はつか", 24: "にじゅうよっか" };
+const TSU_KANA = ["", "ひとつ", "ふたつ", "みっつ", "よっつ", "いつつ", "むっつ", "ななつ", "やっつ", "ここのつ", "とお"];
+// 数え方ごとの、[数の読み, 数え方の読み](n = 数。base = 数のふつうの読み。last = 1の位)。2つをつなげたものが、全体の読み。
+const kai = (cnt, six = true) => (n, base) => ((n % 1000 && [1, 8, 0].includes(n % 10)) || (six && n % 10 === 6 && n % 1000) ? [shorten(base), cnt] : [base, cnt]);
+const sound = (cnts) => (n, base) => {   // ほん・ぽん・ぼん
+  if (n === 0) return [base, cnts[0]];
+  if (n % 1000 === 0) return [base, cnts[2]];
+  if ([1, 6, 8, 0].includes(n % 10)) return [shorten(base), cnts[1]];
+  return n % 10 === 3 ? [base, cnts[2]] : [base, cnts[0]];
+};
+const plainCnt = (cnt) => (n, base) => [base, cnt];
+const DIGIT_COUNTERS = {
+  本: sound(["ほん", "ぽん", "ぼん"]), 匹: sound(["ひき", "ぴき", "びき"]),
+  分: (n, base, o) => {
+    if (o.fraction) return [base, "ぶん"];
+    if (n % 1000 === 0 && n) return [base, "ぷん"];
+    if ([1, 6, 8, 0].includes(n % 10) && n) return [shorten(base), "ぷん"];
+    return [base, [3, 4].includes(n % 10) ? "ぷん" : "ふん"];
+  },
+  回: kai("かい"), 個: kai("こ"), こ: kai("こ"), 県: kai("けん"), 点: kai("てん", false), 滴: kai("てき", false), 等星: kai("とうせい", false),
+  人: (n, base) => (n === 1 ? ["", "ひとり"] : n === 2 ? ["", "ふたり"] : [swapEnd(base, "よん", "よ"), "にん"]),
+  日: (n, base, o) => {
+    if (n === 1) return ["", o.span ? "いちにち" : "ついたち"];
+    if (SPECIAL_DAY_KANA[n]) return ["", SPECIAL_DAY_KANA[n]];
+    return [swapEnd(swapEnd(base, "なな", "しち"), "きゅう", "く"), "にち"];
+  },
+  日間: (n, base) => { const [a, b] = DIGIT_COUNTERS.日(n, base, { span: true }); return [a, `${b}かん`]; },
+  年間: (n, base) => { const [a, b] = DIGIT_COUNTERS.年(n, base); return [a, `${b}かん`]; },
+  月: (n, base) => [n === 4 ? "し" : n === 7 ? "しち" : n === 9 ? "く" : base, "がつ"],
+  時: (n, base) => [swapEnd(swapEnd(swapEnd(base, "よん", "よ"), "なな", "しち"), "きゅう", "く"), "じ"],
+  時間: (n, base) => [swapEnd(swapEnd(base, "よん", "よ"), "きゅう", "く"), "じかん"],
+  年: (n, base) => [swapEnd(swapEnd(swapEnd(base, "よん", "よ"), "なな", "しち"), "きゅう", "く"), "ねん"],
+  円: (n, base) => [swapEnd(base, "よん", "よ"), "えん"],
+  通り: (n, base) => (n === 1 ? ["", "ひととおり"] : n === 2 ? ["", "ふたとおり"] : [base, "とおり"]),
+  つ: (n, base) => (TSU_KANA[n] ? ["", TSU_KANA[n]] : [base, "つ"]),
+  枚: plainCnt("まい"), 秒: plainCnt("びょう"), 度: plainCnt("ど"), 番: plainCnt("ばん"), 倍: plainCnt("ばい"), 問: plainCnt("もん"),
+  組: plainCnt("くみ"), 列: plainCnt("れつ"), 桁: plainCnt("けた"), 割: plainCnt("わり"), 文字: plainCnt("もじ"), 往復: plainCnt("おうふく"),
+  名園: plainCnt("めいえん"), 大義務: plainCnt("だいぎむ"),
+  平方キロメートル: plainCnt("へいほうきろめえとる"), km: plainCnt("きろめえとる"), cm: plainCnt("せんちめえとる"), mm: plainCnt("みりめえとる"),
+  kg: plainCnt("きろぐらむ"), m: plainCnt("めえとる"), L: plainCnt("りっとる"), g: plainCnt("ぐらむ"), "%": plainCnt("ぱあせんと"),
+};
+const COUNTER_WORDS = Object.keys(DIGIT_COUNTERS).sort((a, b) => b.length - a.length);
+const DEFER_TO_DICT = new Set(["円", "番", "回", "個", "枚", "度", "倍", "秒", "組", "列", "点", "問"]);   // 「円玉」「番目」のように、辞書の語が続くときは、数の読みだけ つける
+const LETTER_COUNTERS = new Set(["km", "cm", "mm", "kg", "m", "L", "g"]);
+
+function digitMatch(text, i, digits) {
+  if (/[0-9.,]/.test(text[i - 1] ?? "")) return null;   // 小数・位どりの数の途中
+  const after = i + digits.length;
+  const rest = text.slice(after);
+  const word = COUNTER_WORDS.find((w) => rest.startsWith(w));
+  if (!word || (LETTER_COUNTERS.has(word) && /^[A-Za-z]/.test(rest.slice(word.length)))) return null;
+  const zeroPadded = digits.length > 1 && digits[0] === "0";
+  const n = Number(digits);
+  const base = zeroPadded ? [...digits].map((d) => (d === "0" ? "ぜろ" : DIG[d])).join("") : bigNumberKana(n);
+  const following = rest.slice(word.length);
+  const opts = { fraction: word === "分" && isFraction(following), span: word === "日" && /^(のうち|中|で|間|ごと|あたり)/.test(following) };
+  let [num, cnt] = DIGIT_COUNTERS[word](zeroPadded ? 9 : n, base, opts);
+  if (zeroPadded) [num, cnt] = [base, word === "分" ? "ふん" : DIGIT_COUNTERS[word](9, base, opts)[1]];
+  const next = longestMatch(text, after);
+  if (DEFER_TO_DICT.has(word) && next && next.length > 1) return { length: digits.length, segs: [[digits, num]] };
+  return { length: digits.length + word.length, segs: [[digits + word, num + cnt]] };
+}
+
+// text の i 番目から、辞書か数え方に当てはまる部分を探す。digitMode = 数字+数え方にも、ふりがなをつける
+function matchAt(text, i, digitMode = false) {
   const digits = /^[0-9]+/.exec(text.slice(i));
+  if (digits && digitMode) return digitMatch(text, i, digits[0]);
   if (digits) {
     const after = i + digits[0].length;
     const counter = text[after];
@@ -142,7 +228,7 @@ function escapeHtml(text) {
 }
 
 // 文字を、[{ text, reading }] に分ける(読みは、ルビをつける部分だけ)。確認用にも使う。
-export function segments(text) {
+export function segments(text, digitMode = false) {
   const out = [];
   const push = (t, reading) => {
     const last = out[out.length - 1];
@@ -151,7 +237,7 @@ export function segments(text) {
   };
   let i = 0;
   while (i < text.length) {
-    const found = matchAt(text, i);
+    const found = matchAt(text, i, digitMode);
     if (found) {
       for (const [t, reading] of found.segs) push(t, reading);
       i += found.length;
@@ -252,7 +338,7 @@ function withKatakanaRuby(plain) {
 
 export function rubyHtml(text, mode, kana = false) {
   if (mode === "none") return escapeHtml(text);
-  return segments(text)
+  return segments(text, kana && mode === "all")
     .map(({ text: t, reading }) => {
       const show = reading && (mode === "all" || hasUpperKanji(t, FROM_GRADE[mode]));
       if (show) return `<ruby>${escapeHtml(t)}<rp>(</rp><rt>${reading}</rt><rp>)</rp></ruby>`;
@@ -298,7 +384,7 @@ function hostify(node) {
   if (!parent || SKIP_TAGS.has(parent.tagName) || parent.closest(`.${HOST_CLASS}, [data-no-ruby]`)) return;
   // 問題・選択肢・ヒント・解説(data-kana の中)は、カタカナにも ふりがなをつけられるように、カタカナだけの文字も包む
   const kana = Boolean(parent.closest("[data-kana]"));
-  if (!KANJI.test(node.nodeValue) && !(kana && KATAKANA_ANY.test(node.nodeValue))) return;
+  if (!KANJI.test(node.nodeValue) && !(kana && (KATAKANA_ANY.test(node.nodeValue) || DIGIT_COUNTER_HINT.test(node.nodeValue)))) return;
   const host = document.createElement("span");
   host.className = HOST_CLASS;
   host.dataset.plain = node.nodeValue;

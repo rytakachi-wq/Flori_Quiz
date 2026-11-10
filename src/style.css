@@ -3619,3 +3619,11 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 #screen-dress #dress-reward .reward-title { display: none; }
 #screen-dress #dress-reward .reward-icon { display: none; }
 #screen-dress #dress-reward .reward-note { font-size: 11px; font-weight: bold; }
+
+/* 新オープニング:ロゴがぽんと出て、「ひらめきクイズ」の文字が1文字ずつ ぽんぽんと出てから、はねる */
+.opening .logo { animation: op-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both; }
+.opening-title span {
+  animation: op-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) calc(0.7s + var(--i) * 0.08s) both, letter-bounce 1.2s ease-in-out calc(1.9s + var(--i) * 0.1s) infinite;
+}
+@keyframes op-pop { from { transform: scale(0.1); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .opening .logo, .opening-title span { animation: none; } }
