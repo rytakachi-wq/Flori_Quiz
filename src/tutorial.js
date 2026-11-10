@@ -15,10 +15,10 @@ function demoHatStyle() {
 const PLAY_SCENES = [
   {
     title: "STEP 1 選ぼう",
-    caption: "「クイズ」を押して 人数・分類・難しさ・制限時間を 選んで スタート!",
+    caption: "「クイズ」を押して、選んで スタート!",
     html: `
       <div class="tm-set">
-        <div class="tm-srow"><span class="tm-btn mini c3 is-hit"><i>🙂</i><small>1人</small></span><span class="tm-btn mini c2"><i>👥</i><small>皆で</small></span></div>
+        <div class="tm-srow"><span class="tm-btn mini c3 is-hit"><i>🙂</i><small>ひとりで</small></span><span class="tm-btn mini c2"><i>👤</i><small>みんなで</small></span></div>
         <div class="tm-srow"><span class="tm-btn mini c1"><i>🔬</i><small>理系</small></span><span class="tm-btn mini c4"><i>📖</i><small>文系</small></span><span class="tm-btn mini c3"><i>💡</i><small>ひらめき</small></span><span class="tm-btn mini c6"><i>🎲</i><small>ランダム</small></span></div>
         <div class="tm-srow"><span class="tm-btn mini c5"><i>🌱</i><small>普通</small></span><span class="tm-btn mini c6"><i>🔥</i><small>難しい</small></span></div>
         <span class="tm-go">▶ スタート!</span>
@@ -27,7 +27,7 @@ const PLAY_SCENES = [
   },
   {
     title: "STEP 2 難しさと時間",
-    caption: "「普通」か「難しい」を選んで 制限時間を付けるかも選ぼう。付けるとご褒美の星がもらえるよ。",
+    caption: "難しさと 制限時間を 選ぼう。時間をつけると 星がもらえるよ!",
     html: `
       <div class="tm-rows">
         <div class="tm-row"><span class="tm-btn c5"><i>🌱</i><small>普通</small></span><span class="tm-btn c6 is-hit"><i>🔥</i><small>難しい</small></span></div>

@@ -2133,7 +2133,7 @@ body.has-pager { padding-bottom: 56px; }
 .screen-head .title { line-height: 1.1; }
 
 /* 設定の画面:ぜんぶの行が、画面を、ちょうど使いきるように、ひろげる */
-#screen-setup .set-list { grid-template-rows: repeat(4, minmax(0, 1fr)); max-height: 460px; align-content: stretch; }
+#screen-setup .set-list { grid-template-rows: repeat(5, minmax(0, 1fr)); max-height: 560px; align-content: stretch; }
 #screen-setup .set-row { align-items: stretch; }
 #screen-setup .set-label { align-self: center; }
 #screen-setup .seg { align-items: stretch; }
@@ -3552,3 +3552,70 @@ html[data-pattern] :is(#screen-menu, #screen-note, #screen-credits, #screen-dex,
 :is(#screen-cover, #screen-menu, #screen-flow) .hero-fig.has-live { animation: liveBob 3.6s ease-in-out infinite; }
 #screen-cover.is-lively .home-hero .hero-fig.has-live { animation: liveHop 2.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { :is(#screen-cover, #screen-menu, #screen-flow) .hero-fig.has-live { animation: none; } }
+
+/* ---- モード選択:選んだボタンの絵は、大きく はずむ(感想 No.23)---- */
+@keyframes segIconHop { 0%, 60%, 100% { transform: translateY(0) scale(1); } 30% { transform: translateY(-2px) scale(1.1); } }
+.seg-btn.is-on .si { display: block; animation: segIconHop 2.8s ease-in-out infinite; transform-origin: 50% 80%; }
+@media (prefers-reduced-motion: reduce) { .seg-btn.is-on .si { animation: none; } }
+
+
+
+/* ---- まだ持っていないもの:かざりは黒いかげ、色・背景・先のランクは「？」(感想 No.27)---- */
+#screen-dress .dress-item.is-locked .dress-art img { filter: brightness(0); opacity: 0.32; }
+#screen-dress .dress-art.is-mystery { display: grid; place-items: center; font-size: 22px; font-weight: bold; color: #8a98a2; background: #dfe5e9; }
+#ranks-list li.is-unknown { opacity: 0.6; }
+
+/* ---- 難しさの行:RPG・皆で対戦のときは、うすくして、押せない(場所は変えない。感想 No.20)---- */
+#screen-setup .set-row.is-off { opacity: 0.4; pointer-events: none; }
+#screen-setup .set-row.is-off .seg-btn.is-on { box-shadow: none; border-color: #8a98a2; }
+
+/* ---- モード選択が5段になったので、低い画面では、すきまと絵を少しつめる ---- */
+#screen-setup .set-label-time { white-space: normal; overflow-wrap: anywhere; }
+@media (max-height: 700px) {
+  #screen-setup .set-list { gap: 4px; }
+  #screen-setup .set-row { padding: 2px 6px; }
+  #screen-setup .seg-btn { min-height: 40px; }
+  #screen-setup .seg-btn .si { font-size: 18px; }
+  #screen-setup .seg-btn { font-size: 11.5px; }
+}
+
+/* ---- モード選択を、見やすく:選んでいないボタンは、白っぽく静かに。選んだものだけ、色をつける ---- */
+#screen-setup .seg-btn:not(.is-on) { --c: #f6f8fa; border-color: #c3ccd3; color: #5b676e; opacity: 0.95; }
+#screen-setup .seg-btn:not(.is-on) .si { filter: grayscale(0.7); opacity: 0.8; }
+#screen-setup .set-row[hidden] { display: none; }
+@media (max-height: 800px) {
+  #screen-setup .seg-time .ss { display: none; }
+  #screen-setup .seg-time .seg-btn:first-child .si { font-size: 20px; }
+  #screen-setup .seg-time .seg-btn:first-child .st { font-size: 15px; }
+  #screen-setup .seg-time .seg-btn.is-small { height: 100%; min-height: 0; }
+}
+#screen-setup .set-list.rows-5 { grid-template-rows: repeat(4, minmax(0, 1fr)) minmax(0, var(--tw, 1.4fr)); }
+#screen-setup .set-list.rows-4 { grid-template-rows: repeat(3, minmax(0, 1fr)) minmax(0, var(--tw, 1.4fr)); }
+#screen-setup .seg-time .seg-btn:first-child .si { font-size: 22px; }
+@media (max-height: 800px) {
+  #screen-setup .set-list { --tw: 1fr; }
+  #screen-setup .set-label-time { font-size: 12px; line-height: 1.15; }
+  #screen-setup .set-label-time > span:first-child { font-size: 13px; line-height: 1; }
+  #screen-setup .seg-time .seg-btn:first-child .si { font-size: 18px; }
+}
+
+/* ---- 問題画面:進み具合のバー(感想 No.9)。かわいく:ピンクのしましまと、先っぽの星。場所は取らない(ヘッダーの下はしに重ねる)---- */
+#screen-question .status { position: relative; }
+.q-bar { position: absolute; left: 6px; right: 10px; bottom: -10px; height: 10px; background: #fff; border: 2px solid #ffb8cf; border-radius: 999px; box-shadow: 0 2px 0 rgba(255, 150, 180, 0.35); }
+.q-bar span { position: relative; display: block; height: 100%; width: 0; background: repeating-linear-gradient(-45deg, #ff8fb4 0 6px, #ffb3cc 6px 12px); background-size: 17px 17px; border-radius: 999px; transition: width 0.5s cubic-bezier(0.3, 1.5, 0.6, 1); animation: qbarStripe 1.2s linear infinite; }
+.q-bar span i { position: absolute; right: -8px; top: 50%; font-style: normal; font-size: 16px; line-height: 1; transform: translateY(-50%); animation: qbarStar 2s ease-in-out infinite; filter: drop-shadow(0 1px 0 rgba(200, 120, 20, 0.5)); }
+@keyframes qbarStripe { to { background-position: 17px 0; } }
+@keyframes qbarStar { 0%, 100% { transform: translateY(-50%) rotate(-12deg) scale(1); } 50% { transform: translateY(-50%) rotate(12deg) scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .q-bar span, .q-bar span i { transition: none; animation: none; } }
+
+/* ---- 着せ替えの「次のご褒美」を、小さく(1行の目立たない帯にする)---- */
+#screen-dress #dress-reward { gap: 6px; padding: 2px 8px; border-width: 2px; border-radius: 12px; box-shadow: 0 2px 0 rgba(70, 85, 94, 0.18); }
+#screen-dress #dress-reward .reward-icon { font-size: 16px; animation: none; }
+#screen-dress #dress-reward .reward-art { width: 26px; height: 26px; border-width: 2px; border-radius: 8px; }
+#screen-dress #dress-reward .reward-info { gap: 1px; }
+#screen-dress #dress-reward .reward-title { font-size: 12px; line-height: 1.3; }
+#screen-dress #dress-reward .reward-bar { height: 6px; border-width: 1px; }
+#screen-dress #dress-reward .reward-note { font-size: 10px; line-height: 1.25; }
+#screen-dress #dress-reward .reward-title { display: none; }
+#screen-dress #dress-reward .reward-icon { display: none; }
+#screen-dress #dress-reward .reward-note { font-size: 11px; font-weight: bold; }

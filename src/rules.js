@@ -111,7 +111,7 @@ const KINDS = {
   normal: { theme: "solo", tag: "🌱 1人で 普通", scenes: () => [...COMMON, ...SOLO] },
   hard: { theme: "hard", tag: "🔥 1人で 難しい", scenes: () => [...COMMON, SOLO[0], ...HARD] },
   rpg: { theme: "rpg", tag: "🗡️ RPGクエスト", scenes: () => RPG },
-  versus: { theme: "vs", tag: "👥 皆で 対戦", scenes: () => [...COMMON, ...VS] },
+  versus: { theme: "vs", tag: "👤👤 皆で 対戦", scenes: () => [...COMMON, ...VS] },
 };
 let kind = "normal";
 let SCENES = [];

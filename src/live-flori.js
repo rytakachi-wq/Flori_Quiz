@@ -98,11 +98,12 @@ function view(bounce) {
 }
 
 // 足もとの影(静止画にある、水色の楕円)
-function shadow(ctx) {
+// 影は、フロリが動いても(跳ねる・息)、画面の同じ場所に置く(bounce = からだの上への動き。その分、影を下げて打ち消す)
+function shadow(ctx, bounce = 0) {
   ctx.save();
   ctx.fillStyle = "rgba(160, 190, 205, 0.55)";
   ctx.beginPath();
-  ctx.ellipse(1455, 3485, 520, 105, 0, 0, Math.PI * 2);
+  ctx.ellipse(1455, 3485 + bounce, 520, 105, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -173,7 +174,7 @@ function frame(now) {
     }
     const m = reduced ? { bounce: 0, sx: 1, sy: 1 } : item.motion.update(now);
     const bg = model.meshes.findIndex((mesh) => mesh.name === "BG");
-    draw(model, canvas.getContext("2d"), view(m.bounce), { hide: new Set([bg]), squash: { sx: m.sx, sy: m.sy, ...FOOT }, imgs: tint?.imgs, before: shadow });
+    draw(model, canvas.getContext("2d"), view(m.bounce), { hide: new Set([bg]), squash: { sx: m.sx, sy: m.sy, ...FOOT }, imgs: tint?.imgs, before: (ctx) => shadow(ctx, m.bounce) });
     tiltDecor(img, reduced ? 0 : faceAngle(), m);
     if (!item.ready) {
       item.ready = true;

@@ -73,7 +73,7 @@ const IMG = {
 };
 
 const $ = (id) => document.getElementById(id);
-const SCREENS = ["cover", "rules", "setup", "confirm", "menu", "credits", "note", "relax", "records", "settings", "dex", "dress", "question", "rpg", "gameover", "result", "error"];
+const SCREENS = ["cover", "rules", "setup", "menu", "credits", "note", "relax", "records", "settings", "dex", "dress", "question", "rpg", "gameover", "result", "error"];
 
 let coverTaps = 0;
 let mode = "normal"; // 遊び方:"normal"(普通) "hard"(難しい) "oni"(オニ) "versus"(皆で対戦) "review"(復習) "daily"(毎日1問) "rpg"(RPGクエスト)
@@ -273,7 +273,7 @@ let hardIds = new Set(); // 難しい問題の uid
 let oniIds = new Set(); // オニ問題の uid
 const sessions = new Map(); // 「理系-normal」のような名前 → 普通・難しいモードの遊び(難しさのカウンターを引き継ぐ)
 let activeKey = null; // いま遊んでいる、sessions の名前
-const pick = { kind: "solo", group: "理系", level: "normal", time: false, players: 2 }; // 設定の画面で選んだ、遊ぶ人・分類・難しさ(人数)・制限時間
+const pick = { kind: "solo", group: "理系", level: "normal", simple: "normal", time: false, players: 2 }; // 設定の画面で選んだ、遊ぶ人・分類・難しさ(人数)・制限時間
 const GROUPS = ["理系", "文系", "ひらめき"];
 const MIN_POOL = 10; // 1つの組み合わせで、最低これだけの問題がないと、他の分類から足す
 let versusQuestions = []; // 対戦で使う問題(段階1〜3)
@@ -420,6 +420,8 @@ function showQuestion() {
     daily: "毎日1問 ",
   }[mode];
   $("q-progress").textContent = versus ? `${play.round} / ${VERSUS_ROUNDS}回戦` : `${prefix}第${play.asked + 1}問 / ${total}問`;
+  // 進み具合のバー(感想 No.9):いま何問目かまで、うめる
+  $("q-bar-fill").style.width = `${Math.round(((versus ? play.round : play.asked + 1) / (versus ? VERSUS_ROUNDS : total)) * 100)}%`;
   renderTurn(versus);
   // 星は、せまい枠(文字を大きくしたとき)でも、はみ出さないように、すこし小さく詰めて出す
   const starsHtml = (text) => `<span class="q-stars">${text}</span>`;
@@ -1190,13 +1192,15 @@ function showRecords() {
 function openRankInfo() {
   const total = currentTotal();
   const now = rankOf(total);
+  const nextMin = RANKS.find((item) => item.min > total)?.min; // 次のランクだけ見せて、そのあとは「？」にする(感想 No.27)
   $("ranks-list").replaceChildren(
     ...RANKS.map((rank) => {
       const item = document.createElement("li");
-      item.className = rank.min === now.min ? "is-now" : total >= rank.min ? "is-past" : "";
+      const hidden = rank.min > total && rank.min !== nextMin;
+      item.className = (rank.min === now.min ? "is-now" : total >= rank.min ? "is-past" : "") + (hidden ? " is-unknown" : "");
       item.innerHTML = '<span class="rk-icon" aria-hidden="true"></span><span class="rk-name"></span><span class="rk-min"></span>';
-      item.querySelector(".rk-icon").textContent = rank.icon;
-      item.querySelector(".rk-name").textContent = rank.name;
+      item.querySelector(".rk-icon").textContent = hidden ? "？" : rank.icon;
+      item.querySelector(".rk-name").textContent = hidden ? "？？？" : rank.name;
       item.querySelector(".rk-min").textContent = (rank.min === 100 ? "〜100点" : `${rank.min}点〜`) + (rank.min === now.min ? " 今!" : "");
       return item;
     }),
@@ -1308,7 +1312,11 @@ function renderSeg(el, options, value, onPick) {
       button.className = `seg-btn ${option.color}${option.value === value ? " is-on" : ""}${option.small ? " is-small" : ""}`;
       button.setAttribute("aria-pressed", String(option.value === value));
       button.innerHTML = '<span class="si" aria-hidden="true"></span><span class="st"></span><span class="ss"></span><span class="sb"></span>';
-      button.querySelector(".si").textContent = option.icon;
+      const iconEl = button.querySelector(".si");
+      iconEl.textContent = option.icon;
+      // 絵が2つ以上ならぶときは、小さくして、ボタンに収める(人数の絵)
+      const iconCount = [...option.icon].length;
+      if (iconCount > 1) iconEl.style.fontSize = `${{ 2: 19, 3: 16, 4: 13 }[iconCount] ?? 13}px`;
       button.querySelector(".st").textContent = option.text;
       button.querySelector(".ss").textContent = option.sub ?? "";
       const badge = button.querySelector(".sb");
@@ -1330,8 +1338,8 @@ function renderSetup() {
   renderSeg(
     $("seg-kind"),
     [
-      { value: "solo", icon: "🙂", text: "1人", color: "c-yellow" },
-      { value: "versus", icon: "👥", text: "皆で", color: "c-blue" },
+      { value: "solo", icon: "🙂", text: "ひとりで", color: "c-yellow" },
+      { value: "versus", icon: "👤👤", text: "みんなで", color: "c-blue" },
     ],
     pick.kind,
     (value) => {
@@ -1353,12 +1361,12 @@ function renderSetup() {
       renderSetup();
     },
   );
-  // 3つめの行は、1人のときは「難しさ」、皆のときは「皆の人数」(場所と高さは、同じ)
+  // 3つめの行は、1人のときは「遊び方」(シンプル/RPG)、皆のときは「皆の人数」(場所と高さは、同じ)
   $("set-label-3").innerHTML = versus ? '<span aria-hidden="true">🔢</span> 皆の人数' : '<span aria-hidden="true">🎮</span> 遊び方';
   if (versus) {
     renderSeg(
       $("seg-third"),
-      [2, 3, 4].map((n) => ({ value: n, icon: "👤", text: `${n}人`, color: "c-blue" })),
+      [2, 3, 4].map((n) => ({ value: n, icon: "👤".repeat(n), text: `${n}人`, color: "c-blue" })),
       pick.players,
       (value) => {
         pick.players = value;
@@ -1366,20 +1374,38 @@ function renderSetup() {
       },
     );
   } else {
+    // 遊び方=シンプル/RPG。シンプルのときだけ、そのつぎの「難しさ」(普通・難しい)を選ぶ(感想 No.20)
     renderSeg(
       $("seg-third"),
       [
-        { value: "normal", icon: "🌱", text: "普通", color: "c-green" },
-        { value: "hard", icon: "🔥", text: "難しい", color: "c-orange" },
+        { value: "simple", icon: "🎯", text: "シンプル", color: "c-green" },
         { value: "rpg", icon: "🗡️", text: "RPG", color: "c-red" },
-      ].map((option) => ({ ...option, badge: hasCourseKey(courseKey(pick.group, option.value)) ? SAVE_MARK : "" })),
-      pick.level,
+      ],
+      pick.level === "rpg" ? "rpg" : "simple",
       (value) => {
-        pick.level = value;
+        pick.level = value === "rpg" ? "rpg" : pick.simple;
         renderSetup();
       },
     );
   }
+  const levelOff = versus || pick.level === "rpg";
+  $("row-level").hidden = levelOff; // 難しさは、シンプルのときだけ(感想 No.8・No.20)
+  const setList = document.querySelector("#screen-setup .set-list");
+  setList.classList.toggle("rows-4", levelOff);
+  setList.classList.toggle("rows-5", !levelOff);
+  renderSeg(
+    $("seg-level"),
+    [
+      { value: "normal", icon: "🌱", text: "普通", color: "c-green" },
+      { value: "hard", icon: "🔥", text: "難しい", color: "c-orange" },
+    ].map((option) => ({ ...option, badge: !levelOff && hasCourseKey(courseKey(pick.group, option.value)) ? SAVE_MARK : "" })),
+    levelOff ? null : pick.level,
+    (value) => {
+      pick.simple = value;
+      pick.level = value;
+      renderSetup();
+    },
+  );
   // 制限時間:「つける」を大きく、「なし」を小さく
   renderSeg(
     $("seg-time"),
@@ -1393,15 +1419,16 @@ function renderSetup() {
       renderSetup();
     },
   );
+  // 説明の文は、みじかく(感想 No.21)
   $("setup-note").textContent = versus
-    ? "1台の画面で 順番に 答えるよ。毎回 初めから。"
+    ? "1台で 順番に 答えるよ。"
     : pick.level === "rpg"
-      ? "5つのマスを ハート4つで 進もう! ボスの ドラゴンを 倒せ!"
+      ? "ハート4つで ボスを 倒そう!"
       : hasCourseKey(courseKey())
         ? "💾 続きから 始まるよ!"
         : anySavedCourse()
-          ? "初めから 始まるよ。(💾 = 続きあり)"
-        : "初めから 始まるよ。じっくり 考えよう!";
+          ? "初めから。(💾 = 続きあり)"
+          : "初めから 始まるよ。";
   renderRewardCard($("flow-reward"));
 }
 
@@ -1418,32 +1445,9 @@ function chooseRecommended() {
   }
   pick.group = best && pick.kind !== "versus" ? best.group : "ランダム";
   pick.level = best ? best.level : "normal";
-  pick.time = false;
+  pick.simple = pick.level;
+  pick.time = true; // 制限時間をつける(星が もらえる)
   renderSetup();
-}
-
-// 確認の画面:選んだものを、ならべて見せる
-function renderConfirm() {
-  const versus = pick.kind === "versus";
-  const saved = !versus && hasCourseKey(courseKey());
-  const rows = [
-    ["👥", "人数選択", versus ? `皆で(${pick.players}人)` : "1人", "c-blue"],
-    ["📚", "分類", `${GROUP_ICON[pick.group]} ${pick.group}`, "c-tan"],
-    versus ? ["🏁", "進み方", "3回戦で 対戦", "c-green"] : ["🎮", "遊び方", LEVEL_TEXT[pick.level], "c-orange"],
-    ["⏱", "制限時間", pick.time ? "つける(30秒)" : "なし", pick.time ? "c-red" : "c-gray"],
-    saved ? ["💾", "続き", "前の続きから 遊ぶ", "c-yellow"] : ["🆕", "続き", "初めから 遊ぶ", "c-yellow"],
-  ];
-  $("confirm-list").replaceChildren(
-    ...rows.map(([icon, label, value, color]) => {
-      const item = document.createElement("li");
-      item.className = color;
-      item.innerHTML = '<span class="cl-i" aria-hidden="true"></span><span class="cl-l"></span><b class="cl-v"></b>';
-      item.querySelector(".cl-i").textContent = icon;
-      item.querySelector(".cl-l").textContent = label;
-      item.querySelector(".cl-v").textContent = value;
-      return item;
-    }),
-  );
 }
 
 // クイズのルール(フリップ)は、はじめて「クイズ」を押したときだけ、ゲームの前に流れる。2回目からは、モード選択へ(モード選択の「ルールをもう1度見る」で、いつでも見られる)
@@ -1472,12 +1476,8 @@ initRules(() => {
   show("setup");
 });
 $("btn-recommend").addEventListener("click", chooseRecommended);
+// 「準備完了!」で、確認の画面なしに、そのまま始める(感想 No.26)
 $("btn-start").addEventListener("click", () => {
-  renderConfirm();
-  show("confirm");
-});
-$("btn-confirm-back").addEventListener("click", () => show("setup", -1));
-$("btn-confirm-start").addEventListener("click", () => {
   timeLimit = pick.time;
   if (pick.kind === "versus") {
     versusPlayers = Math.min(VERSUS_MAX_PLAYERS, Math.max(VERSUS_MIN_PLAYERS, pick.players));
@@ -3037,7 +3037,11 @@ function renderDress() {
       const art = document.createElement("span");
       art.className = `dress-art is-${kind}`;
       const paint = kind === "color" ? (choice.swatch ?? choice.tint) : kind === "theme" ? (choice.preview ?? choice.tint) : "";
-      if (choice.trial && paint.includes("px")) {
+      if (!open && (kind === "color" || kind === "theme")) {
+        // まだ手に入れていない色・背景は、中身を見せず「？」のパネルにする(図鑑と同じ。感想 No.27)
+        art.classList.add("is-mystery");
+        art.textContent = "？";
+      } else if (choice.trial && paint.includes("px")) {
         // 模様のあるもの:大きな絵を縮めて入れて、模様の間隔を、せまくする
         art.classList.add("has-pat");
         const pat = document.createElement("i");

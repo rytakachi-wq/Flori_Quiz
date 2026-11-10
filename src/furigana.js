@@ -15,6 +15,7 @@ const FROM_GRADE = { all: 1, many: 3, few: 5 };
 const HOST_CLASS = "rb";
 
 const KANJI = /[一-鿿々〆]/;
+const KATAKANA_ANY = /[ァ-ヶ]/;
 const gradeOf = new Map();
 KYOIKU_BY_GRADE.forEach((chars, i) => [...chars].forEach((c) => gradeOf.set(c, i + 1)));
 
@@ -216,12 +217,46 @@ export function speechOf(text) {
     .replace(/[〜~]/g, ""); // 「〜べし」の「〜」は読まない
 }
 
-export function rubyHtml(text, mode) {
+// ---- カタカナのふりがな(「ふりがな:全部」のときだけ。問題・選択肢・ヒント・解説の文字に限る)----
+// 例:カード → かあど。「ー」は、前の文字の母音(あ・い・う・え・お)にする。前が「ん・っ」などのときは、そのまま「ー」。
+const KATAKANA_RUN = /[ァ-ヶー]*[ァ-ヶ][ァ-ヶー]*/g;
+const VOWEL_OF = [
+  ["あ", "ぁあかがさざただなはばぱまゃやらゎわ"],
+  ["い", "ぃいきぎしじちぢにひびぴみり"],
+  ["う", "ぅうくぐすずつづぬふぶぷむゅゆるゔ"],
+  ["え", "ぇえけげせぜてでねへべぺめれ"],
+  ["お", "ぉおこごそぞとどのほぼぽもょよろを"],
+];
+const vowelOf = (kana) => VOWEL_OF.find(([, chars]) => chars.includes(kana))?.[0] ?? null;
+export function katakanaReading(text) {
+  let out = "";
+  for (const ch of text) {
+    const code = ch.charCodeAt(0);
+    if (code >= 0x30a1 && code <= 0x30f6) out += String.fromCharCode(code - 0x60);
+    else if (ch === "ー") out += vowelOf(out.slice(-1)) ?? "ー";
+    else out += ch;
+  }
+  return out;
+}
+// ルビのつかない部分(漢字の読みのない部分)の、カタカナの かたまりに、ルビをつける
+function withKatakanaRuby(plain) {
+  let html = "";
+  let last = 0;
+  for (const match of plain.matchAll(KATAKANA_RUN)) {
+    html += escapeHtml(plain.slice(last, match.index));
+    html += `<ruby>${escapeHtml(match[0])}<rp>(</rp><rt>${katakanaReading(match[0])}</rt><rp>)</rp></ruby>`;
+    last = match.index + match[0].length;
+  }
+  return html + escapeHtml(plain.slice(last));
+}
+
+export function rubyHtml(text, mode, kana = false) {
   if (mode === "none") return escapeHtml(text);
   return segments(text)
     .map(({ text: t, reading }) => {
       const show = reading && (mode === "all" || hasUpperKanji(t, FROM_GRADE[mode]));
-      return show ? `<ruby>${escapeHtml(t)}<rp>(</rp><rt>${reading}</rt><rp>)</rp></ruby>` : escapeHtml(t);
+      if (show) return `<ruby>${escapeHtml(t)}<rp>(</rp><rt>${reading}</rt><rp>)</rp></ruby>`;
+      return kana && mode === "all" && !reading ? withKatakanaRuby(t) : escapeHtml(t);
     })
     .join("");
 }
@@ -255,16 +290,19 @@ export function setFuriganaMode(next) {
 const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "TEXTAREA", "INPUT", "TITLE", "RT", "RP"]);
 
 function render(host) {
-  host.innerHTML = rubyHtml(host.dataset.plain, mode);
+  host.innerHTML = rubyHtml(host.dataset.plain, mode, host.dataset.kana === "1");
 }
 
 function hostify(node) {
   const parent = node.parentElement;
   if (!parent || SKIP_TAGS.has(parent.tagName) || parent.closest(`.${HOST_CLASS}, [data-no-ruby]`)) return;
-  if (!KANJI.test(node.nodeValue)) return;
+  // 問題・選択肢・ヒント・解説(data-kana の中)は、カタカナにも ふりがなをつけられるように、カタカナだけの文字も包む
+  const kana = Boolean(parent.closest("[data-kana]"));
+  if (!KANJI.test(node.nodeValue) && !(kana && KATAKANA_ANY.test(node.nodeValue))) return;
   const host = document.createElement("span");
   host.className = HOST_CLASS;
   host.dataset.plain = node.nodeValue;
+  if (kana) host.dataset.kana = "1";
   render(host);
   node.replaceWith(host);
 }

@@ -15,7 +15,7 @@ const clamp1 = x => Math.max(-1, Math.min(1, x));
 const env = (a, up, hold, down) => ss(a / up) * (1 - ss((a - up - hold) / down));       // 上がる → 保つ → 下がる(0→1→0)
 
 export const HOP_SECONDS = 1.2;
-const HOP_H = 45;                  // ぴょんの高さ(キャンバス座標。はじめは 85。へらした)
+const HOP_H = 85;                  // ぴょんの高さ(キャンバス座標。いちど 45 にへらしたが、もっと高く、の指示で 85 に)
 const HOP_SQ = 0.55;               // かがむ・のびる・着地のつぶれを、へらす倍率
 export const CROSS_PX = 0;             // いつもの寄り目の量(ひとみが、内側へ動く。キャンバスのピクセル)
 // ※いつもの目の位置(CROSS_PX = 0)は、Live2D のパラメーターが 0 のときの位置(利用者が見せた絵のとおり)

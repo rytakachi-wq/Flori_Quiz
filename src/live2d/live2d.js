@@ -15,6 +15,18 @@ function trimLips(model) {
   }
 }
 
+// 口の横はば:上唇・下唇の左右を、真ん中へ縮める倍率(1 = そのまま)。model.lipWidth で変えられる
+export const LIP_WIDTH = 0.85;
+function narrowLips(model) {
+  const s = model.lipWidth ?? LIP_WIDTH;
+  if (s === 1) return;
+  for (const m of model.meshes) {
+    if (!/^(上唇|下唇)$/.test(m.name) || m.pts.length !== 8) continue;
+    const xs = m.forms[0].pos.filter((_, i) => i % 2 === 0), mid = (Math.min(...xs) + Math.max(...xs)) / 2;   // 絵の貼りつけ(pts)は、そのまま。表示の位置(forms)だけ、縮める
+    for (const f of m.forms) for (let k = 0; k < 4; k++) f.pos[k * 2] = mid + (f.pos[k * 2] - mid) * s;
+  }
+}
+
 export async function loadModel(base) {
   const model = await (await fetch(base + 'model.json')).json();
   const imgs = new Map();
@@ -30,6 +42,7 @@ export async function loadModel(base) {
   // 腕は、ファイルでは、どちらか(または両方)が非表示のことがある(バンザイとコブシがかさなるため)。出し分けは armHidden がするので、ここでは表示にしておく
   for (const m of model.meshes) if (/^(右|左)手(バンザイ|コブシ)$/.test(m.name)) m.visible = true;
   trimLips(model);
+  narrowLips(model);
   model.values = model.params.map(p => p.default);
   // 描画順は、ファイルの並びの逆(後ろから前)。顔は、体のすぐ上に重ねる
   const order = model.meshes.map((m, i) => i).reverse();
